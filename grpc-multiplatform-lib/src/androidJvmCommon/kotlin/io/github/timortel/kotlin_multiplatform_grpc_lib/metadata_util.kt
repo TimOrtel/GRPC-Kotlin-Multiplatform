@@ -1,0 +1,9 @@
+package io.github.timortel.kotlin_multiplatform_grpc_lib
+
+val KMMetadata.jvmMetadata: io.grpc.Metadata
+    get() = io.grpc.Metadata().apply {
+        metadataMap.forEach { (key, value) ->
+            val metadataKey = io.grpc.Metadata.Key.of(key, io.grpc.Metadata.ASCII_STRING_MARSHALLER)
+            put(metadataKey, value)
+        }
+    }

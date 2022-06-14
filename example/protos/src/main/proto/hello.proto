@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package io.github.timortel.grpc_multiplatform.example;
+
+option java_multiple_files = true;
+
+message HelloRequest {
+  string greeting = 1;
+}
+
+message Response {
+  string response = 1;
+}
+
+service HelloService {
+  rpc sayHello (HelloRequest) returns (Response);
+
+  rpc sayHelloMultipleTimes(HelloRequest) returns (stream Response);
+}
