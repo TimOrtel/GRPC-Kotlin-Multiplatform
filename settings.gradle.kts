@@ -11,7 +11,7 @@ pluginManagement {
     plugins {
         kotlin("jvm") version kotlinVersion
         kotlin("multiplatform") version kotlinVersion
-        id("com.android.library") version "4.2.2"
+        id("com.android.library") version "7.0.4"
     }
 }
 

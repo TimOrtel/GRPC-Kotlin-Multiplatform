@@ -86,6 +86,9 @@ val myMessage = kmMyMessage {
 You can call this code from both JVM/Android modules and JS modules.
 
 ## Setup
+For now, first clone the repository and publish both the plugin and the library to mavenLocal.
+Then proceed and add mavenLocal as repositories.
+
 In your top-level build.gradle.kts, add the following:
 ```kotlin
 buildscript {
@@ -95,7 +98,7 @@ buildscript {
     }
 
     dependencies {
-        classpath(kotlin("gradle-plugin", version = "1.6.0"))
+        classpath(kotlin("gradle-plugin", version = "<latest version>"))
 
         //...
         
