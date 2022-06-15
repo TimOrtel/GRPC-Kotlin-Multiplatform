@@ -3,7 +3,7 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfor
 plugins {
     kotlin("multiplatform")
 
-    id("io.github.timortel.kotlin-multiplatform-grpc-plugin") version "0.1.0"
+    id("io.github.timortel.kotlin-multiplatform-grpc-plugin") version "0.1.1"
 }
 
 group = "io.github.timortel.grpc_multiplaform.example.common"

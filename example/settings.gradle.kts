@@ -2,7 +2,6 @@ rootProject.name = "grpc-multiplaform-example"
 
 pluginManagement {
     repositories {
-        mavenLocal()
         gradlePluginPortal()
         maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
         google()
@@ -21,6 +20,6 @@ pluginManagement {
 }
 
 include("common")
-//include("protos")
-//include("generate-proto")
+include("protos")
+include("generate-proto")
 //include("js")
