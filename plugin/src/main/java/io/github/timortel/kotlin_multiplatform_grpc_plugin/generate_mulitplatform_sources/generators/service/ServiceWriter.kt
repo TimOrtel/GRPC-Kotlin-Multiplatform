@@ -2,12 +2,12 @@ package io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfo
 
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
-import io.github.timortel.kotlin_multiplatform_grpc_lib.KMChannel
-import io.github.timortel.kotlin_multiplatform_grpc_lib.KMMetadata
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoFile
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoRpc
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoService
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.kmChannel
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.kmMetadata
 import kotlinx.coroutines.flow.Flow
 import java.io.File
 
@@ -33,7 +33,7 @@ abstract class ServiceWriter(private val isActual: Boolean) {
                     .addFunction(
                         FunSpec
                             .constructorBuilder()
-                            .addParameter("channel", KMChannel::class)
+                            .addParameter("channel", kmChannel)
                             .addModifiers(channelConstructorModifiers)
                             .apply { applyToChannelConstructor(this, protoFile, service) }
                             .build()
@@ -54,7 +54,7 @@ abstract class ServiceWriter(private val isActual: Boolean) {
                                     .addParameter(Const.Service.RpcCall.PARAM_REQUEST, rpc.request.commonType)
                                     .addParameter(
                                         ParameterSpec
-                                            .builder(Const.Service.RpcCall.PARAM_METADATA, KMMetadata::class)
+                                            .builder(Const.Service.RpcCall.PARAM_METADATA, kmMetadata)
                                             .apply { applyToMetadataParameter(this, service) }
                                             .build()
                                     )

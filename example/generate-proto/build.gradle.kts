@@ -6,7 +6,6 @@ plugins {
 
     id("java")
     id("com.google.protobuf")
-    id("de.undercouch.download")
 }
 
 version = "unspecified"
@@ -73,21 +72,5 @@ protobuf {
                 }
             }
         }
-    }
-}
-
-tasks {
-    register("downloadGRPCWeb", de.undercouch.gradle.tasks.download.Download::class.java) {
-        val grpcWebVersion = "1.3.1"
-        val downloadUrl = when {
-            Os.isFamily(Os.FAMILY_WINDOWS) -> "https://github.com/grpc/grpc-web/releases/download/$grpcWebVersion/protoc-gen-grpc-web-$grpcWebVersion-windows-x86_64.exe"
-            Os.isFamily(Os.FAMILY_UNIX) -> "https://github.com/grpc/grpc-web/releases/download/$grpcWebVersion/protoc-gen-grpc-web-$grpcWebVersion-linux-x86_64"
-            Os.isFamily(Os.FAMILY_MAC) -> "https://github.com/grpc/grpc-web/releases/download/$grpcWebVersion/protoc-gen-grpc-web-$grpcWebVersion-darwin-x86_64"
-            else -> throw IllegalStateException("Unsupported operating system.")
-        }
-
-        src(downloadUrl)
-        dest(buildDir.resolve("protoc-gen-grpc-web"))
-        overwrite(false)
     }
 }

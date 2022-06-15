@@ -2,13 +2,13 @@ package io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfo
 
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
-import io.github.timortel.kotlin_multiplatform_grpc_lib.KMChannel
-import io.github.timortel.kotlin_multiplatform_grpc_lib.KMMetadata
-import io.github.timortel.kotlin_multiplatform_grpc_lib.stub.KMStub
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoFile
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoRpc
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoService
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.kmChannel
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.kmMetadata
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.kmStub
 
 object JsServiceWriter : ServiceWriter(true) {
 
@@ -25,7 +25,7 @@ object JsServiceWriter : ServiceWriter(true) {
         builder.apply {
             addProperty(
                 PropertySpec
-                    .builder("channel", KMChannel::class, KModifier.PRIVATE, KModifier.LATEINIT).mutable(true)
+                    .builder("channel", kmChannel, KModifier.PRIVATE, KModifier.LATEINIT).mutable(true)
                     .build()
             )
             addProperty(
@@ -41,17 +41,17 @@ object JsServiceWriter : ServiceWriter(true) {
             )
             addProperty(
                 PropertySpec
-                    .builder("metadata", KMMetadata::class, KModifier.OVERRIDE)
+                    .builder("metadata", kmMetadata, KModifier.OVERRIDE)
                     .mutable(true)
-                    .initializer("%T()", KMMetadata::class)
+                    .initializer("%T()", kmMetadata)
                     .build()
             )
 
             addFunction(
                 FunSpec
                     .constructorBuilder()
-                    .addParameter("channel", KMChannel::class)
-                    .addParameter("metadata", KMMetadata::class)
+                    .addParameter("channel", kmChannel)
+                    .addParameter("metadata", kmMetadata)
                     .callThisConstructor("channel")
                     .addStatement("this.metadata = metadata")
                     .build()
@@ -61,7 +61,7 @@ object JsServiceWriter : ServiceWriter(true) {
                 FunSpec
                     .builder("build")
                     .addModifiers(KModifier.OVERRIDE)
-                    .addParameter("metadata", KMMetadata::class)
+                    .addParameter("metadata", kmMetadata)
                     .returns(serviceName)
                     .addStatement("return %T(channel, metadata)", serviceName)
                     .build()
@@ -148,7 +148,7 @@ object JsServiceWriter : ServiceWriter(true) {
         service: ProtoService
     ) {
         builder.apply {
-            superclass(KMStub::class.asTypeName().parameterizedBy(serviceClass))
+            superclass(kmStub.parameterizedBy(serviceClass))
 
             addSuperinterface(
                 ClassName("io.github.timortel.kotlin_multiplatform_grpc_lib.stub", "JsStub")

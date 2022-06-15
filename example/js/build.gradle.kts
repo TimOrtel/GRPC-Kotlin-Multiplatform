@@ -1,5 +1,5 @@
 plugins {
-    kotlin("js")
+    kotlin("multiplatform")
 }
 
 version = "unspecified"
@@ -20,12 +20,19 @@ kotlin {
 
         binaries.executable()
     }
-}
 
-dependencies {
-    implementation(project(":common"))
+    sourceSets {
+        val jsMain by getting {
+            kotlin.srcDir("src/main/kotlin")
+            resources.srcDir("src/main/resources")
 
-    api(npm("google-protobuf", "^3.19.1"))
-    api(npm("grpc-web", "^1.3.0"))
-    api(npm("protobufjs", "^6.11.2"))
+            dependencies {
+                implementation(project(":app-common"))
+
+                api(npm("google-protobuf", "^3.19.1"))
+                api(npm("grpc-web", "^1.3.0"))
+                api(npm("protobufjs", "^6.11.2"))
+            }
+        }
+    }
 }

@@ -2,12 +2,12 @@ package io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfo
 
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
-import io.github.timortel.kotlin_multiplatform_grpc_lib.stub.AndroidJvmKMStub
-import io.github.timortel.kotlin_multiplatform_grpc_lib.stub.KMStub
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoFile
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoRpc
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoService
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.kmAndroidJVMStub
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.kmStub
 
 object JvmServiceWriter : ServiceWriter(true) {
 
@@ -115,9 +115,9 @@ object JvmServiceWriter : ServiceWriter(true) {
         protoFile: ProtoFile,
         service: ProtoService
     ) {
-        builder.superclass(KMStub::class.asTypeName().parameterizedBy(serviceClass))
+        builder.superclass(kmStub.parameterizedBy(serviceClass))
         builder.addSuperinterface(
-            AndroidJvmKMStub::class.asTypeName().parameterizedBy(
+            kmAndroidJVMStub.parameterizedBy(
                 serviceClass,
                 Const.Service.JVM.nativeServiceClassName(protoFile, service)
             )

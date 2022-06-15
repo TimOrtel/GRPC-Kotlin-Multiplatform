@@ -25,7 +25,7 @@ gradlePlugin {
         create("kotlin-multiplatform-grpc-plugin") {
             id = "io.github.timortel.kotlin-multiplatform-grpc-plugin"
             displayName = "GRPC Kotlin Multiplatform Plugin"
-            description = "Plugin that generates multiplatform wrapper classes for GRPC"
+            description = "Plugin that generates Kotlin multiplatform wrapper classes for GRPC"
 
             implementationClass = "io.github.timortel.kotlin_multiplatform_grpc_plugin.GrpcMultiplatformPlugin"
         }
@@ -54,7 +54,6 @@ repositories {
 
 dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1")
-    api(project(":grpc-multiplatform-lib"))
     implementation("org.antlr:antlr4:4.10.1")
     antlr("org.antlr:antlr4:4.10.1")
 
