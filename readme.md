@@ -87,9 +87,6 @@ val myMessage = kmMyMessage {
 You can call this code from both JVM/Android modules and JS modules.
 
 ## Setup
-For now, first clone the repository and publish both the plugin and the library to mavenLocal.
-Then proceed and add mavenLocal as repositories.
-
 In your top-level build.gradle.kts, add the following:
 ```kotlin
 buildscript {
@@ -98,14 +95,7 @@ buildscript {
         gradlePluginPortal()
     }
 
-    dependencies {
-        classpath(kotlin("gradle-plugin", version = "<latest version>"))
-
-        //...
-        
-        classpath("com.google.protobuf:protobuf-gradle-plugin:<latest version>")
-        classpath("io.github.timortel:kotlin-multiplatform-grpc-plugin:<latest version>")
-    }
+    //...
 }
 ```
 
@@ -115,19 +105,20 @@ Add the following to your plugins block:
 plugins {
     kotlin("multiplatform")
 
-    id("io.github.timortel.kotlin-multiplatform-grpc-plugin")
+    //...
+    
+    id("io.github.timortel.kotlin-multiplatform-grpc-plugin") version "0.1.1"
 }
 ```
 
 Configure your JS configuration:
 ```kotlin
 kotlin {
-    ...
+    //...
 
     js(IR) {
         useCommonJs()
 
-        nodejs()
         browser {
             webpackTask {
                 output.libraryTarget = "commonjs2"
@@ -137,7 +128,7 @@ kotlin {
         binaries.executable()
     }
     
-    ...
+    //...
 }
 ```
 Other configurations may work, but I have not tested others.
@@ -149,7 +140,7 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 implementation(kotlin("stdlib-common"))
-                api("io.github.timortel:grpc-multiplatform-lib:<latest version>")
+                api("com.github.TimOrtel.GRPC-Kotlin-Multiplatform:grpc-multiplatform-lib:<latest version>")
                 api("org.jetbrains.kotlinx:kotlinx-coroutines-core:<latest version>")
             }
 
@@ -159,7 +150,7 @@ kotlin {
         val jvmMain by getting {
             dependencies {
                 api(project(":generate-proto"))
-                implementation("io.github.timortel:grpc-multiplatform-lib-jvm:<latest version>")
+                implementation("com.github.TimOrtel.GRPC-Kotlin-Multiplatform:grpc-multiplatform-lib-jvm:<latest version>")
             }
 
             kotlin.srcDir(projectDir.resolve("build/generated/source/kmp-grpc/jvmMain/kotlin").canonicalPath)
@@ -167,7 +158,7 @@ kotlin {
 
         val jsMain by getting {
             dependencies {
-                implementation("io.github.timortel:grpc-multiplatform-lib-js:<latest version>")
+                implementation("com.github.TimOrtel.GRPC-Kotlin-Multiplatform:grpc-multiplatform-lib-js:<latest version>")
             }
             kotlin.srcDir(projectDir.resolve("build/generated/source/kmp-grpc/jsMain/kotlin").canonicalPath)
         }
@@ -178,7 +169,7 @@ kotlin {
 Finally, register the generation task:
 ```kotlin
 kotlin {
-    ...
+    //...
 }
 
 tasks.register<GenerateMultiplatformSourcesTask>("generateMPProtos") {
@@ -195,7 +186,7 @@ An example on how to configure this can be found in [here](example)
 You must add the following npm dependencies to your JS module:
 ```kotlin
 dependencies {
-    ...
+    //...
     api(npm("google-protobuf", "^<latest version>"))
     api(npm("grpc-web", "^<latest version>"))
     api(npm("protobufjs", "^<latest version>"))

@@ -38,15 +38,9 @@ protobuf {
         id("grpckt") {
             artifact = "io.grpc:protoc-gen-grpc-kotlin:${Versions.GRPC_KOTLIN}:jdk7@jar"
         }
-
-        id("grpc-web") {
-            path = buildDir.resolve("protoc-gen-grpc-web").path
-        }
     }
     generateProtoTasks {
         ofSourceSet("main").forEach {
-            it.dependsOn("downloadGRPCWeb")
-
             it.plugins {
                 id("grpc") {
                     option("lite")
@@ -54,21 +48,11 @@ protobuf {
                 id("grpckt") {
                     option("lite")
                 }
-
-                id("grpc-web") {
-                    option("import_style=commonjs")
-                    option("mode=grpcwebtext")
-                }
             }
 
             it.builtins {
                 id("kotlin") {
                     option("lite")
-                }
-
-                id("js") {
-                    option("import_style=commonjs")
-                    option("binary")
                 }
             }
         }

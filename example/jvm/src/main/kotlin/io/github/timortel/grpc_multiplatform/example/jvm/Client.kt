@@ -1,4 +1,4 @@
-package io.github.timortel.grpc_multiplatform.jvm;
+package io.github.timortel.grpc_multiplatform.example.jvm
 
 import io.github.timortel.grpc_multiplatform.example.common.performGreeting
 import io.github.timortel.grpc_multiplatform.example.common.performMultipleGreetings

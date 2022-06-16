@@ -1,4 +1,4 @@
-package io.github.timortel.grpc_multiplatform.jvm
+package io.github.timortel.grpc_multiplatform.example.jvm
 
 import io.grpc.ServerBuilder
 import io.github.timortel.grpc_multiplatform.example.HelloServiceGrpcKt;
