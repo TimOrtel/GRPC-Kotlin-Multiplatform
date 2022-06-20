@@ -135,6 +135,11 @@ Other configurations may work, but I have not tested others.
 
 Add the library as a dependency:
 ```kotlin
+repositories {
+    //...
+    maven(url = "https://jitpack.io")
+}
+
 kotlin {
     sourceSets {
         val commonMain by getting {
