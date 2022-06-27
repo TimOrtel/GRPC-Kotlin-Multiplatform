@@ -19,7 +19,7 @@ abstract class RepeatedMessageMethodGenerator(private val isActual: Boolean) {
         val listProperty = PropertySpec
             .builder(
                 Const.Message.Attribute.Repeated.listPropertyName(messageAttribute),
-                ClassName("kotlin.collections", "List").parameterizedBy(type)
+                LIST.parameterizedBy(type)
             )
             .addModifiers(attrs)
             .apply { modifyListProperty(this, message, messageAttribute) }

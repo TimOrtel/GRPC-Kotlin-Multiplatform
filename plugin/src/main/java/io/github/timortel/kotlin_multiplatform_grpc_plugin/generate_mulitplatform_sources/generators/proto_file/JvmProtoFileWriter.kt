@@ -41,6 +41,40 @@ class JvmProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
         )
     }
 
+    override fun applyToEqualsFunction(
+        builder: FunSpec.Builder,
+        message: ProtoMessage,
+        thisClassName: ClassName
+    ) {
+        with(builder) {
+            //Simply delegate equals to the implementation provided by the JVM
+            //First check if the param is of the same type
+            addStatement("if (%N == null) return false", Const.Message.BasicFunctions.EqualsFunction.OTHER_PARAM)
+
+            beginControlFlow(
+                "return if (%N is %T)",
+                Const.Message.BasicFunctions.EqualsFunction.OTHER_PARAM,
+                thisClassName
+            )
+
+            //Delegate
+            addStatement(
+                "%N.equals(%N.%N)",
+                Const.Message.Constructor.JVM.PARAM_IMPL,
+                Const.Message.BasicFunctions.EqualsFunction.OTHER_PARAM,
+                Const.Message.Constructor.JVM.PARAM_IMPL
+            )
+
+            endControlFlow()
+            addCode("else false")
+        }
+    }
+
+    override fun applyToHashCodeFunction(builder: FunSpec.Builder, message: ProtoMessage) {
+        //Delegate hash code generation to jvm impl
+        builder.addStatement("return %N.hashCode()", Const.Message.Constructor.JVM.PARAM_IMPL)
+    }
+
     override fun getChildClassName(parentClass: ClassName?, childName: String): ClassName =
         getChildClassName(parentClass, childName, protoFile.pkg)
 }

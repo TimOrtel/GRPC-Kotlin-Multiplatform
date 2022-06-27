@@ -52,4 +52,12 @@ class CommonProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(
 
     override fun getChildClassName(parentClass: ClassName?, childName: String): ClassName =
         getChildClassName(parentClass, childName, protoFile.pkg)
+
+    override fun applyToEqualsFunction(
+        builder: FunSpec.Builder,
+        message: ProtoMessage,
+        thisClassName: ClassName
+    ) = Unit
+
+    override fun applyToHashCodeFunction(builder: FunSpec.Builder, message: ProtoMessage) = Unit
 }

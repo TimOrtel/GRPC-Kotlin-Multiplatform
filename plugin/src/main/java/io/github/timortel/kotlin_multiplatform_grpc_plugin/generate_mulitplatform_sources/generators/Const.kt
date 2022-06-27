@@ -27,7 +27,8 @@ object Const {
              */
             fun jsServiceName(service: ProtoService): String = "JS_" + service.serviceName.capitalize()
 
-            fun nativeServiceClassName(protoFile: ProtoFile, service: ProtoService) = ClassName(protoFile.pkg, jsServiceName(service))
+            fun nativeServiceClassName(protoFile: ProtoFile, service: ProtoService) =
+                ClassName(protoFile.pkg, jsServiceName(service))
         }
 
         object RpcCall {
@@ -178,6 +179,17 @@ object Const {
 
             object JS {
                 const val PARAM_IMPL = "jsImpl"
+            }
+        }
+
+        object BasicFunctions {
+            object EqualsFunction {
+                const val NAME = "equals"
+                const val OTHER_PARAM = "other"
+            }
+
+            object HashCodeFunction {
+                const val NAME = "hashCode"
             }
         }
     }

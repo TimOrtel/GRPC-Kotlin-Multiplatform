@@ -6,7 +6,7 @@ pluginManagement {
         google()
     }
 
-    val kotlinVersion: String = "1.6.10"
+    val kotlinVersion: String = "1.7.0"
 
     plugins {
         kotlin("jvm") version kotlinVersion

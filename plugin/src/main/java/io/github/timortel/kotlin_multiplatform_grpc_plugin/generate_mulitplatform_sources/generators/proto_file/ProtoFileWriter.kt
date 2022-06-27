@@ -84,17 +84,61 @@ abstract class ProtoFileWriter(private val protoFile: ProtoFile, private val isA
                         childEnum
                     ) { childName -> messageClassName.nestedClass(childName) }
                 }
+
+                //Write eq function
+                addFunction(
+                    FunSpec.builder(Const.Message.BasicFunctions.EqualsFunction.NAME)
+                        .addModifiers(if (isActual) KModifier.ACTUAL else KModifier.EXPECT, KModifier.OVERRIDE)
+                        .addParameter(
+                            Const.Message.BasicFunctions.EqualsFunction.OTHER_PARAM,
+                            ANY.copy(nullable = true)
+                        )
+                        .returns(BOOLEAN)
+                        .apply {
+                            applyToEqualsFunction(this, message, messageClassName)
+                        }
+                        .build()
+                )
+
+                addFunction(
+                    FunSpec.builder(Const.Message.BasicFunctions.HashCodeFunction.NAME)
+                        .returns(INT)
+                        .addModifiers(if (isActual) KModifier.ACTUAL else KModifier.EXPECT, KModifier.OVERRIDE)
+                        .apply {
+                            applyToHashCodeFunction(this, message)
+                        }
+                        .build()
+                )
             }
             .build()
     }
 
     abstract fun applyToClass(builder: TypeSpec.Builder, message: ProtoMessage)
 
-    private fun addSimpleMessageFunctions(builder: TypeSpec.Builder, message: ProtoMessage, attr: ProtoMessageAttribute) {
+    /**
+     * @param thisClassName the ClassName of the class we are constructing right now.
+     */
+    abstract fun applyToEqualsFunction(
+        builder: FunSpec.Builder,
+        message: ProtoMessage,
+        thisClassName: ClassName
+    )
+
+    abstract fun applyToHashCodeFunction(builder: FunSpec.Builder, message: ProtoMessage)
+
+    private fun addSimpleMessageFunctions(
+        builder: TypeSpec.Builder,
+        message: ProtoMessage,
+        attr: ProtoMessageAttribute
+    ) {
         scalarMessageMethodGenerator.generateFunctions(builder, message, attr)
     }
 
-    private fun addRepeatedMessageFunctions(builder: TypeSpec.Builder, message: ProtoMessage, attr: ProtoMessageAttribute) {
+    private fun addRepeatedMessageFunctions(
+        builder: TypeSpec.Builder,
+        message: ProtoMessage,
+        attr: ProtoMessageAttribute
+    ) {
         repeatedMessageMethodGenerator.generateFunctions(builder, message, attr)
     }
 
