@@ -9,6 +9,7 @@ import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.tree.ParseTreeWalker
 import org.gradle.api.DefaultTask
+import org.gradle.api.Project
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.tasks.Input
 import org.slf4j.Logger
@@ -16,6 +17,13 @@ import java.io.File
 
 @Suppress("LeakingThis")
 abstract class GenerateMultiplatformSourcesTask : DefaultTask() {
+
+    companion object {
+        fun getOutputFolder(project: Project): File = project.buildDir.resolve("generated/source/kmp-grpc/")
+        fun getCommonOutputFolder(project: Project): File = getOutputFolder(project).resolve("commonMain/kotlin")
+        fun getJVMOutputFolder(project: Project): File = getOutputFolder(project).resolve("jvmMain/kotlin")
+        fun getJSOutputFolder(project: Project): File = getOutputFolder(project).resolve("jsMain/kotlin")
+    }
 
     @get:Input
     abstract val protoSourceFolders: ListProperty<File>
@@ -25,15 +33,15 @@ abstract class GenerateMultiplatformSourcesTask : DefaultTask() {
 
         doLast {
             val sourceFolders = protoSourceFolders.get()
-            val outputFolder = project.buildDir.resolve("generated/source/kmp-grpc/")
+            val outputFolder = getOutputFolder(project)
             outputFolder.mkdirs()
 
             generateProtoFiles(
                 logger,
                 sourceFolders,
-                commonOutputFolder = outputFolder.resolve("commonMain/kotlin"),
-                jvmOutputFolder = outputFolder.resolve("jvmMain/kotlin"),
-                jsOutputFolder = outputFolder.resolve("jsMain/kotlin")
+                commonOutputFolder = getCommonOutputFolder(project),
+                jvmOutputFolder = getJVMOutputFolder(project),
+                jsOutputFolder = getJSOutputFolder(project)
             )
         }
     }

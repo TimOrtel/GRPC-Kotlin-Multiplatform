@@ -24,7 +24,7 @@ object CommonToJvmMapMapper : MapMapper() {
                 Const.Message.Attribute.Map.JVM.putAllFunctionName(attribute)
             )
             .add(mapToPutVariable)
-            .add(")")
+            .add(")\n")
             .build()
     }
 

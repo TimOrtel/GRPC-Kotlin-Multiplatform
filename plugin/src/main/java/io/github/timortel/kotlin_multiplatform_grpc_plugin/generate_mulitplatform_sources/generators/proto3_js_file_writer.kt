@@ -50,7 +50,7 @@ fun generateBridgeClass(message: ProtoMessage): TypeSpec {
                     CodeBlock
                         .builder()
                         .addStatement("val jspb = %T", jspb)
-                        .addStatement("val messageClass = js(\"function() { jspb.Message.initialize(this, [], 0, -1, null, null); }\")")
+                        .addStatement("val messageClass = js(\"function()·{·jspb.Message.initialize(this,·[],·0,·-1,·null,·null);·}\")")
                         .addStatement("%T.inherits(messageClass, %T)", jspb, jspbMessage)
                         .addStatement("%N = messageClass", prototypePropertyName)
                         .build()

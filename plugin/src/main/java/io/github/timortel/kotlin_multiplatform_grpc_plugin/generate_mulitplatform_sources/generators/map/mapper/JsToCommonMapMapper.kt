@@ -35,7 +35,7 @@ object JsToCommonMapMapper : MapMapper() {
                 variableName
             )
         } else {
-            CodeBlock.of("%M(%N)", Const.Message.CommonFunction.JS.commonFunction(types.jsType), variableName)
+            CodeBlock.of("%T(%T(%N))", types.commonType, types.jsType, variableName)
         }
     }
 }

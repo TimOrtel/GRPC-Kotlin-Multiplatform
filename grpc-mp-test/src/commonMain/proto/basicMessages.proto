@@ -1,0 +1,69 @@
+syntax = "proto3";
+
+package io.github.timortel.kotlin_multiplatform_grpc_plugin.test.basic_messages;
+
+option java_multiple_files = true;
+
+message SimpleMessage {
+  string field1 = 1;
+}
+
+message ScalarTypes {
+  string field1 = 1;
+  bool field2 = 2;
+  int32 field3 = 3;
+  int64 field4 = 4;
+  float field5 = 5;
+  double field6 = 6;
+}
+
+message SimpleRepeatedMessage {
+  repeated string field1 = 1;
+}
+
+message ComplexRepeatedMessage {
+  repeated string field1 = 1;
+  repeated bool field2 = 2;
+  repeated int32 field3 = 3;
+  repeated int64 field4 = 4;
+  repeated float field5 = 5;
+  repeated double field6 = 6;
+}
+
+message MessageWithSubMessage {
+  SimpleMessage field1 = 1;
+}
+
+message MessageWithRepeatedSubMessage {
+  repeated SimpleMessage field1 = 1;
+}
+
+enum SimpleEnum {
+  ZERO = 0;
+  ONE = 1;
+  TWO = 2;
+}
+
+message MessageWithEnum {
+  SimpleEnum field1 = 1;
+}
+
+message MessageWithRepeatedEnum {
+  repeated SimpleEnum field1 = 1;
+}
+
+message MessageWithNestedMessage {
+  NestedMessage field1 = 1;
+
+  message NestedMessage {
+    int32 field1 = 1;
+  }
+}
+
+message MessageWithMap {
+  map<string, int32> field1 = 1;
+}
+
+message MessageWithMessageMap {
+  map<int32, SimpleMessage> field1 = 1;
+}

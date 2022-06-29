@@ -4,7 +4,10 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfor
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
+import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinMultiplatformPluginWrapper
+import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
+import org.jetbrains.kotlin.gradle.plugin.KotlinTarget
 import org.jetbrains.kotlin.gradle.targets.js.ir.KotlinJsIrTarget
 import org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget
 import org.jetbrains.kotlin.gradle.tasks.Kotlin2JsCompile
@@ -19,15 +22,31 @@ class GrpcMultiplatformPlugin : Plugin<Project> {
                 val generateMpProtosTask = project.tasks.withType(GenerateMultiplatformSourcesTask::class.java)
                 val targets = extension.targets.toList()
 
-                //JVM
-                targets.filterIsInstance<KotlinJvmTarget>()
+                //Common
+                targets
+                    .filter { it.platformType == KotlinPlatformType.common }
                     .flatMap { it.compilations }
                     .map { it.defaultSourceSet }
                     .forEach { kotlinSourceSet ->
+                        kotlinSourceSet.kotlin.srcDir(GenerateMultiplatformSourcesTask.getCommonOutputFolder(project))
+                    }
+
+                //JVM
+                targets.filterIsInstance<KotlinJvmTarget>()
+                    .flatMap { it.compilations }
+                    .forEach { compilation ->
                         project.tasks.withType(KotlinCompile::class.java).all { kotlinCompile ->
                             generateMpProtosTask.forEach { generateProtoTask ->
                                 kotlinCompile.dependsOn(generateProtoTask)
                             }
+                        }
+
+                        if (compilation.name == KotlinCompilation.MAIN_COMPILATION_NAME) {
+                            compilation.defaultSourceSet.kotlin.srcDir(
+                                GenerateMultiplatformSourcesTask.getJVMOutputFolder(
+                                    project
+                                )
+                            )
                         }
                     }
 
@@ -35,12 +54,19 @@ class GrpcMultiplatformPlugin : Plugin<Project> {
                 targets
                     .filterIsInstance<KotlinJsIrTarget>()
                     .flatMap { it.compilations }
-                    .map { it.defaultSourceSet }
-                    .forEach { kotlinSourceSet ->
+                    .forEach { compilation ->
                         project.tasks.withType(Kotlin2JsCompile::class.java).all { kotlinCompile ->
                             generateMpProtosTask.forEach { generateProtoTask ->
                                 kotlinCompile.dependsOn(generateProtoTask)
                             }
+                        }
+
+                        if (compilation.name == KotlinCompilation.MAIN_COMPILATION_NAME) {
+                            compilation.defaultSourceSet.kotlin.srcDir(
+                                GenerateMultiplatformSourcesTask.getJSOutputFolder(
+                                    project
+                                )
+                            )
                         }
                     }
             }

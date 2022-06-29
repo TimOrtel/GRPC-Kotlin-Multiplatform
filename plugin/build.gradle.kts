@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm")
+    kotlin("jvm") version "1.7.0"
     id("java-gradle-plugin")
     id("maven-publish")
     id("com.gradle.plugin-publish") version "0.18.0"
@@ -54,11 +54,11 @@ repositories {
 
 dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1")
-    implementation("org.antlr:antlr4:4.10.1")
     antlr("org.antlr:antlr4:4.10.1")
+    implementation("org.antlr:antlr4:4.10.1")
 
-    implementation("com.squareup:kotlinpoet:1.11.0")
-    compileOnly("org.jetbrains.kotlin:kotlin-gradle-plugin:1.6.21")
+    implementation("com.squareup:kotlinpoet:1.12.0")
+    compileOnly("org.jetbrains.kotlin:kotlin-gradle-plugin:1.7.0")
 }
 
 tasks.generateGrammarSource {
