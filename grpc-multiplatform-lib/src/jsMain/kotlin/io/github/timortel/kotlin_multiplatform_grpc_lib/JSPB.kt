@@ -74,7 +74,7 @@ external object JSPB {
 
         fun readDouble(): Double
         fun readFloat(): Float
-        fun readInt64(): Long
+        fun readInt64(): dynamic
         fun readUInt64(): dynamic
         fun readInt32(): Int
         fun readUInt32(): dynamic

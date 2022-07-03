@@ -4,6 +4,7 @@ import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeName
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.ProtoType
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoMessage
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoMessageAttribute
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
@@ -30,6 +31,8 @@ object JsRepeatedMessageMethodGenerator : RepeatedMessageMethodGenerator(true) {
             )
         } else if (attr.types.doDiffer) {
             initBlock.add(".map·{ %M(it) }.toList()", Const.Message.CommonFunction.JS.commonFunction(attr))
+        } else if (attr.types.protoType == ProtoType.INT_64) {
+            initBlock.add(".map·{ it.toLong() }")
         } else {
             initBlock.add(".toList()")
         }

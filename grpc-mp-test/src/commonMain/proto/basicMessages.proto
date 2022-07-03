@@ -67,3 +67,38 @@ message MessageWithMap {
 message MessageWithMessageMap {
   map<int32, SimpleMessage> field1 = 1;
 }
+
+message MessageWithEnumMap {
+  map<int32, SimpleEnum> field1 = 1;
+}
+
+message MessageWithEverything {
+  string field1 = 1;
+  bool field2 = 2;
+  int32 field3 = 3;
+  int64 field4 = 4;
+  float field5 = 5;
+  double field6 = 6;
+  SimpleEnum field7 = 7;
+  SimpleMessage field8 = 8;
+
+  repeated string field9 = 9;
+  repeated bool field10 = 10;
+  repeated int32 field11 = 11;
+  repeated int64 field12 = 12;
+  repeated float field13 = 13;
+  repeated double field14 = 14;
+  repeated SimpleEnum field15 = 15;
+
+  map<string, int32> field16 = 16;
+  map<int32, SimpleMessage> field17 = 17;
+  map<int32, SimpleEnum> field18 = 18;
+}
+
+message LongMessage {
+  int64 field1 = 1;
+}
+
+message RepeatedLongMessage {
+  repeated int64 field1 = 1;
+}

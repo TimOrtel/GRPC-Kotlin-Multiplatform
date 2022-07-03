@@ -24,4 +24,9 @@ class EqTest {
 
         assertNotEquals(one, two)
     }
+
+    @Test
+    fun messageWithAllTypesEquals() {
+        assertEquals(createMessageWithAllTypes(), createMessageWithAllTypes())
+    }
 }

@@ -73,6 +73,9 @@ class DSLBuilderTest {
             field1 = subMessage
         }
 
+        assertEquals("Foo", subMessage.field1)
+        assertEquals("Foo", msg.field1.field1)
+
         assertEquals(subMessage, msg.field1)
         assertEquals(subMessage.field1, msg.field1.field1)
     }
@@ -141,6 +144,8 @@ class DSLBuilderTest {
             field1Map += map
         }
 
+        assertEquals(map, msg.field1Map)
+
         map.entries.forEach { (key, value) ->
             assertTrue(msg.field1Map.containsKey(key))
             assertEquals(value, msg.field1Map[key])
@@ -158,9 +163,28 @@ class DSLBuilderTest {
             field1Map += map
         }
 
+        assertEquals(map, msg.field1Map)
+
         map.entries.forEach { (key, value) ->
             assertTrue(msg.field1Map.containsKey(key))
             assertEquals(value, msg.field1Map[key])
         }
+    }
+
+    @Test
+    fun testCreateMessageWithEnumMap() {
+        val map = mapOf(
+            33 to KMSimpleEnum.ONE,
+            12 to KMSimpleEnum.TWO,
+            13 to KMSimpleEnum.TWO,
+            -12 to KMSimpleEnum.ONE,
+            5 to KMSimpleEnum.ZERO
+        )
+
+        val msg = kmMessageWithEnumMap {
+            field1Map += map
+        }
+
+        assertEquals(map, msg.field1Map)
     }
 }

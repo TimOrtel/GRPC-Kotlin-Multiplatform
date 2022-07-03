@@ -1,6 +1,6 @@
 package io.github.timortel.kotlin_multiplatform_grpc_lib
 
-class JSPBMap<K, V>(private val impl: dynamic) : Map<K, V> {
+class JSPBMap<K, V>(private val impl: dynamic) : AbstractMap<K, V>() {
 
     override val size: Int
         get() = impl.getLength() as Int
@@ -17,26 +17,25 @@ class JSPBMap<K, V>(private val impl: dynamic) : Map<K, V> {
 
     override fun isEmpty(): Boolean = size == 0
 
-    override val entries: Set<Map.Entry<K, V>>
-        get() {
-            val internal = impl.entries()
+    override val entries: Set<Map.Entry<K, V>> by lazy {
+        val internal = impl.entries()
 
-            val set = mutableSetOf<ArrayEntry>()
-            while (true) {
-                val next = internal.next()
-                if (next.done as Boolean) break
+        val set = mutableSetOf<ArrayEntry>()
+        while (true) {
+            val next = internal.next()
+            if (next.done as Boolean) break
 
-                set += ArrayEntry(next.value as Array<*>)
-            }
-
-            return set
+            set += ArrayEntry(next.value as Array<*>)
         }
+
+        set
+    }
+
     override val keys: Set<K>
         get() = (impl.keys() as Iterable<K>).toSet()
 
     override val values: Collection<V>
         get() = (impl.values() as Iterable<V>).toSet()
-
 
     @Suppress("UNCHECKED_CAST")
     private inner class ArrayEntry(entry: Array<*>) : Map.Entry<K, V> {

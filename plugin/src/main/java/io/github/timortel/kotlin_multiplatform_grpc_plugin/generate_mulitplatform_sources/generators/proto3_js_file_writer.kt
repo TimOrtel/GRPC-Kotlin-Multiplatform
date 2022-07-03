@@ -276,7 +276,7 @@ fun generateBridgeClass(message: ProtoMessage): TypeSpec {
                                     "getRepeatedFloatingPointField",
                                     objPropertyName,
                                     attr.protoId,
-                                    if (isDouble) Double::class else Float::class
+                                    if (isDouble) DOUBLE else FLOAT
                                 )
                             }
                             ProtoType.INT_32, ProtoType.INT_64 -> {
@@ -288,7 +288,7 @@ fun generateBridgeClass(message: ProtoMessage): TypeSpec {
                                     "getRepeatedField",
                                     objPropertyName,
                                     attr.protoId,
-                                    if (isLong) Long::class else Int::class
+                                    if (isLong) NUMBER else INT
                                 )
                             }
                             ProtoType.BOOL ->
@@ -330,7 +330,11 @@ fun generateBridgeClass(message: ProtoMessage): TypeSpec {
                             ProtoType.MAP -> throw IllegalStateException()
                         }
 
-                        val arrayType = ClassName("kotlin", "Array").parameterizedBy(attr.types.jsType)
+                        val arrayType = ClassName("kotlin", "Array")
+                            .parameterizedBy(
+                                //INT64 is broken, therefore we cast it to number instead.
+                                if (attr.types.protoType == ProtoType.INT_64) NUMBER else attr.types.jsType
+                            )
                         //List getter
                         addFunction(
                             FunSpec
@@ -447,8 +451,9 @@ private fun writeSerializeBinaryToWriter(message: ProtoMessage): CodeBlock {
                         ProtoType.MESSAGE -> {
                             beginControlFlow(" != null)")
                             addStatement(
-                                "writer.writeMessage(%L, temp, %T.Companion::serializeBinaryToWriter)",
+                                "writer.writeMessage(%L, temp.%N, %T.Companion::serializeBinaryToWriter)",
                                 attr.protoId,
+                                objPropertyName,
                                 attr.types.jsType,
                             )
                             endControlFlow()
@@ -559,8 +564,16 @@ private fun writeDeserializeBinaryFromReader(message: ProtoMessage): CodeBlock {
             when (attr.attributeType) {
                 is Scalar -> {
                     when (attr.types.protoType) {
-                        ProtoType.DOUBLE, ProtoType.FLOAT, ProtoType.INT_32, ProtoType.INT_64, ProtoType.BOOL, ProtoType.ENUM, ProtoType.STRING -> {
+                        ProtoType.DOUBLE, ProtoType.FLOAT, ProtoType.INT_32, ProtoType.BOOL, ProtoType.ENUM, ProtoType.STRING -> {
                             addStatement("val value = reader.%N()", getScalarReadFunctionName(attr.types.protoType))
+                            addStatement(
+                                "message.%N(value)",
+                                Const.Message.Attribute.Scalar.JS.setFunction(message, attr)
+                            )
+                        }
+                        ProtoType.INT_64 -> {
+                            addStatement("//Handle weird behaviour of Long")
+                            addStatement("val value = (reader.readInt64() as %T).toLong()", NUMBER)
                             addStatement(
                                 "message.%N(value)",
                                 Const.Message.Attribute.Scalar.JS.setFunction(message, attr)
