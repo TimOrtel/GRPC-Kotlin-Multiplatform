@@ -1,6 +1,7 @@
 plugins {
     id("com.android.library")
     kotlin("multiplatform")
+    kotlin("native.cocoapods")
     id("maven-publish")
 }
 
@@ -21,6 +22,26 @@ kotlin {
         nodejs()
     }
     jvm("jvm")
+    iosX64()
+    iosArm64()
+    iosSimulatorArm64()
+
+    cocoapods {
+        version = "1.0"
+        summary = "GRPC Kotlin Multiplatform Implementation"
+        homepage = "https://github.com/TimOrtel/GRPC-Kotlin-Multiplatform"
+
+
+        framework {
+            baseName = "GRPCKotlinMultiplatform"
+        }
+
+        ios.deploymentTarget = "9.0"
+
+        pod("gRPC-ProtoRPC", version = "~> 1.48", moduleName = "GRPCClient")
+        pod("Protobuf", version = "~> 1.48", moduleName = "Protobuf")
+        //pod("gRPC-Core")
+    }
 
     sourceSets {
         val commonMain by getting {
@@ -72,6 +93,17 @@ kotlin {
                 api(npm("grpc-web", "^1.3.0"))
                 api(npm("protobufjs", "^6.11.2"))
             }
+        }
+
+        val iosX64Main by getting
+        val iosArm64Main by getting
+
+        val iosSimulatorArm64Main by getting
+        val iosMain by creating {
+            dependsOn(commonMain)
+            iosX64Main.dependsOn(this)
+            iosArm64Main.dependsOn(this)
+            iosSimulatorArm64Main.dependsOn(this)
         }
     }
 }

@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm") version "1.7.0"
+    kotlin("jvm") version "1.7.10"
     id("java-gradle-plugin")
     id("maven-publish")
     id("com.gradle.plugin-publish") version "0.18.0"
@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "io.github.timortel"
-version = "0.1.1"
+version = "0.2.0"
 
 java {
     withSourcesJar()
@@ -53,7 +53,7 @@ repositories {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
     antlr("org.antlr:antlr4:4.10.1")
     implementation("org.antlr:antlr4:4.10.1")
 

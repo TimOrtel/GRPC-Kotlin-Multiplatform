@@ -1,9 +1,6 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.scalar
 
-import com.squareup.kotlinpoet.CodeBlock
-import com.squareup.kotlinpoet.FunSpec
-import com.squareup.kotlinpoet.KModifier
-import com.squareup.kotlinpoet.TypeName
+import com.squareup.kotlinpoet.*
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoMessage
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoMessageAttribute
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
@@ -15,8 +12,8 @@ object JsScalarMessageMethodGenerator : ScalarMessageMethodGenerator(true) {
     override fun getTypeForAttribute(protoMessageAttribute: ProtoMessageAttribute): TypeName =
         protoMessageAttribute.commonType
 
-    override fun modifyGetter(builder: FunSpec.Builder, message: ProtoMessage, attr: ProtoMessageAttribute) {
-        builder.apply {
+    override fun modifyProperty(builder: PropertySpec.Builder, message: ProtoMessage, attr: ProtoMessageAttribute) {
+        builder.getter(FunSpec.getterBuilder().apply {
             if (attr.types.isEnum) {
                 addCode(
                     "return %T.%N(jsImpl.%N())",
@@ -48,7 +45,7 @@ object JsScalarMessageMethodGenerator : ScalarMessageMethodGenerator(true) {
                     addCode(getter)
                 }
             }
-        }
+        }.build())
     }
 
 //    override fun modifySetter(builder: FunSpec.Builder, message: ProtoMessage, attr: ProtoMessageAttribute) {

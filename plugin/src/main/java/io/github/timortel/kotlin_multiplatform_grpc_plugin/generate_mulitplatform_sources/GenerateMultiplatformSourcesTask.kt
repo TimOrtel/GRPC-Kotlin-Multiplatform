@@ -23,6 +23,7 @@ abstract class GenerateMultiplatformSourcesTask : DefaultTask() {
         fun getCommonOutputFolder(project: Project): File = getOutputFolder(project).resolve("commonMain/kotlin")
         fun getJVMOutputFolder(project: Project): File = getOutputFolder(project).resolve("jvmMain/kotlin")
         fun getJSOutputFolder(project: Project): File = getOutputFolder(project).resolve("jsMain/kotlin")
+        fun getIOSOutputFolder(project: Project): File = getOutputFolder(project).resolve("iosMain/kotlin")
     }
 
     @get:Input
@@ -41,7 +42,8 @@ abstract class GenerateMultiplatformSourcesTask : DefaultTask() {
                 sourceFolders,
                 commonOutputFolder = getCommonOutputFolder(project),
                 jvmOutputFolder = getJVMOutputFolder(project),
-                jsOutputFolder = getJSOutputFolder(project)
+                jsOutputFolder = getJSOutputFolder(project),
+                iosOutputDir = getIOSOutputFolder(project)
             )
         }
     }
@@ -52,7 +54,8 @@ private fun generateProtoFiles(
     protoFolders: List<File>,
     commonOutputFolder: File,
     jvmOutputFolder: File,
-    jsOutputFolder: File
+    jsOutputFolder: File,
+    iosOutputDir: File
 ) {
     val sourceProtoFiles = protoFolders.map { sourceFolder ->
         sourceFolder
@@ -88,7 +91,7 @@ private fun generateProtoFiles(
         }
 
     protoFiles.forEach { protoFile ->
-        writeProtoFile(protoFile, commonOutputFolder, jvmOutputFolder, jsOutputFolder)
+        writeProtoFile(protoFile, commonOutputFolder, jvmOutputFolder, jsOutputFolder, iosOutputDir)
         writeServiceFile(protoFile, commonOutputFolder, jvmOutputFolder, jsOutputFolder)
     }
 }

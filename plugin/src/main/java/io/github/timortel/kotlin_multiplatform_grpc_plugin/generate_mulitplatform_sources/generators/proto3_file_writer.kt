@@ -12,12 +12,14 @@ fun writeProtoFile(
     protoFile: ProtoFile,
     commonOutputDir: File,
     jvmOutputDir: File,
-    jsOutputDir: File
+    jsOutputDir: File,
+    iosOutputDir: File
 ) {
     CommonProtoFileWriter(protoFile).writeFile(commonOutputDir)
 
     writeJsFiles(protoFile, jsOutputDir)
     writeJvmFiles(protoFile, jvmOutputDir)
+    writeIOSFiles(protoFile, iosOutputDir)
     writeDSLBuilder(protoFile, CommonDslBuilder, commonOutputDir)
 }
 

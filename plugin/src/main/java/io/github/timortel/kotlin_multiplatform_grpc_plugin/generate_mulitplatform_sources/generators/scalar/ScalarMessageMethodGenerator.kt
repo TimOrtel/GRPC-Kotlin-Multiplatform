@@ -25,9 +25,7 @@ abstract class ScalarMessageMethodGenerator(private val isActual: Boolean) {
                 .builder(messageAttribute.name, type)
                 .addModifiers(attrs)
                 .apply {
-                    if (isActual) {
-                        getter(getter.apply { modifyGetter(this, protoMessage, messageAttribute) }.build())
-                    }
+                    modifyProperty(this, protoMessage, messageAttribute)
                 }
                 .build()
         )
@@ -47,7 +45,7 @@ abstract class ScalarMessageMethodGenerator(private val isActual: Boolean) {
 
     protected abstract fun getTypeForAttribute(protoMessageAttribute: ProtoMessageAttribute): TypeName
 
-    protected abstract fun modifyGetter(builder: FunSpec.Builder, message: ProtoMessage, attr: ProtoMessageAttribute)
+    protected abstract fun modifyProperty(builder: PropertySpec.Builder, message: ProtoMessage, attr: ProtoMessageAttribute)
 
     protected abstract fun modifyHasFunction(
         builder: FunSpec.Builder,
