@@ -30,17 +30,17 @@ object JsScalarMessageMethodGenerator : ScalarMessageMethodGenerator(true) {
 
                 addCode("return ")
                 if (attr.types.doDiffer) {
-                    if (attr.types.hasDefaultValue) {
-                        addCode("%M(", Const.Message.CommonFunction.JS.commonFunction(attr))
-                        addCode(getter)
-                        addCode(")")
-                    } else {
-                        addCode(getter)
-                        addCode(
-                            ".let·{ if (it == null) null else %M(it) }",
-                            Const.Message.CommonFunction.JS.commonFunction(attr)
-                        )
-                    }
+//                    if (attr.types.hasDefaultValue) {
+                    addCode("%M(", Const.Message.CommonFunction.JS.commonFunction(attr))
+                    addCode(getter)
+                    addCode(")")
+//                    } else {
+//                        addCode(getter)
+//                        addCode(
+//                            ".let·{ if (it == null) null else %M(it) }",
+//                            Const.Message.CommonFunction.JS.commonFunction(attr)
+//                        )
+//                    }
                 } else {
                     addCode(getter)
                 }
@@ -67,6 +67,9 @@ object JsScalarMessageMethodGenerator : ScalarMessageMethodGenerator(true) {
 //    }
 
     override fun modifyHasFunction(builder: FunSpec.Builder, message: ProtoMessage, attr: ProtoMessageAttribute) {
-        builder.addStatement("return jsImpl.%N()", Const.Message.Attribute.Scalar.JS.getHasFunction(message, attr).simpleName)
+        builder.addStatement(
+            "return jsImpl.%N()",
+            Const.Message.Attribute.Scalar.JS.getHasFunction(message, attr).simpleName
+        )
     }
 }

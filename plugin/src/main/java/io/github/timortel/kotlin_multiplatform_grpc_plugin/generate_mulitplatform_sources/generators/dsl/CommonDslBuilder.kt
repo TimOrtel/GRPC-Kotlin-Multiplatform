@@ -7,40 +7,5 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfor
 
 object CommonDslBuilder : DslBuilder(false) {
 
-    override val mapMapper: MapMapper
-        get() = error("No mapper needed for common")
-
-    override fun initializeBuilder(builder: FunSpec.Builder, message: ProtoMessage): String = error("Common does not have an implementation")
-
-    override fun returnPlatformType(builder: FunSpec.Builder, message: ProtoMessage, builderVariableName: String) = Unit
-
-    override fun setEnumValue(
-        builder: FunSpec.Builder,
-        variableName: String,
-        message: ProtoMessage,
-        attribute: ProtoMessageAttribute,
-        builderVariable: String
-    ) = Unit
-
-    override fun setScalarValue(
-        builder: FunSpec.Builder,
-        variableName: String,
-        message: ProtoMessage,
-        attribute: ProtoMessageAttribute,
-        builderVariable: String
-    ) = Unit
-
-    override fun addAllValues(
-        builder: FunSpec.Builder,
-        message: ProtoMessage,
-        attribute: ProtoMessageAttribute,
-        builderVariable: String
-    ) = Unit
-
-    override fun addAllEnumValues(
-        builder: FunSpec.Builder,
-        message: ProtoMessage,
-        attribute: ProtoMessageAttribute,
-        builderVariable: String
-    ) = Unit
+    override fun modifyBuildFunction(builder: FunSpec.Builder, message: ProtoMessage) = Unit
 }

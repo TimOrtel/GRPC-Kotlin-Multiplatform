@@ -24,11 +24,11 @@ object JvmScalarMessageMethodGenerator : ScalarMessageMethodGenerator(true) {
 
                         addCode("return ")
                         if (attr.types.doDiffer) {
-                            if (!attr.types.hasDefaultValue) {
-                                addCode("if (")
-                                addCode(getter)
-                                addCode(" == null) null else ")
-                            }
+//                            if (!attr.types.hasDefaultValue) {
+//                                addCode("if (")
+//                                addCode(getter)
+//                                addCode(" == null) null else ")
+//                            }
 
                             addCode("%M(", Const.Message.CommonFunction.JVM.commonFunction(attr))
                             addCode(getter)

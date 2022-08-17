@@ -1,8 +1,10 @@
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.GrpcMultiplatformExtension.OutputTarget
+
 plugins {
     id("com.android.library")
     kotlin("multiplatform")
 
-    id("io.github.timortel.kotlin-multiplatform-grpc-plugin") version "0.1.0"
+    id("io.github.timortel.kotlin-multiplatform-grpc-plugin") version "0.2.0"
 }
 
 repositories {
@@ -23,6 +25,8 @@ kotlin {
 
         browser()
     }
+
+    ios()
 
     sourceSets {
         val commonMain by getting {
@@ -79,7 +83,15 @@ android {
     }
 }
 
-tasks.register<io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.GenerateMultiplatformSourcesTask>("generateMPProtos") {
+grpcKotlinMultiplatform {
+    targetSourcesMap.put(OutputTarget.JS, listOf(kotlin.sourceSets.getByName("jsMain")))
+    targetSourcesMap.put(OutputTarget.JVM, listOf(kotlin.sourceSets.getByName("androidMain")))
+    targetSourcesMap.put(OutputTarget.IOS, listOf(kotlin.sourceSets.getByName("iosMain")))
+}
+
+tasks.register<io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.GenerateMultiplatformSourcesTask>(
+    "generateMPProtos"
+) {
     val protoFolder = projectDir.resolve("src/commonMain/proto")
     protoSourceFolders.set(
         listOf(protoFolder)

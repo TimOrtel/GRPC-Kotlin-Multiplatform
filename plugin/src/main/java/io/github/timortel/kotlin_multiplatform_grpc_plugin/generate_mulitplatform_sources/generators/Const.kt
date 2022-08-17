@@ -78,8 +78,6 @@ object Const {
 
         object Attribute {
             object Scalar {
-                fun setFunctionName(attr: ProtoMessageAttribute) = "set${attr.capitalizedName}"
-
                 object JVM {
                     fun getFunction(message: ProtoMessage, attr: ProtoMessageAttribute) =
                         message.jvmType.member(attr.name)
@@ -103,6 +101,19 @@ object Const {
 
                     fun setFunction(message: ProtoMessage, attr: ProtoMessageAttribute) =
                         message.jsType.member("set${attr.name.lowercase().capitalize()}")
+                }
+
+                object IOS {
+                    fun isMessageSetFunctionName(message: ProtoMessage, attr: ProtoMessageAttribute): String {
+                        var name = "is${attr.capitalizedName}Set"
+                        val attrNames = message.attributes.map { it.name }
+
+                        while (name in attrNames) {
+                            name = "_$name"
+                        }
+
+                        return name
+                    }
                 }
             }
 
@@ -139,6 +150,7 @@ object Const {
             }
 
             object Enum {
+
                 object JVM {
                     fun getValueFunction(message: ProtoMessage, attr: ProtoMessageAttribute) =
                         message.jvmType.member("${attr.name}Value")
@@ -192,6 +204,27 @@ object Const {
                 const val NAME = "hashCode"
             }
         }
+
+        object IOS {
+            object SerializeFunction {
+                const val NAME = "serialize"
+                const val STREAM_PARAM = "stream"
+            }
+        }
+
+        object Companion {
+            object IOS {
+                object DataDeserializationFunction {
+                    const val NAME = "deserialize"
+                    const val DATA_PARAM = "data"
+                }
+
+                object WrapperDeserializationFunction {
+                    const val NAME = "deserialize"
+                    const val WRAPPER_PARAM = "wrapper"
+                }
+            }
+        }
     }
 
     object DSL {
@@ -214,6 +247,7 @@ object Const {
 
     object Enum {
         const val getEnumForNumFunctionName = "getEnumForNumber"
+        const val VALUE_PROPERTY_NAME = "value"
 
         fun commonEnumName(protoEnum: ProtoEnum): String = "KM${protoEnum.name.capitalize()}"
         fun commonEnumName(protoEnumName: String): String = "KM${protoEnumName.capitalize()}"

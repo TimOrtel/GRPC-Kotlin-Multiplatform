@@ -151,17 +151,16 @@ class Proto3FileBuilder(
         val valueTypes = resolveType(currentReadingStack.messageNode, ctx.value_type.text)
 
         val type = MapType(keyTypes, valueTypes)
-        val mapType = ClassName("kotlin.collections", "Map")
 
         val attr = ProtoMessageAttribute(
             ctx.name.text,
-            mapType,
+            MAP,
             Types(
-                mapType,
-                mapType,
-                mapType,
+                MAP,
+                MAP,
+                MAP,
+                MAP,
                 doDiffer = false,
-                hasDefaultValue = true,
                 isEnum = false,
                 isNullable = false,
                 protoType = ProtoType.MAP
@@ -265,16 +264,18 @@ class Proto3FileBuilder(
         }
 
         //Scalar types have the same type on all platforms
-        if (scalar != null && protoType != null) return Types(
-            scalar,
-            scalar,
-            scalar,
-            doDiffer = false,
-            hasDefaultValue = true,
-            isEnum = false,
-            isNullable = false,
-            protoType = protoType
-        )
+        if (scalar != null && protoType != null) {
+            return Types(
+                scalar,
+                scalar,
+                scalar,
+                scalar,
+                doDiffer = false,
+                isEnum = false,
+                isNullable = false,
+                protoType = protoType
+            )
+        }
 
         if (messageNode != null) {
             //Priority 1: Look for the message in the current message node
@@ -331,8 +332,8 @@ class Proto3FileBuilder(
                         commonType = getCommonClassName(pkg, messageNodes),
                         jvmType = getJVMClassName(pkg, fileNameWithoutExtensions, javaUseMultipleFiles, messageNodes),
                         jsType = getJSClassName(pkg, messageNodes),
+                        iosType = getCommonClassName(pkg, messageNodes),
                         doDiffer = true,
-                        hasDefaultValue = true, //Java Protobuf always returns a default value
                         isEnum = false,
                         isNullable = true,
                         protoType = ProtoType.MESSAGE
@@ -372,8 +373,8 @@ class Proto3FileBuilder(
                         commonType = commonType,
                         jvmType = jvmType,
                         jsType = Int::class.asTypeName(),
+                        iosType = commonType,
                         doDiffer = true,
-                        hasDefaultValue = true,
                         isEnum = true,
                         isNullable = false,
                         protoType = ProtoType.ENUM

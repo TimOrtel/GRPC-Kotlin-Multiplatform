@@ -224,7 +224,7 @@ fun generateBridgeClass(message: ProtoMessage): TypeSpec {
                         addFunction(
                             FunSpec
                                 .builder(Const.Message.Attribute.Scalar.JS.setFunction(message, attr).simpleName)
-                                .addParameter("value", attr.types.jsType.copy(nullable = !attr.types.hasDefaultValue))
+                                .addParameter("value", attr.types.jsType.copy(nullable = false))
                                 .addCode(setterCodeBlock)
                                 .build()
                         )

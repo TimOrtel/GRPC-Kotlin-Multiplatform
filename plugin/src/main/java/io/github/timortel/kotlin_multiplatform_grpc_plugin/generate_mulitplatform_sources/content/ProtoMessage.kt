@@ -20,6 +20,7 @@ data class ProtoMessage(
     val jsType: ClassName =
         parent?.jsType?.nestedClass("JS_${name.capitalize()}") ?: ClassName(pkg, "JS_${name.capitalize()}")
     val jvmType: ClassName = parent?.jvmType?.nestedClass(name) ?: getJVMClassName(pkg, protoFileName, javaUseMultipleFiles, listOf(name))
+    val iosType = commonType
 
     override fun toString(): String = name
 }

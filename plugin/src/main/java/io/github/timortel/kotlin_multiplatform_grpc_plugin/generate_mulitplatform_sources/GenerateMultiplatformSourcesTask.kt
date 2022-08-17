@@ -1,5 +1,6 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources
 
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.GrpcMultiplatformExtension
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.anltr.Proto3Lexer
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.anltr.Proto3Parser
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.writeProtoFile
@@ -32,6 +33,13 @@ abstract class GenerateMultiplatformSourcesTask : DefaultTask() {
     init {
         protoSourceFolders.set(listOf(project.projectDir.resolve("src/main/proto")))
 
+        val grpcMultiplatformExtension = project.extensions.findByType(GrpcMultiplatformExtension::class.java)
+            ?: throw IllegalStateException("grpc multiplatform extension not specified.")
+
+        val generateTarget = GrpcMultiplatformExtension.OutputTarget.values().associateWith { target ->
+            grpcMultiplatformExtension.targetSourcesMap.get()[target].orEmpty().isNotEmpty()
+        }
+
         doLast {
             val sourceFolders = protoSourceFolders.get()
             val outputFolder = getOutputFolder(project)
@@ -40,6 +48,7 @@ abstract class GenerateMultiplatformSourcesTask : DefaultTask() {
             generateProtoFiles(
                 logger,
                 sourceFolders,
+                generateTarget,
                 commonOutputFolder = getCommonOutputFolder(project),
                 jvmOutputFolder = getJVMOutputFolder(project),
                 jsOutputFolder = getJSOutputFolder(project),
@@ -52,6 +61,7 @@ abstract class GenerateMultiplatformSourcesTask : DefaultTask() {
 private fun generateProtoFiles(
     log: Logger,
     protoFolders: List<File>,
+    generateTarget: Map<GrpcMultiplatformExtension.OutputTarget, Boolean>,
     commonOutputFolder: File,
     jvmOutputFolder: File,
     jsOutputFolder: File,
@@ -91,7 +101,7 @@ private fun generateProtoFiles(
         }
 
     protoFiles.forEach { protoFile ->
-        writeProtoFile(protoFile, commonOutputFolder, jvmOutputFolder, jsOutputFolder, iosOutputDir)
-        writeServiceFile(protoFile, commonOutputFolder, jvmOutputFolder, jsOutputFolder)
+        writeProtoFile(protoFile, generateTarget, commonOutputFolder, jvmOutputFolder, jsOutputFolder, iosOutputDir)
+        writeServiceFile(protoFile, generateTarget, commonOutputFolder, jvmOutputFolder, jsOutputFolder)
     }
 }

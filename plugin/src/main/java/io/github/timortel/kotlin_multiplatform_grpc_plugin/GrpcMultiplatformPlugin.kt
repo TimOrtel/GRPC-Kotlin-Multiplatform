@@ -18,9 +18,13 @@ import org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget
 import org.jetbrains.kotlin.gradle.tasks.Kotlin2JsCompile
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile
+import org.jetbrains.kotlin.gradle.utils.`is`
 
 class GrpcMultiplatformPlugin : Plugin<Project> {
     override fun apply(project: Project) {
+        val grpcMultiplatformExtension =
+            project.extensions.create("grpcKotlinMultiplatform", GrpcMultiplatformExtension::class.java)
+
         project.plugins.withType(KotlinMultiplatformPluginWrapper::class.java) {
             val extension = project.extensions.getByType(KotlinMultiplatformExtension::class.java)
 
@@ -37,6 +41,22 @@ class GrpcMultiplatformPlugin : Plugin<Project> {
                         kotlinSourceSet.kotlin.srcDir(GenerateMultiplatformSourcesTask.getCommonOutputFolder(project))
                     }
 
+                val targetSourceMap = grpcMultiplatformExtension.targetSourcesMap.getOrElse(emptyMap()).orEmpty()
+
+                println()
+
+                targetSourceMap[GrpcMultiplatformExtension.OutputTarget.JVM].orEmpty().forEach {
+                    it.kotlin.srcDir(GenerateMultiplatformSourcesTask.getJVMOutputFolder(project))
+                }
+
+                targetSourceMap[GrpcMultiplatformExtension.OutputTarget.JS].orEmpty().forEach {
+                    it.kotlin.srcDir(GenerateMultiplatformSourcesTask.getJSOutputFolder(project))
+                }
+                targetSourceMap[GrpcMultiplatformExtension.OutputTarget.IOS].orEmpty().forEach {
+                    it.kotlin.srcDir(GenerateMultiplatformSourcesTask.getIOSOutputFolder(project))
+                }
+
+
                 //JVM
                 targets.filterIsInstance<KotlinJvmTarget>()
                     .flatMap { it.compilations }
@@ -47,13 +67,13 @@ class GrpcMultiplatformPlugin : Plugin<Project> {
                             }
                         }
 
-                        if (compilation.name == KotlinCompilation.MAIN_COMPILATION_NAME) {
-                            compilation.defaultSourceSet.kotlin.srcDir(
-                                GenerateMultiplatformSourcesTask.getJVMOutputFolder(
-                                    project
-                                )
-                            )
-                        }
+//                        if (compilation.name == KotlinCompilation.MAIN_COMPILATION_NAME) {
+//                            compilation.defaultSourceSet.kotlin.srcDir(
+//                                GenerateMultiplatformSourcesTask.getJVMOutputFolder(
+//                                    project
+//                                )
+//                            )
+//                        }
                     }
 
                 //JS
@@ -67,18 +87,19 @@ class GrpcMultiplatformPlugin : Plugin<Project> {
                             }
                         }
 
-                        if (compilation.name == KotlinCompilation.MAIN_COMPILATION_NAME) {
-                            compilation.defaultSourceSet.kotlin.srcDir(
-                                GenerateMultiplatformSourcesTask.getJSOutputFolder(
-                                    project
-                                )
-                            )
-                        }
+//                        if (compilation.name == KotlinCompilation.MAIN_COMPILATION_NAME) {
+//                            compilation.defaultSourceSet.kotlin.srcDir(
+//                                GenerateMultiplatformSourcesTask.getJSOutputFolder(
+//                                    project
+//                                )
+//                            )
+//                        }
                     }
 
                 //IOS
                 targets
-                    .filter { it is KotlinIosArm32Variant || it is KotlinIosArm64Variant || it is KotlinIosX64Variant || it is KotlinIosSimulatorArm64Variant }
+                    .filterIsInstance<KotlinNativeTarget>()
+                    .filter { it.konanTarget.family.isAppleFamily }
                     .flatMap { it.compilations }
                     .forEach { compilation ->
                         project.tasks.withType(KotlinNativeCompile::class.java).all { kotlinCompile ->
@@ -87,13 +108,13 @@ class GrpcMultiplatformPlugin : Plugin<Project> {
                             }
                         }
 
-                        if (compilation.name == KotlinCompilation.MAIN_COMPILATION_NAME) {
-                            compilation.defaultSourceSet.kotlin.srcDir(
-                                GenerateMultiplatformSourcesTask.getIOSOutputFolder(
-                                    project
-                                )
-                            )
-                        }
+//                        if (compilation.name == KotlinCompilation.MAIN_COMPILATION_NAME) {
+//                            compilation.defaultSourceSet.kotlin.srcDir(
+//                                GenerateMultiplatformSourcesTask.getIOSOutputFolder(
+//                                    project
+//                                )
+//                            )
+//                        }
                     }
             }
         }

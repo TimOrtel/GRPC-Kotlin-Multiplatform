@@ -131,7 +131,7 @@ abstract class ProtoFileWriter(private val protoFile: ProtoFile, private val isA
         message: ProtoMessage,
         attr: ProtoMessageAttribute
     ) {
-        scalarMessageMethodGenerator.generateFunctions(builder, message, attr)
+        scalarMessageMethodGenerator.generateProperties(builder, message, attr)
     }
 
     private fun addRepeatedMessageFunctions(
@@ -173,9 +173,9 @@ abstract class ProtoFileWriter(private val protoFile: ProtoFile, private val isA
                 .enumBuilder(Const.Enum.commonEnumName(protoEnum))
                 .addProperty(
                     PropertySpec
-                        .builder("value", Int::class)
+                        .builder(Const.Enum.VALUE_PROPERTY_NAME, Int::class)
                         .apply {
-                            if (supplyImplementation) initializer("value")
+                            if (supplyImplementation) initializer(Const.Enum.VALUE_PROPERTY_NAME)
                             if (enumType == EnumType.ACTUAL) addModifiers(KModifier.ACTUAL)
                         }
                         .build()
@@ -185,7 +185,7 @@ abstract class ProtoFileWriter(private val protoFile: ProtoFile, private val isA
                         primaryConstructor(
                             FunSpec
                                 .constructorBuilder()
-                                .addParameter("value", Int::class)
+                                .addParameter(Const.Enum.VALUE_PROPERTY_NAME, Int::class)
                                 .build()
                         )
 

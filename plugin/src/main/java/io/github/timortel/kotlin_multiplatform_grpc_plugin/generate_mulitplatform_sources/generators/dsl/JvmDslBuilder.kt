@@ -8,7 +8,7 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfor
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoMessage
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoMessageAttribute
 
-object JvmDslBuilder : DslBuilder(true) {
+object JvmDslBuilder : SubDslBuilder(true) {
 
     override val mapMapper: MapMapper = CommonToJvmMapMapper
 

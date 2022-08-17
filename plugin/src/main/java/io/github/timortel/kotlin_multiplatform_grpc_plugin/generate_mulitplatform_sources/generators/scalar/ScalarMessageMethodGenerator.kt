@@ -11,15 +11,22 @@ abstract class ScalarMessageMethodGenerator(private val isActual: Boolean) {
 
     protected abstract val attrs: List<KModifier>
 
-    fun generateFunctions(
+    fun generateProperties(
         builder: TypeSpec.Builder,
         protoMessage: ProtoMessage,
         messageAttribute: ProtoMessageAttribute
     ) {
-        val type = getTypeForAttribute(messageAttribute).copy(nullable = !messageAttribute.types.hasDefaultValue)
+        val type = getTypeForAttribute(messageAttribute)
 
-        val getter = FunSpec.getterBuilder()
+        generateProperties(builder, protoMessage, messageAttribute, type)
+    }
 
+    open fun generateProperties(
+        builder: TypeSpec.Builder,
+        protoMessage: ProtoMessage,
+        messageAttribute: ProtoMessageAttribute,
+        type: TypeName
+    ) {
         builder.addProperty(
             PropertySpec
                 .builder(messageAttribute.name, type)
@@ -45,7 +52,11 @@ abstract class ScalarMessageMethodGenerator(private val isActual: Boolean) {
 
     protected abstract fun getTypeForAttribute(protoMessageAttribute: ProtoMessageAttribute): TypeName
 
-    protected abstract fun modifyProperty(builder: PropertySpec.Builder, message: ProtoMessage, attr: ProtoMessageAttribute)
+    protected abstract fun modifyProperty(
+        builder: PropertySpec.Builder,
+        message: ProtoMessage,
+        attr: ProtoMessageAttribute
+    )
 
     protected abstract fun modifyHasFunction(
         builder: FunSpec.Builder,
