@@ -222,7 +222,7 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
 
                                 ProtoType.ENUM -> add(
                                     "%M(it.%N)",
-                                    MemberName("cocoapods.Protobuf", "GPBComputeEnumSize"),
+                                    MemberName("cocoapods.Protobuf", "GPBComputeEnumSizeNoTag"),
                                     Const.Enum.VALUE_PROPERTY_NAME
                                 )
 
@@ -304,6 +304,7 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
                                 addStatement(
                                     "%N.writeEnum(%L, %N.%N)",
                                     Const.Message.IOS.SerializeFunction.STREAM_PARAM,
+                                    attr.protoId,
                                     attr.name,
                                     Const.Enum.VALUE_PROPERTY_NAME
                                 )
@@ -336,8 +337,7 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
                             ProtoType.FLOAT,
                             ProtoType.INT_32,
                             ProtoType.INT_64,
-                            ProtoType.BOOL,
-                            ProtoType.ENUM -> {
+                            ProtoType.BOOL -> {
                                 //Write packed.
                                 // From GPBDescriptor.m: GPBWireFormatForType(description->dataType,
                                 //                                  ((description->flags & GPBFieldPacked) != 0))
@@ -353,7 +353,20 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
                                     getGPBDataTypeForAttr(attr)
                                 )
                             }
-
+                            ProtoType.ENUM -> {
+                                addStatement(
+                                    "%M(%N, %L, %N.map·{ it.%N }, %M(%L, %M(%M, true)))",
+                                    writeListFunction,
+                                    Const.Message.IOS.SerializeFunction.STREAM_PARAM,
+                                    attr.protoId,
+                                    Const.Message.Attribute.Repeated.listPropertyName(attr),
+                                    Const.Enum.VALUE_PROPERTY_NAME,
+                                    GPBWireFormatMakeTag,
+                                    attr.protoId,
+                                    GPBWireFormatForType,
+                                    getGPBDataTypeForAttr(attr)
+                                )
+                            }
                             ProtoType.STRING -> {
                                 //Write unpacked. 0 means unpacked
                                 addStatement(
@@ -488,7 +501,7 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
                             ProtoType.ENUM -> addCode(
                                 "%N = %T.%N(%N.stream.readEnum())\n",
                                 getAttrVarName(attr),
-                                attr.types.jsType,
+                                attr.types.iosType,
                                 Const.Enum.getEnumForNumFunctionName,
                                 wrapperParamName
                             )
@@ -527,6 +540,7 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
                                         "%N += %T.%N(%N.stream.readEnum())",
                                         getAttrVarName(attr),
                                         attr.types.commonType,
+                                        Const.Enum.getEnumForNumFunctionName,
                                         wrapperParamName
                                     )
                                 } else {
