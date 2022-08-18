@@ -34,15 +34,15 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
                     .constructorBuilder()
                     .apply {
                         message.attributes.forEach { attr ->
-                            if (attr.types.isNullable) {
-                                addParameter(
-                                    ParameterSpec.builder(attr.name, attr.commonType.copy(nullable = true))
-                                        .defaultValue("null")
-                                        .build()
-                                )
-                            } else {
-                                when (attr.attributeType) {
-                                    is Scalar -> {
+                            when (attr.attributeType) {
+                                is Scalar -> {
+                                    if (attr.types.isNullable) {
+                                        addParameter(
+                                            ParameterSpec.builder(attr.name, attr.commonType.copy(nullable = true))
+                                                .defaultValue("null")
+                                                .build()
+                                        )
+                                    } else {
                                         addParameter(
                                             ParameterSpec
                                                 .builder(attr.name, attr.commonType)
@@ -55,22 +55,21 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
                                                 .build()
                                         )
                                     }
-
-                                    is Repeated -> {
-                                        addParameter(
-                                            ParameterSpec
-                                                .builder(
-                                                    Const.Message.Attribute.Repeated.listPropertyName(attr),
-                                                    LIST.parameterizedBy(attr.commonType)
-                                                )
-                                                .defaultValue("emptyList()")
-                                                .build()
-                                        )
-                                    }
-
-                                    is MapType -> TODO()
                                 }
 
+                                is Repeated -> {
+                                    addParameter(
+                                        ParameterSpec
+                                            .builder(
+                                                Const.Message.Attribute.Repeated.listPropertyName(attr),
+                                                LIST.parameterizedBy(attr.commonType)
+                                            )
+                                            .defaultValue("emptyList()")
+                                            .build()
+                                    )
+                                }
+
+                                is MapType -> TODO()
                             }
                         }
                     }
@@ -237,7 +236,7 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
                             if (isPackable) {
                                 addStatement("dataSize + tagSize + %M(tagSize)", GPBComputeSizeTSizeAsInt32NoTag)
                             } else {
-                                addStatement("dataSize + %N.size * tagSize", attrFieldName)
+                                addStatement("dataSize + %N.size.toULong() * tagSize", attrFieldName)
                             }
 
                             add("\n}")
@@ -355,10 +354,19 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
                                 )
                             }
 
-                            ProtoType.STRING, ProtoType.MESSAGE -> {
+                            ProtoType.STRING -> {
                                 //Write unpacked. 0 means unpacked
                                 addStatement(
                                     "%M(%N, %L, %N, 0u)",
+                                    writeListFunction,
+                                    Const.Message.IOS.SerializeFunction.STREAM_PARAM,
+                                    attr.protoId,
+                                    Const.Message.Attribute.Repeated.listPropertyName(attr)
+                                )
+                            }
+                            ProtoType.MESSAGE -> {
+                                addStatement(
+                                    "%M(%N, %L, %N)",
                                     writeListFunction,
                                     Const.Message.IOS.SerializeFunction.STREAM_PARAM,
                                     attr.protoId,
@@ -538,7 +546,7 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
                             }
 
                             ProtoType.MESSAGE -> addCode(
-                                "%N = %M(%N, %T.Companion::%N)\n",
+                                "%N += %M(%N, %T.Companion::%N)\n",
                                 getAttrVarName(attr),
                                 readKMMessage,
                                 wrapperParamName,

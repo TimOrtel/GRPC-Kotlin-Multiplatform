@@ -10,6 +10,10 @@ fun writeKMMessage(stream: GPBCodedOutputStream, fieldNumber: Int, msg: KMMessag
     msg.serialize(stream)
 }
 
+fun writeMessageList(stream: GPBCodedOutputStream, fieldNumber: Int, values: List<KMMessage>) {
+    values.forEach { writeKMMessage(stream, fieldNumber, it) }
+}
+
 private fun <T> writeList(
     stream: GPBCodedOutputStream,
     fieldNumber: Int,
