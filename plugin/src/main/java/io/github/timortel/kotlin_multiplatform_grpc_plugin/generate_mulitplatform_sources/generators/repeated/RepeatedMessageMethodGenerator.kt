@@ -35,6 +35,9 @@ abstract class RepeatedMessageMethodGenerator(private val isActual: Boolean) {
         builder.addProperty(countProperty)
     }
 
+    /**
+     * @return the type of the list property
+     */
     protected abstract fun getType(messageAttribute: ProtoMessageAttribute): TypeName
 
     protected abstract fun modifyListProperty(

@@ -4,6 +4,10 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.basic_messages.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
+//actual fun reserializeLong(msg: KMLongMessage): KMLongMessage {
+//    return KMLongMessage(JS_LongMessage.deserializeBinary(msg.jsImpl.serializeBinary()))
+//}
+
 class SerializationTest {
 
     @Test

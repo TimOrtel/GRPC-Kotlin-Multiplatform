@@ -12,3 +12,5 @@ val NSMutableData = ClassName("platform.Foundation", "NSMutableData")
 
 val GPBWireFormatMakeTag = MemberName(COCOAPODS_PROTOBUF_PACKAGE, "GPBWireFormatMakeTag")
 val GPBWireFormatForType = MemberName(COCOAPODS_PROTOBUF_PACKAGE, "GPBWireFormatForType")
+val GPBComputeTagSize = MemberName(COCOAPODS_PROTOBUF_PACKAGE, "GPBComputeTagSize")
+val GPBComputeSizeTSizeAsInt32NoTag = MemberName(COCOAPODS_PROTOBUF_PACKAGE, "GPBComputeSizeTSizeAsInt32NoTag")

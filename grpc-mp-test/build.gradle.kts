@@ -30,8 +30,6 @@ kotlin {
 
     sourceSets {
         val commonMain by getting {
-//            kotlin.srcDir(projectDir.resolve("build/generated/source/kmp-grpc/commonMain/kotlin").canonicalPath)
-
             dependencies {
                 api(project(":grpc-multiplatform-lib"))
             }
@@ -39,7 +37,7 @@ kotlin {
 
         val commonTest by getting {
             dependencies {
-                implementation(kotlin("test")) // This brings all the platform dependencies automatically
+                implementation(kotlin("test"))
             }
         }
 
@@ -47,9 +45,6 @@ kotlin {
             dependencies {
                 api(project("test-jvm-protos"))
             }
-
-//            kotlin.srcDir(projectDir.resolve("build/generated/source/kmp-grpc/jvmMain/kotlin").canonicalPath)
-
         }
 
         val androidMain by getting {
@@ -58,6 +53,21 @@ kotlin {
             }
 
             kotlin.srcDir(projectDir.resolve("build/generated/source/kmp-grpc/jvmMain/kotlin").canonicalPath)
+        }
+
+        val serializationTest by creating {
+            dependencies {
+                implementation(kotlin("test"))
+            }
+            kotlin.srcDir(projectDir.resolve("build/generated/source/kmp-grpc/commonMain/kotlin").canonicalPath)
+        }
+
+        val jsTest by getting {
+            dependsOn(serializationTest)
+        }
+
+        val iosTest by getting {
+            dependsOn(serializationTest)
         }
     }
 }

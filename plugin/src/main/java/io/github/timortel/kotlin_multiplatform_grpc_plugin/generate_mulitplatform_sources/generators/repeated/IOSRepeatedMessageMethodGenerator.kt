@@ -10,11 +10,9 @@ object IOSRepeatedMessageMethodGenerator : RepeatedMessageMethodGenerator(true) 
 
     override val attrs: List<KModifier> = listOf(KModifier.ACTUAL)
 
-    override fun getType(messageAttribute: ProtoMessageAttribute): TypeName {
-        TODO("Not yet implemented")
-    }
+    override fun getType(messageAttribute: ProtoMessageAttribute): TypeName = messageAttribute.commonType
 
     override fun modifyListProperty(builder: PropertySpec.Builder, message: ProtoMessage, attr: ProtoMessageAttribute) {
-        TODO("Not yet implemented")
+
     }
 }

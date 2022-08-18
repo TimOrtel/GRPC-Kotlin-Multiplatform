@@ -118,13 +118,10 @@ object Const {
             }
 
             object Repeated {
-                fun addAllFunctionName(attr: ProtoMessageAttribute) = "addAll${attr.name.capitalize()}"
 
                 fun listPropertyName(attr: ProtoMessageAttribute) = "${attr.name}List"
 
                 fun countPropertyName(attr: ProtoMessageAttribute) = "${attr.name}Count"
-
-                fun clearListFunctionName(attr: ProtoMessageAttribute) = "clear${attr.name.capitalize()}"
 
                 object JS {
                     fun setListFunctionName(attr: ProtoMessageAttribute): String =
