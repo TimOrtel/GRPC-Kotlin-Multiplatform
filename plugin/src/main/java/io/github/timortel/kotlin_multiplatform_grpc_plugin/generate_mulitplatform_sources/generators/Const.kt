@@ -77,6 +77,17 @@ object Const {
         }
 
         object Attribute {
+            /**
+             * @return the property name of the given attribute in the generated kotlin file for the message.
+             */
+            fun propertyName(protoMessage: ProtoMessage, attr: ProtoMessageAttribute): String {
+                return when(attr.attributeType) {
+                    is io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.Scalar -> attr.name
+                    is io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.Repeated -> Repeated.listPropertyName(attr)
+                    is MapType -> Map.propertyName(attr)
+                }
+            }
+
             object Scalar {
                 object JVM {
                     fun getFunction(message: ProtoMessage, attr: ProtoMessageAttribute) =

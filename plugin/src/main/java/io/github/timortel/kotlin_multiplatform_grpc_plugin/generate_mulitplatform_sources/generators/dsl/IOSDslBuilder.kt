@@ -11,8 +11,10 @@ object IOSDslBuilder : DslBuilder(true) {
         builder.apply {
             addCode("return %T(", message.iosType)
             message.attributes.forEach { attr ->
-                addCode("\n%N=%N ?: ", attr.name, Const.DSL.Attribute.Scalar.attrName(attr))
-                addCode(IOSDefaultAttributeValue.getDefaultValueForAttr(attr))
+                val propertyName = Const.Message.Attribute.propertyName(message, attr)
+
+                addCode("\n%N=%N ?: ", propertyName, propertyName)
+                addCode(IOSDefaultAttributeValue.getDefaultValueForAttr(attr, false))
                 addCode(",")
             }
             addCode("\n)")

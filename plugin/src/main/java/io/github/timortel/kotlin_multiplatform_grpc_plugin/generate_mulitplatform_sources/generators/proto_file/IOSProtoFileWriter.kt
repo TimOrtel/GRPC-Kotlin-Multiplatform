@@ -46,7 +46,12 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
                                         addParameter(
                                             ParameterSpec
                                                 .builder(attr.name, attr.commonType)
-                                                .defaultValue(IOSDefaultAttributeValue.getDefaultValueForAttr(attr))
+                                                .defaultValue(
+                                                    IOSDefaultAttributeValue.getDefaultValueForAttr(
+                                                        attr,
+                                                        false
+                                                    )
+                                                )
                                                 .build()
                                         )
                                     }
@@ -155,7 +160,7 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
             .builder()
             .apply {
                 message.attributes.forEachIndexed { i, attr ->
-                    if (i != 0) add("\n+ ")
+                    if (i != 0) add("·+\n")
                     when (attr.attributeType) {
                         is Scalar -> {
                             when (attr.types.protoType) {
@@ -198,7 +203,7 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
                         is Repeated -> {
                             val attrFieldName = Const.Message.Attribute.Repeated.listPropertyName(attr)
 
-                            beginControlFlow("if (%N.isEmpty()) 0 else %N.let·{·e ->", attrFieldName)
+                            add("if (%N.isEmpty()) 0u else %N.let·{·e ->\n", attrFieldName, attrFieldName)
                             beginControlFlow("val dataSize = e.sumOf·{")
                             when (attr.types.protoType) {
                                 ProtoType.DOUBLE,
@@ -235,7 +240,7 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
                                 addStatement("dataSize + %N.size * tagSize", attrFieldName)
                             }
 
-                            endControlFlow()
+                            add("\n}")
                         }
 
                         is MapType -> TODO()
@@ -270,7 +275,13 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
                                     ProtoType.STRING -> "writeString"
                                     else -> throw IllegalStateException()
                                 }
-                                addStatement("%N.%N(%L, %N)", Const.Message.IOS.SerializeFunction.STREAM_PARAM, functionName, attr.protoId, attr.name)
+                                addStatement(
+                                    "%N.%N(%L, %N)",
+                                    Const.Message.IOS.SerializeFunction.STREAM_PARAM,
+                                    functionName,
+                                    attr.protoId,
+                                    attr.name
+                                )
                             }
 
                             ProtoType.MESSAGE -> {
@@ -289,15 +300,76 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
 
                                 endControlFlow()
                             }
+
                             ProtoType.ENUM -> {
-                                addStatement("%N.writeEnum(%L, %N.%N)", Const.Message.IOS.SerializeFunction.STREAM_PARAM, attr.name, Const.Enum.VALUE_PROPERTY_NAME)
+                                addStatement(
+                                    "%N.writeEnum(%L, %N.%N)",
+                                    Const.Message.IOS.SerializeFunction.STREAM_PARAM,
+                                    attr.name,
+                                    Const.Enum.VALUE_PROPERTY_NAME
+                                )
                             }
+
                             ProtoType.MAP -> throw IllegalStateException()
                         }
                     }
-                    is Repeated -> {
 
+                    is Repeated -> {
+                        val writeListPartialFunctionName = when (attr.types.protoType) {
+                            ProtoType.DOUBLE -> "Double"
+                            ProtoType.FLOAT -> "Float"
+                            ProtoType.INT_32 -> "Int32"
+                            ProtoType.INT_64 -> "Int64"
+                            ProtoType.BOOL -> "Bool"
+                            ProtoType.STRING -> "String"
+                            ProtoType.MESSAGE -> "Message"
+                            ProtoType.ENUM -> "Enum"
+                            ProtoType.MAP -> throw IllegalStateException()
+                        }
+
+                        val writeListFunction = MemberName(
+                            "io.github.timortel.kotlin_multiplatform_grpc_lib.io",
+                            "write${writeListPartialFunctionName}List"
+                        )
+
+                        when (attr.types.protoType) {
+                            ProtoType.DOUBLE,
+                            ProtoType.FLOAT,
+                            ProtoType.INT_32,
+                            ProtoType.INT_64,
+                            ProtoType.BOOL,
+                            ProtoType.ENUM -> {
+                                //Write packed.
+                                // From GPBDescriptor.m: GPBWireFormatForType(description->dataType,
+                                //                                  ((description->flags & GPBFieldPacked) != 0))
+                                addStatement(
+                                    "%M(%N, %L, %N, %M(%L, %M(%M, true)))",
+                                    writeListFunction,
+                                    Const.Message.IOS.SerializeFunction.STREAM_PARAM,
+                                    attr.protoId,
+                                    Const.Message.Attribute.Repeated.listPropertyName(attr),
+                                    GPBWireFormatMakeTag,
+                                    attr.protoId,
+                                    GPBWireFormatForType,
+                                    getGPBDataTypeForAttr(attr)
+                                )
+                            }
+
+                            ProtoType.STRING, ProtoType.MESSAGE -> {
+                                //Write unpacked. 0 means unpacked
+                                addStatement(
+                                    "%M(%N, %L, %N, 0u)",
+                                    writeListFunction,
+                                    Const.Message.IOS.SerializeFunction.STREAM_PARAM,
+                                    attr.protoId,
+                                    Const.Message.Attribute.Repeated.listPropertyName(attr)
+                                )
+                            }
+
+                            ProtoType.MAP -> throw IllegalStateException()
+                        }
                     }
+
                     is MapType -> TODO()
                 }
             }
@@ -305,6 +377,8 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
     }
 
     private fun buildWrapperDeserializationFunction(builder: FunSpec.Builder, message: ProtoMessage) {
+        val wrapperParamName = Const.Message.Companion.IOS.WrapperDeserializationFunction.WRAPPER_PARAM
+
         val getAttrVarName = { attr: ProtoMessageAttribute ->
             when (attr.attributeType) {
                 is MapType -> "${attr.name}Map"
@@ -315,19 +389,28 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
 
         builder.apply {
             message.attributes.forEach { attr ->
+                val (type, mutable) = when (attr.attributeType) {
+                    is Scalar -> attr.types.iosType.copy(nullable = attr.types.isNullable) to true
+                    is Repeated -> MUTABLE_LIST.parameterizedBy(attr.types.iosType) to false
+                    is MapType -> MUTABLE_MAP.parameterizedBy(
+                        attr.attributeType.keyTypes.iosType,
+                        attr.attributeType.valueTypes.iosType
+                    ) to false
+                }
+
                 addCode(
-                    "var %N: %T = ",
+                    if (mutable) "var %N: %T = " else "val %N: %T = ",
                     getAttrVarName(attr),
-                    attr.types.iosType.copy(nullable = attr.types.isNullable)
+                    type
                 )
-                addCode(IOSDefaultAttributeValue.getDefaultValueForAttr(attr))
+                addCode(IOSDefaultAttributeValue.getDefaultValueForAttr(attr, true))
                 addCode("\n")
             }
 
             beginControlFlow("while (true)")
             addStatement(
                 "val tag = %N.stream.readTag()",
-                Const.Message.Companion.IOS.WrapperDeserializationFunction.WRAPPER_PARAM
+                wrapperParamName
             )
             addStatement("if (tag == 0) break")
 
@@ -338,20 +421,7 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
                     is Scalar, is Repeated -> {
                         val isPacked = attr.attributeType is Repeated
 
-                        val gpbType = MemberName(
-                            COCOAPODS_PROTOBUF_PACKAGE,
-                            when (attr.types.protoType) {
-                                ProtoType.DOUBLE -> "GPBDataTypeDouble"
-                                ProtoType.FLOAT -> "GPBDataTypeFloat"
-                                ProtoType.INT_32 -> "GPBDataTypeInt32"
-                                ProtoType.INT_64 -> "GPBDataTypeInt64"
-                                ProtoType.BOOL -> "GPBDataTypeBool"
-                                ProtoType.STRING -> "GPBDataTypeString"
-                                ProtoType.MESSAGE -> "GPBDataTypeMessage"
-                                ProtoType.ENUM -> "GPBDataTypeEnum"
-                                else -> throw IllegalStateException("A")
-                            }
-                        )
+                        val gpbType = getGPBDataTypeForAttr(attr)
 
                         addCode(
                             "%M(%L, %M(%M, %L)).toInt()",
@@ -393,7 +463,7 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
                                 addCode(
                                     "%N = %N.stream.%N()\n",
                                     getAttrVarName(attr),
-                                    Const.Message.Companion.IOS.WrapperDeserializationFunction.WRAPPER_PARAM,
+                                    wrapperParamName,
                                     getScalarReadFunctionName()
                                 )
                             }
@@ -402,7 +472,7 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
                                 "%N = %M(%N, %T.Companion::%N)\n",
                                 getAttrVarName(attr),
                                 readKMMessage,
-                                Const.Message.Companion.IOS.WrapperDeserializationFunction.WRAPPER_PARAM,
+                                wrapperParamName,
                                 attr.types.iosType,
                                 Const.Message.Companion.IOS.WrapperDeserializationFunction.NAME
                             )
@@ -412,7 +482,7 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
                                 getAttrVarName(attr),
                                 attr.types.jsType,
                                 Const.Enum.getEnumForNumFunctionName,
-                                Const.Message.Companion.IOS.WrapperDeserializationFunction.WRAPPER_PARAM
+                                wrapperParamName
                             )
 
                             else -> throw IllegalStateException("C")
@@ -432,46 +502,50 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
                             ProtoType.ENUM -> {
                                 //All packable
                                 addStatement(
-                                    "val length = %N.stream.readInt32()",
-                                    Const.Message.Companion.IOS.WrapperDeserializationFunction.WRAPPER_PARAM
+                                    "val length = %N.stream.readInt32().toULong()",
+                                    wrapperParamName
                                 )
-                                addStatement("val limit = %N.stream.pushLimit(length)")
                                 addStatement(
-                                    "val _%N = mutableListOf<%T>()",
-                                    getAttrVarName(attr),
-                                    attr.types.commonType
+                                    "val limit = %N.stream.pushLimit(length)",
+                                    wrapperParamName
                                 )
-                                beginControlFlow("while (!%N.stream.isAtEnd())·{")
+                                beginControlFlow(
+                                    "while (!%N.stream.isAtEnd())·{",
+                                    wrapperParamName
+                                )
                                 //Enums need to first get mapped
                                 if (attr.types.protoType == ProtoType.ENUM) {
                                     addStatement(
-                                        "_%N += %T.%N(%N.stream.readEnum())",
+                                        "%N += %T.%N(%N.stream.readEnum())",
                                         getAttrVarName(attr),
                                         attr.types.commonType,
-                                        Const.Message.Companion.IOS.WrapperDeserializationFunction.WRAPPER_PARAM
+                                        wrapperParamName
                                     )
                                 } else {
                                     val functionName = getScalarReadFunctionName()
 
                                     addStatement(
-                                        "_%N += %N.stream.%N()",
+                                        "%N += %N.stream.%N()",
                                         getAttrVarName(attr),
-                                        Const.Message.Companion.IOS.WrapperDeserializationFunction.WRAPPER_PARAM,
+                                        wrapperParamName,
                                         functionName
                                     )
                                 }
 
                                 endControlFlow()
+
+                                addStatement("%N.stream.popLimit(limit)", wrapperParamName)
                             }
 
                             ProtoType.MESSAGE -> addCode(
                                 "%N = %M(%N, %T.Companion::%N)\n",
                                 getAttrVarName(attr),
                                 readKMMessage,
-                                Const.Message.Companion.IOS.WrapperDeserializationFunction.WRAPPER_PARAM,
+                                wrapperParamName,
                                 attr.types.iosType,
                                 Const.Message.Companion.IOS.WrapperDeserializationFunction.NAME
                             )
+
                             ProtoType.MAP -> throw IllegalStateException()
                         }
                         endControlFlow()
@@ -485,7 +559,7 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
 
             endControlFlow()
 
-            val paramList = message.attributes.joinToString { it.name }
+            val paramList = message.attributes.joinToString { Const.Message.Attribute.propertyName(message, it) }
 
             addStatement("return %T($paramList)", message.iosType)
         }
@@ -503,6 +577,22 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
         ProtoType.MESSAGE -> false
         ProtoType.MAP -> throw IllegalStateException()
     }
+
+    private fun getGPBDataTypeForAttr(attr: ProtoMessageAttribute) =
+        MemberName(
+            COCOAPODS_PROTOBUF_PACKAGE,
+            when (attr.types.protoType) {
+                ProtoType.DOUBLE -> "GPBDataTypeDouble"
+                ProtoType.FLOAT -> "GPBDataTypeFloat"
+                ProtoType.INT_32 -> "GPBDataTypeInt32"
+                ProtoType.INT_64 -> "GPBDataTypeInt64"
+                ProtoType.BOOL -> "GPBDataTypeBool"
+                ProtoType.STRING -> "GPBDataTypeString"
+                ProtoType.MESSAGE -> "GPBDataTypeMessage"
+                ProtoType.ENUM -> "GPBDataTypeEnum"
+                else -> throw IllegalStateException()
+            }
+        )
 
     override fun applyToEqualsFunction(builder: FunSpec.Builder, message: ProtoMessage, thisClassName: ClassName) {
         builder.addStatement("return false")
