@@ -12,4 +12,10 @@ val kmTimeUnit = ClassName("io.github.timortel.kotlin_multiplatform_grpc_lib.uti
 val kmMessage = ClassName("io.github.timortel.kotlin_multiplatform_grpc_lib.message", "KMMessage")
 val GPBCodedInputStreamWrapper = ClassName("io.github.timortel.kotlin_multiplatform_grpc_lib.io", "GPBCodedInputStreamWrapper")
 
+val writeKMMessage = MemberName("io.github.timortel.kotlin_multiplatform_grpc_lib.io", "writeKMMessage")
 val readKMMessage = MemberName("io.github.timortel.kotlin_multiplatform_grpc_lib.io", "readKMMessage")
+val computeMapSize = MemberName("io.github.timortel.kotlin_multiplatform_grpc_lib.message", "computeMapSize")
+val computeMessageSize = MemberName("io.github.timortel.kotlin_multiplatform_grpc_lib.message", "computeMessageSize")
+
+val writeMap = MemberName("io.github.timortel.kotlin_multiplatform_grpc_lib.io", "writeMap")
+val readMapEntry = MemberName("io.github.timortel.kotlin_multiplatform_grpc_lib.io", "readMapEntry")

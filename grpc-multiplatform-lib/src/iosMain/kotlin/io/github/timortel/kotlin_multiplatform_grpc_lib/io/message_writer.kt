@@ -2,6 +2,8 @@ package io.github.timortel.kotlin_multiplatform_grpc_lib.io
 
 import cocoapods.Protobuf.*
 import io.github.timortel.kotlin_multiplatform_grpc_lib.message.KMMessage
+import io.github.timortel.kotlin_multiplatform_grpc_lib.message.kMapKeyFieldNumber
+import io.github.timortel.kotlin_multiplatform_grpc_lib.message.kMapValueFieldNumber
 
 fun writeKMMessage(stream: GPBCodedOutputStream, fieldNumber: Int, msg: KMMessage) {
     stream.writeUInt32NoTag(GPBWireFormatMakeTag(fieldNumber.toUInt(), GPBWireFormatLengthDelimited))
@@ -12,6 +14,28 @@ fun writeKMMessage(stream: GPBCodedOutputStream, fieldNumber: Int, msg: KMMessag
 
 fun writeMessageList(stream: GPBCodedOutputStream, fieldNumber: Int, values: List<KMMessage>) {
     values.forEach { writeKMMessage(stream, fieldNumber, it) }
+}
+
+fun <K, V> writeMap(
+    stream: GPBCodedOutputStream,
+    fieldNumber: Int,
+    map: Map<K, V>,
+    getKeySize: (fieldNumber: Int, key: K) -> ULong,
+    getValueSize: (fieldNumber: Int, value: V) -> ULong,
+    writeKey: GPBCodedOutputStream.(fieldNumber: Int, K) -> Unit,
+    writeValue: GPBCodedOutputStream.(fieldNumber: Int, V) -> Unit
+) {
+    val tag = GPBWireFormatMakeTag(fieldNumber.toUInt(), GPBWireFormatLengthDelimited)
+    map.forEach { (key, value) ->
+        //Write tag
+        stream.writeInt32NoTag(tag.toInt())
+        //Write the size of the message
+        val msgSize = getKeySize(kMapKeyFieldNumber, key) + getValueSize(kMapValueFieldNumber, value)
+        stream.writeInt32NoTag(msgSize.toInt())
+        //Write fields
+        writeKey(stream, kMapKeyFieldNumber, key)
+        writeValue(stream, kMapValueFieldNumber, value)
+    }
 }
 
 private fun <T> writeList(

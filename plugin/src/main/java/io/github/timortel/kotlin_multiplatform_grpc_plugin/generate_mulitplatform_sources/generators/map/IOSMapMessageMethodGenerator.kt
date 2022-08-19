@@ -4,6 +4,7 @@ import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.PropertySpec
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoMessage
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoMessageAttribute
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
 
 object IOSMapMessageMethodGenerator : MapMessageMethodGenerator(true) {
     override val modifiers: List<KModifier> = listOf(KModifier.ACTUAL)
@@ -13,6 +14,6 @@ object IOSMapMessageMethodGenerator : MapMessageMethodGenerator(true) {
         protoMessage: ProtoMessage,
         messageAttribute: ProtoMessageAttribute
     ) {
-        TODO("Not yet implemented")
+        builder.initializer(Const.Message.Attribute.propertyName(protoMessage, messageAttribute))
     }
 }
