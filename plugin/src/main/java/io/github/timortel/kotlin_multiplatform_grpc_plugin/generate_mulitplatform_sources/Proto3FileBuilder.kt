@@ -137,7 +137,8 @@ class Proto3FileBuilder(
             types.commonType,
             types,
             type,
-            ctx.num.text.toInt()
+            ctx.num.text.toInt(),
+            isOneOfAttribute = currentOneOfAttributes != null
         )
         currentReadingStack.attributes += attr
 
@@ -166,7 +167,8 @@ class Proto3FileBuilder(
                 protoType = ProtoType.MAP
             ),
             type,
-            ctx.num.text.toInt()
+            ctx.num.text.toInt(),
+            isOneOfAttribute = false
         )
 
         currentReadingStack.attributes += attr

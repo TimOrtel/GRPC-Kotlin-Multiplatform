@@ -8,18 +8,15 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfor
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoOneOf
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
 
-object JsOneOfMethodAndClassGenerator : OneOfMethodAndClassGenerator() {
+object JsOneOfMethodAndClassGenerator : OneOfMethodAndClassGenerator(true) {
 
     override val attrs: List<KModifier> = listOf(KModifier.ACTUAL)
 
-    override fun modifyGetCaseProperty(
+    override fun modifyOneOfProperty(
         builder: PropertySpec.Builder,
-        enumClassName: ClassName,
         message: ProtoMessage,
         oneOf: ProtoOneOf
     ) {
-        val enumName = Const.Message.OneOf.CaseEnum.oneOfCaseClassName(oneOf)
-
         builder.getter(
             FunSpec
                 .getterBuilder()
@@ -27,15 +24,15 @@ object JsOneOfMethodAndClassGenerator : OneOfMethodAndClassGenerator() {
                     addCode("return when(jsImpl.%N()) {\n", Const.Message.OneOf.JS.getCaseFunctionName(oneOf))
                     oneOf.attributes.forEach { attr ->
                         addCode(
-                            "%L -> %T.%N.%N\n",
+                            "%L -> %T(%N.%N())\n",
                             attr.protoId,
-                            message.commonType,
-                            enumName,
-                            Const.Message.OneOf.CaseEnum.EnumField.name(attr)
+                            Const.Message.OneOf.childClassName(message, oneOf, attr),
+                            Const.Message.Constructor.JS.PARAM_IMPL,
+                            Const.Message.Attribute.Scalar.JS.getFunction(message, attr)
                         )
                     }
-                    addCode("0 -> %T.%N.%N\n", message.commonType, enumName, Const.Message.OneOf.CaseEnum.EnumNotSet.name(oneOf))
-                    addCode("else -> null\n")
+                    addCode("0 -> %T\n", Const.Message.OneOf.notSetClassName(message, oneOf))
+                    addCode("else -> %T\n", Const.Message.OneOf.unknownClassName(message, oneOf))
                     addCode("}")
                 }
                 .build()

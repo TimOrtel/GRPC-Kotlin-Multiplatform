@@ -18,7 +18,10 @@ abstract class ScalarMessageMethodGenerator(private val isActual: Boolean) {
     ) {
         val type = getTypeForAttribute(messageAttribute)
 
-        generateProperties(builder, protoMessage, messageAttribute, type)
+        //No property needed for one of attributes
+        if (!messageAttribute.isOneOfAttribute) {
+            generateProperties(builder, protoMessage, messageAttribute, type)
+        }
     }
 
     open fun generateProperties(

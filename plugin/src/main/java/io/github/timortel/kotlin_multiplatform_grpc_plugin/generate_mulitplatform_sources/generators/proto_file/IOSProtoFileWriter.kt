@@ -5,7 +5,6 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.*
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.*
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.ios.IOSDefaultAttributeValue
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.map.IOSMapMessageMethodGenerator
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.map.MapMessageMethodGenerator
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.oneof.IOSOneOfMethodAndClassGenerator
@@ -14,6 +13,8 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfor
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.repeated.RepeatedMessageMethodGenerator
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.scalar.IOSScalarMessageMethodGenerator
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.scalar.ScalarMessageMethodGenerator
+import org.jetbrains.kotlin.gradle.utils.`is`
+import org.jetbrains.kotlin.gradle.utils.toSetOrEmpty
 
 class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(protoFile, isActual = true),
     DefaultChildClassName {
@@ -33,7 +34,8 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
                 FunSpec
                     .constructorBuilder()
                     .apply {
-                        message.attributes.forEach { attr ->
+                        //one of attributes do not get a parameter, as they get the one of parameter
+                        message.attributes.filter { !it.isOneOfAttribute }.forEach { attr ->
                             when (attr.attributeType) {
                                 is Scalar -> {
                                     if (attr.types.isNullable) {
@@ -46,12 +48,7 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
                                         addParameter(
                                             ParameterSpec
                                                 .builder(attr.name, attr.commonType)
-                                                .defaultValue(
-                                                    IOSDefaultAttributeValue.getDefaultValueForAttr(
-                                                        attr,
-                                                        false
-                                                    )
-                                                )
+                                                .defaultValue(attr.commonDefaultValue(false))
                                                 .build()
                                         )
                                     }
@@ -84,6 +81,18 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
                                     )
                                 }
                             }
+                        }
+
+                        message.oneOfs.forEach { oneOf ->
+                            addParameter(
+                                ParameterSpec
+                                    .builder(
+                                        Const.Message.OneOf.propertyName(message, oneOf),
+                                        Const.Message.OneOf.parentSealedClassName(message, oneOf)
+                                    )
+                                    .defaultValue(oneOf.defaultValue(message))
+                                    .build()
+                            )
                         }
                     }
                     .build()
@@ -156,45 +165,13 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
         return CodeBlock
             .builder()
             .apply {
-                message.attributes.forEachIndexed { i, attr ->
+                val onlyNonOneOfAttributes = message.attributes.filter { !it.isOneOfAttribute }
+
+                onlyNonOneOfAttributes.forEachIndexed { i, attr ->
                     if (i != 0) add("·+\n")
                     when (attr.attributeType) {
                         is Scalar -> {
-                            when (attr.types.protoType) {
-                                ProtoType.DOUBLE,
-                                ProtoType.FLOAT,
-                                ProtoType.INT_32,
-                                ProtoType.INT_64,
-                                ProtoType.BOOL,
-                                ProtoType.STRING -> {
-                                    add(
-                                        "%M(%L, %N)",
-                                        getComputeDataTypeSizeMember(attr.types.protoType, true),
-                                        attr.protoId,
-                                        attr.name
-                                    )
-                                }
-
-                                ProtoType.MESSAGE -> add(
-                                    "%M(%L, %N)",
-                                    MemberName(
-                                        "io.github.timortel.kotlin_multiplatform_grpc_lib.message",
-                                        "computeMessageSize"
-                                    ),
-                                    attr.protoId,
-                                    attr.name
-                                )
-
-                                ProtoType.ENUM -> add(
-                                    "%M(%L, %N.%N)",
-                                    MemberName("cocoapods.Protobuf", "GPBComputeEnumSize"),
-                                    attr.protoId,
-                                    attr.name,
-                                    Const.Enum.VALUE_PROPERTY_NAME
-                                )
-
-                                ProtoType.MAP -> throw IllegalStateException()
-                            }
+                            add(getCodeForRequiredSizeForScalarAttributeC(attr))
                         }
 
                         is Repeated -> {
@@ -257,7 +234,15 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
                             add(")")
                         }
                     }
+                }
 
+                message.oneOfs.forEachIndexed { index, oneOf ->
+                    if (index != 0 || onlyNonOneOfAttributes.isNotEmpty()) add("·+\n")
+                    add(
+                        "%N.%N",
+                        Const.Message.OneOf.propertyName(message, oneOf),
+                        Const.Message.OneOf.IOS.REQUIRED_SIZE_PROPERTY_NAME
+                    )
                 }
             }
             .build()
@@ -267,70 +252,17 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
      * Generate the serialize function, adds a write call for each attribute
      */
     private fun buildSerializeFunction(builder: FunSpec.Builder, message: ProtoMessage) {
-        val getWriteScalarFunctionName = { protoType: ProtoType ->
-            when (protoType) {
-                ProtoType.DOUBLE -> "writeDouble"
-                ProtoType.FLOAT -> "writeFloat"
-                ProtoType.INT_32 -> "writeInt32"
-                ProtoType.INT_64 -> "writeInt64"
-                ProtoType.BOOL -> "writeBool"
-                ProtoType.STRING -> "writeString"
-                ProtoType.ENUM -> "writeEnum"
-                ProtoType.MAP, ProtoType.MESSAGE -> throw IllegalStateException()
-            }
-        }
-
         builder.apply {
-            message.attributes.forEach { attr ->
+            message.attributes.filter { !it.isOneOfAttribute }.forEach { attr ->
                 when (attr.attributeType) {
                     is Scalar -> {
-                        when (attr.types.protoType) {
-                            ProtoType.DOUBLE,
-                            ProtoType.FLOAT,
-                            ProtoType.INT_32,
-                            ProtoType.INT_64,
-                            ProtoType.BOOL,
-                            ProtoType.STRING -> {
-                                val functionName = getWriteScalarFunctionName(attr.types.protoType)
-
-                                addStatement(
-                                    "%N.%N(%L, %N)",
-                                    Const.Message.IOS.SerializeFunction.STREAM_PARAM,
-                                    functionName,
-                                    attr.protoId,
-                                    attr.name
-                                )
-                            }
-
-                            ProtoType.MESSAGE -> {
-                                beginControlFlow(
-                                    "if (%N)",
-                                    Const.Message.Attribute.Scalar.IOS.isMessageSetFunctionName(message, attr)
-                                )
-
-                                addStatement(
-                                    "%M(%N, %L, %N)",
-                                    MemberName("io.github.timortel.kotlin_multiplatform_grpc_lib.io", "writeKMMessage"),
-                                    Const.Message.IOS.SerializeFunction.STREAM_PARAM,
-                                    attr.protoId,
-                                    attr.name
-                                )
-
-                                endControlFlow()
-                            }
-
-                            ProtoType.ENUM -> {
-                                addStatement(
-                                    "%N.writeEnum(%L, %N.%N)",
-                                    Const.Message.IOS.SerializeFunction.STREAM_PARAM,
-                                    attr.protoId,
-                                    attr.name,
-                                    Const.Enum.VALUE_PROPERTY_NAME
-                                )
-                            }
-
-                            ProtoType.MAP -> throw IllegalStateException()
-                        }
+                        addCode(
+                            getWriteScalarFieldCode(
+                                message,
+                                attr,
+                                Const.Message.IOS.SerializeFunction.STREAM_PARAM
+                            )
+                        )
                     }
 
                     is Repeated -> {
@@ -435,7 +367,12 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
                             )
                         }
 
-                        val addWriteEnumCode = { addCode("{·fieldNumber,·it·-> writeEnum(fieldNumber, it.%N)·}", Const.Enum.VALUE_PROPERTY_NAME) }
+                        val addWriteEnumCode = {
+                            addCode(
+                                "{·fieldNumber,·it·-> writeEnum(fieldNumber, it.%N)·}",
+                                Const.Enum.VALUE_PROPERTY_NAME
+                            )
+                        }
 
                         when (attr.attributeType.keyTypes.protoType) {
                             ProtoType.INT_32,
@@ -472,11 +409,22 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
                     }
                 }
             }
+
+            message.oneOfs.forEach { oneOf ->
+                addStatement(
+                    "%N.%N(%N)",
+                    Const.Message.OneOf.propertyName(message, oneOf),
+                    Const.Message.OneOf.IOS.SERIALIZE_FUNCTION_NAME,
+                    Const.Message.IOS.SerializeFunction.STREAM_PARAM
+                )
+            }
         }
     }
 
     private fun buildWrapperDeserializationFunction(builder: FunSpec.Builder, message: ProtoMessage) {
         val wrapperParamName = Const.Message.Companion.IOS.WrapperDeserializationFunction.WRAPPER_PARAM
+
+        val getOneOfVarName = { oneOf: ProtoOneOf -> oneOf.name }
 
         val getAttrVarName = { attr: ProtoMessageAttribute ->
             when (attr.attributeType) {
@@ -487,7 +435,7 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
         }
 
         builder.apply {
-            message.attributes.forEach { attr ->
+            message.attributes.filter { !it.isOneOfAttribute }.forEach { attr ->
                 val (type, mutable) = when (attr.attributeType) {
                     is Scalar -> attr.types.iosType.copy(nullable = attr.types.isNullable) to true
                     is Repeated -> MUTABLE_LIST.parameterizedBy(attr.types.iosType) to false
@@ -502,7 +450,18 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
                     getAttrVarName(attr),
                     type
                 )
-                addCode(IOSDefaultAttributeValue.getDefaultValueForAttr(attr, true))
+                addCode(attr.commonDefaultValue(true))
+                addCode("\n")
+            }
+
+            message.oneOfs.forEach { oneOf ->
+                addCode(
+                    "var %N: %T = ",
+                    getOneOfVarName(oneOf),
+                    Const.Message.OneOf.parentSealedClassName(message, oneOf)
+                )
+
+                addCode(oneOf.defaultValue(message))
                 addCode("\n")
             }
 
@@ -558,6 +517,14 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
 
                 when (attr.attributeType) {
                     is Scalar -> {
+                        if (attr.isOneOfAttribute) {
+                            //Set one of field directly
+                            addCode("%N = %T(", getOneOfVarName(attr.one))
+                        } else {
+                            //set the individual attr field
+                            addCode("%N = ")
+                        }
+
                         when (attr.types.protoType) {
                             ProtoType.DOUBLE,
                             ProtoType.FLOAT,
@@ -566,16 +533,14 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
                             ProtoType.BOOL,
                             ProtoType.STRING -> {
                                 addCode(
-                                    "%N = %N.stream.%N()\n",
-                                    getAttrVarName(attr),
+                                    "%N.stream.%N()",
                                     wrapperParamName,
                                     getScalarReadFunctionName(attr.types.protoType)
                                 )
                             }
 
                             ProtoType.MESSAGE -> addCode(
-                                "%N = %M(%N, %T.Companion::%N)\n",
-                                getAttrVarName(attr),
+                                "%M(%N, %T.Companion::%N)",
                                 readKMMessage,
                                 wrapperParamName,
                                 attr.types.iosType,
@@ -583,8 +548,7 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
                             )
 
                             ProtoType.ENUM -> addCode(
-                                "%N = %T.%N(%N.stream.readEnum())\n",
-                                getAttrVarName(attr),
+                                "%T.%N(%N.stream.readEnum())",
                                 attr.types.iosType,
                                 Const.Enum.getEnumForNumFunctionName,
                                 wrapperParamName
@@ -593,6 +557,11 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
                             else -> throw IllegalStateException()
                         }
 
+                        if (attr.isOneOfAttribute) {
+                            addCode(")\n")
+                        } else {
+                            addCode("\n")
+                        }
                     }
 
                     is Repeated -> {
@@ -781,35 +750,6 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
             }
         )
 
-    /**
-     * @return the function that compute the size of the data type.
-     */
-    private fun getComputeDataTypeSizeMember(protoType: ProtoType, withTag: Boolean): MemberName {
-        return when (protoType) {
-            ProtoType.DOUBLE,
-            ProtoType.FLOAT,
-            ProtoType.INT_32,
-            ProtoType.INT_64,
-            ProtoType.BOOL,
-            ProtoType.STRING,
-            ProtoType.ENUM -> {
-                val name = when (protoType) {
-                    ProtoType.DOUBLE -> "Double"
-                    ProtoType.FLOAT -> "Float"
-                    ProtoType.INT_32 -> "Int32"
-                    ProtoType.INT_64 -> "Int64"
-                    ProtoType.BOOL -> "Bool"
-                    ProtoType.STRING -> "String"
-                    ProtoType.ENUM -> "Enum"
-                    ProtoType.MAP, ProtoType.MESSAGE -> throw IllegalStateException()
-                }
-                MemberName("cocoapods.Protobuf", "GPBCompute${name}Size${if (!withTag) "NoTag" else ""}")
-            }
-
-            ProtoType.MESSAGE -> computeMessageSize
-            ProtoType.MAP -> computeMapSize
-        }
-    }
 
     private fun getComputeMapValueRequiredSizeCode(valueTypes: Types): CodeBlock {
         return when (valueTypes.protoType) {
@@ -822,6 +762,7 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
                 "::%M",
                 getComputeDataTypeSizeMember(valueTypes.protoType, true)
             )
+
             ProtoType.ENUM -> CodeBlock.of(
                 "{·fieldNumber,·it·-> %M(fieldNumber, it.%N)·}",
                 getComputeDataTypeSizeMember(valueTypes.protoType, true),
@@ -830,6 +771,142 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
 
             ProtoType.MAP -> throw IllegalStateException()
         }
+    }
+
+    companion object {
+        /**
+         * @return the function that compute the size of the data type.
+         */
+        private fun getComputeDataTypeSizeMember(protoType: ProtoType, withTag: Boolean): MemberName {
+            return when (protoType) {
+                ProtoType.DOUBLE,
+                ProtoType.FLOAT,
+                ProtoType.INT_32,
+                ProtoType.INT_64,
+                ProtoType.BOOL,
+                ProtoType.STRING,
+                ProtoType.ENUM -> {
+                    val name = when (protoType) {
+                        ProtoType.DOUBLE -> "Double"
+                        ProtoType.FLOAT -> "Float"
+                        ProtoType.INT_32 -> "Int32"
+                        ProtoType.INT_64 -> "Int64"
+                        ProtoType.BOOL -> "Bool"
+                        ProtoType.STRING -> "String"
+                        ProtoType.ENUM -> "Enum"
+                        ProtoType.MAP, ProtoType.MESSAGE -> throw IllegalStateException()
+                    }
+                    MemberName("cocoapods.Protobuf", "GPBCompute${name}Size${if (!withTag) "NoTag" else ""}")
+                }
+
+                ProtoType.MESSAGE -> computeMessageSize
+                ProtoType.MAP -> computeMapSize
+            }
+        }
+
+        fun getCodeForRequiredSizeForScalarAttributeC(attr: ProtoMessageAttribute): CodeBlock =
+            when (attr.types.protoType) {
+                ProtoType.DOUBLE,
+                ProtoType.FLOAT,
+                ProtoType.INT_32,
+                ProtoType.INT_64,
+                ProtoType.BOOL,
+                ProtoType.STRING -> {
+                    CodeBlock.of(
+                        "%M(%L, %N)",
+                        getComputeDataTypeSizeMember(attr.types.protoType, true),
+                        attr.protoId,
+                        attr.name
+                    )
+                }
+
+                ProtoType.MESSAGE -> CodeBlock.of(
+                    "%M(%L, %N)",
+                    MemberName(
+                        "io.github.timortel.kotlin_multiplatform_grpc_lib.message",
+                        "computeMessageSize"
+                    ),
+                    attr.protoId,
+                    attr.name
+                )
+
+                ProtoType.ENUM -> CodeBlock.of(
+                    "%M(%L, %N.%N)",
+                    MemberName("cocoapods.Protobuf", "GPBComputeEnumSize"),
+                    attr.protoId,
+                    attr.name,
+                    Const.Enum.VALUE_PROPERTY_NAME
+                )
+
+                ProtoType.MAP -> throw IllegalStateException()
+            }
+
+        fun getWriteScalarFieldCode(
+            message: ProtoMessage,
+            attr: ProtoMessageAttribute,
+            streamParam: String
+        ): CodeBlock =
+            when (attr.types.protoType) {
+                ProtoType.DOUBLE,
+                ProtoType.FLOAT,
+                ProtoType.INT_32,
+                ProtoType.INT_64,
+                ProtoType.BOOL,
+                ProtoType.STRING -> {
+                    val functionName = getWriteScalarFunctionName(attr.types.protoType)
+
+                    CodeBlock.of(
+                        "%N.%N(%L, %N)\n",
+                        streamParam,
+                        functionName,
+                        attr.protoId,
+                        attr.name
+                    )
+                }
+
+                ProtoType.MESSAGE -> {
+                    CodeBlock.builder().apply {
+                        beginControlFlow(
+                            "if (%N)",
+                            Const.Message.Attribute.Scalar.IOS.isMessageSetFunctionName(message, attr)
+                        )
+
+                        addStatement(
+                            "%M(%N, %L, %N)",
+                            MemberName("io.github.timortel.kotlin_multiplatform_grpc_lib.io", "writeKMMessage"),
+                            streamParam,
+                            attr.protoId,
+                            attr.name
+                        )
+
+                        endControlFlow()
+                    }.build()
+                }
+
+                ProtoType.ENUM -> {
+                    CodeBlock.of(
+                        "%N.writeEnum(%L, %N.%N)\n",
+                        streamParam,
+                        attr.protoId,
+                        attr.name,
+                        Const.Enum.VALUE_PROPERTY_NAME
+                    )
+                }
+
+                ProtoType.MAP -> throw IllegalStateException()
+            }
+
+        private fun getWriteScalarFunctionName(protoType: ProtoType) =
+            when (protoType) {
+                ProtoType.DOUBLE -> "writeDouble"
+                ProtoType.FLOAT -> "writeFloat"
+                ProtoType.INT_32 -> "writeInt32"
+                ProtoType.INT_64 -> "writeInt64"
+                ProtoType.BOOL -> "writeBool"
+                ProtoType.STRING -> "writeString"
+                ProtoType.ENUM -> "writeEnum"
+                ProtoType.MAP, ProtoType.MESSAGE -> throw IllegalStateException()
+            }
     }
 
     override fun applyToEqualsFunction(builder: FunSpec.Builder, message: ProtoMessage, thisClassName: ClassName) {

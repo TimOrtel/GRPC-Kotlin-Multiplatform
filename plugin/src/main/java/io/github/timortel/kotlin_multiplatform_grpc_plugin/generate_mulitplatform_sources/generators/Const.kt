@@ -56,23 +56,26 @@ object Const {
         }
 
         object OneOf {
-            fun propertyCaseName(oneOf: ProtoOneOf) = "${oneOf.name}Case"
+            fun parentSealedClassName(message: ProtoMessage, oneOf: ProtoOneOf) =
+                message.commonType.nestedClass(oneOf.capitalizedName)
 
-            object CaseEnum {
-                fun oneOfCaseClassName(oneOf: ProtoOneOf): String = oneOfCaseClassName(oneOf.name)
-                fun oneOfCaseClassName(enumName: String): String = "KM${enumName.capitalize()}Case"
+            fun childClassName(message: ProtoMessage, oneOf: ProtoOneOf, attr: ProtoMessageAttribute) =
+                parentSealedClassName(message, oneOf).nestedClass(attr.capitalizedName)
 
-                object EnumNotSet {
-                    fun name(oneOf: ProtoOneOf): String = "${oneOf.name.uppercase()}_NOT_SET"
-                }
+            fun unknownClassName(message: ProtoMessage, oneOf: ProtoOneOf) = parentSealedClassName(message, oneOf).nestedClass("Unknown")
+            fun notSetClassName(message: ProtoMessage, oneOf: ProtoOneOf) = parentSealedClassName(message, oneOf).nestedClass("NotSet")
 
-                object EnumField {
-                    fun name(attr: ProtoMessageAttribute): String = attr.name.uppercase()
-                }
-            }
+            fun propertyName(message: ProtoMessage, oneOf: ProtoOneOf) = oneOf.name
 
             object JS {
                 fun getCaseFunctionName(oneOf: ProtoOneOf): String = "get${oneOf.name.lowercase().capitalize()}Case"
+            }
+
+            object IOS {
+                const val REQUIRED_SIZE_PROPERTY_NAME = "requiredSize"
+
+                const val SERIALIZE_FUNCTION_NAME = "serialize"
+                const val SERIALIZE_FUNCTION_STREAM_PARAM_NAME = "stream"
             }
         }
 
@@ -81,9 +84,12 @@ object Const {
              * @return the property name of the given attribute in the generated kotlin file for the message.
              */
             fun propertyName(protoMessage: ProtoMessage, attr: ProtoMessageAttribute): String {
-                return when(attr.attributeType) {
+                return when (attr.attributeType) {
                     is io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.Scalar -> attr.name
-                    is io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.Repeated -> Repeated.listPropertyName(attr)
+                    is io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.Repeated -> Repeated.listPropertyName(
+                        attr
+                    )
+
                     is MapType -> Map.propertyName(attr)
                 }
             }

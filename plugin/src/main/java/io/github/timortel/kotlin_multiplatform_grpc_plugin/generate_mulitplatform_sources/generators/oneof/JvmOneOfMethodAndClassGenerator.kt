@@ -8,44 +8,42 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfor
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoOneOf
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
 
-object JvmOneOfMethodAndClassGenerator : OneOfMethodAndClassGenerator() {
+object JvmOneOfMethodAndClassGenerator : OneOfMethodAndClassGenerator(true) {
 
     override val attrs: List<KModifier> = listOf(KModifier.ACTUAL)
 
-    override fun modifyGetCaseProperty(
+    override fun modifyOneOfProperty(
         builder: PropertySpec.Builder,
-        enumClassName: ClassName,
         message: ProtoMessage,
         oneOf: ProtoOneOf
     ) {
         val implName = Const.Message.Constructor.JVM.PARAM_IMPL
 
         val jvmProtoEnumClassName = "${oneOf.capitalizedName}Case"
-        val commonProtoEnumClassName = Const.Message.OneOf.CaseEnum.oneOfCaseClassName(oneOf)
 
         builder.getter(
             FunSpec
                 .getterBuilder()
                 .apply {
-                    addCode("return when(%N.get${oneOf.name.capitalize()}Case()) {\n", implName)
+                    addCode("return when(%N.get${oneOf.capitalizedName}Case()) {\n", implName)
                     //simply map each enum to the km enum
                     oneOf.attributes.forEach { attr ->
                         addCode(
-                            "%T.%N.%N -> %T.%N.%N\n",
+                            "%T.%N.%N -> %T(%N.%M())\n",
                             //JVM Builder types
                             message.jvmType, jvmProtoEnumClassName, attr.name.uppercase(),
                             //Generated KM types
-                            message.commonType, commonProtoEnumClassName, Const.Message.OneOf.CaseEnum.EnumField.name(attr),
+                            Const.Message.OneOf.childClassName(message, oneOf, attr), implName, Const.Message.Attribute.Scalar.JVM.getFunction(message, attr)
                         )
                     }
                     //Add case for when it's not set
                     addCode(
-                        "%T.%N.%N -> %T.%N.%N\n",
+                        "%T.%N.%N -> %T\n",
                         message.jvmType, jvmProtoEnumClassName, "${oneOf.name.uppercase()}_NOT_SET",
-                        message.commonType, commonProtoEnumClassName, Const.Message.OneOf.CaseEnum.EnumNotSet.name(oneOf)
+                        Const.Message.OneOf.notSetClassName(message, oneOf)
                     )
                     //Unknown case
-                    addCode("else -> null")
+                    addCode("else -> %T", Const.Message.OneOf.unknownClassName(message, oneOf))
                     addCode("}")
                 }
                 .build()
