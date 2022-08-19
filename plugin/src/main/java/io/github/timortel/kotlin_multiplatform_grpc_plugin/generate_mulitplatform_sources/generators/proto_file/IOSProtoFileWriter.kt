@@ -14,7 +14,6 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfor
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.scalar.IOSScalarMessageMethodGenerator
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.scalar.ScalarMessageMethodGenerator
 import org.jetbrains.kotlin.gradle.utils.`is`
-import org.jetbrains.kotlin.gradle.utils.toSetOrEmpty
 
 class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(protoFile, isActual = true),
     DefaultChildClassName {
@@ -474,21 +473,72 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
 
             beginControlFlow("when (tag)")
 
-            message.attributes.forEach { attr ->
+            val getScalarAndRepeatedTagCode = { attr: ProtoMessageAttribute ->
+                val isPacked = attr.attributeType is Repeated
+
+                val gpbType = getGPBDataTypeForProtoType(attr.types.protoType)
+
+                CodeBlock.of(
+                    "%M(%L, %M(%M, %L)).toInt()",
+                    GPBWireFormatMakeTag,
+                    attr.protoId,
+                    GPBWireFormatForType,
+                    gpbType,
+                    isPacked
+                )
+            }
+
+            //The function name of that reads the type from the input stream
+            val getScalarReadFunctionName = { protoType: ProtoType ->
+                when (protoType) {
+                    ProtoType.DOUBLE -> "readDouble"
+                    ProtoType.FLOAT -> "readFloat"
+                    ProtoType.INT_32 -> "readInt32"
+                    ProtoType.INT_64 -> "readInt64"
+                    ProtoType.BOOL -> "readBool"
+                    ProtoType.STRING -> "readString"
+                    ProtoType.ENUM, ProtoType.MAP, ProtoType.MESSAGE -> throw IllegalStateException()
+                }
+            }
+
+            val getScalarReadFieldCode = { attr: ProtoMessageAttribute ->
+                when (attr.types.protoType) {
+                    ProtoType.DOUBLE,
+                    ProtoType.FLOAT,
+                    ProtoType.INT_32,
+                    ProtoType.INT_64,
+                    ProtoType.BOOL,
+                    ProtoType.STRING -> {
+                        CodeBlock.of(
+                            "%N.stream.%N()",
+                            wrapperParamName,
+                            getScalarReadFunctionName(attr.types.protoType)
+                        )
+                    }
+
+                    ProtoType.MESSAGE -> CodeBlock.of(
+                        "%M(%N, %T.Companion::%N)",
+                        readKMMessage,
+                        wrapperParamName,
+                        attr.types.iosType,
+                        Const.Message.Companion.IOS.WrapperDeserializationFunction.NAME
+                    )
+
+                    ProtoType.ENUM -> CodeBlock.of(
+                        "%T.%N(%N.stream.readEnum())",
+                        attr.types.iosType,
+                        Const.Enum.getEnumForNumFunctionName,
+                        wrapperParamName
+                    )
+
+                    else -> throw IllegalStateException()
+                }
+            }
+
+            message.attributes.filter { !it.isOneOfAttribute }.forEach { attr ->
                 when (attr.attributeType) {
                     is Scalar, is Repeated -> {
-                        val isPacked = attr.attributeType is Repeated
-
-                        val gpbType = getGPBDataTypeForProtoType(attr.types.protoType)
-
-                        addCode(
-                            "%M(%L, %M(%M, %L)).toInt()",
-                            GPBWireFormatMakeTag,
-                            attr.protoId,
-                            GPBWireFormatForType,
-                            gpbType,
-                            isPacked
-                        )
+                        addCode(getScalarAndRepeatedTagCode(attr))
                     }
 
                     is MapType -> addCode(
@@ -502,66 +552,11 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
 
                 addCode(" -> ")
 
-                //The function name of that reads the type from the input stream
-                val getScalarReadFunctionName = { protoType: ProtoType ->
-                    when (protoType) {
-                        ProtoType.DOUBLE -> "readDouble"
-                        ProtoType.FLOAT -> "readFloat"
-                        ProtoType.INT_32 -> "readInt32"
-                        ProtoType.INT_64 -> "readInt64"
-                        ProtoType.BOOL -> "readBool"
-                        ProtoType.STRING -> "readString"
-                        ProtoType.ENUM, ProtoType.MAP, ProtoType.MESSAGE -> throw IllegalStateException()
-                    }
-                }
-
                 when (attr.attributeType) {
                     is Scalar -> {
-                        if (attr.isOneOfAttribute) {
-                            //Set one of field directly
-                            addCode("%N = %T(", getOneOfVarName(attr.one))
-                        } else {
-                            //set the individual attr field
-                            addCode("%N = ")
-                        }
-
-                        when (attr.types.protoType) {
-                            ProtoType.DOUBLE,
-                            ProtoType.FLOAT,
-                            ProtoType.INT_32,
-                            ProtoType.INT_64,
-                            ProtoType.BOOL,
-                            ProtoType.STRING -> {
-                                addCode(
-                                    "%N.stream.%N()",
-                                    wrapperParamName,
-                                    getScalarReadFunctionName(attr.types.protoType)
-                                )
-                            }
-
-                            ProtoType.MESSAGE -> addCode(
-                                "%M(%N, %T.Companion::%N)",
-                                readKMMessage,
-                                wrapperParamName,
-                                attr.types.iosType,
-                                Const.Message.Companion.IOS.WrapperDeserializationFunction.NAME
-                            )
-
-                            ProtoType.ENUM -> addCode(
-                                "%T.%N(%N.stream.readEnum())",
-                                attr.types.iosType,
-                                Const.Enum.getEnumForNumFunctionName,
-                                wrapperParamName
-                            )
-
-                            else -> throw IllegalStateException()
-                        }
-
-                        if (attr.isOneOfAttribute) {
-                            addCode(")\n")
-                        } else {
-                            addCode("\n")
-                        }
+                        addCode("%N = ", getAttrVarName(attr))
+                        addCode(getScalarReadFieldCode(attr))
+                        addCode("\n")
                     }
 
                     is Repeated -> {
@@ -711,13 +706,33 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
                 }
             }
 
-            endControlFlow()
+            message.oneOfs.forEach { protoOneOf ->
+                protoOneOf.attributes.forEach { attr ->
+                    addCode(getScalarAndRepeatedTagCode(attr))
+                    addCode(
+                        " -> %N = %T(",
+                        getOneOfVarName(protoOneOf),
+                        Const.Message.OneOf.childClassName(message, protoOneOf, attr)
+                    )
+                    addCode(getScalarReadFieldCode(attr))
+                    addCode(")\n")
+                }
+            }
 
             endControlFlow()
 
-            val paramList = message.attributes.joinToString { Const.Message.Attribute.propertyName(message, it) }
+            endControlFlow()
 
-            addStatement("return %T($paramList)", message.iosType)
+            addCode("return %T(", message.iosType)
+            message.attributes.filter { !it.isOneOfAttribute }.forEach { attr ->
+                addCode("%N = %N, ", Const.Message.Attribute.propertyName(message, attr), getAttrVarName(attr))
+            }
+
+            message.oneOfs.forEach { oneOf ->
+                addCode("%N = %N, ", Const.Message.OneOf.propertyName(message, oneOf), getOneOfVarName(oneOf))
+            }
+
+            addCode(")\n")
         }
     }
 
