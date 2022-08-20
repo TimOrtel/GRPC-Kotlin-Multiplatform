@@ -98,6 +98,13 @@ abstract class SubDslBuilder(isActual: Boolean) : DslBuilder(isActual) {
                     endControlFlow()
                 }
 
+                //When must be exhaustive
+                addStatement(
+                    "%T, %T·->·{}",
+                    Const.Message.OneOf.notSetClassName(message, oneOf),
+                    Const.Message.OneOf.unknownClassName(message, oneOf)
+                )
+
                 endControlFlow()
             }
         }

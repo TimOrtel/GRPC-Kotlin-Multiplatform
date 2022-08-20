@@ -4,6 +4,7 @@ import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.PropertySpec
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.ProtoType
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoMessage
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoOneOf
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
@@ -24,12 +25,25 @@ object JsOneOfMethodAndClassGenerator : OneOfMethodAndClassGenerator(true) {
                     addCode("return when(jsImpl.%N()) {\n", Const.Message.OneOf.JS.getCaseFunctionName(oneOf))
                     oneOf.attributes.forEach { attr ->
                         addCode(
-                            "%L -> %T(%N.%N())\n",
-                            attr.protoId,
-                            Const.Message.OneOf.childClassName(message, oneOf, attr),
+                            "%L -> %T(", attr.protoId,
+                            Const.Message.OneOf.childClassName(message, oneOf, attr)
+                        )
+
+                        if (attr.types.protoType == ProtoType.MESSAGE) {
+                            addCode("%M(", Const.Message.CommonFunction.JS.commonFunction(attr))
+                        }
+
+                        addCode(
+                            "%N.%N()",
                             Const.Message.Constructor.JS.PARAM_IMPL,
                             Const.Message.Attribute.Scalar.JS.getFunction(message, attr)
                         )
+
+                        if (attr.types.protoType == ProtoType.MESSAGE) {
+                            addCode(")")
+                        }
+
+                        addCode(")\n")
                     }
                     addCode("0 -> %T\n", Const.Message.OneOf.notSetClassName(message, oneOf))
                     addCode("else -> %T\n", Const.Message.OneOf.unknownClassName(message, oneOf))

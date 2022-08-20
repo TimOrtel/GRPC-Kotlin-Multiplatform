@@ -418,14 +418,19 @@ fun generateBridgeClass(parentClass: ClassName?, message: ProtoMessage): TypeSpe
                     FunSpec
                         .builder(Const.Message.OneOf.JS.getCaseFunctionName(oneOf))
                         .returns(Int::class)
-                        .addStatement(
-                            "return %T.computeOneofCase(%N, %T.%N.oneofGroups_[%L])",
-                            jspbMessage,
-                            objPropertyName,
-                            message.jsType,
-                            prototypePropertyName,
-                            oneOf.oneOfIndex
-                        )
+                        .apply {
+                            addCode(
+                                "return %T.computeOneofCase(%N, arrayOf(",
+                                jspbMessage,
+                                objPropertyName,
+                            )
+
+                            addCode(
+                                oneOf.attributes.joinToString { it.protoId.toString() },
+                            )
+
+                            addCode("))")
+                        }
                         .build()
                 )
             }
