@@ -28,5 +28,6 @@ class JSSerializationTest : SerializationTest() {
     override fun serialize(message: KMMessageWithEverything): KMMessageWithEverything =
         serializeImpl(message.jsImpl, JS_MessageWithEverything.Companion, ::KMMessageWithEverything)
 
-
+    override fun serialize(message: KMOneOfMessage): KMOneOfMessage =
+        serializeImpl(message.jsImpl, JS_OneOfMessage.Companion, ::KMOneOfMessage)
 }

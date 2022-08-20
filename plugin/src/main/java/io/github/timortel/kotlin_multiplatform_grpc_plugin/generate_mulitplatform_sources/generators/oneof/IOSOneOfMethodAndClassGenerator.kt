@@ -56,7 +56,8 @@ object IOSOneOfMethodAndClassGenerator : OneOfMethodAndClassGenerator(true) {
                     IOSProtoFileWriter.getWriteScalarFieldCode(
                         message,
                         childClassType.attr,
-                        Const.Message.OneOf.IOS.SERIALIZE_FUNCTION_STREAM_PARAM_NAME
+                        Const.Message.OneOf.IOS.SERIALIZE_FUNCTION_STREAM_PARAM_NAME,
+                        performIsMessageSetCheck = false
                     )
                 )
                 ChildClassType.Unknown, ChildClassType.NotSet -> {

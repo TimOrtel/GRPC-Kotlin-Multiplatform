@@ -24,4 +24,6 @@ class IOSSerializationTest : SerializationTest() {
 
     override fun serialize(message: KMMessageWithEverything): KMMessageWithEverything =
         serializeImpl(message, KMMessageWithEverything.Companion)
+
+    override fun serialize(message: KMOneOfMessage): KMOneOfMessage = serializeImpl(message, KMOneOfMessage.Companion)
 }

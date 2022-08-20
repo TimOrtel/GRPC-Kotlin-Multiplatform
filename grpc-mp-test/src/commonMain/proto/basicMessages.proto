@@ -102,3 +102,11 @@ message LongMessage {
 message RepeatedLongMessage {
   repeated int64 field1 = 1;
 }
+
+message OneOfMessage {
+  oneof oneOf1 {
+    int32 field1 = 1;
+    string field2 = 2;
+    LongMessage field3 = 3;
+  }
+}

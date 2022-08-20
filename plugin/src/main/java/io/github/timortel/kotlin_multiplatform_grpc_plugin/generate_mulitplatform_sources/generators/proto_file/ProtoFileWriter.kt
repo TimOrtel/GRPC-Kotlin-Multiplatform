@@ -133,7 +133,7 @@ abstract class ProtoFileWriter(private val protoFile: ProtoFile, private val isA
                 addStatement("if (%N === this) return true", otherParamName)
                 addStatement("if (%N !is %T) return false", otherParamName, thisClassName)
 
-                message.attributes.forEach { attr ->
+                message.attributes.filter { !it.isOneOfAttribute }.forEach { attr ->
                     when (attr.attributeType) {
                         is Scalar -> {
                             addStatement(
@@ -157,30 +157,55 @@ abstract class ProtoFileWriter(private val protoFile: ProtoFile, private val isA
                     }
                 }
 
+                //Assume that each one of sealed class has their equals method set properly
+                message.oneOfs.forEach { oneOf ->
+                    addStatement(
+                        "if (%1N != %2N.%1N) return false",
+                        Const.Message.OneOf.propertyName(message, oneOf),
+                        otherParamName
+                    )
+                }
+
                 addStatement("return true")
+            }
+        }
+    }
+
+    private sealed class Property {
+        abstract fun propertyName(message: ProtoMessage): String
+
+        class Attribute(val attr: ProtoMessageAttribute) : Property() {
+            override fun propertyName(message: ProtoMessage): String {
+                return Const.Message.Attribute.propertyName(message, attr)
+            }
+        }
+
+        class OneOf(val oneOf: ProtoOneOf) : Property() {
+            override fun propertyName(message: ProtoMessage): String {
+                return Const.Message.OneOf.propertyName(message, oneOf)
             }
         }
     }
 
     open fun applyToHashCodeFunction(builder: FunSpec.Builder, message: ProtoMessage) {
         if (isActual) {
-            val getAttrName = { attr: ProtoMessageAttribute ->
-                Const.Message.Attribute.propertyName(message, attr)
-            }
+            val properties =
+                message.attributes.filter { !it.isOneOfAttribute }.map { Property.Attribute(it) } +
+                        message.oneOfs.map { Property.OneOf(it) }
 
             builder.apply {
-                if (message.attributes.isEmpty()) {
+                if (properties.isEmpty()) {
                     addStatement("return 0")
                     return
                 }
 
-                if (message.attributes.size == 1) {
-                    addStatement("return %N.hashCode()", getAttrName(message.attributes.first()))
+                if (properties.size == 1) {
+                    addStatement("return %N.hashCode()", properties.first().propertyName(message))
                     return
                 }
 
-                message.attributes.forEachIndexed { index, attr ->
-                    val attrName = getAttrName(attr)
+                properties.forEachIndexed { index, property ->
+                    val attrName = property.propertyName(message)
 
                     //Mimic the way IntelliJ generates hashCode
                     if (index == 0) {

@@ -45,20 +45,24 @@ abstract class OneOfMethodAndClassGenerator(private val isActual: Boolean) {
                                 .apply {
                                     if (isActual) {
                                         superclass(parentSealedClassName)
-                                        primaryConstructor(
-                                            FunSpec
-                                                .constructorBuilder()
-                                                .addParameter(
-                                                    ParameterSpec
-                                                        .builder(propName, attr.commonType)
-                                                        .defaultValue(attr.commonDefaultValue(false))
-                                                        .build()
-                                                )
-                                                .build()
-                                        )
+                                        addModifiers(KModifier.DATA)
                                     } else {
                                         addSuperinterface(parentSealedClassName)
                                     }
+
+                                    primaryConstructor(
+                                        FunSpec
+                                            .constructorBuilder()
+                                            .addParameter(
+                                                ParameterSpec
+                                                    .builder(propName, attr.commonType)
+                                                    .build()
+                                            )
+                                            .apply {
+                                                if (isActual) addModifiers(KModifier.ACTUAL)
+                                            }
+                                            .build()
+                                    )
 
                                     modifyChildClass(this, protoMessage, protoOneOf, ChildClassType.Normal(attr))
                                 }
@@ -117,7 +121,8 @@ abstract class OneOfMethodAndClassGenerator(private val isActual: Boolean) {
         message: ProtoMessage,
         oneOf: ProtoOneOf,
         childClassType: ChildClassType
-    ) {}
+    ) {
+    }
 
     sealed class ChildClassType {
         class Normal(val attr: ProtoMessageAttribute) : ChildClassType()

@@ -187,4 +187,41 @@ class DSLBuilderTest {
 
         assertEquals(map, msg.field1Map)
     }
+
+    @Test
+    fun testOneOfMessageBasic() {
+        val value = KMOneOfMessage.OneOf1.Field1(13)
+
+        val msg = kmOneOfMessage {
+            oneOf1 = value
+        }
+
+        assertEquals(value, msg.oneOf1)
+    }
+
+    @Test
+    fun testOneOfMessageMessage() {
+        val longMessage = kmLongMessage { field1 = 2521L }
+        val value = KMOneOfMessage.OneOf1.Field3(longMessage)
+
+        val msg = kmOneOfMessage {
+            oneOf1 = value
+        }
+
+        assertEquals(value, msg.oneOf1)
+        val oneOf = msg.oneOf1 as KMOneOfMessage.OneOf1.Field3
+        assertEquals(longMessage, oneOf.field3)
+    }
+
+    @Test
+    fun testOneOfMessageOverride() {
+        val value = KMOneOfMessage.OneOf1.Field2("Test")
+
+        val msg = kmOneOfMessage {
+            oneOf1 = KMOneOfMessage.OneOf1.Field1(13)
+            oneOf1 = value
+        }
+
+        assertEquals(value, msg.oneOf1)
+    }
 }

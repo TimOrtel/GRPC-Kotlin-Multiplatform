@@ -13,7 +13,7 @@ object IOSDslBuilder : DslBuilder(true) {
                 val propertyName = Const.Message.Attribute.propertyName(message, attr)
 
                 addCode("\n%N = %N ?: ", propertyName, propertyName)
-                addCode(attr.commonDefaultValue(false))
+                addCode(attr.commonDefaultValue(mutable = false, useEmptyMessage = false))
                 addCode(",")
             }
             message.oneOfs.forEach { oneOf ->

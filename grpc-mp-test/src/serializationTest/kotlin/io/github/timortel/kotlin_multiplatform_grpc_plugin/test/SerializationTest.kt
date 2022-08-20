@@ -55,6 +55,26 @@ abstract class SerializationTest {
         assertEquals(msg, reconstructed)
     }
 
+    abstract fun serialize(message: KMOneOfMessage): KMOneOfMessage
+
+    @Test
+    fun testSerializeOneOfScalarNumeric() {
+        val msg = kmOneOfMessage {
+            oneOf1 = KMOneOfMessage.OneOf1.Field1(23)
+        }
+
+        assertEquals(msg, serialize(msg))
+    }
+
+    @Test
+    fun testSerializeOneOfMessage() {
+        val msg = kmOneOfMessage {
+            oneOf1 = KMOneOfMessage.OneOf1.Field3(kmLongMessage { field1 = 15323L })
+        }
+
+        assertEquals(msg, serialize(msg))
+    }
+
     abstract fun serialize(message: KMMessageWithEverything): KMMessageWithEverything
 
     @Test

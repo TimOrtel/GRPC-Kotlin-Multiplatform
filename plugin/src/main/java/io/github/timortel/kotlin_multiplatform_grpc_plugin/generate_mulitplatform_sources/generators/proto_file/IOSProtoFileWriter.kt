@@ -46,7 +46,7 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
                                         addParameter(
                                             ParameterSpec
                                                 .builder(attr.name, attr.commonType)
-                                                .defaultValue(attr.commonDefaultValue(false))
+                                                .defaultValue(attr.commonDefaultValue(false, useEmptyMessage = false))
                                                 .build()
                                         )
                                     }
@@ -172,7 +172,7 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
                     when (attr.attributeType) {
                         is Scalar -> {
                             add("if·(%N·==·", Const.Message.Attribute.propertyName(message, attr))
-                            add(attr.commonDefaultValue(false))
+                            add(attr.commonDefaultValue(false, useEmptyMessage = false))
                             add(")·0u·else·{ ")
                             add(getCodeForRequiredSizeForScalarAttributeC(attr))
                             add(" }")
@@ -261,13 +261,14 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
                 when (attr.attributeType) {
                     is Scalar -> {
                         addCode("if·(%N·!=·", Const.Message.Attribute.propertyName(message, attr))
-                        addCode(attr.commonDefaultValue(false))
+                        addCode(attr.commonDefaultValue(false, useEmptyMessage = false))
                         beginControlFlow(")·{ ")
                         addCode(
                             getWriteScalarFieldCode(
                                 message,
                                 attr,
-                                Const.Message.IOS.SerializeFunction.STREAM_PARAM
+                                Const.Message.IOS.SerializeFunction.STREAM_PARAM,
+                                performIsMessageSetCheck = true
                             )
                         )
                         endControlFlow()
@@ -458,7 +459,7 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
                     getAttrVarName(attr),
                     type
                 )
-                addCode(attr.commonDefaultValue(true))
+                addCode(attr.commonDefaultValue(true, useEmptyMessage = false))
                 addCode("\n")
             }
 
@@ -757,6 +758,7 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
         ProtoType.INT_64,
         ProtoType.BOOL,
         ProtoType.ENUM -> true
+
         ProtoType.MESSAGE, ProtoType.STRING -> false
         ProtoType.MAP -> throw IllegalStateException()
     }
@@ -871,7 +873,8 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
         fun getWriteScalarFieldCode(
             message: ProtoMessage,
             attr: ProtoMessageAttribute,
-            streamParam: String
+            streamParam: String,
+            performIsMessageSetCheck: Boolean
         ): CodeBlock =
             when (attr.types.protoType) {
                 ProtoType.DOUBLE,
@@ -893,10 +896,12 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
 
                 ProtoType.MESSAGE -> {
                     CodeBlock.builder().apply {
-                        beginControlFlow(
-                            "if (%N)",
-                            Const.Message.Attribute.Scalar.IOS.isMessageSetFunctionName(message, attr)
-                        )
+                        if (performIsMessageSetCheck) {
+                            beginControlFlow(
+                                "if (%N)",
+                                Const.Message.Attribute.Scalar.IOS.isMessageSetFunctionName(message, attr)
+                            )
+                        }
 
                         addStatement(
                             "%M(%N, %L, %N)",
@@ -906,7 +911,7 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
                             attr.name
                         )
 
-                        endControlFlow()
+                        if (performIsMessageSetCheck) endControlFlow()
                     }.build()
                 }
 
