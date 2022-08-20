@@ -13,7 +13,6 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfor
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.repeated.RepeatedMessageMethodGenerator
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.scalar.IOSScalarMessageMethodGenerator
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.scalar.ScalarMessageMethodGenerator
-import org.jetbrains.kotlin.gradle.utils.`is`
 
 class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(protoFile, isActual = true),
     DefaultChildClassName {
@@ -27,7 +26,7 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
     override val mapMessageMethodGenerator: MapMessageMethodGenerator
         get() = IOSMapMessageMethodGenerator
 
-    override fun applyToClass(builder: TypeSpec.Builder, message: ProtoMessage) {
+    override fun applyToClass(builder: TypeSpec.Builder, message: ProtoMessage, messageClassName: ClassName) {
         builder.apply {
             primaryConstructor(
                 FunSpec
@@ -130,10 +129,12 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
             addType(
                 TypeSpec
                     .companionObjectBuilder()
+                    .addSuperinterface(MessageDeserializer.parameterizedBy(messageClassName))
                     .addFunction(
                         //The function that builds the message from NSData
                         FunSpec
                             .builder(Const.Message.Companion.IOS.DataDeserializationFunction.NAME)
+                            .addModifiers(KModifier.OVERRIDE)
                             .addParameter(Const.Message.Companion.IOS.DataDeserializationFunction.DATA_PARAM, NSData)
                             .addStatement("val wrapper = %T(%T(data))", GPBCodedInputStreamWrapper, GPBCodedInputStream)
                             .addStatement(
@@ -170,7 +171,11 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
                     if (i != 0) add("·+\n")
                     when (attr.attributeType) {
                         is Scalar -> {
+                            add("if·(%N·==·", Const.Message.Attribute.propertyName(message, attr))
+                            add(attr.commonDefaultValue(false))
+                            add(")·0u·else·{ ")
                             add(getCodeForRequiredSizeForScalarAttributeC(attr))
+                            add(" }")
                         }
 
                         is Repeated -> {
@@ -255,6 +260,9 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
             message.attributes.filter { !it.isOneOfAttribute }.forEach { attr ->
                 when (attr.attributeType) {
                     is Scalar -> {
+                        addCode("if·(%N·!=·", Const.Message.Attribute.propertyName(message, attr))
+                        addCode(attr.commonDefaultValue(false))
+                        beginControlFlow(")·{ ")
                         addCode(
                             getWriteScalarFieldCode(
                                 message,
@@ -262,6 +270,7 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
                                 Const.Message.IOS.SerializeFunction.STREAM_PARAM
                             )
                         )
+                        endControlFlow()
                     }
 
                     is Repeated -> {
@@ -474,7 +483,7 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
             beginControlFlow("when (tag)")
 
             val getScalarAndRepeatedTagCode = { attr: ProtoMessageAttribute ->
-                val isPacked = attr.attributeType is Repeated
+                val isPacked = isAttrPackable(attr) && attr.attributeType is Repeated
 
                 val gpbType = getGPBDataTypeForProtoType(attr.types.protoType)
 
@@ -554,7 +563,7 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
 
                 when (attr.attributeType) {
                     is Scalar -> {
-                        addCode("%N = ", getAttrVarName(attr))
+                        addCode("%N·=·", getAttrVarName(attr))
                         addCode(getScalarReadFieldCode(attr))
                         addCode("\n")
                     }
@@ -567,19 +576,18 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
                             ProtoType.INT_32,
                             ProtoType.INT_64,
                             ProtoType.BOOL,
-                            ProtoType.STRING,
                             ProtoType.ENUM -> {
                                 //All packable
                                 addStatement(
-                                    "val length = %N.stream.readInt32().toULong()",
+                                    "val length·=·%N.stream.readInt32().toULong()",
                                     wrapperParamName
                                 )
                                 addStatement(
-                                    "val limit = %N.stream.pushLimit(length)",
+                                    "val limit·=·%N.stream.pushLimit(length)",
                                     wrapperParamName
                                 )
                                 beginControlFlow(
-                                    "while (!%N.stream.isAtEnd())·{",
+                                    "while·(!%N.stream.isAtEnd())·{",
                                     wrapperParamName
                                 )
                                 //Enums need to first get mapped
@@ -595,7 +603,7 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
                                     val functionName = getScalarReadFunctionName(attr.types.protoType)
 
                                     addStatement(
-                                        "%N += %N.stream.%N()",
+                                        "%N·+=·%N.stream.%N()",
                                         getAttrVarName(attr),
                                         wrapperParamName,
                                         functionName
@@ -608,12 +616,18 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
                             }
 
                             ProtoType.MESSAGE -> addCode(
-                                "%N += %M(%N, %T.Companion::%N)\n",
+                                "%N·+=·%M(%N, %T.Companion::%N)\n",
                                 getAttrVarName(attr),
                                 readKMMessage,
                                 wrapperParamName,
                                 attr.types.iosType,
                                 Const.Message.Companion.IOS.WrapperDeserializationFunction.NAME
+                            )
+
+                            ProtoType.STRING -> addCode(
+                                "%N·+=·%N.stream.readString()",
+                                getAttrVarName(attr),
+                                wrapperParamName
                             )
 
                             ProtoType.MAP -> throw IllegalStateException()
@@ -689,7 +703,7 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
                             ProtoType.INT_32,
                             ProtoType.INT_64,
                             ProtoType.BOOL,
-                            ProtoType.STRING -> addReadScalarCode(attr.attributeType.keyTypes)
+                            ProtoType.STRING -> addReadScalarCode(attr.attributeType.valueTypes)
 
                             ProtoType.MESSAGE -> addCode(
                                 "{·%M(this, %T.Companion::%N)}",
@@ -710,7 +724,7 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
                 protoOneOf.attributes.forEach { attr ->
                     addCode(getScalarAndRepeatedTagCode(attr))
                     addCode(
-                        " -> %N = %T(",
+                        "·->·%N·=·%T(",
                         getOneOfVarName(protoOneOf),
                         Const.Message.OneOf.childClassName(message, protoOneOf, attr)
                     )
@@ -725,11 +739,11 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
 
             addCode("return %T(", message.iosType)
             message.attributes.filter { !it.isOneOfAttribute }.forEach { attr ->
-                addCode("%N = %N, ", Const.Message.Attribute.propertyName(message, attr), getAttrVarName(attr))
+                addCode("%N·=·%N, ", Const.Message.Attribute.propertyName(message, attr), getAttrVarName(attr))
             }
 
             message.oneOfs.forEach { oneOf ->
-                addCode("%N = %N, ", Const.Message.OneOf.propertyName(message, oneOf), getOneOfVarName(oneOf))
+                addCode("%N·=·%N, ", Const.Message.OneOf.propertyName(message, oneOf), getOneOfVarName(oneOf))
             }
 
             addCode(")\n")
@@ -742,10 +756,8 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
         ProtoType.INT_32,
         ProtoType.INT_64,
         ProtoType.BOOL,
-        ProtoType.STRING,
         ProtoType.ENUM -> true
-
-        ProtoType.MESSAGE -> false
+        ProtoType.MESSAGE, ProtoType.STRING -> false
         ProtoType.MAP -> throw IllegalStateException()
     }
 
@@ -922,14 +934,6 @@ class IOSProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
                 ProtoType.ENUM -> "writeEnum"
                 ProtoType.MAP, ProtoType.MESSAGE -> throw IllegalStateException()
             }
-    }
-
-    override fun applyToEqualsFunction(builder: FunSpec.Builder, message: ProtoMessage, thisClassName: ClassName) {
-        builder.addStatement("return false")
-    }
-
-    override fun applyToHashCodeFunction(builder: FunSpec.Builder, message: ProtoMessage) {
-        builder.addStatement("return 0")
     }
 
     override fun getChildClassName(parentClass: ClassName?, childName: String): ClassName =

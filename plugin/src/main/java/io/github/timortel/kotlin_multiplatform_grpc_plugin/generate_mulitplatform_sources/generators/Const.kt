@@ -246,16 +246,20 @@ object Const {
 
         object Attribute {
             object Scalar {
-                fun attrName(attr: ProtoMessageAttribute): String = attr.name
+                fun propertyName(attr: ProtoMessageAttribute): String = attr.name
             }
 
             object Repeated {
-                fun attrName(attr: ProtoMessageAttribute): String = "${attr.name}List"
+                fun propertyName(attr: ProtoMessageAttribute): String = "${attr.name}List"
             }
 
             object Map {
-                fun attrName(attr: ProtoMessageAttribute): String = "${attr.name}Map"
+                fun propertyName(attr: ProtoMessageAttribute): String = "${attr.name}Map"
             }
+        }
+
+        object OneOf {
+            fun propertyName(message: ProtoMessage, oneOf: ProtoOneOf): String = oneOf.name
         }
     }
 

@@ -9,8 +9,12 @@ val kmChannel = ClassName("io.github.timortel.kotlin_multiplatform_grpc_lib", "K
 val kmAndroidJVMStub = ClassName("io.github.timortel.kotlin_multiplatform_grpc_lib.stub", "AndroidJvmKMStub")
 val kmTimeUnit = ClassName("io.github.timortel.kotlin_multiplatform_grpc_lib.util", "TimeUnit")
 
+val JSImpl = ClassName("io.github.timortel.kotlin_multiplatform_grpc_lib.message", "JSImpl")
+val MessageDeserializer = ClassName("io.github.timortel.kotlin_multiplatform_grpc_lib.message", "MessageDeserializer")
+
 val kmMessage = ClassName("io.github.timortel.kotlin_multiplatform_grpc_lib.message", "KMMessage")
-val GPBCodedInputStreamWrapper = ClassName("io.github.timortel.kotlin_multiplatform_grpc_lib.io", "GPBCodedInputStreamWrapper")
+val GPBCodedInputStreamWrapper =
+    ClassName("io.github.timortel.kotlin_multiplatform_grpc_lib.io", "GPBCodedInputStreamWrapper")
 
 val writeKMMessage = MemberName("io.github.timortel.kotlin_multiplatform_grpc_lib.io", "writeKMMessage")
 val readKMMessage = MemberName("io.github.timortel.kotlin_multiplatform_grpc_lib.io", "readKMMessage")

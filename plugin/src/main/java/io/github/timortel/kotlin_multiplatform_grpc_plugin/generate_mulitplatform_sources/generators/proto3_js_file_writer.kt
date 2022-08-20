@@ -2,11 +2,14 @@ package io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfo
 
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.JSImpl
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.MessageDeserializer
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.ProtoType
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.common.JsCommonFunctionGenerator
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.dsl.JsDslBuilder
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.proto_file.JsProtoFileWriter
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.*
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.kmMessage
 import java.io.File
 
 private val jspb = ClassName("io.github.timortel.kotlin_multiplatform_grpc_lib", "JSPB")
@@ -19,12 +22,15 @@ val functionWrapper = MemberName("io.github.timortel.kotlin_multiplatform_grpc_l
 
 const val objPropertyName = "obj"
 
-fun generateBridgeClass(message: ProtoMessage): TypeSpec {
+fun generateBridgeClass(parentClass: ClassName?, message: ProtoMessage): TypeSpec {
     val prototypePropertyName = "prototype"
     val newFunctionName = "new"
 
+    val jsImplClassName = parentClass?.nestedClass("JS_" + message.name) ?: ClassName(message.pkg, "JS_" + message.name)
+
     return TypeSpec
-        .classBuilder("JS_" + message.name)
+        .classBuilder(jsImplClassName)
+        .addSuperinterface(JSImpl)
         .primaryConstructor(
             FunSpec
                 .constructorBuilder()
@@ -45,6 +51,7 @@ fun generateBridgeClass(message: ProtoMessage): TypeSpec {
         .addType(
             TypeSpec
                 .companionObjectBuilder()
+                .addSuperinterface(MessageDeserializer.parameterizedBy(jsImplClassName))
                 .addProperty(prototypePropertyName, Dynamic)
                 .addInitializerBlock(
                     CodeBlock
@@ -83,6 +90,7 @@ fun generateBridgeClass(message: ProtoMessage): TypeSpec {
                 .addFunction(
                     FunSpec
                         .builder("deserializeBinary")
+                        .addModifiers(KModifier.OVERRIDE)
                         .addParameter("bytes", Dynamic)
                         .returns(message.jsType)
                         .addStatement("val reader = %T(bytes)", jspbReader)
@@ -97,6 +105,7 @@ fun generateBridgeClass(message: ProtoMessage): TypeSpec {
         .addFunction(
             FunSpec
                 .builder("serializeBinary")
+                .addModifiers(KModifier.OVERRIDE)
                 .returns(Dynamic)
                 .addStatement("val writer = %T()", jspbWriter)
                 .addStatement("serializeBinaryToWriter(this.%N, writer)", objPropertyName)
@@ -123,6 +132,7 @@ fun generateBridgeClass(message: ProtoMessage): TypeSpec {
                                     if (isDouble) Double::class else Float::class
                                 )
                             }
+
                             ProtoType.INT_32, ProtoType.INT_64 -> {
                                 val isLong = attr.types.protoType == ProtoType.INT_64
 
@@ -138,6 +148,7 @@ fun generateBridgeClass(message: ProtoMessage): TypeSpec {
                                     attr.protoId
                                 )
                             }
+
                             ProtoType.BOOL ->
                                 CodeBlock.of(
                                     "return %T.%N(%N, %L, %L)",
@@ -147,6 +158,7 @@ fun generateBridgeClass(message: ProtoMessage): TypeSpec {
                                     attr.protoId,
                                     false
                                 )
+
                             ProtoType.STRING ->
                                 CodeBlock.of(
                                     "return %T.%N(%N, %L, \"\") as String",
@@ -155,6 +167,7 @@ fun generateBridgeClass(message: ProtoMessage): TypeSpec {
                                     objPropertyName,
                                     attr.protoId
                                 )
+
                             ProtoType.MESSAGE ->
                                 CodeBlock.of(
                                     "return %T(%T.%N(%N, %T.%N, %L))",
@@ -166,6 +179,7 @@ fun generateBridgeClass(message: ProtoMessage): TypeSpec {
                                     prototypePropertyName,
                                     attr.protoId
                                 )
+
                             ProtoType.ENUM ->
                                 CodeBlock.of(
                                     "return %T.%N(%N, %L, %L)",
@@ -175,6 +189,7 @@ fun generateBridgeClass(message: ProtoMessage): TypeSpec {
                                     attr.protoId,
                                     0
                                 )
+
                             ProtoType.MAP -> throw IllegalStateException()
                         }
 
@@ -198,6 +213,7 @@ fun generateBridgeClass(message: ProtoMessage): TypeSpec {
                                     "value"
                                 )
                             }
+
                             ProtoType.MAP -> throw IllegalStateException()
                             ProtoType.MESSAGE ->
                                 CodeBlock.of(
@@ -245,6 +261,7 @@ fun generateBridgeClass(message: ProtoMessage): TypeSpec {
                             )
                         }
                     }
+
                     is Repeated -> {
                         val setterCode = when (attr.types.protoType) {
                             ProtoType.DOUBLE, ProtoType.FLOAT, ProtoType.INT_32, ProtoType.INT_64, ProtoType.BOOL, ProtoType.STRING, ProtoType.ENUM ->
@@ -255,6 +272,7 @@ fun generateBridgeClass(message: ProtoMessage): TypeSpec {
                                     attr.protoId,
                                     "values"
                                 )
+
                             ProtoType.MESSAGE -> CodeBlock.of(
                                 "%T.setRepeatedWrapperField(%N, %L, %N.map·{ it.%N }.toTypedArray())",
                                 jspbMessage,
@@ -263,6 +281,7 @@ fun generateBridgeClass(message: ProtoMessage): TypeSpec {
                                 "values",
                                 objPropertyName
                             )
+
                             ProtoType.MAP -> throw IllegalStateException()
                         }
 
@@ -279,6 +298,7 @@ fun generateBridgeClass(message: ProtoMessage): TypeSpec {
                                     if (isDouble) DOUBLE else FLOAT
                                 )
                             }
+
                             ProtoType.INT_32, ProtoType.INT_64 -> {
                                 val isLong = attr.types.protoType == ProtoType.INT_64
 
@@ -291,6 +311,7 @@ fun generateBridgeClass(message: ProtoMessage): TypeSpec {
                                     if (isLong) NUMBER else INT
                                 )
                             }
+
                             ProtoType.BOOL ->
                                 CodeBlock.of(
                                     "return %T.%N(%N, %L) as Array<Boolean>",
@@ -299,6 +320,7 @@ fun generateBridgeClass(message: ProtoMessage): TypeSpec {
                                     objPropertyName,
                                     attr.protoId
                                 )
+
                             ProtoType.STRING ->
                                 CodeBlock.of(
                                     "return %T.%N(%N, %L) as Array<String>",
@@ -307,6 +329,7 @@ fun generateBridgeClass(message: ProtoMessage): TypeSpec {
                                     objPropertyName,
                                     attr.protoId
                                 )
+
                             ProtoType.MESSAGE ->
                                 CodeBlock.of(
                                     "return %T.%N(%N, %T.%N, %L).map·{ %T(it) }.toTypedArray() as Array<%T>",
@@ -319,6 +342,7 @@ fun generateBridgeClass(message: ProtoMessage): TypeSpec {
                                     attr.types.jsType,
                                     attr.types.jsType
                                 )
+
                             ProtoType.ENUM ->
                                 CodeBlock.of(
                                     "return %T.%N(%N, %L) as Array<Int>",
@@ -327,6 +351,7 @@ fun generateBridgeClass(message: ProtoMessage): TypeSpec {
                                     objPropertyName,
                                     attr.protoId
                                 )
+
                             ProtoType.MAP -> throw IllegalStateException()
                         }
 
@@ -352,6 +377,7 @@ fun generateBridgeClass(message: ProtoMessage): TypeSpec {
                                 .build()
                         )
                     }
+
                     is MapType -> {
                         //Get map
                         addFunction(
@@ -405,7 +431,7 @@ fun generateBridgeClass(message: ProtoMessage): TypeSpec {
             }
 
             message.children.forEach { childMessage ->
-                addType(generateBridgeClass(childMessage))
+                addType(generateBridgeClass(jsImplClassName, childMessage))
             }
         }
         .build()
@@ -427,26 +453,32 @@ private fun writeSerializeBinaryToWriter(message: ProtoMessage): CodeBlock {
                             beginControlFlow(" != 0.0)")
                             "writeDouble" to false
                         }
+
                         ProtoType.FLOAT -> {
                             beginControlFlow(" != 0f)")
                             "writeFloat" to false
                         }
+
                         ProtoType.INT_32 -> {
                             beginControlFlow(" != 0)")
                             "writeInt32" to false
                         }
+
                         ProtoType.INT_64 -> {
                             beginControlFlow(" != 0L)")
                             "writeInt64" to false
                         }
+
                         ProtoType.BOOL -> {
                             beginControlFlow(")")
                             "writeBool" to false
                         }
+
                         ProtoType.STRING -> {
                             beginControlFlow(".length > 0)")
                             "writeString" to false
                         }
+
                         ProtoType.MAP -> throw IllegalStateException()
                         ProtoType.MESSAGE -> {
                             beginControlFlow(" != null)")
@@ -459,6 +491,7 @@ private fun writeSerializeBinaryToWriter(message: ProtoMessage): CodeBlock {
                             endControlFlow()
                             "writeMessage" to true
                         }
+
                         ProtoType.ENUM -> {
                             beginControlFlow(" != 0)")
                             "writeEnum" to false
@@ -470,6 +503,7 @@ private fun writeSerializeBinaryToWriter(message: ProtoMessage): CodeBlock {
                         endControlFlow()
                     }
                 }
+
                 is Repeated -> {
                     addStatement("temp = message.%N()", Const.Message.Attribute.Repeated.JS.getListFunctionName(attr))
                     beginControlFlow("if (temp.length > 0)")
@@ -483,6 +517,7 @@ private fun writeSerializeBinaryToWriter(message: ProtoMessage): CodeBlock {
 
                     endControlFlow()
                 }
+
                 is MapType -> {
                     addStatement("temp = message.%N(false)", Const.Message.Attribute.Map.JS.getMapFunctionName(attr))
                     beginControlFlow("if (temp != null && temp.getLength() > 0)")
@@ -571,6 +606,7 @@ private fun writeDeserializeBinaryFromReader(message: ProtoMessage): CodeBlock {
                                 Const.Message.Attribute.Scalar.JS.setFunction(message, attr)
                             )
                         }
+
                         ProtoType.INT_64 -> {
                             addStatement("//Handle weird behaviour of Long")
                             addStatement("val value = (reader.readInt64() as %T).toLong()", NUMBER)
@@ -579,6 +615,7 @@ private fun writeDeserializeBinaryFromReader(message: ProtoMessage): CodeBlock {
                                 Const.Message.Attribute.Scalar.JS.setFunction(message, attr)
                             )
                         }
+
                         ProtoType.MESSAGE -> {
                             addStatement("val value = %T()\n", attr.types.jsType)
                             addStatement(
@@ -591,9 +628,11 @@ private fun writeDeserializeBinaryFromReader(message: ProtoMessage): CodeBlock {
                                 Const.Message.Attribute.Scalar.JS.setFunction(message, attr)
                             )
                         }
+
                         ProtoType.MAP -> throw IllegalStateException()
                     }
                 }
+
                 is Repeated -> {
                     when (attr.types.protoType) {
                         ProtoType.DOUBLE, ProtoType.FLOAT, ProtoType.INT_32, ProtoType.INT_64, ProtoType.BOOL, ProtoType.ENUM -> {
@@ -606,9 +645,11 @@ private fun writeDeserializeBinaryFromReader(message: ProtoMessage): CodeBlock {
 
                             addStatement("%N += value", getRepeatedListVarName(attr))
                         }
+
                         ProtoType.STRING -> {
                             addStatement("%N += reader.readString()", getRepeatedListVarName(attr))
                         }
+
                         ProtoType.MESSAGE -> {
                             addStatement("val value = %T()", attr.types.jsType)
                             addStatement(
@@ -618,9 +659,11 @@ private fun writeDeserializeBinaryFromReader(message: ProtoMessage): CodeBlock {
                             )
                             addStatement("%N += value", getRepeatedListVarName(attr))
                         }
+
                         ProtoType.MAP -> throw IllegalStateException()
                     }
                 }
+
                 is MapType -> {
                     addStatement(
                         "val value = message.%N(false)",
@@ -734,7 +777,7 @@ fun writeJsFiles(protoFile: ProtoFile, jsOutputDir: File) {
 
             protoFile.messages.forEach { message ->
                 addType(
-                    generateBridgeClass(message)
+                    generateBridgeClass(null, message)
                 )
             }
         }

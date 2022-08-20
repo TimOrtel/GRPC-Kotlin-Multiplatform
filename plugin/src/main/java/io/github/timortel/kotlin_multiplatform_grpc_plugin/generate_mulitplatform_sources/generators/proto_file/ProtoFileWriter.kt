@@ -8,6 +8,7 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfor
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.scalar.ScalarMessageMethodGenerator
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.unrecognizedEnumField
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.*
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.kmMessage
 import java.io.File
 
 abstract class ProtoFileWriter(private val protoFile: ProtoFile, private val isActual: Boolean) {
@@ -51,6 +52,8 @@ abstract class ProtoFileWriter(private val protoFile: ProtoFile, private val isA
                 else TypeSpec.classBuilder(message.commonName)
                 )
             .apply {
+                addSuperinterface(kmMessage)
+
                 message.attributes.forEach { attr ->
                     //We change nothing here
                     when (attr.attributeType) {
@@ -64,7 +67,7 @@ abstract class ProtoFileWriter(private val protoFile: ProtoFile, private val isA
                     addOneOfEnumAndFunctions(this, message, oneOf)
                 }
 
-                applyToClass(this, message)
+                applyToClass(this, message, messageClassName)
 
                 //Write child messages
                 message.children.forEach { childMessage ->
@@ -113,18 +116,84 @@ abstract class ProtoFileWriter(private val protoFile: ProtoFile, private val isA
             .build()
     }
 
-    abstract fun applyToClass(builder: TypeSpec.Builder, message: ProtoMessage)
+    abstract fun applyToClass(builder: TypeSpec.Builder, message: ProtoMessage, messageClassName: ClassName)
 
     /**
      * @param thisClassName the ClassName of the class we are constructing right now.
      */
-    abstract fun applyToEqualsFunction(
+    open fun applyToEqualsFunction(
         builder: FunSpec.Builder,
         message: ProtoMessage,
         thisClassName: ClassName
-    )
+    ) {
+        if (isActual) {
+            builder.apply {
+                val otherParamName = Const.Message.BasicFunctions.EqualsFunction.OTHER_PARAM
 
-    abstract fun applyToHashCodeFunction(builder: FunSpec.Builder, message: ProtoMessage)
+                addStatement("if (%N === this) return true", otherParamName)
+                addStatement("if (%N !is %T) return false", otherParamName, thisClassName)
+
+                message.attributes.forEach { attr ->
+                    when (attr.attributeType) {
+                        is Scalar -> {
+                            addStatement(
+                                "if (%1N != %2N.%1N) return false",
+                                attr.name,
+                                otherParamName
+                            )
+                        }
+
+                        is Repeated -> addStatement(
+                            "if (%1N != %2N.%1N) return false",
+                            Const.Message.Attribute.Repeated.listPropertyName(attr),
+                            otherParamName
+                        )
+
+                        is MapType -> addStatement(
+                            "if (%1N != %2N.%1N) return false",
+                            Const.Message.Attribute.Map.propertyName(attr),
+                            otherParamName
+                        )
+                    }
+                }
+
+                addStatement("return true")
+            }
+        }
+    }
+
+    open fun applyToHashCodeFunction(builder: FunSpec.Builder, message: ProtoMessage) {
+        if (isActual) {
+            val getAttrName = { attr: ProtoMessageAttribute ->
+                Const.Message.Attribute.propertyName(message, attr)
+            }
+
+            builder.apply {
+                if (message.attributes.isEmpty()) {
+                    addStatement("return 0")
+                    return
+                }
+
+                if (message.attributes.size == 1) {
+                    addStatement("return %N.hashCode()", getAttrName(message.attributes.first()))
+                    return
+                }
+
+                message.attributes.forEachIndexed { index, attr ->
+                    val attrName = getAttrName(attr)
+
+                    //Mimic the way IntelliJ generates hashCode
+                    if (index == 0) {
+                        addStatement("var result = %N.hashCode()", attrName)
+                    } else {
+                        addStatement("result = 31 * result + %N.hashCode()", attrName)
+                    }
+                }
+
+                addStatement("return result")
+            }
+        }
+    }
 
     private fun addSimpleMessageFunctions(
         builder: TypeSpec.Builder,

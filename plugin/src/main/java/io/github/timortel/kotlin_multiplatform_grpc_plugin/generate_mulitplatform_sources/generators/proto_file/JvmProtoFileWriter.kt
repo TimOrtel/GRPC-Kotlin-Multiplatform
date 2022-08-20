@@ -26,7 +26,7 @@ class JvmProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(pro
 
     override val mapMessageMethodGenerator: MapMessageMethodGenerator = JvmMapMessageMethodGenerator
 
-    override fun applyToClass(builder: TypeSpec.Builder, message: ProtoMessage) {
+    override fun applyToClass(builder: TypeSpec.Builder, message: ProtoMessage, messageClassName: ClassName) {
         builder.addProperty(
             PropertySpec
                 .builder(Const.Message.Constructor.JVM.PARAM_IMPL, message.jvmType)

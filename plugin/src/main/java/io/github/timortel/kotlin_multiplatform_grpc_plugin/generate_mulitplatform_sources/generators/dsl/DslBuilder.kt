@@ -3,7 +3,6 @@ package io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfo
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.map.mapper.MapMapper
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.*
 
 abstract class DslBuilder(private val isActual: Boolean) {
@@ -34,7 +33,7 @@ abstract class DslBuilder(private val isActual: Boolean) {
         val modifier: List<KModifier> =
             if (isActual) listOf(KModifier.ACTUAL) else if (currentClass != null) emptyList() else listOf(KModifier.EXPECT)
 
-        val dslBuilderClassName = "KM${message.name.capitalize()}DSL"
+        val dslBuilderClassName = "KM${message.capitalizedName}DSL"
         val dslBuilderClassType =
             currentClass?.nestedClass(dslBuilderClassName) ?: ClassName(message.pkg, dslBuilderClassName)
         addType(
@@ -49,13 +48,13 @@ abstract class DslBuilder(private val isActual: Boolean) {
                         .build()
                 )
                 .apply {
-                    message.attributes.forEach { attr ->
+                    message.attributes.filter { !it.isOneOfAttribute }.forEach { attr ->
                         when (attr.attributeType) {
                             is Scalar -> {
                                 addProperty(
                                     PropertySpec
                                         .builder(
-                                            Const.DSL.Attribute.Scalar.attrName(attr),
+                                            Const.DSL.Attribute.Scalar.propertyName(attr),
                                             attr.commonType.copy(nullable = true)
                                         )
                                         .addModifiers(modifier)
@@ -68,11 +67,12 @@ abstract class DslBuilder(private val isActual: Boolean) {
                                         .build()
                                 )
                             }
+
                             is Repeated -> {
                                 addProperty(
                                     PropertySpec
                                         .builder(
-                                            Const.DSL.Attribute.Repeated.attrName(attr),
+                                            Const.DSL.Attribute.Repeated.propertyName(attr),
                                             ClassName(
                                                 "kotlin.collections",
                                                 "MutableList"
@@ -86,11 +86,12 @@ abstract class DslBuilder(private val isActual: Boolean) {
                                         .build()
                                 )
                             }
+
                             is MapType -> {
                                 addProperty(
                                     PropertySpec
                                         .builder(
-                                            Const.DSL.Attribute.Map.attrName(attr),
+                                            Const.DSL.Attribute.Map.propertyName(attr),
                                             attr.attributeType.commonMutableMapType
                                         )
                                         .addModifiers(modifier)
@@ -103,6 +104,24 @@ abstract class DslBuilder(private val isActual: Boolean) {
                                 )
                             }
                         }
+                    }
+
+                    message.oneOfs.forEach { oneOf ->
+                        addProperty(
+                            PropertySpec
+                                .builder(
+                                    Const.DSL.OneOf.propertyName(message, oneOf),
+                                    Const.Message.OneOf.parentSealedClassName(message, oneOf),
+                                    modifier
+                                )
+                                .mutable()
+                                .apply {
+                                    if (isActual) {
+                                        initializer(oneOf.defaultValue(message))
+                                    }
+                                }
+                                .build()
+                        )
                     }
                 }
                 .addFunction(
@@ -135,7 +154,7 @@ abstract class DslBuilder(private val isActual: Boolean) {
         if (!isActual) {
             addTopLevelFunction(
                 FunSpec
-                    .builder("km${message.name.capitalize()}")
+                    .builder("km${message.capitalizedName}")
                     .addModifiers(KModifier.INLINE)
                     .addParameter(
                         "builderDsl",

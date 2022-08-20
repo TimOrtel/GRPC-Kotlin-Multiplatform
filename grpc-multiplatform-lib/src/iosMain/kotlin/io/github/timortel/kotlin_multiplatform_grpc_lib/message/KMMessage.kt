@@ -9,7 +9,7 @@ import platform.posix.size_t
 /**
  * Base specification.
  */
-interface KMMessage {
+actual interface KMMessage {
 
     val requiredSize: size_t
 

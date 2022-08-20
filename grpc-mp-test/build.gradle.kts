@@ -3,9 +3,12 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.GrpcMultiplatformExte
 plugins {
     id("com.android.library")
     kotlin("multiplatform")
+    kotlin("native.cocoapods")
 
     id("io.github.timortel.kotlin-multiplatform-grpc-plugin") version "0.2.0"
 }
+
+version = "dev"
 
 repositories {
     mavenCentral()
@@ -27,6 +30,17 @@ kotlin {
     }
 
     ios()
+    iosArm64()
+    iosSimulatorArm64()
+
+    cocoapods {
+        summary = "GRPC Kotlin Multiplatform test library"
+        homepage = "https://github.com/TimOrtel/GRPC-Kotlin-Multiplatform"
+        ios.deploymentTarget = "14.1"
+
+        pod("gRPC-ProtoRPC", moduleName = "GRPCClient")
+        pod("Protobuf")
+    }
 
     sourceSets {
         val commonMain by getting {
@@ -40,6 +54,8 @@ kotlin {
                 implementation(kotlin("test"))
             }
         }
+
+        val iosMain by getting
 
         val jvmMain by getting {
             dependencies {
@@ -56,6 +72,8 @@ kotlin {
         }
 
         val serializationTest by creating {
+            dependsOn(commonMain)
+            dependsOn(commonTest)
             dependencies {
                 implementation(kotlin("test"))
             }
@@ -68,6 +86,14 @@ kotlin {
 
         val iosTest by getting {
             dependsOn(serializationTest)
+        }
+
+        val iosSimulatorArm64Main by getting {
+            dependsOn(iosMain)
+        }
+
+        val iosSimulatorArm64Test by getting {
+            dependsOn(iosTest)
         }
     }
 }
@@ -94,9 +120,23 @@ android {
 }
 
 grpcKotlinMultiplatform {
-    targetSourcesMap.put(OutputTarget.JS, listOf(kotlin.sourceSets.getByName("jsMain")))
-    targetSourcesMap.put(OutputTarget.JVM, listOf(kotlin.sourceSets.getByName("androidMain")))
-    targetSourcesMap.put(OutputTarget.IOS, listOf(kotlin.sourceSets.getByName("iosMain")))
+    targetSourcesMap.put(
+        OutputTarget.JS,
+        listOf(kotlin.sourceSets.getByName("jsMain"), kotlin.sourceSets.getByName("jsTest"))
+    )
+    targetSourcesMap.put(
+        OutputTarget.JVM,
+        listOf(kotlin.sourceSets.getByName("androidMain"), kotlin.sourceSets.getByName("jvmMain"))
+    )
+    targetSourcesMap.put(
+        OutputTarget.IOS,
+        listOf(
+            kotlin.sourceSets.getByName("iosMain"),
+            kotlin.sourceSets.getByName("iosTest"),
+//            kotlin.sourceSets.getByName("iosSimulatorArm64Main"),
+//            kotlin.sourceSets.getByName("iosSimulatorArm64Test")
+        )
+    )
 }
 
 tasks.register<io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.GenerateMultiplatformSourcesTask>(

@@ -1,64 +1,68 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.test
 
-//import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.basic_messages.*
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.basic_messages.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-//expect fun reserializeLong(msg: KMLongMessage): KMLongMessage
+abstract class SerializationTest {
 
-class SerializationTest {
+    abstract fun serialize(message: KMLongMessage): KMLongMessage
 
-//    @Test
-//    fun testSerializeLong() {
-//        val message = kmLongMessage {
-//            field1 = 12L
-//        }
-//
-//        val serializedMessage = reserializeLong(message)
-//
-//        assertEquals(message, serializedMessage)
-//    }
+    @Test
+    fun testSerializeLong() {
+        val message = kmLongMessage {
+            field1 = 12L
+        }
 
-//    @Test
-//    fun testSerializeRepeatedLong() {
-//        val message = kmRepeatedLongMessage {
-//            field1List += listOf(12L, 13L, 25L)
-//        }
-//
-//        val binary = message.jsImpl.serializeBinary()
-//        val serializedMessage = KMRepeatedLongMessage(JS_RepeatedLongMessage.deserializeBinary(binary))
-//
-//        assertEquals(message, serializedMessage)
-//    }
-//
-//    @Test
-//    fun testScalarSerialization() {
-//        val msg = createScalarMessage()
-//        val data = msg.jsImpl.serializeBinary()
-//        val reconstructed = KMScalarTypes(JS_ScalarTypes.deserializeBinary(data))
-//
-//        assertEquals(msg, reconstructed)
-//    }
-//
-//    @Test
-//    fun testSerializeMessageWithMessage() {
-//        val msg = kmMessageWithSubMessage {
-//            field1 = kmSimpleMessage { field1 = "Foo" }
-//        }
-//
-//        val data = msg.jsImpl.serializeBinary()
-//        val reconstructed = KMMessageWithSubMessage(JS_MessageWithSubMessage.deserializeBinary(data))
-//
-//        assertEquals(msg, reconstructed)
-//    }
-//
-//    @Test
-//    fun testSerialization() {
-//        val msg = createMessageWithAllTypes()
-//
-//        val data = msg.jsImpl.serializeBinary()
-//        val reconstructed = KMMessageWithEverything(JS_MessageWithEverything.deserializeBinary(data))
-//
-//        assertEquals(msg, reconstructed)
-//    }
+        val serializedMessage = serialize(message)
+
+        assertEquals(message, serializedMessage)
+    }
+
+    abstract fun serialize(message: KMRepeatedLongMessage): KMRepeatedLongMessage
+
+    @Test
+    fun testSerializeRepeatedLong() {
+        val message = kmRepeatedLongMessage {
+            field1List += listOf(12L, 13L, 25L)
+        }
+
+        val serializedMessage = serialize(message)
+
+        assertEquals(message, serializedMessage)
+    }
+
+    abstract fun serialize(message: KMScalarTypes): KMScalarTypes
+
+    @Test
+    fun testScalarSerialization() {
+        val msg: KMScalarTypes = createScalarMessage()
+        val reconstructed = serialize(msg)
+
+        assertEquals(msg, reconstructed)
+    }
+
+    abstract fun serialize(message: KMMessageWithSubMessage): KMMessageWithSubMessage
+
+    @Test
+    fun testSerializeMessageWithMessage() {
+        val msg = kmMessageWithSubMessage {
+            field1 = kmSimpleMessage { field1 = "Foo" }
+        }
+
+        val reconstructed = serialize(msg)
+
+        assertEquals(msg, reconstructed)
+    }
+
+    abstract fun serialize(message: KMMessageWithEverything): KMMessageWithEverything
+
+    @Test
+    fun testSerialization() {
+        val msg = createMessageWithAllTypes()
+
+        val reconstructed = serialize(msg)
+
+        assertEquals(msg, reconstructed)
+    }
 }

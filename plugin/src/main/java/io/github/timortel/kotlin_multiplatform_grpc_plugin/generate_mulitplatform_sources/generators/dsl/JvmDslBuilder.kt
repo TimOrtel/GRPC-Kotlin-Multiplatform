@@ -77,11 +77,11 @@ object JvmDslBuilder : SubDslBuilder(true) {
         if (attribute.types.doDiffer) {
             builder.addCode(
                 "%N.map·{ it.%N }",
-                Const.DSL.Attribute.Repeated.attrName(attribute),
+                Const.DSL.Attribute.Repeated.propertyName(attribute),
                 Const.Message.Constructor.JVM.PARAM_IMPL
             )
         } else {
-            builder.addCode("%N", Const.DSL.Attribute.Repeated.attrName(attribute))
+            builder.addCode("%N", Const.DSL.Attribute.Repeated.propertyName(attribute))
         }
 
         builder.addCode(")\n")
@@ -101,7 +101,7 @@ object JvmDslBuilder : SubDslBuilder(true) {
 
         builder.addCode(
             "%N.map·{ it.%N })\n",
-            Const.DSL.Attribute.Repeated.attrName(attribute),
+            Const.DSL.Attribute.Repeated.propertyName(attribute),
             "value"
         )
     }

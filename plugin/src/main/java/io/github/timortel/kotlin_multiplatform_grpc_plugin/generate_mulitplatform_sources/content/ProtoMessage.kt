@@ -2,6 +2,7 @@ package io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfo
 
 import com.squareup.kotlinpoet.ClassName
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.getJVMClassName
+import java.util.*
 
 data class ProtoMessage(
     val pkg: String,
@@ -14,7 +15,9 @@ data class ProtoMessage(
     val protoFileName: String,
     val javaUseMultipleFiles: Boolean,
 ) {
-    val commonName = "KM${name.capitalize()}"
+    val capitalizedName = name.capitalize(Locale.ROOT)
+
+    val commonName = "KM${capitalizedName}"
 
     val commonType: ClassName = parent?.commonType?.nestedClass(commonName) ?: ClassName(pkg, commonName)
     val jsType: ClassName =

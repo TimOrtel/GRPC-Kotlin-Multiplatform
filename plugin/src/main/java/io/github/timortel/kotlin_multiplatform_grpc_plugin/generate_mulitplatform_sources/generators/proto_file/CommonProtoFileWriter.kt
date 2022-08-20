@@ -48,7 +48,7 @@ class CommonProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(
         }
     }
 
-    override fun applyToClass(builder: TypeSpec.Builder, message: ProtoMessage) = Unit
+    override fun applyToClass(builder: TypeSpec.Builder, message: ProtoMessage, messageClassName: ClassName) = Unit
 
     override fun getChildClassName(parentClass: ClassName?, childName: String): ClassName =
         getChildClassName(parentClass, childName, protoFile.pkg)

@@ -74,11 +74,11 @@ object JsDslBuilder : SubDslBuilder(true) {
         if (attribute.types.doDiffer) {
             builder.addCode(
                 "%N.map·{ it.%N }.toTypedArray()",
-                Const.DSL.Attribute.Repeated.attrName(attribute),
+                Const.DSL.Attribute.Repeated.propertyName(attribute),
                 Const.Message.Constructor.JS.PARAM_IMPL
             )
         } else {
-            builder.addCode("%N.toTypedArray()", Const.DSL.Attribute.Repeated.attrName(attribute))
+            builder.addCode("%N.toTypedArray()", Const.DSL.Attribute.Repeated.propertyName(attribute))
         }
 
         builder.addCode(")\n")
@@ -98,7 +98,7 @@ object JsDslBuilder : SubDslBuilder(true) {
 
         builder.addCode(
             "%N.map·{ it.%N }.toTypedArray())\n",
-            Const.DSL.Attribute.Repeated.attrName(attribute),
+            Const.DSL.Attribute.Repeated.propertyName(attribute),
             "value"
         )
     }

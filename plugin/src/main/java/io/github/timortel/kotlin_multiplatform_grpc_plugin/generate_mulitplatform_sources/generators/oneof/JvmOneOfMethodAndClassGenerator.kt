@@ -29,11 +29,15 @@ object JvmOneOfMethodAndClassGenerator : OneOfMethodAndClassGenerator(true) {
                     //simply map each enum to the km enum
                     oneOf.attributes.forEach { attr ->
                         addCode(
-                            "%T.%N.%N -> %T(%N.%M())\n",
+                            "%T.%N.%N -> %T(%N.%N)\n",
                             //JVM Builder types
-                            message.jvmType, jvmProtoEnumClassName, attr.name.uppercase(),
+                            message.jvmType,
+                            jvmProtoEnumClassName,
+                            attr.name.uppercase(),
                             //Generated KM types
-                            Const.Message.OneOf.childClassName(message, oneOf, attr), implName, Const.Message.Attribute.Scalar.JVM.getFunction(message, attr)
+                            Const.Message.OneOf.childClassName(message, oneOf, attr),
+                            implName,
+                            Const.Message.Attribute.Scalar.JVM.getFunction(message, attr).simpleName
                         )
                     }
                     //Add case for when it's not set

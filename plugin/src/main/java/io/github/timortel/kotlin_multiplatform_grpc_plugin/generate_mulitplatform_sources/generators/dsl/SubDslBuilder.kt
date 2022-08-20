@@ -1,7 +1,7 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.dsl
 
 import com.squareup.kotlinpoet.*
-import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.ProtoType
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.*
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.map.mapper.MapMapper
@@ -14,10 +14,10 @@ abstract class SubDslBuilder(isActual: Boolean) : DslBuilder(isActual) {
         val buildParam = initializeBuilder(builder, message)
 
         builder.apply {
-            message.attributes.forEach { attr ->
+            message.attributes.filter { !it.isOneOfAttribute }.forEach { attr ->
                 when (attr.attributeType) {
                     is Scalar -> {
-                        val attrName = Const.DSL.Attribute.Scalar.attrName(attr)
+                        val attrName = Const.DSL.Attribute.Scalar.propertyName(attr)
                         addStatement(
                             "val %N = %N",
                             attrName,
@@ -33,6 +33,7 @@ abstract class SubDslBuilder(isActual: Boolean) : DslBuilder(isActual) {
 
                         endControlFlow()
                     }
+
                     is Repeated -> {
                         if (attr.types.isEnum) {
                             addAllEnumValues(builder, message, attr, buildParam)
@@ -40,11 +41,12 @@ abstract class SubDslBuilder(isActual: Boolean) : DslBuilder(isActual) {
                             addAllValues(builder, message, attr, buildParam)
                         }
                     }
+
                     is MapType -> {
                         addCode(
                             mapMapper.mapMap(
                                 buildParam,
-                                CodeBlock.of(Const.DSL.Attribute.Map.attrName(attr)),
+                                CodeBlock.of(Const.DSL.Attribute.Map.propertyName(attr)),
                                 message,
                                 attr,
                                 attr.attributeType
@@ -52,6 +54,51 @@ abstract class SubDslBuilder(isActual: Boolean) : DslBuilder(isActual) {
                         )
                     }
                 }
+            }
+
+            message.oneOfs.forEach { oneOf ->
+                beginControlFlow(
+                    "when·(val %N = %N)·{",
+                    Const.DSL.OneOf.propertyName(message, oneOf),
+                    Const.DSL.OneOf.propertyName(message, oneOf)
+                )
+
+                oneOf.attributes.forEach { attr ->
+                    beginControlFlow(
+                        "is·%T·->·{",
+                        Const.Message.OneOf.childClassName(message, oneOf, attr)
+                    )
+
+                    //get wrapper property
+                    addStatement(
+                        "val %N = %N.%N",
+                        Const.Message.Attribute.propertyName(message, attr),
+                        Const.DSL.OneOf.propertyName(message, oneOf),
+                        Const.Message.Attribute.propertyName(message, attr)
+                    )
+
+                    if (attr.types.protoType == ProtoType.ENUM) {
+                        setEnumValue(
+                            builder,
+                            Const.Message.Attribute.propertyName(message, attr),
+                            message,
+                            attr,
+                            buildParam
+                        )
+                    } else {
+                        setScalarValue(
+                            builder,
+                            Const.Message.Attribute.propertyName(message, attr),
+                            message,
+                            attr,
+                            buildParam
+                        )
+                    }
+
+                    endControlFlow()
+                }
+
+                endControlFlow()
             }
         }
 
