@@ -8,19 +8,15 @@ import io.github.timortel.kotlin_multiplatform_grpc_lib.KMStatus
 import io.github.timortel.kotlin_multiplatform_grpc_lib.KMStatusException
 import io.github.timortel.kotlin_multiplatform_grpc_lib.message.KMMessage
 import io.github.timortel.kotlin_multiplatform_grpc_lib.message.MessageDeserializer
-import kotlinx.cinterop.rawValue
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
 import platform.Foundation.NSData
 import platform.Foundation.NSError
-import platform.Security.errSecInvalidReason
 import platform.darwin.*
-import platform.posix.QOS_CLASS_DEFAULT
+import kotlin.coroutines.coroutineContext
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
-import kotlin.native.concurrent.freeze
 
 @Throws(KMStatusException::class, CancellationException::class)
 suspend fun <REQ : KMMessage, RES : KMMessage> unaryCallImplementation(
@@ -30,17 +26,14 @@ suspend fun <REQ : KMMessage, RES : KMMessage> unaryCallImplementation(
     responseDeserializer: MessageDeserializer<RES>
 ): RES {
     val data = request.serialize()
-    println("Starting")
 
     return suspendCoroutine { continuation ->
-        val handler = UnaryCallHandler(
+        val handler = CallHandler(
             onReceive = { data: Any ->
-                println("Received")
                 val response = responseDeserializer.deserialize(data as NSData)
                 continuation.resume(response)
             },
             onError = { error: NSError ->
-                println("Error")
                 val exception =
                     KMStatusException(
                         KMStatus(KMCode.getCodeForValue(error.code.toInt()), error.description ?: "No description"),
@@ -48,7 +41,8 @@ suspend fun <REQ : KMMessage, RES : KMMessage> unaryCallImplementation(
                     )
 
                 continuation.resumeWithException(exception)
-            }
+            },
+            onDone = {}
         )
 
         val call = GRPCCall2(
@@ -57,7 +51,6 @@ suspend fun <REQ : KMMessage, RES : KMMessage> unaryCallImplementation(
             callOptions = channel.callOptions
         )
 
-
         call.start()
         call.writeData(data)
 
@@ -65,9 +58,69 @@ suspend fun <REQ : KMMessage, RES : KMMessage> unaryCallImplementation(
     }
 }
 
-private class UnaryCallHandler(
+private sealed class StreamingResponse<T : KMMessage> {
+    class Message<T : KMMessage>(val msg: T) : StreamingResponse<T>()
+    class StatusException<T : KMMessage>(val exception: KMStatusException) : StreamingResponse<T>()
+}
+
+suspend fun <REQ : KMMessage, RES : KMMessage> serverSideStreamingCallImplementation(
+    channel: KMChannel,
+    path: String,
+    request: REQ,
+    responseDeserializer: MessageDeserializer<RES>
+): Flow<RES> {
+    val flow = MutableSharedFlow<StreamingResponse<RES>>()
+    val isDone = MutableStateFlow(false)
+
+    val scope = CoroutineScope(coroutineContext)
+
+    val handler = CallHandler(
+        onReceive = { data ->
+            val msg = responseDeserializer.deserialize(data as NSData)
+            scope.launch {
+                flow.emit(StreamingResponse.Message(msg))
+            }
+        },
+        onError = { error ->
+            val exception = KMStatusException(
+                KMStatus(KMCode.getCodeForValue(error.code.toInt()), error.description ?: "No description"),
+                null
+            )
+
+            scope.launch {
+                flow.emit(StreamingResponse.StatusException(exception))
+            }
+        },
+        onDone = {
+            isDone.value = true
+        }
+    )
+
+    val call = GRPCCall2(channel.buildRequestOptions(path), handler, channel.callOptions)
+
+    call.start()
+    call.writeData(request.serialize())
+    call.finish()
+
+    return isDone.takeWhile { !it }.transform {
+        flow.collect { response ->
+            when (response) {
+                is StreamingResponse.Message -> emit(response.msg)
+                is StreamingResponse.StatusException -> throw response.exception
+            }
+        }
+    }.onCompletion {
+        try {
+            scope.cancel()
+        } catch (_: IllegalStateException) {
+        }
+    }
+}
+
+private class CallHandler(
     private val onReceive: (data: Any) -> Unit,
-    private val onError: (error: NSError) -> Unit
+    private val onError: (error: NSError) -> Unit,
+    private val onDone: () -> Unit
 ) :
     NSObject(), GRPCResponseHandlerProtocol {
 
@@ -76,9 +129,9 @@ private class UnaryCallHandler(
     override fun didReceiveData(data: Any) = onReceive(data)
 
     override fun didCloseWithTrailingMetadata(trailingMetadata: Map<Any?, *>?, error: NSError?) {
-        println("Done")
         if (error != null) {
             onError(error)
         }
+        onDone()
     }
 }

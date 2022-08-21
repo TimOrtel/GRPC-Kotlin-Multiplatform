@@ -1,12 +1,15 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.service
 
 import com.squareup.kotlinpoet.*
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoFile
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoRpc
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoService
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.iosServerSideStreamingCallImplementation
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.iosUnaryCallImplementation
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.kmChannel
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.kmStub
 
 object IOSServiceWriter : ServiceWriter(true) {
 
@@ -22,9 +25,22 @@ object IOSServiceWriter : ServiceWriter(true) {
     ) {
         builder.addProperty(
             PropertySpec
-                .builder(Const.Service.IOS.CHANNEL_PROPERTY_NAME, kmChannel, KModifier.PRIVATE)
+                .builder(Const.Service.IOS.CHANNEL_PROPERTY_NAME, kmChannel, KModifier.OVERRIDE, KModifier.LATEINIT)
+                .mutable()
                 .build()
         )
+
+        builder.addFunction(
+            FunSpec
+                .builder("build")
+                .addModifiers(KModifier.OVERRIDE)
+                .returns(serviceName)
+                .addParameter("channel", kmChannel)
+                .addStatement("return %T(channel)", serviceName)
+                .build()
+        )
+
+        overrideWithDeadlineAfter(builder, serviceName)
     }
 
     override fun applyToChannelConstructor(builder: FunSpec.Builder, protoFile: ProtoFile, service: ProtoService) {
@@ -33,6 +49,8 @@ object IOSServiceWriter : ServiceWriter(true) {
             Const.Service.IOS.CHANNEL_PROPERTY_NAME,
             Const.Service.Constructor.CHANNEL_PARAMETER_NAME
         )
+
+        builder.callThisConstructor()
     }
 
     override fun applyToRpcFunction(
@@ -41,19 +59,16 @@ object IOSServiceWriter : ServiceWriter(true) {
         service: ProtoService,
         rpc: ProtoRpc
     ) {
-        if (rpc.isResponseStream) {
+        val impl = if (rpc.isResponseStream) iosServerSideStreamingCallImplementation else iosUnaryCallImplementation
 
-        } else {
-            //unary rpc, simply call the implementation
-            builder.addStatement(
-                "return %M(%N, %S, %N, %T.Companion)",
-                iosUnaryCallImplementation,
-                Const.Service.IOS.CHANNEL_PROPERTY_NAME,
-                "/${protoFile.pkg}/${rpc.rpcName}",
-                Const.Service.RpcCall.PARAM_REQUEST,
-                rpc.response.iosType
-            )
-        }
+        builder.addStatement(
+            "return %M(%N, %S, %N, %T.Companion)",
+            impl,
+            Const.Service.IOS.CHANNEL_PROPERTY_NAME,
+            "/${protoFile.pkg}.${service.serviceName}/${rpc.rpcName}",
+            Const.Service.RpcCall.PARAM_REQUEST,
+            rpc.response.iosType
+        )
     }
 
     override fun applyToMetadataParameter(builder: ParameterSpec.Builder, service: ProtoService) {
@@ -66,6 +81,12 @@ object IOSServiceWriter : ServiceWriter(true) {
         protoFile: ProtoFile,
         service: ProtoService
     ) {
-
+        builder.superclass(kmStub.parameterizedBy(serviceClass))
+        builder.addSuperinterface(
+            ClassName(
+                "io.github.timortel.kotlin_multiplatform_grpc_lib.stub",
+                "IOSKMStub"
+            ).parameterizedBy(serviceClass)
+        )
     }
 }

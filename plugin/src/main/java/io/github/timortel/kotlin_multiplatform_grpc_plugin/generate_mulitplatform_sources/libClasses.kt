@@ -25,3 +25,4 @@ val writeMap = MemberName("io.github.timortel.kotlin_multiplatform_grpc_lib.io",
 val readMapEntry = MemberName("io.github.timortel.kotlin_multiplatform_grpc_lib.io", "readMapEntry")
 
 val iosUnaryCallImplementation = MemberName("io.github.timortel.kotlin_multiplatform_grpc_lib.rpc", "unaryCallImplementation")
+val iosServerSideStreamingCallImplementation = MemberName("io.github.timortel.kotlin_multiplatform_grpc_lib.rpc", "serverSideStreamingCallImplementation")
