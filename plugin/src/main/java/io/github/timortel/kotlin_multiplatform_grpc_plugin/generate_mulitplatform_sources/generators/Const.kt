@@ -10,6 +10,10 @@ object Const {
 
         fun getName(service: ProtoService): String = "KM${service.serviceName.capitalize()}Stub"
 
+        object Constructor {
+            const val CHANNEL_PARAMETER_NAME = "channel"
+        }
+
         object JVM {
             const val PROPERTY_JVM_IMPL = "impl"
 
@@ -29,6 +33,10 @@ object Const {
 
             fun nativeServiceClassName(protoFile: ProtoFile, service: ProtoService) =
                 ClassName(protoFile.pkg, jsServiceName(service))
+        }
+
+        object IOS {
+            const val CHANNEL_PROPERTY_NAME = "channel"
         }
 
         object RpcCall {

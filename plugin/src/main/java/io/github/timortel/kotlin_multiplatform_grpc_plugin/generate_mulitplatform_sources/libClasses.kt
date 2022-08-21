@@ -23,3 +23,5 @@ val computeMessageSize = MemberName("io.github.timortel.kotlin_multiplatform_grp
 
 val writeMap = MemberName("io.github.timortel.kotlin_multiplatform_grpc_lib.io", "writeMap")
 val readMapEntry = MemberName("io.github.timortel.kotlin_multiplatform_grpc_lib.io", "readMapEntry")
+
+val iosUnaryCallImplementation = MemberName("io.github.timortel.kotlin_multiplatform_grpc_lib.rpc", "unaryCallImplementation")

@@ -33,7 +33,7 @@ abstract class ServiceWriter(private val isActual: Boolean) {
                     .addFunction(
                         FunSpec
                             .constructorBuilder()
-                            .addParameter("channel", kmChannel)
+                            .addParameter(Const.Service.Constructor.CHANNEL_PARAMETER_NAME, kmChannel)
                             .addModifiers(channelConstructorModifiers)
                             .apply { applyToChannelConstructor(this, protoFile, service) }
                             .build()
@@ -60,7 +60,7 @@ abstract class ServiceWriter(private val isActual: Boolean) {
                                     )
                                     .returns(returnType)
                                     .apply {
-                                        applyToRpcFunction(this, service, rpc)
+                                        applyToRpcFunction(this, protoFile, service, rpc)
                                     }
                                     .build()
                             )
@@ -88,7 +88,12 @@ abstract class ServiceWriter(private val isActual: Boolean) {
         service: ProtoService
     )
 
-    protected abstract fun applyToRpcFunction(builder: FunSpec.Builder, service: ProtoService, rpc: ProtoRpc)
+    protected abstract fun applyToRpcFunction(
+        builder: FunSpec.Builder,
+        protoFile: ProtoFile,
+        service: ProtoService,
+        rpc: ProtoRpc
+    )
 
     protected abstract fun applyToMetadataParameter(builder: ParameterSpec.Builder, service: ProtoService)
 

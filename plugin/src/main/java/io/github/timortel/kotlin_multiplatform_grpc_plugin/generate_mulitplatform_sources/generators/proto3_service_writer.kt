@@ -10,7 +10,8 @@ fun writeServiceFile(
     generateTarget: Map<GrpcMultiplatformExtension.OutputTarget, Boolean>,
     commonOutputFolder: File,
     jvmOutputFolder: File,
-    jsOutputFolder: File
+    jsOutputFolder: File,
+    iosOutputFolder: File
 ) {
     protoFile.services.forEach { service ->
         CommonServiceWriter.writeServiceStub(protoFile, service, commonOutputFolder)
@@ -20,7 +21,7 @@ fun writeServiceFile(
         if (generateTarget[GrpcMultiplatformExtension.OutputTarget.JVM] == true)
             writeJvmServiceFile(protoFile, service, jvmOutputFolder)
         if (generateTarget[GrpcMultiplatformExtension.OutputTarget.IOS] == true) {
-
+            writeIOSServiceFile(protoFile, service, iosOutputFolder)
         }
     }
 }

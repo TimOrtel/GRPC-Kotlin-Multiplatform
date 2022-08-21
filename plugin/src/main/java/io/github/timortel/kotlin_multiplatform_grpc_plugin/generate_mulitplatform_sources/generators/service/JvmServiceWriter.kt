@@ -71,6 +71,7 @@ object JvmServiceWriter : ServiceWriter(true) {
 
     override fun applyToRpcFunction(
         builder: FunSpec.Builder,
+        protoFile: ProtoFile,
         service: ProtoService,
         rpc: ProtoRpc
     ) {

@@ -16,7 +16,12 @@ object CommonServiceWriter : ServiceWriter(false) {
 
     override fun applyToClass(builder: TypeSpec.Builder, protoFile: ProtoFile, service: ProtoService, serviceName: ClassName) = Unit
 
-    override fun applyToRpcFunction(builder: FunSpec.Builder, service: ProtoService, rpc: ProtoRpc) = Unit
+    override fun applyToRpcFunction(
+        builder: FunSpec.Builder,
+        protoFile: ProtoFile,
+        service: ProtoService,
+        rpc: ProtoRpc
+    ) = Unit
 
     override fun applyToMetadataParameter(builder: ParameterSpec.Builder, service: ProtoService) {
         builder.defaultValue("%T()", kmMetadata)

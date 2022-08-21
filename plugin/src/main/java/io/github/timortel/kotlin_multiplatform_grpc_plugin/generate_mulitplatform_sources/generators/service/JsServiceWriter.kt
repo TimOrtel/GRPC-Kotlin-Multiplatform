@@ -90,7 +90,12 @@ object JsServiceWriter : ServiceWriter(true) {
         }
     }
 
-    override fun applyToRpcFunction(builder: FunSpec.Builder, service: ProtoService, rpc: ProtoRpc) {
+    override fun applyToRpcFunction(
+        builder: FunSpec.Builder,
+        protoFile: ProtoFile,
+        service: ProtoService,
+        rpc: ProtoRpc
+    ) {
         builder.apply {
             val responseCommonMember = Const.Message.CommonFunction.JS.commonFunction(rpc.response.commonType)
 

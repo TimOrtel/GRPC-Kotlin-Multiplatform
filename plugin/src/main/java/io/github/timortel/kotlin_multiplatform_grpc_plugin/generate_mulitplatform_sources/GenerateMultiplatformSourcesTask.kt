@@ -102,6 +102,6 @@ private fun generateProtoFiles(
 
     protoFiles.forEach { protoFile ->
         writeProtoFile(protoFile, generateTarget, commonOutputFolder, jvmOutputFolder, jsOutputFolder, iosOutputDir)
-        writeServiceFile(protoFile, generateTarget, commonOutputFolder, jvmOutputFolder, jsOutputFolder)
+        writeServiceFile(protoFile, generateTarget, commonOutputFolder, jvmOutputFolder, jsOutputFolder, iosOutputDir)
     }
 }
