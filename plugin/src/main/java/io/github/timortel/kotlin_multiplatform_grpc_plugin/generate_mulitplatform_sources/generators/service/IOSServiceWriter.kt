@@ -2,14 +2,11 @@ package io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfo
 
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.*
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoFile
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoRpc
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoService
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.iosServerSideStreamingCallImplementation
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.iosUnaryCallImplementation
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.kmChannel
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.kmStub
 
 object IOSServiceWriter : ServiceWriter(true) {
 
@@ -62,9 +59,10 @@ object IOSServiceWriter : ServiceWriter(true) {
         val impl = if (rpc.isResponseStream) iosServerSideStreamingCallImplementation else iosUnaryCallImplementation
 
         builder.addStatement(
-            "return %M(%N, %S, %N, %T.Companion)",
+            "return %M(%N.withMetadata(%N), %S, %N, %T.Companion)",
             impl,
             Const.Service.IOS.CHANNEL_PROPERTY_NAME,
+            Const.Service.RpcCall.PARAM_METADATA,
             "/${protoFile.pkg}.${service.serviceName}/${rpc.rpcName}",
             Const.Service.RpcCall.PARAM_REQUEST,
             rpc.response.iosType
@@ -72,7 +70,6 @@ object IOSServiceWriter : ServiceWriter(true) {
     }
 
     override fun applyToMetadataParameter(builder: ParameterSpec.Builder, service: ProtoService) {
-
     }
 
     override fun specifyInheritance(

@@ -27,12 +27,7 @@ abstract class GenerateMultiplatformSourcesTask : DefaultTask() {
         fun getIOSOutputFolder(project: Project): File = getOutputFolder(project).resolve("iosMain/kotlin")
     }
 
-    @get:Input
-    abstract val protoSourceFolders: ListProperty<File>
-
     init {
-        protoSourceFolders.set(listOf(project.projectDir.resolve("src/main/proto")))
-
         val grpcMultiplatformExtension = project.extensions.findByType(GrpcMultiplatformExtension::class.java)
             ?: throw IllegalStateException("grpc multiplatform extension not specified.")
 
@@ -41,7 +36,7 @@ abstract class GenerateMultiplatformSourcesTask : DefaultTask() {
         }
 
         doLast {
-            val sourceFolders = protoSourceFolders.get()
+            val sourceFolders = grpcMultiplatformExtension.protoSourceFolders.get()
             val outputFolder = getOutputFolder(project)
             outputFolder.mkdirs()
 

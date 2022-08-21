@@ -1,5 +1,5 @@
 [![GitHub license](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg?style=flat)](http://www.apache.org/licenses/LICENSE-2.0)
-![version](https://img.shields.io/badge/version-0.1.1-blue)
+![version](https://img.shields.io/badge/version-0.2.0-blue)
 
 ![badge][badge-android]
 ![badge][badge-jvm]
@@ -206,6 +206,9 @@ dependencies {
     api(npm("protobufjs", "^<latest version>"))
 }
 ```
+
+## Roadmap
+- Similar to the message generation in iOS, the messages should also be generated for JVM/Android. Therefore, it should no longer be necessary to include the generated proto files by protoc.
 
 ## Contributing
 Feel free to implement improvements, bug fixes and features and create a pull request.

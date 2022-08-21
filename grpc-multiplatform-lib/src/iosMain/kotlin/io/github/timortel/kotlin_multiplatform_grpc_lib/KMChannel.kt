@@ -2,7 +2,6 @@ package io.github.timortel.kotlin_multiplatform_grpc_lib
 
 import cocoapods.GRPCClient.*
 import io.github.timortel.kotlin_multiplatform_grpc_lib.util.TimeUnit
-import platform.Foundation.NSTimeInterval
 
 actual class KMChannel(private val name: String, private val port: Int, val callOptions: GRPCCallOptions) {
 
@@ -15,6 +14,13 @@ actual class KMChannel(private val name: String, private val port: Int, val call
         val seconds = millis / 1000.0
 
         mutableOptions.setTimeout(seconds)
+
+        return KMChannel(name, port, mutableOptions)
+    }
+
+    fun withMetadata(metadata: KMMetadata): KMChannel {
+        val mutableOptions = callOptions.mutableCopy() as GRPCMutableCallOptions
+        mutableOptions.setInitialMetadata(metadata.metadataMap.toMap())
 
         return KMChannel(name, port, mutableOptions)
     }

@@ -132,16 +132,10 @@ grpcKotlinMultiplatform {
         OutputTarget.IOS,
         listOf(
             kotlin.sourceSets.getByName("iosMain"),
-            kotlin.sourceSets.getByName("iosTest"),
-//            kotlin.sourceSets.getByName("iosSimulatorArm64Main"),
-//            kotlin.sourceSets.getByName("iosSimulatorArm64Test")
+            kotlin.sourceSets.getByName("iosTest")
         )
     )
-}
 
-tasks.register<io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.GenerateMultiplatformSourcesTask>(
-    "generateMPProtos"
-) {
     val protoFolder = projectDir.resolve("src/commonMain/proto")
     protoSourceFolders.set(
         listOf(protoFolder)

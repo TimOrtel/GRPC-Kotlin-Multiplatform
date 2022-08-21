@@ -25,6 +25,8 @@ class GrpcMultiplatformPlugin : Plugin<Project> {
         val grpcMultiplatformExtension =
             project.extensions.create("grpcKotlinMultiplatform", GrpcMultiplatformExtension::class.java)
 
+        project.tasks.register("generateMPProtos", GenerateMultiplatformSourcesTask::class.java)
+
         project.plugins.withType(KotlinMultiplatformPluginWrapper::class.java) {
             val extension = project.extensions.getByType(KotlinMultiplatformExtension::class.java)
 
@@ -43,8 +45,6 @@ class GrpcMultiplatformPlugin : Plugin<Project> {
 
                 val targetSourceMap = grpcMultiplatformExtension.targetSourcesMap.getOrElse(emptyMap()).orEmpty()
 
-                println()
-
                 targetSourceMap[GrpcMultiplatformExtension.OutputTarget.JVM].orEmpty().forEach {
                     it.kotlin.srcDir(GenerateMultiplatformSourcesTask.getJVMOutputFolder(project))
                 }
@@ -56,66 +56,26 @@ class GrpcMultiplatformPlugin : Plugin<Project> {
                     it.kotlin.srcDir(GenerateMultiplatformSourcesTask.getIOSOutputFolder(project))
                 }
 
-
                 //JVM
-                targets.filterIsInstance<KotlinJvmTarget>()
-                    .flatMap { it.compilations }
-                    .forEach { compilation ->
-                        project.tasks.withType(KotlinCompile::class.java).all { kotlinCompile ->
-                            generateMpProtosTask.forEach { generateProtoTask ->
-                                kotlinCompile.dependsOn(generateProtoTask)
-                            }
-                        }
-
-//                        if (compilation.name == KotlinCompilation.MAIN_COMPILATION_NAME) {
-//                            compilation.defaultSourceSet.kotlin.srcDir(
-//                                GenerateMultiplatformSourcesTask.getJVMOutputFolder(
-//                                    project
-//                                )
-//                            )
-//                        }
+                project.tasks.withType(KotlinCompile::class.java).all { kotlinCompile ->
+                    generateMpProtosTask.forEach { generateProtoTask ->
+                        kotlinCompile.dependsOn(generateProtoTask)
                     }
+                }
 
                 //JS
-                targets
-                    .filterIsInstance<KotlinJsIrTarget>()
-                    .flatMap { it.compilations }
-                    .forEach { compilation ->
-                        project.tasks.withType(Kotlin2JsCompile::class.java).all { kotlinCompile ->
-                            generateMpProtosTask.forEach { generateProtoTask ->
-                                kotlinCompile.dependsOn(generateProtoTask)
-                            }
-                        }
-
-//                        if (compilation.name == KotlinCompilation.MAIN_COMPILATION_NAME) {
-//                            compilation.defaultSourceSet.kotlin.srcDir(
-//                                GenerateMultiplatformSourcesTask.getJSOutputFolder(
-//                                    project
-//                                )
-//                            )
-//                        }
+                project.tasks.withType(Kotlin2JsCompile::class.java).all { kotlinCompile ->
+                    generateMpProtosTask.forEach { generateProtoTask ->
+                        kotlinCompile.dependsOn(generateProtoTask)
                     }
+                }
 
                 //IOS
-                targets
-                    .filterIsInstance<KotlinNativeTarget>()
-                    .filter { it.konanTarget.family.isAppleFamily }
-                    .flatMap { it.compilations }
-                    .forEach { compilation ->
-                        project.tasks.withType(KotlinNativeCompile::class.java).all { kotlinCompile ->
-                            generateMpProtosTask.forEach { generateProtoTask ->
-                                kotlinCompile.dependsOn(generateProtoTask)
-                            }
-                        }
-
-//                        if (compilation.name == KotlinCompilation.MAIN_COMPILATION_NAME) {
-//                            compilation.defaultSourceSet.kotlin.srcDir(
-//                                GenerateMultiplatformSourcesTask.getIOSOutputFolder(
-//                                    project
-//                                )
-//                            )
-//                        }
+                project.tasks.withType(KotlinNativeCompile::class.java).all { kotlinCompile ->
+                    generateMpProtosTask.forEach { generateProtoTask ->
+                        kotlinCompile.dependsOn(generateProtoTask)
                     }
+                }
             }
         }
     }
