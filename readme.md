@@ -207,6 +207,9 @@ dependencies {
 }
 ```
 
+### iOS
+This library uses the updated memory manager. Therefore, you might have to [enable this memory manager in your project](https://github.com/JetBrains/kotlin/blob/master/kotlin-native/NEW_MM.md#switch-to-the-new-mm), too.
+
 ## Roadmap
 - Similar to the message generation in iOS, the messages should also be generated for JVM/Android. Therefore, it should no longer be necessary to include the generated proto files by protoc.
 
