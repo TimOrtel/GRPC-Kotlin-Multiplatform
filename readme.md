@@ -4,9 +4,10 @@
 ![badge][badge-android]
 ![badge][badge-jvm]
 ![badge][badge-js]
+![badge][badge-ios]
 
-# GRPC Kotlin Multiplatform
-This projects implements client-side GRPC for Android, JVM and the web. iOS will be coming soon.
+# gRPC Kotlin Multiplatform
+This projects implements client-side gRPC for Android, JVM, iOS and the web.
 
 ## Table of contents
 - [Features](#features)
@@ -21,7 +22,7 @@ This projects implements client-side GRPC for Android, JVM and the web. iOS will
 - Parses proto3 files and generates Kotlin files for these proto3 files.
 - DSL Syntax for creating proto objects.
 - Suspending rpc calls like in Kotlin/GRPC.
-- Heavily influenced by the Java/Kotlin GRPC and Proto API.
+- Heavily influenced by the Java/Kotlin gRPC and Proto API.
 
 ### Supported features:
 - suspending unary-rpc and server side streaming.
@@ -54,7 +55,9 @@ val myMessage = kmMyMessage {
     
     myNumberField = 23
     
-    myOtherMessageField = kmOtherMessage {...}
+    myOtherMessageField = kmOtherMessage { 
+        //...
+    }
 }
 ```
 
@@ -69,7 +72,9 @@ val myMessage = kmMyMessage {
     //For each service a unique class is generated. KM(serviceName)Stub
     val stub = KMMyServiceStub(channel)
     
-    val request = kmRequest {...}
+    val request = kmRequest {
+        //...
+    }
      
      try {
          val response = stub
@@ -84,7 +89,7 @@ val myMessage = kmMyMessage {
      }
 }
 ```
-You can call this code from both JVM/Android modules and JS modules.
+You can call this common code from JVM/Android, iOS and JS modules.
 
 ## Setup
 In your top-level build.gradle.kts, add the following:
@@ -107,7 +112,7 @@ plugins {
 
     //...
     
-    id("io.github.timortel.kotlin-multiplatform-grpc-plugin") version "0.1.1"
+    id("io.github.timortel.kotlin-multiplatform-grpc-plugin") version "<latest version>"
 }
 ```
 
@@ -135,12 +140,29 @@ Other configurations may work, but I have not tested others.
 
 Add the library as a dependency:
 ```kotlin
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.GrpcMultiplatformExtension.OutputTarget
+
+plugins {
+    //Required when targeting iOS
+    kotlin("native.cocoapods")
+}
+
 repositories {
     //...
     maven(url = "https://jitpack.io")
 }
 
 kotlin {
+    //For iOS support, configure cocoapods
+    cocoapods {
+        summary = "..."
+        homepage = "..."
+        ios.deploymentTarget = //...
+            
+        pod("gRPC-ProtoRPC", moduleName = "GRPCClient")
+        pod("Protobuf")
+    }
+    
     sourceSets {
         val commonMain by getting {
             dependencies {
@@ -148,44 +170,31 @@ kotlin {
                 api("com.github.TimOrtel.GRPC-Kotlin-Multiplatform:grpc-multiplatform-lib:<latest version>")
                 api("org.jetbrains.kotlinx:kotlinx-coroutines-core:<latest version>")
             }
-
-            kotlin.srcDir(projectDir.resolve("build/generated/source/kmp-grpc/commonMain/kotlin").canonicalPath)
         }
 
         val jvmMain by getting {
             dependencies {
+                //Make sure the generated Kotlin JVM protos are available
                 api(project(":generate-proto"))
-                implementation("com.github.TimOrtel.GRPC-Kotlin-Multiplatform:grpc-multiplatform-lib-jvm:<latest version>")
             }
-
-            kotlin.srcDir(projectDir.resolve("build/generated/source/kmp-grpc/jvmMain/kotlin").canonicalPath)
-        }
-
-        val jsMain by getting {
-            dependencies {
-                implementation("com.github.TimOrtel.GRPC-Kotlin-Multiplatform:grpc-multiplatform-lib-js:<latest version>")
-            }
-            kotlin.srcDir(projectDir.resolve("build/generated/source/kmp-grpc/jsMain/kotlin").canonicalPath)
         }
     }
 }
-```
 
-Finally, register the generation task:
-```kotlin
-kotlin {
-    //...
-}
+grpcKotlinMultiplatform {
+    targetSourcesMap.put(OutputTarget.IOS, listOf(kotlin.sourceSets.getByName("iosMain")))
+    targetSourcesMap.put(OutputTarget.JVM, listOf(kotlin.sourceSets.getByName("androidMain")))
+    targetSourcesMap.put(OutputTarget.JS, listOf(kotlin.sourceSets.getByName("jsMain")))
 
-tasks.register<GenerateMultiplatformSourcesTask>("generateMPProtos") {
     //Specify the folders where your proto files are located, you can list multiple.
     protoSourceFolders.set(listOf(projectDir.resolve("../protos/src/main/proto")))
 }
+
 ```
 
 ### JVM/Android
 Make sure your Kotlin-Protobuf and Kotlin-GRPC generated files are available in you JVM and Android modules.
-An example on how to configure this can be found in [here](example)
+An example on how to configure this can be found in [here](example).
 
 ### JS
 You must add the following npm dependencies to your JS module:
@@ -198,9 +207,6 @@ dependencies {
 }
 ```
 
-## Roadmap
-- iOS
-
 ## Contributing
 Feel free to implement improvements, bug fixes and features and create a pull request.
 Please send all pull requests to the develop branch, as the master always holds the code for the latest version.
@@ -210,6 +216,7 @@ Please send all pull requests to the develop branch, as the master always holds 
 ### How does it work internally?
 - The JVM implementation simply delegates all logic to the files generated by the proto plugin.
 - The JS implementation fully replaces the javascript protoc files and implements the logic in Kotlin. It then utilizes the google-protobuf and grpc-web the same way the javascript files would do.
+- The iOS implementation uses the objective-c implementation of gRPC. The necessary message implementations are generated by the gradle plugin.
 
 ## License
 Copyright 2022 Tim Ortel
