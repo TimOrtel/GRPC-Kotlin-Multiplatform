@@ -18,7 +18,8 @@ plugins {
     id("com.android.library") apply false
 }
 
+//Called by jitpack
 tasks.register("publishToMavenLocal") {
-    dependsOn("plugin:publishToMavenLocal")
+    //No need to publish the plugin itself
     dependsOn(":grpc-multiplatform-lib:publishToMavenLocal")
 }
