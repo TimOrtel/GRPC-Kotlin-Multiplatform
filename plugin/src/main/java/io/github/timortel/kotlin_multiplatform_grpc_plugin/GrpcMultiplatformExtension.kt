@@ -15,6 +15,7 @@ abstract class GrpcMultiplatformExtension {
     abstract val protoSourceFolders: ListProperty<File>
 
     enum class OutputTarget {
+        COMMON,
         JVM,
         JS,
         IOS

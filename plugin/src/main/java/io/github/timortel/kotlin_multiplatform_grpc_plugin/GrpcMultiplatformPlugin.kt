@@ -28,22 +28,15 @@ class GrpcMultiplatformPlugin : Plugin<Project> {
         project.tasks.register("generateMPProtos", GenerateMultiplatformSourcesTask::class.java)
 
         project.plugins.withType(KotlinMultiplatformPluginWrapper::class.java) {
-            val extension = project.extensions.getByType(KotlinMultiplatformExtension::class.java)
 
             project.afterEvaluate {
                 val generateMpProtosTask = project.tasks.withType(GenerateMultiplatformSourcesTask::class.java)
-                val targets = extension.targets.toList()
 
-                //Common
-                targets
-                    .filter { it.platformType == KotlinPlatformType.common }
-                    .flatMap { it.compilations }
-                    .map { it.defaultSourceSet }
-                    .forEach { kotlinSourceSet ->
-                        kotlinSourceSet.kotlin.srcDir(GenerateMultiplatformSourcesTask.getCommonOutputFolder(project))
-                    }
+                val targetSourceMap = grpcMultiplatformExtension.targetSourcesMap.getOrElse(emptyMap())
 
-                val targetSourceMap = grpcMultiplatformExtension.targetSourcesMap.getOrElse(emptyMap()).orEmpty()
+                targetSourceMap[GrpcMultiplatformExtension.OutputTarget.COMMON].orEmpty().forEach {
+                    it.kotlin.srcDir(GenerateMultiplatformSourcesTask.getCommonOutputFolder(project))
+                }
 
                 targetSourceMap[GrpcMultiplatformExtension.OutputTarget.JVM].orEmpty().forEach {
                     it.kotlin.srcDir(GenerateMultiplatformSourcesTask.getJVMOutputFolder(project))
