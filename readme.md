@@ -182,6 +182,7 @@ kotlin {
 }
 
 grpcKotlinMultiplatform {
+    targetSourcesMap.put(OutputTarget.COMMON, listOf(kotlin.sourceSets.getByName("commonMain")))
     targetSourcesMap.put(OutputTarget.IOS, listOf(kotlin.sourceSets.getByName("iosMain")))
     targetSourcesMap.put(OutputTarget.JVM, listOf(kotlin.sourceSets.getByName("androidMain")))
     targetSourcesMap.put(OutputTarget.JS, listOf(kotlin.sourceSets.getByName("jsMain")))
