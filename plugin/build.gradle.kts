@@ -6,8 +6,8 @@ plugins {
     antlr
 }
 
-group = "io.github.timortel"
-version = "0.2.1"
+group = "dev.baseio.grpc"
+version = "0.2.2"
 
 java {
     withSourcesJar()
