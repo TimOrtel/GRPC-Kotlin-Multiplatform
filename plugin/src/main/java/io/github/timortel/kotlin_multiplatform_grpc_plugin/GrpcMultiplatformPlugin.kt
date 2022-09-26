@@ -42,6 +42,10 @@ class GrpcMultiplatformPlugin : Plugin<Project> {
                     it.kotlin.srcDir(GenerateMultiplatformSourcesTask.getJVMOutputFolder(project))
                 }
 
+                targetSourceMap[GrpcMultiplatformExtension.OutputTarget.Android].orEmpty().forEach {
+                    it.kotlin.srcDir(GenerateMultiplatformSourcesTask.getAndroidOutputFolder(project))
+                }
+
                 targetSourceMap[GrpcMultiplatformExtension.OutputTarget.JS].orEmpty().forEach {
                     it.kotlin.srcDir(GenerateMultiplatformSourcesTask.getJSOutputFolder(project))
                 }

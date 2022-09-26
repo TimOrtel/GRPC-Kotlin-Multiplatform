@@ -19,84 +19,103 @@ import java.io.File
 @Suppress("LeakingThis")
 abstract class GenerateMultiplatformSourcesTask : DefaultTask() {
 
-    companion object {
-        fun getOutputFolder(project: Project): File = project.buildDir.resolve("generated/source/kmp-grpc/")
-        fun getCommonOutputFolder(project: Project): File = getOutputFolder(project).resolve("commonMain/kotlin")
-        fun getJVMOutputFolder(project: Project): File = getOutputFolder(project).resolve("jvmMain/kotlin")
-        fun getJSOutputFolder(project: Project): File = getOutputFolder(project).resolve("jsMain/kotlin")
-        fun getIOSOutputFolder(project: Project): File = getOutputFolder(project).resolve("iosMain/kotlin")
+  companion object {
+    fun getOutputFolder(project: Project): File = project.buildDir.resolve("generated/source/kmp-grpc/")
+    fun getCommonOutputFolder(project: Project): File = getOutputFolder(project).resolve("commonMain/kotlin")
+    fun getJVMOutputFolder(project: Project): File = getOutputFolder(project).resolve("jvmMain/kotlin")
+    fun getAndroidOutputFolder(project: Project): File = getOutputFolder(project).resolve("androidMain/kotlin")
+    fun getJSOutputFolder(project: Project): File = getOutputFolder(project).resolve("jsMain/kotlin")
+    fun getIOSOutputFolder(project: Project): File = getOutputFolder(project).resolve("iosMain/kotlin")
+  }
+
+  init {
+    val grpcMultiplatformExtension = project.extensions.findByType(GrpcMultiplatformExtension::class.java)
+      ?: throw IllegalStateException("grpc multiplatform extension not specified.")
+
+    val generateTarget = GrpcMultiplatformExtension.OutputTarget.values().associateWith { target ->
+      grpcMultiplatformExtension.targetSourcesMap.get()[target].orEmpty().isNotEmpty()
     }
 
-    init {
-        val grpcMultiplatformExtension = project.extensions.findByType(GrpcMultiplatformExtension::class.java)
-            ?: throw IllegalStateException("grpc multiplatform extension not specified.")
+    doLast {
+      val sourceFolders = grpcMultiplatformExtension.protoSourceFolders.get()
+      val outputFolder = getOutputFolder(project)
+      outputFolder.mkdirs()
 
-        val generateTarget = GrpcMultiplatformExtension.OutputTarget.values().associateWith { target ->
-            grpcMultiplatformExtension.targetSourcesMap.get()[target].orEmpty().isNotEmpty()
-        }
-
-        doLast {
-            val sourceFolders = grpcMultiplatformExtension.protoSourceFolders.get()
-            val outputFolder = getOutputFolder(project)
-            outputFolder.mkdirs()
-
-            generateProtoFiles(
-                logger,
-                sourceFolders,
-                generateTarget,
-                commonOutputFolder = getCommonOutputFolder(project),
-                jvmOutputFolder = getJVMOutputFolder(project),
-                jsOutputFolder = getJSOutputFolder(project),
-                iosOutputDir = getIOSOutputFolder(project)
-            )
-        }
+      generateProtoFiles(
+        logger,
+        sourceFolders,
+        generateTarget,
+        commonOutputFolder = getCommonOutputFolder(project),
+        jvmOutputFolder = getJVMOutputFolder(project),
+        androidOutputFolder = getAndroidOutputFolder(project),
+        jsOutputFolder = getJSOutputFolder(project),
+        iosOutputDir = getIOSOutputFolder(project)
+      )
     }
+  }
 }
 
 private fun generateProtoFiles(
-    log: Logger,
-    protoFolders: List<File>,
-    generateTarget: Map<GrpcMultiplatformExtension.OutputTarget, Boolean>,
-    commonOutputFolder: File,
-    jvmOutputFolder: File,
-    jsOutputFolder: File,
-    iosOutputDir: File
+  log: Logger,
+  protoFolders: List<File>,
+  generateTarget: Map<GrpcMultiplatformExtension.OutputTarget, Boolean>,
+  commonOutputFolder: File,
+  jvmOutputFolder: File,
+  androidOutputFolder: File,
+  jsOutputFolder: File,
+  iosOutputDir: File
 ) {
-    val sourceProtoFiles = protoFolders.map { sourceFolder ->
-        sourceFolder
-            .walk(FileWalkDirection.TOP_DOWN)
-            .filter { it.isFile && it.extension == "proto" }
-            .toList()
-    }.flatten()
+  val sourceProtoFiles = protoFolders.map { sourceFolder ->
+    sourceFolder
+      .walk(FileWalkDirection.TOP_DOWN)
+      .filter { it.isFile && it.extension == "proto" }
+      .toList()
+  }.flatten()
 
-    val packetTree = PacketTreeBuilder.buildPacketTree(sourceProtoFiles)
+  val packetTree = PacketTreeBuilder.buildPacketTree(sourceProtoFiles)
 
-    val protoFiles = sourceProtoFiles
-        .map { protoFile ->
-            log.debug("Generating KMP sources for proto file=$protoFile")
-            val lexer = Proto3Lexer(CharStreams.fromStream(protoFile.inputStream()))
-            val parser = Proto3Parser(CommonTokenStream(lexer))
+  val protoFiles = sourceProtoFiles
+    .map { protoFile ->
+      log.debug("Generating KMP sources for proto file=$protoFile")
+      val lexer = Proto3Lexer(CharStreams.fromStream(protoFile.inputStream()))
+      val parser = Proto3Parser(CommonTokenStream(lexer))
 
-            val proto3File = parser.file()
+      val proto3File = parser.file()
 
-            val javaUseMultipleFiles = proto3File.option()
-                .any { it.optionName.text == "java_multiple_files" && it.optionValueExpression.text == "true" }
+      val javaUseMultipleFiles = proto3File.option()
+        .any { it.optionName.text == "java_multiple_files" && it.optionValueExpression.text == "true" }
 
-            val proto3FileBuilder =
-                Proto3FileBuilder(protoFile.nameWithoutExtension, protoFile.name, packetTree, javaUseMultipleFiles)
-            ParseTreeWalker().walk(
-                proto3FileBuilder,
-                proto3File
-            )
+      val proto3FileBuilder =
+        Proto3FileBuilder(protoFile.nameWithoutExtension, protoFile.name, packetTree, javaUseMultipleFiles)
+      ParseTreeWalker().walk(
+        proto3FileBuilder,
+        proto3File
+      )
 
-            val result = proto3FileBuilder.protoFile
-                ?: throw IllegalArgumentException("Failed generating protos for $protoFile because builder returned null.")
+      val result = proto3FileBuilder.protoFile
+        ?: throw IllegalArgumentException("Failed generating protos for $protoFile because builder returned null.")
 
-            result
-        }
-
-    protoFiles.forEach { protoFile ->
-        writeProtoFile(protoFile, generateTarget, commonOutputFolder, jvmOutputFolder, jsOutputFolder, iosOutputDir)
-        writeServiceFile(protoFile, generateTarget, commonOutputFolder, jvmOutputFolder, jsOutputFolder, iosOutputDir)
+      result
     }
+
+  protoFiles.forEach { protoFile ->
+    writeProtoFile(
+      protoFile,
+      generateTarget,
+      commonOutputFolder,
+      jvmOutputFolder,
+      androidOutputFolder,
+      jsOutputFolder,
+      iosOutputDir
+    )
+    writeServiceFile(
+      protoFile,
+      generateTarget,
+      commonOutputFolder,
+      jvmOutputFolder,
+      androidOutputFolder,
+      jsOutputFolder,
+      iosOutputDir
+    )
+  }
 }

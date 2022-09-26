@@ -18,7 +18,8 @@ abstract class GrpcMultiplatformExtension {
         COMMON,
         JVM,
         JS,
-        IOS
+        IOS,
+        Android
     }
 
     init {
