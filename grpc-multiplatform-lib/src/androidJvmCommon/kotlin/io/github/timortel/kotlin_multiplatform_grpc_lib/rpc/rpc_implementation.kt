@@ -14,3 +14,13 @@ suspend fun <COMMON_RESPONSE> simpleCallImplementation(
         throw KMStatusException(KMStatus(KMCode.getCodeForValue(e.status.code.value()), e.status.description.orEmpty()), e)
     }
 }
+
+fun <COMMON_RESPONSE> simpleNonSuspendingCallImplementation(
+    performCall: () -> COMMON_RESPONSE
+): COMMON_RESPONSE {
+    return try {
+        performCall()
+    } catch (e: StatusException) {
+        throw KMStatusException(KMStatus(KMCode.getCodeForValue(e.status.code.value()), e.status.description.orEmpty()), e)
+    }
+}
