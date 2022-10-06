@@ -6,7 +6,7 @@ plugins {
     antlr
 }
 
-group = "dev.baseio.grpc"
+group = "io.github.timortel"
 version = "0.2.2"
 
 java {
@@ -23,7 +23,7 @@ pluginBundle {
 gradlePlugin {
     plugins {
         create("kotlin-multiplatform-grpc-plugin") {
-            id = "dev.baseio.grpc.kotlin-multiplatform-grpc-plugin"
+            id = "io.github.timortel.kotlin-multiplatform-grpc-plugin"
             displayName = "GRPC Kotlin Multiplatform Plugin"
             description = "Plugin that generates Kotlin multiplatform wrapper classes for GRPC"
 

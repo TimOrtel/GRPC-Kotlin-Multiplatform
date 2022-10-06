@@ -4,7 +4,7 @@ plugins {
   id("maven-publish")
 }
 
-group = "dev.baseio.grpc"
+group = "io.github.timortel"
 version = "0.2.2"
 
 repositories {
@@ -14,7 +14,7 @@ repositories {
 
 kotlin {
   android("android") {
-    publishLibraryVariants("release", "debug")
+    publishLibraryVariants("release")
   }
   js(IR) {
     browser()
