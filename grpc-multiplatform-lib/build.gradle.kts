@@ -15,7 +15,7 @@ repositories {
 
 kotlin {
   android("android") {
-        publishLibraryVariants("release", "debug")
+        publishLibraryVariants("release")
   }
   js(IR) {
     browser()
