@@ -45,45 +45,29 @@ abstract class ServiceWriter(private val isActual: Boolean) {
                             val returnType = if (rpc.isResponseStream) {
                                 Flow::class.asTypeName().parameterizedBy(rpc.response.commonType)
                             } else rpc.response.commonType
-                            if (rpc.isResponseStream) {
-                                addFunction(
-                                    FunSpec
-                                        .builder(rpc.rpcName)
-                                        .addModifiers(classAndFunctionModifiers)
-                                        .addParameter(Const.Service.RpcCall.PARAM_REQUEST, rpc.request.commonType)
-                                        .addParameter(
-                                            ParameterSpec
-                                                .builder(Const.Service.RpcCall.PARAM_METADATA, kmMetadata)
-                                                .apply { applyToMetadataParameter(this, service) }
-                                                .build()
-                                        )
-                                        .returns(returnType)
-                                        .apply {
-                                            applyToRpcFunction(this, protoFile, service, rpc)
-                                        }
-                                        .build()
-                                )
-                            } else {
-                                addFunction(
-                                    FunSpec
-                                        .builder(rpc.rpcName)
-                                        .addModifiers(KModifier.SUSPEND)
-                                        .addModifiers(classAndFunctionModifiers)
-                                        .addParameter(Const.Service.RpcCall.PARAM_REQUEST, rpc.request.commonType)
-                                        .addParameter(
-                                            ParameterSpec
-                                                .builder(Const.Service.RpcCall.PARAM_METADATA, kmMetadata)
-                                                .apply { applyToMetadataParameter(this, service) }
-                                                .build()
-                                        )
-                                        .returns(returnType)
-                                        .apply {
-                                            applyToRpcFunction(this, protoFile, service, rpc)
-                                        }
-                                        .build()
-                                )
-                            }
 
+                            addFunction(
+                                FunSpec
+                                    .builder(rpc.rpcName)
+                                    .apply {
+                                        if (!rpc.isResponseStream) {
+                                            this.addModifiers(KModifier.SUSPEND)
+                                        }
+                                    }
+                                    .addModifiers(classAndFunctionModifiers)
+                                    .addParameter(Const.Service.RpcCall.PARAM_REQUEST, rpc.request.commonType)
+                                    .addParameter(
+                                        ParameterSpec
+                                            .builder(Const.Service.RpcCall.PARAM_METADATA, kmMetadata)
+                                            .apply { applyToMetadataParameter(this, service) }
+                                            .build()
+                                    )
+                                    .returns(returnType)
+                                    .apply {
+                                        applyToRpcFunction(this, protoFile, service, rpc)
+                                    }
+                                    .build()
+                            )
                         }
                     }
                     .build()
