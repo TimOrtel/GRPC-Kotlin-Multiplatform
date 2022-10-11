@@ -121,6 +121,11 @@ android {
 
 grpcKotlinMultiplatform {
     targetSourcesMap.put(
+        OutputTarget.COMMON,
+        listOf(kotlin.sourceSets.getByName("commonMain"))
+    )
+
+    targetSourcesMap.put(
         OutputTarget.JS,
         listOf(kotlin.sourceSets.getByName("jsMain"), kotlin.sourceSets.getByName("jsTest"))
     )
