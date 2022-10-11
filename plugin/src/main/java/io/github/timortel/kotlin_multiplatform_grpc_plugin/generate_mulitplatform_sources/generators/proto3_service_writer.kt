@@ -10,7 +10,6 @@ fun writeServiceFile(
     generateTarget: Map<GrpcMultiplatformExtension.OutputTarget, Boolean>,
     commonOutputFolder: File,
     jvmOutputFolder: File,
-    androidOutputFolder:File,
     jsOutputFolder: File,
     iosOutputFolder: File
 ) {
@@ -21,8 +20,6 @@ fun writeServiceFile(
             writeJsServiceFile(protoFile, service, jsOutputFolder)
         if (generateTarget[GrpcMultiplatformExtension.OutputTarget.JVM] == true)
             writeJvmServiceFile(protoFile, service, jvmOutputFolder)
-        if (generateTarget[GrpcMultiplatformExtension.OutputTarget.Android] == true)
-            writeJvmServiceFile(protoFile, service, androidOutputFolder)
         if (generateTarget[GrpcMultiplatformExtension.OutputTarget.IOS] == true) {
             writeIOSServiceFile(protoFile, service, iosOutputFolder)
         }

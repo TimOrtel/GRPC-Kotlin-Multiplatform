@@ -4,5 +4,4 @@ object Versions {
     const val JVM_PROTOBUF_VERSION = "3.21.6"
 
     const val COROUTINES_VERSION = "1.6.4"
-
 }

@@ -9,8 +9,6 @@ import io.github.timortel.kotlin_multiplatform_grpc_lib.KMStatusException
 import io.github.timortel.kotlin_multiplatform_grpc_lib.message.KMMessage
 import io.github.timortel.kotlin_multiplatform_grpc_lib.message.MessageDeserializer
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.onFailure
-import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.flow.*
 import platform.Foundation.NSData
 import platform.Foundation.NSError
@@ -22,154 +20,154 @@ import kotlin.coroutines.suspendCoroutine
 
 @Throws(KMStatusException::class, CancellationException::class)
 suspend fun <REQ : KMMessage, RES : KMMessage> unaryCallImplementation(
-  channel: KMChannel,
-  path: String,
-  request: REQ,
-  responseDeserializer: MessageDeserializer<RES>
+    channel: KMChannel,
+    path: String,
+    request: REQ,
+    responseDeserializer: MessageDeserializer<RES>
 ): RES {
-  val data = request.serialize()
+    val data = request.serialize()
 
-  return suspendCoroutine { continuation ->
-    val handler = CallHandler(
-      onReceive = { data: Any ->
-        val response = responseDeserializer.deserialize(data as NSData)
-        continuation.resume(response)
-      },
-      onError = { error: NSError ->
-        val exception =
-          KMStatusException(
-            KMStatus(KMCode.getCodeForValue(error.code.toInt()), error.description ?: "No description"),
-            null
-          )
+    return suspendCoroutine { continuation ->
+        val handler = CallHandler(
+            onReceive = { data: Any ->
+                val response = responseDeserializer.deserialize(data as NSData)
+                continuation.resume(response)
+            },
+            onError = { error: NSError ->
+                val exception =
+                    KMStatusException(
+                        KMStatus(KMCode.getCodeForValue(error.code.toInt()), error.description ?: "No description"),
+                        null
+                    )
 
-        continuation.resumeWithException(exception)
-      },
-      onDone = {}
-    )
+                continuation.resumeWithException(exception)
+            },
+            onDone = {}
+        )
 
-    val call = GRPCCall2(
-      requestOptions = channel.buildRequestOptions(path),
-      responseHandler = handler,
-      callOptions = channel.callOptions
-    )
+        val call = GRPCCall2(
+            requestOptions = channel.buildRequestOptions(path),
+            responseHandler = handler,
+            callOptions = channel.callOptions
+        )
 
-    call.start()
-    call.writeData(data)
+        call.start()
+        call.writeData(data)
 
-    call.finish()
-  }
+        call.finish()
+    }
 }
 
 private sealed class StreamingResponse<T : KMMessage> {
-  class Message<T : KMMessage>(val msg: T) : StreamingResponse<T>()
-  class StatusException<T : KMMessage>(val exception: KMStatusException) : StreamingResponse<T>()
+    class Message<T : KMMessage>(val msg: T) : StreamingResponse<T>()
+    class StatusException<T : KMMessage>(val exception: KMStatusException) : StreamingResponse<T>()
 }
 
 suspend fun <REQ : KMMessage, RES : KMMessage> serverSideStreamingCallImplementation(
-  channel: KMChannel,
-  path: String,
-  request: REQ,
-  responseDeserializer: MessageDeserializer<RES>
+    channel: KMChannel,
+    path: String,
+    request: REQ,
+    responseDeserializer: MessageDeserializer<RES>
 ): Flow<RES> {
-  val flow = MutableSharedFlow<StreamingResponse<RES>>()
-  val isDone = MutableStateFlow(false)
+    val flow = MutableSharedFlow<StreamingResponse<RES>>()
+    val isDone = MutableStateFlow(false)
 
-  val scope = CoroutineScope(coroutineContext)
+    val scope = CoroutineScope(coroutineContext)
 
-  val handler = CallHandler(
-    onReceive = { data ->
-      val msg = responseDeserializer.deserialize(data as NSData)
-      scope.launch {
-        flow.emit(StreamingResponse.Message(msg))
-      }
-    },
-    onError = { error ->
-      val exception = KMStatusException(
-        KMStatus(KMCode.getCodeForValue(error.code.toInt()), error.description ?: "No description"),
-        null
-      )
-
-      scope.launch {
-        flow.emit(StreamingResponse.StatusException(exception))
-      }
-    },
-    onDone = {
-      isDone.value = true
-    }
-  )
-
-  val call = GRPCCall2(channel.buildRequestOptions(path), handler, channel.callOptions)
-
-  call.start()
-  call.writeData(request.serialize())
-  call.finish()
-
-  return isDone.takeWhile { !it }.transform {
-    flow.collect { response ->
-      when (response) {
-        is StreamingResponse.Message -> emit(response.msg)
-        is StreamingResponse.StatusException -> throw response.exception
-      }
-    }
-  }.onCompletion {
-    try {
-      scope.cancel()
-    } catch (_: IllegalStateException) {
-    }
-  }
-}
-
-@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-fun <REQ : KMMessage, RES : KMMessage> serverSideNonSuspendingStreamingCallImplementation(
-  channel: KMChannel,
-  path: String,
-  request: REQ,
-  responseDeserializer: MessageDeserializer<RES>
-): Flow<RES> {
-  return callbackFlow {
-    val scope = this
     val handler = CallHandler(
-      onReceive = { data ->
-        val msg = responseDeserializer.deserialize(data as NSData)
-        trySend(msg)
-      },
-      onError = { error ->
-        val exception = KMStatusException(
-          KMStatus(KMCode.getCodeForValue(error.code.toInt()), error.description ?: "No description"),
-          null
-        )
-        cancel(CancellationException(error.code.toString(), exception))
-      },
-      onDone = {
-        scope.close()
-      }
+        onReceive = { data ->
+            val msg = responseDeserializer.deserialize(data as NSData)
+            scope.launch {
+                flow.emit(StreamingResponse.Message(msg))
+            }
+        },
+        onError = { error ->
+            val exception = KMStatusException(
+                KMStatus(KMCode.getCodeForValue(error.code.toInt()), error.description ?: "No description"),
+                null
+            )
+
+            scope.launch {
+                flow.emit(StreamingResponse.StatusException(exception))
+            }
+        },
+        onDone = {
+            isDone.value = true
+        }
     )
+
     val call = GRPCCall2(channel.buildRequestOptions(path), handler, channel.callOptions)
+
     call.start()
     call.writeData(request.serialize())
     call.finish()
 
-    invokeOnClose {
-      call.cancel()
+    return isDone.takeWhile { !it }.transform {
+        flow.collect { response ->
+            when (response) {
+                is StreamingResponse.Message -> emit(response.msg)
+                is StreamingResponse.StatusException -> throw response.exception
+            }
+        }
+    }.onCompletion {
+        try {
+            scope.cancel()
+        } catch (_: IllegalStateException) {
+        }
     }
-  }
+}
+
+@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+fun <REQ : KMMessage, RES : KMMessage> serverSideNonSuspendingStreamingCallImplementation(
+    channel: KMChannel,
+    path: String,
+    request: REQ,
+    responseDeserializer: MessageDeserializer<RES>
+): Flow<RES> {
+    return callbackFlow {
+        val scope = this
+        val handler = CallHandler(
+            onReceive = { data ->
+                val msg = responseDeserializer.deserialize(data as NSData)
+                trySend(msg)
+            },
+            onError = { error ->
+                val exception = KMStatusException(
+                    KMStatus(KMCode.getCodeForValue(error.code.toInt()), error.description ?: "No description"),
+                    null
+                )
+                cancel(CancellationException(error.code.toString(), exception))
+            },
+            onDone = {
+                scope.close()
+            }
+        )
+        val call = GRPCCall2(channel.buildRequestOptions(path), handler, channel.callOptions)
+        call.start()
+        call.writeData(request.serialize())
+        call.finish()
+
+        invokeOnClose {
+            call.cancel()
+        }
+    }
 }
 
 private class CallHandler(
-  private val onReceive: (data: Any) -> Unit,
-  private val onError: (error: NSError) -> Unit,
-  private val onDone: () -> Unit
+    private val onReceive: (data: Any) -> Unit,
+    private val onError: (error: NSError) -> Unit,
+    private val onDone: () -> Unit
 ) :
-  NSObject(), GRPCResponseHandlerProtocol {
+    NSObject(), GRPCResponseHandlerProtocol {
 
-  override fun dispatchQueue(): dispatch_queue_t = null
+    override fun dispatchQueue(): dispatch_queue_t = null
 
-  override fun didReceiveData(data: Any) = onReceive(data)
+    override fun didReceiveData(data: Any) = onReceive(data)
 
-  override fun didCloseWithTrailingMetadata(trailingMetadata: Map<Any?, *>?, error: NSError?) {
-    if (error != null) {
-      onError(error)
+    override fun didCloseWithTrailingMetadata(trailingMetadata: Map<Any?, *>?, error: NSError?) {
+        if (error != null) {
+            onError(error)
+        }
+        onDone()
     }
-    onDone()
-  }
 }

@@ -14,7 +14,6 @@ fun writeProtoFile(
     generateTarget: Map<GrpcMultiplatformExtension.OutputTarget, Boolean>,
     commonOutputDir: File,
     jvmOutputDir: File,
-    androidOutputDir:File,
     jsOutputDir: File,
     iosOutputDir: File
 ) {
@@ -22,7 +21,6 @@ fun writeProtoFile(
 
     if (generateTarget[GrpcMultiplatformExtension.OutputTarget.JS] == true) writeJsFiles(protoFile, jsOutputDir)
     if (generateTarget[GrpcMultiplatformExtension.OutputTarget.JVM] == true) writeJvmFiles(protoFile, jvmOutputDir)
-    if (generateTarget[GrpcMultiplatformExtension.OutputTarget.Android] == true) writeJvmFiles(protoFile, androidOutputDir)
     if (generateTarget[GrpcMultiplatformExtension.OutputTarget.IOS] == true) writeIOSFiles(protoFile, iosOutputDir)
     writeDSLBuilder(protoFile, CommonDslBuilder, commonOutputDir)
 }
