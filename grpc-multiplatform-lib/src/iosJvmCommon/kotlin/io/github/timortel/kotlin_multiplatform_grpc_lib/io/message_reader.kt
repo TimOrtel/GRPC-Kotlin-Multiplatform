@@ -5,11 +5,10 @@ import io.github.timortel.kotlin_multiplatform_grpc_lib.message.KMMessage
 import io.github.timortel.kotlin_multiplatform_grpc_lib.message.kMapKeyFieldNumber
 import io.github.timortel.kotlin_multiplatform_grpc_lib.message.kMapValueFieldNumber
 import platform.posix.int32_t
-import platform.posix.uint32_t
 
 fun <M : KMMessage> readKMMessage(
-    wrapper: GPBCodedInputStreamWrapper,
-    messageFactory: (GPBCodedInputStreamWrapper) -> M
+    wrapper: CodedInputStream,
+    messageFactory: (CodedInputStream) -> M
 ): M = recursiveRead(wrapper) { messageFactory(wrapper) }
 
 
@@ -58,19 +57,29 @@ fun <K, V> readMapEntry(
     }
 }
 
-private fun <T> recursiveRead(wrapper: GPBCodedInputStreamWrapper, block: () -> T): T {
+private fun <T> recursiveRead(wrapper: CodedInputStream, block: () -> T): T {
     checkRecursionLimit(wrapper)
-    val length: int32_t = wrapper.stream.readInt32()
-    val oldLimit = wrapper.stream.pushLimit(length.toULong())
+    val length: Int = wrapper.readInt32()
+    val oldLimit = wrapper.pushLimit(length)
     wrapper.recursionDepth++
     val r = block()
-    wrapper.stream.checkLastTagWas(0)
+    wrapper.checkLastTagWas(0)
     wrapper.recursionDepth--
-    wrapper.stream.popLimit(oldLimit)
+    wrapper.popLimit(oldLimit)
     return r
+
+    //checkRecursionLimit(wrapper)
+    //val length: int32_t = wrapper.stream.readInt32()
+    //val oldLimit = wrapper.stream.pushLimit(length.toULong())
+    //wrapper.recursionDepth++
+    //val r = block()
+    //wrapper.stream.checkLastTagWas(0)
+    //wrapper.recursionDepth--
+    //wrapper.stream.popLimit(oldLimit)
+    //return r
 }
 
-private fun checkRecursionLimit(wrapper: GPBCodedInputStreamWrapper) {
+private fun checkRecursionLimit(wrapper: CodedInputStream) {
     if (wrapper.recursionDepth >= 100) {
         throw RuntimeException("Recursion depth exceeded.")
     }

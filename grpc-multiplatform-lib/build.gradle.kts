@@ -61,9 +61,14 @@ kotlin {
         val GRPC_KOTLIN = "1.2.1"
         val PROTOBUF = "3.20.1"
 
-        val androidJvmCommon by creating {
+        val iosJvmCommon by creating {
 
         }
+
+        val androidJvmCommon by creating {
+            dependsOn(iosJvmCommon)
+        }
+
 
         val jvmMain by getting {
             dependsOn(androidJvmCommon)
@@ -101,6 +106,7 @@ kotlin {
         val iosSimulatorArm64Main by getting
         val iosMain by creating {
             dependsOn(commonMain)
+            dependsOn(iosJvmCommon)
             iosX64Main.dependsOn(this)
             iosArm64Main.dependsOn(this)
             iosSimulatorArm64Main.dependsOn(this)
