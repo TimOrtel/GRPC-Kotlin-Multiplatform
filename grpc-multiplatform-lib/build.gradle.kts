@@ -38,7 +38,7 @@ kotlin {
 
         ios.deploymentTarget = "9.0"
 
-        pod("gRPC-ProtoRPC", version = "~> 1.50.0-pre1", moduleName = "GRPCClient")
+        pod("gRPC-ProtoRPC", version = "~> 1.47.0", moduleName = "GRPCClient")
         pod("Protobuf", version = "~> 3.21.7", moduleName = "Protobuf")
         //pod("gRPC-Core")
     }
