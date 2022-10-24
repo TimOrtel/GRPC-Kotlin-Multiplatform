@@ -1,7 +1,7 @@
+@file:JvmName("ActualSizeComputation")
 package io.github.timortel.kotlin_multiplatform_grpc_lib.io
 
 import com.google.protobuf.CodedOutputStream
-import io.github.timortel.kotlin_multiplatform_grpc_lib.message.DataType
 import io.github.timortel.kotlin_multiplatform_grpc_lib.message.KMMessage
 
 actual fun computeTagSize(fieldNumber: Int): Int = CodedOutputStream.computeTagSize(fieldNumber)

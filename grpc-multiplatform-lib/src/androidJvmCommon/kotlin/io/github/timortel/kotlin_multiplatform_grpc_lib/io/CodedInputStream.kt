@@ -1,12 +1,12 @@
 package io.github.timortel.kotlin_multiplatform_grpc_lib.io
 
 import com.google.protobuf.CodedInputStream
+import com.google.protobuf.InvalidProtocolBufferException
 import io.github.timortel.kotlin_multiplatform_grpc_lib.message.DataType
 import io.github.timortel.kotlin_multiplatform_grpc_lib.message.KMMessage
 import kotlin.jvm.Throws
 
 actual class CodedInputStream(private val impl: CodedInputStream, actual var recursionDepth: Int = 0) {
-
 
     actual val bytesUntilLimit: Int
         get() = impl.bytesUntilLimit
@@ -69,7 +69,13 @@ actual class CodedInputStream(private val impl: CodedInputStream, actual var rec
     }
 
     @Throws(ParseException::class)
-    actual fun checkLastTagWas(value: Int) = impl.checkLastTagWas(value)
+    actual fun checkLastTagWas(value: Int) {
+        try {
+            impl.checkLastTagWas(value)
+        } catch (_: InvalidProtocolBufferException) {
+            throw ParseException()
+        }
+    }
 
     actual fun setSizeLimit(newLimit: Int) = impl.setSizeLimit(newLimit)
 
@@ -81,7 +87,14 @@ actual class CodedInputStream(private val impl: CodedInputStream, actual var rec
         defaultValue: V?,
         readKey: io.github.timortel.kotlin_multiplatform_grpc_lib.io.CodedInputStream.() -> K,
         readValue: io.github.timortel.kotlin_multiplatform_grpc_lib.io.CodedInputStream.() -> V
-    ) {
-
-    }
+    ) = readMapEntry(
+        this,
+        map,
+        keyDataType,
+        valueDataType,
+        defaultKey,
+        defaultValue,
+        readKey,
+        readValue
+    )
 }

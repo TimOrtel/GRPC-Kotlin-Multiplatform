@@ -88,6 +88,11 @@ kotlin {
             dependsOn(serializationTest)
         }
 
+        val jvmTest by getting {
+            dependsOn(jvmMain)
+            dependsOn(serializationTest)
+        }
+
         val iosSimulatorArm64Main by getting {
             dependsOn(iosMain)
         }

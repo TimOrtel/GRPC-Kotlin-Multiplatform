@@ -110,7 +110,3 @@ message OneOfMessage {
     LongMessage field3 = 3;
   }
 }
-
-service TestService {
-  rpc testRpc (SimpleMessage) returns (SimpleRepeatedMessage);
-}

@@ -1,5 +1,0 @@
-package io.github.timortel.kotlin_multiplatform_grpc_lib.io
-
-import com.google.protobuf.InvalidProtocolBufferException
-
-actual typealias ParseException = InvalidProtocolBufferException

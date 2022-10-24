@@ -6,7 +6,7 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfor
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoMessageAttribute
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
 
-object IOSMapMessageMethodGenerator : MapMessageMethodGenerator(true) {
+object IosJvmMapMessageMethodGenerator : MapMessageMethodGenerator(true) {
     override val modifiers: List<KModifier> = listOf(KModifier.ACTUAL)
 
     override fun modifyMapProperty(

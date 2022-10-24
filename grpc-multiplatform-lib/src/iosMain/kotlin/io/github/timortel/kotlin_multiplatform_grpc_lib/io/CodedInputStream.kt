@@ -31,7 +31,7 @@ actual class CodedInputStream(private val impl: GPBCodedInputStream, actual var 
         }
     }
 
-    actual fun getLastTag(): Int = TODO()
+    actual fun getLastTag(): Int = throw NotImplementedError("Not available on iOS")
 
     actual fun skipField(tag: Int): Boolean = impl.skipField(tag)
 

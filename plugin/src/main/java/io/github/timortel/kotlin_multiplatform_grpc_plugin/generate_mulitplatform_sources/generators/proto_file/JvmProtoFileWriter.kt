@@ -1,80 +1,56 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.proto_file
 
-import com.squareup.kotlinpoet.ClassName
-import com.squareup.kotlinpoet.FunSpec
-import com.squareup.kotlinpoet.PropertySpec
-import com.squareup.kotlinpoet.TypeSpec
+import com.squareup.kotlinpoet.*
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.CodedInputStream
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.CodedOutputStream
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoFile
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoMessage
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.map.JvmMapMessageMethodGenerator
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.map.IosJvmMapMessageMethodGenerator
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.map.MapMessageMethodGenerator
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.oneof.JvmOneOfMethodAndClassGenerator
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.oneof.IosJvmOneOfMethodAndClassGenerator
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.oneof.OneOfMethodAndClassGenerator
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.repeated.JvmRepeatedMessageMethodGenerator
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.repeated.IosJvmRepeatedMessageMethodGenerator
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.repeated.RepeatedMessageMethodGenerator
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.scalar.JvmScalarMessageMethodGenerator
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.scalar.IosJvmScalarMessageMethodGenerator
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.scalar.ScalarMessageMethodGenerator
+import java.nio.ByteBuffer
 
-class JvmProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(protoFile, true), DefaultChildClassName {
+class JvmProtoFileWriter(protoFile: ProtoFile) : IosJvmProtoFileWriteBase(protoFile) {
 
-    override val scalarMessageMethodGenerator: ScalarMessageMethodGenerator = JvmScalarMessageMethodGenerator
+    override val scalarMessageMethodGenerator: ScalarMessageMethodGenerator = IosJvmScalarMessageMethodGenerator
 
-    override val repeatedMessageMethodGenerator: RepeatedMessageMethodGenerator = JvmRepeatedMessageMethodGenerator
+    override val repeatedMessageMethodGenerator: RepeatedMessageMethodGenerator = IosJvmRepeatedMessageMethodGenerator
 
-    override val oneOfMethodAndClassGenerator: OneOfMethodAndClassGenerator = JvmOneOfMethodAndClassGenerator
+    override val oneOfMethodAndClassGenerator: OneOfMethodAndClassGenerator = IosJvmOneOfMethodAndClassGenerator
 
-    override val mapMessageMethodGenerator: MapMessageMethodGenerator = JvmMapMessageMethodGenerator
+    override val mapMessageMethodGenerator: MapMessageMethodGenerator = IosJvmMapMessageMethodGenerator
 
-    override fun applyToClass(builder: TypeSpec.Builder, message: ProtoMessage, messageClassName: ClassName) {
-        builder.addProperty(
-            PropertySpec
-                .builder(Const.Message.Constructor.JVM.PARAM_IMPL, message.jvmType)
-                .initializer(Const.Message.Constructor.JVM.PARAM_IMPL)
-                .build()
-        )
-
-        builder.primaryConstructor(
-            FunSpec.constructorBuilder()
-                .addParameter(Const.Message.Constructor.JVM.PARAM_IMPL, message.jvmType)
-                .build()
-        )
-    }
-
-    override fun applyToEqualsFunction(
-        builder: FunSpec.Builder,
-        message: ProtoMessage,
-        thisClassName: ClassName
-    ) {
-        with(builder) {
-            //Simply delegate equals to the implementation provided by the JVM
-            //First check if the param is of the same type
-            addStatement("if (%N == null) return false", Const.Message.BasicFunctions.EqualsFunction.OTHER_PARAM)
-
-            beginControlFlow(
-                "return if (%N is %T)",
-                Const.Message.BasicFunctions.EqualsFunction.OTHER_PARAM,
-                thisClassName
+    override val serializeFunctionCode: CodeBlock
+        get() = CodeBlock.builder()
+            .addStatement("val data = ByteArray(requiredSize)")
+            .addStatement(
+                "val stream = %T(%T.newInstance(%T.wrap(data)))",
+                CodedOutputStream,
+                ClassName("com.google.protobuf", "CodedOutputStream"),
+                ByteBuffer::class.asClassName()
             )
+            .addStatement("serialize(stream)")
+            .addStatement("return data")
+            .build()
 
-            //Delegate
-            addStatement(
-                "%N.equals(%N.%N)",
-                Const.Message.Constructor.JVM.PARAM_IMPL,
-                Const.Message.BasicFunctions.EqualsFunction.OTHER_PARAM,
-                Const.Message.Constructor.JVM.PARAM_IMPL
+    override val serializedDataType: ClassName = ByteArray::class.asClassName()
+
+    override val deserializeFunctionCode: CodeBlock
+        get() = CodeBlock
+            .builder()
+            .addStatement(
+                "val stream = %T(%T.newInstance(data))",
+                CodedInputStream,
+                ClassName("com.google.protobuf", "CodedInputStream"),
             )
-
-            endControlFlow()
-            addCode("else false")
-        }
-    }
-
-    override fun applyToHashCodeFunction(builder: FunSpec.Builder, message: ProtoMessage) {
-        //Delegate hash code generation to jvm impl
-        builder.addStatement("return %N.hashCode()", Const.Message.Constructor.JVM.PARAM_IMPL)
-    }
-
-    override fun getChildClassName(parentClass: ClassName?, childName: String): ClassName =
-        getChildClassName(parentClass, childName, protoFile.pkg)
+            .addStatement(
+                "return %N(stream)",
+                Const.Message.Companion.IOS.WrapperDeserializationFunction.NAME
+            )
+            .build()
 }

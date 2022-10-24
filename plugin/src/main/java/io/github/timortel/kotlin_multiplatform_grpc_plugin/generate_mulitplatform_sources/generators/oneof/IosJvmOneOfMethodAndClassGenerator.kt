@@ -5,9 +5,9 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfor
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoMessage
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoOneOf
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.proto_file.IOSProtoFileWriter
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.proto_file.IosJvmProtoFileWriteBase
 
-object IOSOneOfMethodAndClassGenerator : OneOfMethodAndClassGenerator(true) {
+object IosJvmOneOfMethodAndClassGenerator : OneOfMethodAndClassGenerator(true) {
     override val attrs: List<KModifier> = listOf(KModifier.ACTUAL)
 
     override fun modifyOneOfProperty(builder: PropertySpec.Builder, message: ProtoMessage, oneOf: ProtoOneOf) {
@@ -15,7 +15,7 @@ object IOSOneOfMethodAndClassGenerator : OneOfMethodAndClassGenerator(true) {
     }
 
     override fun modifyParentClass(builder: TypeSpec.Builder, message: ProtoMessage, oneOf: ProtoOneOf) {
-        builder.addProperty(Const.Message.OneOf.IOS.REQUIRED_SIZE_PROPERTY_NAME, U_LONG, KModifier.ABSTRACT)
+        builder.addProperty(Const.Message.OneOf.IOS.REQUIRED_SIZE_PROPERTY_NAME, INT, KModifier.ABSTRACT)
         addSerializeFunction(builder, listOf(KModifier.ABSTRACT)) {
 
         }
@@ -31,20 +31,20 @@ object IOSOneOfMethodAndClassGenerator : OneOfMethodAndClassGenerator(true) {
             PropertySpec
                 .builder(
                     Const.Message.OneOf.IOS.REQUIRED_SIZE_PROPERTY_NAME,
-                    U_LONG,
+                    INT,
                     KModifier.OVERRIDE
                 )
                 .initializer(
                     when (childClassType) {
-                        is ChildClassType.Normal -> IOSProtoFileWriter.getCodeForRequiredSizeForScalarAttributeC(
+                        is ChildClassType.Normal -> IosJvmProtoFileWriteBase.getCodeForRequiredSizeForScalarAttributeC(
                             childClassType.attr
                         )
 
-                        ChildClassType.NotSet -> CodeBlock.of("0u")
+                        ChildClassType.NotSet -> CodeBlock.of("0")
                         /*
                         If KM-GRPC wants to conform to proto 3.5, unknown fields must be retained.
                          */
-                        ChildClassType.Unknown -> CodeBlock.of("0u")
+                        ChildClassType.Unknown -> CodeBlock.of("0")
                     }
                 )
                 .build()
@@ -53,7 +53,7 @@ object IOSOneOfMethodAndClassGenerator : OneOfMethodAndClassGenerator(true) {
         addSerializeFunction(builder, listOf(KModifier.OVERRIDE)) {
             when (childClassType) {
                 is ChildClassType.Normal -> addCode(
-                    IOSProtoFileWriter.getWriteScalarFieldCode(
+                    IosJvmProtoFileWriteBase.getWriteScalarFieldCode(
                         message,
                         childClassType.attr,
                         Const.Message.OneOf.IOS.SERIALIZE_FUNCTION_STREAM_PARAM_NAME,

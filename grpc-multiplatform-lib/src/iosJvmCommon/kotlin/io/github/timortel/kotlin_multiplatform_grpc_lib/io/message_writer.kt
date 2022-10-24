@@ -29,8 +29,8 @@ fun <K, V> writeMap(
     stream: CodedOutputStream,
     fieldNumber: Int,
     map: Map<K, V>,
-    getKeySize: (fieldNumber: Int, key: K) -> ULong,
-    getValueSize: (fieldNumber: Int, value: V) -> ULong,
+    getKeySize: (fieldNumber: Int, key: K) -> Int,
+    getValueSize: (fieldNumber: Int, value: V) -> Int,
     writeKey: CodedOutputStream.(fieldNumber: Int, K) -> Unit,
     writeValue: CodedOutputStream.(fieldNumber: Int, V) -> Unit
 ) {
@@ -40,7 +40,7 @@ fun <K, V> writeMap(
         stream.writeInt32NoTag(tag)
         //Write the size of the message
         val msgSize = getKeySize(kMapKeyFieldNumber, key) + getValueSize(kMapValueFieldNumber, value)
-        stream.writeInt32NoTag(msgSize.toInt())
+        stream.writeInt32NoTag(msgSize)
         //Write fields
         writeKey(stream, kMapKeyFieldNumber, key)
         writeValue(stream, kMapValueFieldNumber, value)

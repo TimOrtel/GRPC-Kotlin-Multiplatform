@@ -17,7 +17,7 @@ val kmMessage = ClassName("io.github.timortel.kotlin_multiplatform_grpc_lib.mess
 val writeKMMessage = MemberName(PACKAGE_IO, "writeKMMessage")
 val readKMMessage = MemberName(PACKAGE_IO, "readKMMessage")
 val computeMapSize = MemberName(PACKAGE_IO, "computeMapSize")
-val computeMessageSize = MemberName(PACKAGE_MESSAGE, "computeMessageSize")
+val computeMessageSize = MemberName(PACKAGE_IO, "computeMessageSize")
 
 val CodedOutputStream = ClassName(PACKAGE_IO, "CodedOutputStream")
 val CodedInputStream = ClassName(PACKAGE_IO, "CodedInputStream")
