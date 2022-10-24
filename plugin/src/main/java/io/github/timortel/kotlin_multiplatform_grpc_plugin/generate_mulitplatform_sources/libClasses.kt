@@ -13,16 +13,17 @@ val JSImpl = ClassName("io.github.timortel.kotlin_multiplatform_grpc_lib.message
 val MessageDeserializer = ClassName("io.github.timortel.kotlin_multiplatform_grpc_lib.message", "MessageDeserializer")
 
 val kmMessage = ClassName("io.github.timortel.kotlin_multiplatform_grpc_lib.message", "KMMessage")
-val GPBCodedInputStreamWrapper =
-    ClassName("io.github.timortel.kotlin_multiplatform_grpc_lib.io", "GPBCodedInputStreamWrapper")
 
-val writeKMMessage = MemberName("io.github.timortel.kotlin_multiplatform_grpc_lib.io", "writeKMMessage")
-val readKMMessage = MemberName("io.github.timortel.kotlin_multiplatform_grpc_lib.io", "readKMMessage")
-val computeMapSize = MemberName("io.github.timortel.kotlin_multiplatform_grpc_lib.message", "computeMapSize")
-val computeMessageSize = MemberName("io.github.timortel.kotlin_multiplatform_grpc_lib.message", "computeMessageSize")
+val writeKMMessage = MemberName(PACKAGE_IO, "writeKMMessage")
+val readKMMessage = MemberName(PACKAGE_IO, "readKMMessage")
+val computeMapSize = MemberName(PACKAGE_IO, "computeMapSize")
+val computeMessageSize = MemberName(PACKAGE_MESSAGE, "computeMessageSize")
 
-val writeMap = MemberName("io.github.timortel.kotlin_multiplatform_grpc_lib.io", "writeMap")
-val readMapEntry = MemberName("io.github.timortel.kotlin_multiplatform_grpc_lib.io", "readMapEntry")
+val CodedOutputStream = ClassName(PACKAGE_IO, "CodedOutputStream")
+val CodedInputStream = ClassName(PACKAGE_IO, "CodedInputStream")
+
+val writeMap = MemberName(PACKAGE_IO, "writeMap")
+val readMapEntry = MemberName(PACKAGE_IO, "readMapEntry")
 
 val iosUnaryCallImplementation = MemberName("io.github.timortel.kotlin_multiplatform_grpc_lib.rpc", "unaryCallImplementation")
 val iosServerSideStreamingCallImplementation = MemberName("io.github.timortel.kotlin_multiplatform_grpc_lib.rpc", "serverSideStreamingCallImplementation")

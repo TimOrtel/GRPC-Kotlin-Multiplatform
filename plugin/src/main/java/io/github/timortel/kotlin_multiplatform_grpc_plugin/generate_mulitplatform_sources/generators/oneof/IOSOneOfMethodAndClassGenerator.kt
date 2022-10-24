@@ -1,7 +1,7 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.oneof
 
 import com.squareup.kotlinpoet.*
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.GPBCodedOutputStream
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.CodedOutputStream
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoMessage
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoOneOf
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
@@ -76,7 +76,7 @@ object IOSOneOfMethodAndClassGenerator : OneOfMethodAndClassGenerator(true) {
             FunSpec
                 .builder(Const.Message.OneOf.IOS.SERIALIZE_FUNCTION_NAME)
                 .addModifiers(modifiers)
-                .addParameter(Const.Message.OneOf.IOS.SERIALIZE_FUNCTION_STREAM_PARAM_NAME, GPBCodedOutputStream)
+                .addParameter(Const.Message.OneOf.IOS.SERIALIZE_FUNCTION_STREAM_PARAM_NAME, CodedOutputStream)
                 .apply(modify)
                 .build()
         )

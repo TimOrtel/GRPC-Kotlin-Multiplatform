@@ -243,7 +243,7 @@ object Const {
 
                 object WrapperDeserializationFunction {
                     const val NAME = "deserialize"
-                    const val WRAPPER_PARAM = "wrapper"
+                    const val STREAM_PARAM = "stream"
                 }
             }
         }

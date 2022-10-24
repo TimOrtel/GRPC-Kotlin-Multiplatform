@@ -12,10 +12,10 @@ import platform.posix.size_t
  */
 actual interface KMMessage {
 
-    val requiredSize: size_t
+    val requiredSize: Int
 
     fun serialize(): NSData {
-        val data = NSMutableData().apply { setLength(requiredSize) }
+        val data = NSMutableData().apply { setLength(requiredSize.toULong()) }
         val stream = GPBCodedOutputStream(data)
         serialize(CodedOutputStream(stream))
 

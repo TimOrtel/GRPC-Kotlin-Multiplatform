@@ -5,7 +5,7 @@ import java.nio.ByteBuffer
 
 actual interface KMMessage {
 
-    val requiredSize: Long
+    val requiredSize: Int
 
     fun serialize(): ByteArray {
         val data = ByteArray(requiredSize.toInt())
