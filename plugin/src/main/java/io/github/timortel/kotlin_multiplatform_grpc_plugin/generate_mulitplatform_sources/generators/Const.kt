@@ -79,7 +79,7 @@ object Const {
                 fun getCaseFunctionName(oneOf: ProtoOneOf): String = "get${oneOf.name.lowercase().capitalize()}Case"
             }
 
-            object IOS {
+            object IosJvm {
                 const val REQUIRED_SIZE_PROPERTY_NAME = "requiredSize"
 
                 const val SERIALIZE_FUNCTION_NAME = "serialize"
@@ -128,7 +128,7 @@ object Const {
                         message.jsType.member("set${attr.name.lowercase().capitalize()}")
                 }
 
-                object IOS {
+                object IosJvm {
                     fun isMessageSetFunctionName(message: ProtoMessage, attr: ProtoMessageAttribute): String {
                         var name = "is${attr.capitalizedName}Set"
                         val attrNames = message.attributes.map { it.name }

@@ -231,7 +231,7 @@ abstract class IosJvmProtoFileWriteBase(private val protoFile: ProtoFile) :
                     add(
                         "%N.%N",
                         Const.Message.OneOf.propertyName(message, oneOf),
-                        Const.Message.OneOf.IOS.REQUIRED_SIZE_PROPERTY_NAME
+                        Const.Message.OneOf.IosJvm.REQUIRED_SIZE_PROPERTY_NAME
                     )
                 }
             }
@@ -407,7 +407,7 @@ abstract class IosJvmProtoFileWriteBase(private val protoFile: ProtoFile) :
                 addStatement(
                     "%N.%N(%N)",
                     Const.Message.OneOf.propertyName(message, oneOf),
-                    Const.Message.OneOf.IOS.SERIALIZE_FUNCTION_NAME,
+                    Const.Message.OneOf.IosJvm.SERIALIZE_FUNCTION_NAME,
                     Const.Message.IOS.SerializeFunction.STREAM_PARAM
                 )
             }
@@ -883,7 +883,7 @@ abstract class IosJvmProtoFileWriteBase(private val protoFile: ProtoFile) :
                         if (performIsMessageSetCheck) {
                             beginControlFlow(
                                 "if (%N)",
-                                Const.Message.Attribute.Scalar.IOS.isMessageSetFunctionName(message, attr)
+                                Const.Message.Attribute.Scalar.IosJvm.isMessageSetFunctionName(message, attr)
                             )
                         }
 

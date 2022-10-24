@@ -33,7 +33,7 @@ object IosJvmScalarMessageMethodGenerator : ScalarMessageMethodGenerator(true) {
             builder.addProperty(
                 PropertySpec
                     .builder(
-                        Const.Message.Attribute.Scalar.IOS.isMessageSetFunctionName(protoMessage, messageAttribute),
+                        Const.Message.Attribute.Scalar.IosJvm.isMessageSetFunctionName(protoMessage, messageAttribute),
                         BOOLEAN,
                         KModifier.PRIVATE
                     )
@@ -45,7 +45,7 @@ object IosJvmScalarMessageMethodGenerator : ScalarMessageMethodGenerator(true) {
 
     override fun modifyHasFunction(builder: FunSpec.Builder, message: ProtoMessage, attr: ProtoMessageAttribute) {
         builder.apply {
-            addStatement("return %N", Const.Message.Attribute.Scalar.IOS.isMessageSetFunctionName(message, attr))
+            addStatement("return %N", Const.Message.Attribute.Scalar.IosJvm.isMessageSetFunctionName(message, attr))
         }
     }
 }

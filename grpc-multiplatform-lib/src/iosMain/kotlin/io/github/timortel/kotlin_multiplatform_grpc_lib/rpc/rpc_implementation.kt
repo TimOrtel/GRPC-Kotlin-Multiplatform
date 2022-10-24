@@ -23,7 +23,7 @@ suspend fun <REQ : KMMessage, RES : KMMessage> unaryCallImplementation(
     channel: KMChannel,
     path: String,
     request: REQ,
-    responseDeserializer: MessageDeserializer<RES>
+    responseDeserializer: MessageDeserializer<RES, NSData>
 ): RES {
     val data = request.serialize()
 
@@ -67,7 +67,7 @@ suspend fun <REQ : KMMessage, RES : KMMessage> serverSideStreamingCallImplementa
     channel: KMChannel,
     path: String,
     request: REQ,
-    responseDeserializer: MessageDeserializer<RES>
+    responseDeserializer: MessageDeserializer<RES, NSData>
 ): Flow<RES> {
     val flow = MutableSharedFlow<StreamingResponse<RES>>()
     val isDone = MutableStateFlow(false)

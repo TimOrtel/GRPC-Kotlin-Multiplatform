@@ -7,24 +7,6 @@ actual class KMChannel(private val name: String, private val port: Int, val call
 
     fun buildRequestOptions(path: String) = GRPCRequestOptions("$name:$port", path, safety = GRPCCallSafetyDefault)
 
-    fun withDeadlineAfter(duration: Long, unit: TimeUnit): KMChannel {
-        val mutableOptions = callOptions.mutableCopy() as GRPCMutableCallOptions
-
-        val millis = (duration * unit.toMilliFactor).toDouble()
-        val seconds = millis / 1000.0
-
-        mutableOptions.setTimeout(seconds)
-
-        return KMChannel(name, port, mutableOptions)
-    }
-
-    fun withMetadata(metadata: KMMetadata): KMChannel {
-        val mutableOptions = callOptions.mutableCopy() as GRPCMutableCallOptions
-        mutableOptions.setInitialMetadata(metadata.metadataMap.toMap())
-
-        return KMChannel(name, port, mutableOptions)
-    }
-
     actual class Builder(private val name: String, private val port: Int) {
 
         private val callOptions = GRPCMutableCallOptions()

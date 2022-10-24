@@ -1,5 +1,7 @@
 package io.github.timortel.kotlin_multiplatform_grpc_lib
 
+import io.github.timortel.kotlin_multiplatform_grpc_lib.util.TimeUnit
+
 /**
  * Wrapps around the GRPC-Channel
  */

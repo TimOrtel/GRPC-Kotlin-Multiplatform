@@ -15,7 +15,7 @@ object IosJvmOneOfMethodAndClassGenerator : OneOfMethodAndClassGenerator(true) {
     }
 
     override fun modifyParentClass(builder: TypeSpec.Builder, message: ProtoMessage, oneOf: ProtoOneOf) {
-        builder.addProperty(Const.Message.OneOf.IOS.REQUIRED_SIZE_PROPERTY_NAME, INT, KModifier.ABSTRACT)
+        builder.addProperty(Const.Message.OneOf.IosJvm.REQUIRED_SIZE_PROPERTY_NAME, INT, KModifier.ABSTRACT)
         addSerializeFunction(builder, listOf(KModifier.ABSTRACT)) {
 
         }
@@ -30,7 +30,7 @@ object IosJvmOneOfMethodAndClassGenerator : OneOfMethodAndClassGenerator(true) {
         builder.addProperty(
             PropertySpec
                 .builder(
-                    Const.Message.OneOf.IOS.REQUIRED_SIZE_PROPERTY_NAME,
+                    Const.Message.OneOf.IosJvm.REQUIRED_SIZE_PROPERTY_NAME,
                     INT,
                     KModifier.OVERRIDE
                 )
@@ -56,7 +56,7 @@ object IosJvmOneOfMethodAndClassGenerator : OneOfMethodAndClassGenerator(true) {
                     IosJvmProtoFileWriteBase.getWriteScalarFieldCode(
                         message,
                         childClassType.attr,
-                        Const.Message.OneOf.IOS.SERIALIZE_FUNCTION_STREAM_PARAM_NAME,
+                        Const.Message.OneOf.IosJvm.SERIALIZE_FUNCTION_STREAM_PARAM_NAME,
                         performIsMessageSetCheck = false
                     )
                 )
@@ -74,9 +74,9 @@ object IosJvmOneOfMethodAndClassGenerator : OneOfMethodAndClassGenerator(true) {
     ) {
         builder.addFunction(
             FunSpec
-                .builder(Const.Message.OneOf.IOS.SERIALIZE_FUNCTION_NAME)
+                .builder(Const.Message.OneOf.IosJvm.SERIALIZE_FUNCTION_NAME)
                 .addModifiers(modifiers)
-                .addParameter(Const.Message.OneOf.IOS.SERIALIZE_FUNCTION_STREAM_PARAM_NAME, CodedOutputStream)
+                .addParameter(Const.Message.OneOf.IosJvm.SERIALIZE_FUNCTION_STREAM_PARAM_NAME, CodedOutputStream)
                 .apply(modify)
                 .build()
         )
