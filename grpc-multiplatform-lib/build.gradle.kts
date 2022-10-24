@@ -62,7 +62,7 @@ kotlin {
         val PROTOBUF = "3.20.1"
 
         val iosJvmCommon by creating {
-
+            dependsOn(commonMain)
         }
 
         val androidJvmCommon by creating {

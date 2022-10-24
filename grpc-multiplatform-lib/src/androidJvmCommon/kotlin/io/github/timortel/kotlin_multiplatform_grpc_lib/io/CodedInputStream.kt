@@ -1,10 +1,11 @@
 package io.github.timortel.kotlin_multiplatform_grpc_lib.io
 
 import com.google.protobuf.CodedInputStream
+import io.github.timortel.kotlin_multiplatform_grpc_lib.message.DataType
 import io.github.timortel.kotlin_multiplatform_grpc_lib.message.KMMessage
 import kotlin.jvm.Throws
 
-actual class CodedInputStream(private val impl: CodedInputStream) {
+actual class CodedInputStream(private val impl: CodedInputStream, actual var recursionDepth: Int = 0) {
 
 
     actual val bytesUntilLimit: Int
@@ -71,4 +72,16 @@ actual class CodedInputStream(private val impl: CodedInputStream) {
     actual fun checkLastTagWas(value: Int) = impl.checkLastTagWas(value)
 
     actual fun setSizeLimit(newLimit: Int) = impl.setSizeLimit(newLimit)
+
+    actual fun <K, V> readMapEntry(
+        map: MutableMap<K, V>,
+        keyDataType: DataType,
+        valueDataType: DataType,
+        defaultKey: K?,
+        defaultValue: V?,
+        readKey: io.github.timortel.kotlin_multiplatform_grpc_lib.io.CodedInputStream.() -> K,
+        readValue: io.github.timortel.kotlin_multiplatform_grpc_lib.io.CodedInputStream.() -> V
+    ) {
+
+    }
 }

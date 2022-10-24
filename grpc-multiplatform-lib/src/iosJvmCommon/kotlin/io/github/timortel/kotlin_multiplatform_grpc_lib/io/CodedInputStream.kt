@@ -1,5 +1,6 @@
 package io.github.timortel.kotlin_multiplatform_grpc_lib.io
 
+import io.github.timortel.kotlin_multiplatform_grpc_lib.message.DataType
 import io.github.timortel.kotlin_multiplatform_grpc_lib.message.KMMessage
 
 expect class CodedInputStream {
@@ -40,13 +41,13 @@ expect class CodedInputStream {
     fun <M : KMMessage> readKMMessage(messageFactory: (CodedInputStream) -> M): M
 
     fun <K, V> readMapEntry(
-            map: MutableMap<K, V>,
-            keyDataType: GPBDataType,
-            valueDataType: GPBDataType,
-            defaultKey: K?,
-            defaultValue: V?,
-            readKey: GPBCodedInputStreamWrapper.() -> K,
-            readValue: GPBCodedInputStreamWrapper.() -> V
+        map: MutableMap<K, V>,
+        keyDataType: DataType,
+        valueDataType: DataType,
+        defaultKey: K?,
+        defaultValue: V?,
+        readKey: CodedInputStream.() -> K,
+        readValue: CodedInputStream.() -> V
     )
 
     fun readBytes(): ByteArray

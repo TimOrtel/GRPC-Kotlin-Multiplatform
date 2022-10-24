@@ -1,34 +1,30 @@
 package io.github.timortel.kotlin_multiplatform_grpc_lib.io
 
-import cocoapods.Protobuf.*
+import io.github.timortel.kotlin_multiplatform_grpc_lib.message.DataType
 import io.github.timortel.kotlin_multiplatform_grpc_lib.message.KMMessage
-import io.github.timortel.kotlin_multiplatform_grpc_lib.message.kMapKeyFieldNumber
-import io.github.timortel.kotlin_multiplatform_grpc_lib.message.kMapValueFieldNumber
-import platform.posix.int32_t
 
 fun <M : KMMessage> readKMMessage(
     wrapper: CodedInputStream,
     messageFactory: (CodedInputStream) -> M
 ): M = recursiveRead(wrapper) { messageFactory(wrapper) }
 
-
 /*
  Adapted version of https://github.com/protocolbuffers/protobuf/blob/520c601c99012101c816b6ccc89e8d6fc28fdbb8/objectivec/GPBDictionary.m#L455
  */
 fun <K, V> readMapEntry(
-    wrapper: GPBCodedInputStreamWrapper,
+    inputStream: CodedInputStream,
     map: MutableMap<K, V>,
-    keyDataType: GPBDataType,
-    valueDataType: GPBDataType,
+    keyDataType: DataType,
+    valueDataType: DataType,
     defaultKey: K?,
     defaultValue: V?,
-    readKey: GPBCodedInputStreamWrapper.() -> K,
-    readValue: GPBCodedInputStreamWrapper.() -> V
+    readKey: CodedInputStream.() -> K,
+    readValue: CodedInputStream.() -> V
 ) {
-    recursiveRead(wrapper) {
-        val keyTag = GPBWireFormatMakeTag(kMapKeyFieldNumber.toUInt(), GPBWireFormatForType(keyDataType, false)).toInt()
+    recursiveRead(inputStream) {
+        val keyTag = wireFormatMakeTag(kMapKeyFieldNumber, wireFormatForType(keyDataType, false))
         val valueTag =
-            GPBWireFormatMakeTag(kMapValueFieldNumber.toUInt(), GPBWireFormatForType(valueDataType, false)).toInt()
+            wireFormatMakeTag(kMapValueFieldNumber, wireFormatForType(valueDataType, false))
 
         var key: K? = defaultKey
         var value: V? = defaultValue
@@ -36,13 +32,13 @@ fun <K, V> readMapEntry(
         var hitError = false
 
         while (true) {
-            when (val tag = wrapper.stream.readTag()) {
+            when (val tag = inputStream.readTag()) {
                 0 -> break
-                keyTag -> key = wrapper.readKey()
-                valueTag -> value = wrapper.readValue()
+                keyTag -> key = inputStream.readKey()
+                valueTag -> value = inputStream.readValue()
                 else -> {
                     //Unknown
-                    if (!wrapper.stream.skipField(tag)) {
+                    if (!inputStream.skipField(tag)) {
                         hitError = true
                         break
                     }
@@ -57,15 +53,15 @@ fun <K, V> readMapEntry(
     }
 }
 
-private fun <T> recursiveRead(wrapper: CodedInputStream, block: () -> T): T {
-    checkRecursionLimit(wrapper)
-    val length: Int = wrapper.readInt32()
-    val oldLimit = wrapper.pushLimit(length)
-    wrapper.recursionDepth++
+private fun <T> recursiveRead(stream: CodedInputStream, block: () -> T): T {
+    checkRecursionLimit(stream)
+    val length: Int = stream.readInt32()
+    val oldLimit = stream.pushLimit(length)
+    stream.recursionDepth++
     val r = block()
-    wrapper.checkLastTagWas(0)
-    wrapper.recursionDepth--
-    wrapper.popLimit(oldLimit)
+    stream.checkLastTagWas(0)
+    stream.recursionDepth--
+    stream.popLimit(oldLimit)
     return r
 
     //checkRecursionLimit(wrapper)
