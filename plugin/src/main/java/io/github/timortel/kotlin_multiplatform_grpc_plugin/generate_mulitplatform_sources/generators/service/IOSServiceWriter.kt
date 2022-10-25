@@ -8,11 +8,17 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfor
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoService
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
 
-object IOSServiceWriter : ServiceWriter(true) {
+object IOSServiceWriter : IosJvmServiceWriter() {
 
     override val classAndFunctionModifiers: List<KModifier> = listOf(KModifier.ACTUAL)
     override val channelConstructorModifiers: List<KModifier> = listOf(KModifier.ACTUAL)
     override val primaryConstructorModifiers: List<KModifier> = listOf(KModifier.PRIVATE, KModifier.ACTUAL)
+
+    private val GRPC_MUTABLE_CALL_OPTIONS = ClassName("cocoapods.GRPCClient", "GRPCMutableCallOptions")
+    override val callOptionsType: TypeName = ClassName("cocoapods.GRPCClient", "GRPCCallOptions")
+    override val createEmptyCallOptionsCode: CodeBlock =
+        CodeBlock.of("%T()", GRPC_MUTABLE_CALL_OPTIONS)
+
 
     override fun applyToClass(
         builder: TypeSpec.Builder,
@@ -20,34 +26,9 @@ object IOSServiceWriter : ServiceWriter(true) {
         service: ProtoService,
         serviceName: ClassName
     ) {
-        builder.addProperty(
-            PropertySpec
-                .builder(Const.Service.IOS.CHANNEL_PROPERTY_NAME, kmChannel, KModifier.OVERRIDE, KModifier.LATEINIT)
-                .mutable()
-                .build()
-        )
-
-        builder.addFunction(
-            FunSpec
-                .builder("build")
-                .addModifiers(KModifier.OVERRIDE)
-                .returns(serviceName)
-                .addParameter("channel", kmChannel)
-                .addStatement("return %T(channel)", serviceName)
-                .build()
-        )
+        super.applyToClass(builder, protoFile, service, serviceName)
 
         overrideWithDeadlineAfter(builder, serviceName)
-    }
-
-    override fun applyToChannelConstructor(builder: FunSpec.Builder, protoFile: ProtoFile, service: ProtoService) {
-        builder.addStatement(
-            "this.%N = %N",
-            Const.Service.IOS.CHANNEL_PROPERTY_NAME,
-            Const.Service.Constructor.CHANNEL_PARAMETER_NAME
-        )
-
-        builder.callThisConstructor()
     }
 
     override fun applyToRpcFunction(
@@ -56,13 +37,20 @@ object IOSServiceWriter : ServiceWriter(true) {
         service: ProtoService,
         rpc: ProtoRpc
     ) {
-        val impl = if (rpc.isResponseStream) iosServerSideStreamingCallImplementation else iosUnaryCallImplementation
+        val impl = when (rpc.method) {
+            ProtoRpc.Method.UNARY -> iosUnaryCallImplementation
+            ProtoRpc.Method.SERVER_STREAMING -> iosServerSideStreamingCallImplementation
+        }
+
+        builder.apply {
+            addStatement("val callOptions = %N.mutableCopy() as %T", Const.Service.IosJvm.CALL_OPTIONS_PROPERTY_NAME, GRPC_MUTABLE_CALL_OPTIONS)
+            addStatement("callOptions.setInitialMetadata(%N.metadataMap.toMap())", Const.Service.RpcCall.PARAM_METADATA)
+        }
 
         builder.addStatement(
-            "return %M(%N.withMetadata(%N), %S, %N, %T.Companion)",
+            "return %M(%N, callOptions, %S, %N, %T.Companion)",
             impl,
-            Const.Service.IOS.CHANNEL_PROPERTY_NAME,
-            Const.Service.RpcCall.PARAM_METADATA,
+            Const.Service.IosJvm.CHANNEL_PROPERTY_NAME,
             "/${protoFile.pkg}.${service.serviceName}/${rpc.rpcName}",
             Const.Service.RpcCall.PARAM_REQUEST,
             rpc.response.iosType

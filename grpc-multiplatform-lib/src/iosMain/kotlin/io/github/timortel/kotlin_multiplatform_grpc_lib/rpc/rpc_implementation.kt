@@ -1,6 +1,8 @@
 package io.github.timortel.kotlin_multiplatform_grpc_lib.rpc
 
 import cocoapods.GRPCClient.GRPCCall2
+import cocoapods.GRPCClient.GRPCCallOptions
+import cocoapods.GRPCClient.GRPCMutableCallOptions
 import cocoapods.GRPCClient.GRPCResponseHandlerProtocol
 import io.github.timortel.kotlin_multiplatform_grpc_lib.KMChannel
 import io.github.timortel.kotlin_multiplatform_grpc_lib.KMCode
@@ -21,6 +23,7 @@ import kotlin.coroutines.suspendCoroutine
 @Throws(KMStatusException::class, CancellationException::class)
 suspend fun <REQ : KMMessage, RES : KMMessage> unaryCallImplementation(
     channel: KMChannel,
+    callOptions: GRPCCallOptions,
     path: String,
     request: REQ,
     responseDeserializer: MessageDeserializer<RES, NSData>
@@ -48,7 +51,7 @@ suspend fun <REQ : KMMessage, RES : KMMessage> unaryCallImplementation(
         val call = GRPCCall2(
             requestOptions = channel.buildRequestOptions(path),
             responseHandler = handler,
-            callOptions = channel.callOptions
+            callOptions = channel.applyToCallOptions(callOptions)
         )
 
         call.start()
@@ -65,6 +68,7 @@ private sealed class StreamingResponse<T : KMMessage> {
 
 suspend fun <REQ : KMMessage, RES : KMMessage> serverSideStreamingCallImplementation(
     channel: KMChannel,
+    callOptions: GRPCCallOptions,
     path: String,
     request: REQ,
     responseDeserializer: MessageDeserializer<RES, NSData>
@@ -96,7 +100,7 @@ suspend fun <REQ : KMMessage, RES : KMMessage> serverSideStreamingCallImplementa
         }
     )
 
-    val call = GRPCCall2(channel.buildRequestOptions(path), handler, channel.callOptions)
+    val call = GRPCCall2(channel.buildRequestOptions(path), handler, channel.applyToCallOptions(callOptions))
 
     call.start()
     call.writeData(request.serialize())

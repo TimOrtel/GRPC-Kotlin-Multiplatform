@@ -3,6 +3,7 @@ import com.google.protobuf.gradle.*
 plugins {
     kotlin("jvm")
 
+    id("java")
     id("com.google.protobuf")
 }
 
@@ -27,6 +28,10 @@ sourceSets {
         proto {
             srcDirs("../src/commonMain/proto")
         }
+        kotlin.srcDir(buildDir.resolve("generated/source/proto/main/grpc"))
+        kotlin.srcDir(buildDir.resolve("generated/source/proto/main/grpckt"))
+        kotlin.srcDir(buildDir.resolve("generated/source/proto/main/java"))
+        kotlin.srcDir(buildDir.resolve("generated/source/proto/main/kotlin"))
     }
 }
 
@@ -68,4 +73,12 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().all {
     kotlinOptions {
         freeCompilerArgs = listOf("-Xopt-in=kotlin.RequiresOptIn")
     }
+}
+
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+    kotlinOptions.jvmTarget = "1.8"
+}
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
 }

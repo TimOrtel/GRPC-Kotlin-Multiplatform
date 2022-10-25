@@ -106,7 +106,10 @@ class JvmProtoFileWriter(protoFile: ProtoFile) : IosJvmProtoFileWriteBase(protoF
                     .builder("writeTo")
                     .addModifiers(KModifier.OVERRIDE)
                     .addParameter("output", ClassName("java.io", "OutputStream"))
-                    .addStatement("writeTo(%T.newInstance(output))", PROTO_CODED_OUTPUT_STREAM)
+                    .addStatement("val bufferSize = requiredSize")
+                    .addStatement("val codedOutput = %T.newInstance(output, bufferSize)", PROTO_CODED_OUTPUT_STREAM)
+                    .addStatement("writeTo(codedOutput)")
+                    .addStatement("codedOutput.flush()")
                     .build()
             )
 

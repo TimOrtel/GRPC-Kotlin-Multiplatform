@@ -1,15 +1,27 @@
 package io.github.timortel.kotlin_multiplatform_grpc_lib
 
 import cocoapods.GRPCClient.*
-import io.github.timortel.kotlin_multiplatform_grpc_lib.util.TimeUnit
 
-actual class KMChannel(private val name: String, private val port: Int, val callOptions: GRPCCallOptions) {
+actual class KMChannel(private val name: String, private val port: Int, private val usePlaintext: Boolean) {
 
     fun buildRequestOptions(path: String) = GRPCRequestOptions("$name:$port", path, safety = GRPCCallSafetyDefault)
 
+    /**
+     * Applies configuration of the channel to the given call options.
+     * If any mutations are performed, a new copy of call options is returned. The original call options
+     * are left unmodified.
+     */
+    fun applyToCallOptions(callOptions: GRPCCallOptions): GRPCCallOptions {
+        return if (usePlaintext) {
+            val newCallOptions = callOptions.mutableCopy() as GRPCMutableCallOptions
+            newCallOptions.setTransport(GRPCDefaultTransportImplList_.core_insecure)
+            newCallOptions
+        } else callOptions
+    }
+
     actual class Builder(private val name: String, private val port: Int) {
 
-        private val callOptions = GRPCMutableCallOptions()
+        private var usePlaintext = false
 
         actual companion object {
             actual fun forAddress(
@@ -19,10 +31,10 @@ actual class KMChannel(private val name: String, private val port: Int, val call
         }
 
         actual fun usePlaintext(): Builder {
-            callOptions.setTransport(GRPCDefaultTransportImplList_.core_insecure)
+            usePlaintext = true
             return this
         }
 
-        actual fun build(): KMChannel = KMChannel(name, port, callOptions)
+        actual fun build(): KMChannel = KMChannel(name, port, usePlaintext)
     }
 }

@@ -61,7 +61,10 @@ fun writeJsServiceFile(protoFile: ProtoFile, service: ProtoService, jsOutputFold
                                         "%T(%S, %S, ::%T, ::%T, {·request:·dynamic -> %T(request).serializeBinary() }, %T::deserializeBinary)",
                                         methodDescriptor,
                                         "/${protoFile.pkg}.${service.serviceName}/${rpc.rpcName}",
-                                        if (rpc.isResponseStream) "server_streaming" else "unary",
+                                        when (rpc.method) {
+                                            ProtoRpc.Method.UNARY -> "unary"
+                                            ProtoRpc.Method.SERVER_STREAMING -> "server_streaming"
+                                        },
                                         rpc.request.jsType,
                                         rpc.response.jsType,
                                         rpc.request.jsType,
@@ -79,7 +82,10 @@ fun writeJsServiceFile(protoFile: ProtoFile, service: ProtoService, jsOutputFold
                                 .apply {
                                     addCode(
                                         "return client.%N(\"\$hostname/%L/%L\", request.%N, metadata ?: js(%S), %N",
-                                        if (rpc.isResponseStream) "serverStreaming" else "rpcCall",
+                                        when (rpc.method) {
+                                            ProtoRpc.Method.UNARY -> "rpcCall"
+                                            ProtoRpc.Method.SERVER_STREAMING -> "serverStreaming"
+                                        },
                                         "${protoFile.pkg}.${service.serviceName}",
                                         rpc.rpcName,
                                         objPropertyName,
@@ -87,23 +93,26 @@ fun writeJsServiceFile(protoFile: ProtoFile, service: ProtoService, jsOutputFold
                                         methodDescriptorName
                                     )
 
-                                    if (rpc.isResponseStream) {
-                                        returns(Dynamic)
-                                        addCode(")")
-                                    } else {
-                                        addParameter(
-                                            "callback",
-                                            LambdaTypeName.get(
-                                                parameters =
-                                                arrayOf(
-                                                    Dynamic,
-                                                    rpc.response.jsType
-                                                ),
-                                                returnType = Unit::class.asTypeName()
+                                    when(rpc.method) {
+                                        ProtoRpc.Method.UNARY -> {
+                                            addParameter(
+                                                "callback",
+                                                LambdaTypeName.get(
+                                                    parameters =
+                                                    arrayOf(
+                                                        Dynamic,
+                                                        rpc.response.jsType
+                                                    ),
+                                                    returnType = Unit::class.asTypeName()
+                                                )
                                             )
-                                        )
 
-                                        addCode(", callback)")
+                                            addCode(", callback)")
+                                        }
+                                        ProtoRpc.Method.SERVER_STREAMING -> {
+                                            returns(Dynamic)
+                                            addCode(")")
+                                        }
                                     }
                                 }
                                 .build()

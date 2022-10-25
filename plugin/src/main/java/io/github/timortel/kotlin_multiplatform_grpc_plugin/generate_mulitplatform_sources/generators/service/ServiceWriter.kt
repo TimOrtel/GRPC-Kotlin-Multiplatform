@@ -29,7 +29,6 @@ abstract class ServiceWriter(private val isActual: Boolean) {
                 TypeSpec
                     .classBuilder(serviceFileName)
                     .addModifiers(classAndFunctionModifiers)
-                    .primaryConstructor(FunSpec.constructorBuilder().addModifiers(primaryConstructorModifiers).build())
                     .addFunction(
                         FunSpec
                             .constructorBuilder()
@@ -42,9 +41,10 @@ abstract class ServiceWriter(private val isActual: Boolean) {
                         specifyInheritance(this, serviceClass, protoFile, service)
                         applyToClass(this, protoFile, service, serviceClass)
                         service.rpcs.forEach { rpc ->
-                            val returnType = if (rpc.isResponseStream) {
-                                Flow::class.asTypeName().parameterizedBy(rpc.response.commonType)
-                            } else rpc.response.commonType
+                            val returnType = when(rpc.method) {
+                                ProtoRpc.Method.UNARY -> rpc.response.commonType
+                                ProtoRpc.Method.SERVER_STREAMING -> Flow::class.asTypeName().parameterizedBy(rpc.response.commonType)
+                            }
 
                             addFunction(
                                 FunSpec
