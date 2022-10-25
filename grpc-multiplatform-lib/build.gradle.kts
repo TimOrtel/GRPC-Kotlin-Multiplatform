@@ -36,7 +36,7 @@ kotlin {
             baseName = "GRPCKotlinMultiplatform"
         }
 
-        ios.deploymentTarget = "9.0"
+        ios.deploymentTarget = "14.1"
 
         pod("gRPC-ProtoRPC", version = "~> 1.50.0-pre1", moduleName = "GRPCClient")
         pod("Protobuf", version = "~> 3.21.7", moduleName = "Protobuf")
@@ -138,3 +138,5 @@ kotlin.targets.withType(org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarge
         binaryOptions["memoryModel"] = "experimental"
     }
 }
+
+tasks.replace("podGenIOS", PatchedPodGenTask::class)

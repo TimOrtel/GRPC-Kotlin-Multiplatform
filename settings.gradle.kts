@@ -7,7 +7,7 @@ pluginManagement {
         gradlePluginPortal()
         google()
     }
-    val kotlinVersion: String = "1.7.10"
+    val kotlinVersion: String = "1.7.20"
 
     plugins {
         kotlin("jvm") version kotlinVersion
