@@ -102,19 +102,18 @@ object JvmServiceWriter : IosJvmServiceWriter() {
         val jvmMetadataMember = MemberName("io.github.timortel.kotlin_multiplatform_grpc_lib", "jvmMetadata")
 
         builder.apply {
-            when (rpc.method) {
-                ProtoRpc.Method.UNARY -> {
-                    addCode("return %T.unaryRpc(", CLIENT_CALLS)
-                    addCode("channel = %N.managedChannel,", Const.Service.IosJvm.CHANNEL_PROPERTY_NAME)
-                    addCode("callOptions = %N,", Const.Service.IosJvm.CALL_OPTIONS_PROPERTY_NAME)
-                    addCode("method = %N,", Const.Service.JVM.Companion.methodDescriptorPropertyName(service, rpc))
-                    addCode("headers = metadata.%M,", jvmMetadataMember)
-                    addCode("request = %N", Const.Service.RpcCall.PARAM_REQUEST)
-                    addCode(")")
-                }
-
-                ProtoRpc.Method.SERVER_STREAMING -> TODO()
+            val funName = when (rpc.method) {
+                ProtoRpc.Method.UNARY -> "unaryRpc"
+                ProtoRpc.Method.SERVER_STREAMING -> "serverStreamingRpc"
             }
+
+            addCode("return %T.%N(", CLIENT_CALLS, funName)
+            addCode("channel = %N.managedChannel,", Const.Service.IosJvm.CHANNEL_PROPERTY_NAME)
+            addCode("callOptions = %N,", Const.Service.IosJvm.CALL_OPTIONS_PROPERTY_NAME)
+            addCode("method = %N,", Const.Service.JVM.Companion.methodDescriptorPropertyName(service, rpc))
+            addCode("headers = metadata.%M,", jvmMetadataMember)
+            addCode("request = %N", Const.Service.RpcCall.PARAM_REQUEST)
+            addCode(")")
         }
     }
 

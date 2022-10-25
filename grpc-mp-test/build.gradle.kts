@@ -1,4 +1,5 @@
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.GrpcMultiplatformExtension.OutputTarget
+import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeSimulatorTest
 
 plugins {
     id("com.android.library")
@@ -46,12 +47,14 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 api(project(":grpc-multiplatform-lib"))
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
             }
         }
 
         val commonTest by getting {
             dependencies {
                 implementation(kotlin("test"))
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.4")
             }
         }
 
@@ -91,6 +94,10 @@ kotlin {
         val jvmTest by getting {
             dependsOn(jvmMain)
             dependsOn(serializationTest)
+
+            dependencies {
+                runtimeOnly("io.grpc:grpc-netty:1.50.2")
+            }
         }
 
         val iosSimulatorArm64Main by getting {
@@ -153,3 +160,25 @@ grpcKotlinMultiplatform {
 }
 
 tasks.replace("podGenIOS", PatchedPodGenTask::class)
+
+tasks.findByName("jvmTest")?.let {
+    it.doFirst {
+        TestServer.start()
+    }
+
+    it.doLast {
+        TestServer.stop()
+    }
+}
+
+tasks.named("iosSimulatorArm64Test", KotlinNativeSimulatorTest::class).configure {
+    deviceId = "iPhone 14"
+
+    doFirst {
+        TestServer.start()
+    }
+
+    doLast {
+        TestServer.stop()
+    }
+}

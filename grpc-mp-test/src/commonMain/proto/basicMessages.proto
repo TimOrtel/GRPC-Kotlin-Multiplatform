@@ -112,5 +112,10 @@ message OneOfMessage {
 }
 
 service TestService {
-  rpc testRpc (SimpleMessage) returns (SimpleRepeatedMessage);
+  rpc simpleRpc (SimpleMessage) returns (SimpleMessage);
+  rpc scalarRpc (ScalarTypes) returns (ScalarTypes);
+  rpc everythingRpc (MessageWithEverything) returns (MessageWithEverything);
+
+  rpc simpleStreamingRpc (SimpleMessage) returns (stream SimpleMessage);
+  rpc everythingStreamingRpc (MessageWithEverything) returns (stream MessageWithEverything);
 }
