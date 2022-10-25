@@ -86,8 +86,8 @@ kotlin {
 compose.experimental {
     web.application {}
     uikit.application {
-        bundleIdPrefix = "dev.johnoreilly"
-        projectName = "PeopleInSpace"
+        bundleIdPrefix = "io.timortel"
+        projectName = "example"
         deployConfigurations {
             simulator("IPhone13Pro") {
                 //Usage: ./gradlew iosDeployIPhone8Debug
