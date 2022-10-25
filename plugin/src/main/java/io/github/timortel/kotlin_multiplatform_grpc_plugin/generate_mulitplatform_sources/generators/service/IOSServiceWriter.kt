@@ -8,17 +8,17 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfor
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoService
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
 
-object IOSServiceWriter : IosJvmServiceWriter() {
+object IOSServiceWriter : ActualServiceWriter() {
 
     override val classAndFunctionModifiers: List<KModifier> = listOf(KModifier.ACTUAL)
     override val channelConstructorModifiers: List<KModifier> = listOf(KModifier.ACTUAL)
     override val primaryConstructorModifiers: List<KModifier> = listOf(KModifier.PRIVATE, KModifier.ACTUAL)
 
     private val GRPC_MUTABLE_CALL_OPTIONS = ClassName("cocoapods.GRPCClient", "GRPCMutableCallOptions")
+
     override val callOptionsType: TypeName = ClassName("cocoapods.GRPCClient", "GRPCCallOptions")
     override val createEmptyCallOptionsCode: CodeBlock =
         CodeBlock.of("%T()", GRPC_MUTABLE_CALL_OPTIONS)
-
 
     override fun applyToClass(
         builder: TypeSpec.Builder,
@@ -26,8 +26,6 @@ object IOSServiceWriter : IosJvmServiceWriter() {
         service: ProtoService,
         serviceName: ClassName
     ) {
-        super.applyToClass(builder, protoFile, service, serviceName)
-
         overrideWithDeadlineAfter(builder, serviceName)
     }
 
@@ -43,14 +41,14 @@ object IOSServiceWriter : IosJvmServiceWriter() {
         }
 
         builder.apply {
-            addStatement("val callOptions = %N.mutableCopy() as %T", Const.Service.IosJvm.CALL_OPTIONS_PROPERTY_NAME, GRPC_MUTABLE_CALL_OPTIONS)
+            addStatement("val callOptions = %N.mutableCopy() as %T", Const.Service.CALL_OPTIONS_PROPERTY_NAME, GRPC_MUTABLE_CALL_OPTIONS)
             addStatement("callOptions.setInitialMetadata(%N.metadataMap.toMap())", Const.Service.RpcCall.PARAM_METADATA)
         }
 
         builder.addStatement(
             "return %M(%N, callOptions, %S, %N, %T.Companion)",
             impl,
-            Const.Service.IosJvm.CHANNEL_PROPERTY_NAME,
+            Const.Service.CHANNEL_PROPERTY_NAME,
             "/${protoFile.pkg}.${service.serviceName}/${rpc.rpcName}",
             Const.Service.RpcCall.PARAM_REQUEST,
             rpc.response.iosType
