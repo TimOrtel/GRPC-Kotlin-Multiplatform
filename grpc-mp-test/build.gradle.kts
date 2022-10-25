@@ -146,3 +146,5 @@ grpcKotlinMultiplatform {
         listOf(protoFolder)
     )
 }
+
+tasks.replace("podGenIOS", PatchedPodGenTask::class)
