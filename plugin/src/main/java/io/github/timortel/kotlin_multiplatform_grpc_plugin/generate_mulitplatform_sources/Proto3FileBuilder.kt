@@ -202,7 +202,7 @@ class Proto3FileBuilder(
             rpcName,
             requestTypes,
             responseTypes,
-            isResponseStream
+            if (isResponseStream) ProtoRpc.Method.SERVER_STREAMING else ProtoRpc.Method.UNARY
         )
     }
 
@@ -395,6 +395,7 @@ class Proto3FileBuilder(
                 //because enum nodes have no children
                 null
             }
+
             is MessageNode -> {
                 val child = node.children.firstOrNull { it.name == nodeText }
                     ?: return null

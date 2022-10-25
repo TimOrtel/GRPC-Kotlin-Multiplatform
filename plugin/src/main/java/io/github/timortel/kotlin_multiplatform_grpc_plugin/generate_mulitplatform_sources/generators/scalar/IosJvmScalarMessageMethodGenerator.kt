@@ -6,7 +6,7 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfor
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoMessageAttribute
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
 
-object IOSScalarMessageMethodGenerator : ScalarMessageMethodGenerator(true) {
+object IosJvmScalarMessageMethodGenerator : ScalarMessageMethodGenerator(true) {
 
     override val attrs: List<KModifier> = listOf(KModifier.ACTUAL)
 
@@ -33,7 +33,7 @@ object IOSScalarMessageMethodGenerator : ScalarMessageMethodGenerator(true) {
             builder.addProperty(
                 PropertySpec
                     .builder(
-                        Const.Message.Attribute.Scalar.IOS.isMessageSetFunctionName(protoMessage, messageAttribute),
+                        Const.Message.Attribute.Scalar.IosJvm.isMessageSetFunctionName(protoMessage, messageAttribute),
                         BOOLEAN,
                         KModifier.PRIVATE
                     )
@@ -45,7 +45,7 @@ object IOSScalarMessageMethodGenerator : ScalarMessageMethodGenerator(true) {
 
     override fun modifyHasFunction(builder: FunSpec.Builder, message: ProtoMessage, attr: ProtoMessageAttribute) {
         builder.apply {
-            addStatement("return %N", Const.Message.Attribute.Scalar.IOS.isMessageSetFunctionName(message, attr))
+            addStatement("return %N", Const.Message.Attribute.Scalar.IosJvm.isMessageSetFunctionName(message, attr))
         }
     }
 }

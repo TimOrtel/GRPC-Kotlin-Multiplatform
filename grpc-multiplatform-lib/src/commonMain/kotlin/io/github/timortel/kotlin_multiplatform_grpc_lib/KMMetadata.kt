@@ -3,7 +3,7 @@ package io.github.timortel.kotlin_multiplatform_grpc_lib
 /**
  * Metadata wrapper.
  */
-data class KMMetadata(internal val metadataMap: MutableMap<String, String> = mutableMapOf()) {
+data class KMMetadata(val metadataMap: MutableMap<String, String> = mutableMapOf()) {
 
     operator fun set(key: String, value: String) {
         metadataMap[key] = value

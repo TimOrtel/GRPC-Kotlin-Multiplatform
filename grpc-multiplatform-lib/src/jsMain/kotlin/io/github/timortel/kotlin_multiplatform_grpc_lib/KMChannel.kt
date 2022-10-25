@@ -1,6 +1,13 @@
 package io.github.timortel.kotlin_multiplatform_grpc_lib
 
-actual class KMChannel private constructor(name: String, port: Int, usePlainText: Boolean) {
+import io.github.timortel.kotlin_multiplatform_grpc_lib.util.TimeUnit
+
+actual class KMChannel private constructor(
+    private val name: String,
+    private val port: Int,
+    private val usePlainText: Boolean,
+    val metadata: KMMetadata
+) {
 
     val connectionString = (if (usePlainText) "http://" else "https://") + "$name:$port"
 
@@ -22,5 +29,15 @@ actual class KMChannel private constructor(name: String, port: Int, usePlainText
 
         actual fun build(): KMChannel =
             io.github.timortel.kotlin_multiplatform_grpc_lib.KMChannel(name, port, usePlainText)
+    }
+
+    actual fun withDeadlineAfter(
+        duration: Long,
+        unit: TimeUnit
+    ): KMChannel {
+        val newMetadata = metadata.copy()
+        newMetadata["deadline"] = (duration * unit.toMilliFactor).toString()
+
+        return KMChannel(name, port, usePlainText, newMetadata)
     }
 }

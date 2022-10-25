@@ -6,5 +6,10 @@ class ProtoRpc(
     val rpcName: String,
     val request: Types,
     val response: Types,
-    val isResponseStream: Boolean,
-)
+    val method: Method,
+) {
+    enum class Method {
+        UNARY,
+        SERVER_STREAMING
+    }
+}

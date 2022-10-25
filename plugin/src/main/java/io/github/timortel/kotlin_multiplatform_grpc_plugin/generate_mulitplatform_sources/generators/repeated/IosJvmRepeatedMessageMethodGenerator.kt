@@ -7,7 +7,7 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfor
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoMessageAttribute
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
 
-object IOSRepeatedMessageMethodGenerator : RepeatedMessageMethodGenerator(true) {
+object IosJvmRepeatedMessageMethodGenerator : RepeatedMessageMethodGenerator(true) {
 
     override val attrs: List<KModifier> = listOf(KModifier.ACTUAL)
 

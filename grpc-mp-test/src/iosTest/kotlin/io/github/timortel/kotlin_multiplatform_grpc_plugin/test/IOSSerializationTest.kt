@@ -3,11 +3,11 @@ package io.github.timortel.kotlin_multiplatform_grpc_plugin.test
 import io.github.timortel.kotlin_multiplatform_grpc_lib.message.KMMessage
 import io.github.timortel.kotlin_multiplatform_grpc_lib.message.MessageDeserializer
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.basic_messages.*
-import kotlin.test.Test
+import platform.Foundation.NSData
 
 class IOSSerializationTest : SerializationTest() {
 
-    private fun <T : KMMessage> serializeImpl(msg: T, deserializer: MessageDeserializer<T>): T {
+    private fun <T : KMMessage> serializeImpl(msg: T, deserializer: MessageDeserializer<T, NSData>): T {
         return deserializer.deserialize(msg.serialize())
     }
 

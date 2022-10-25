@@ -21,6 +21,8 @@ abstract class ProtoFileWriter(private val protoFile: ProtoFile, private val isA
 
     abstract val mapMessageMethodGenerator: MapMessageMethodGenerator
 
+    open val additionalSuperinterfaces: List<TypeName> = emptyList()
+
     open fun writeFile(outputDir: File) {
         protoFile.messages.forEach { message ->
             FileSpec
@@ -53,6 +55,7 @@ abstract class ProtoFileWriter(private val protoFile: ProtoFile, private val isA
                 )
             .apply {
                 addSuperinterface(kmMessage)
+                addSuperinterfaces(additionalSuperinterfaces)
 
                 message.attributes.forEach { attr ->
                     //We change nothing here

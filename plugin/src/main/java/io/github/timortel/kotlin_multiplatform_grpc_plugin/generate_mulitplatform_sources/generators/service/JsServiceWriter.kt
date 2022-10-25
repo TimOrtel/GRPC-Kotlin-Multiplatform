@@ -107,39 +107,46 @@ object JsServiceWriter : ServiceWriter(true) {
                 .add("request.jsImpl, ")
                 .add("actMetadata.%M", MemberName("io.github.timortel.kotlin_multiplatform_grpc_lib", "jsMetadata"))
                 .apply {
-                    if (rpc.isResponseStream) {
-                        add(")")
-                    } else {
-                        add(", callback)")
+                    when (rpc.method) {
+                        ProtoRpc.Method.UNARY -> add(", callback)")
+                        ProtoRpc.Method.SERVER_STREAMING -> add(")")
                     }
                 }
                 .build()
 
             addCode("return ")
 
-            if (!rpc.isResponseStream) {
+            if (rpc.method == ProtoRpc.Method.UNARY) {
                 addCode("%M(", responseCommonMember)
             }
 
             addCode(
                 "%M<%T> {\n",
-                if (rpc.isResponseStream)
-                    MemberName(
+                when (rpc.method) {
+                    ProtoRpc.Method.UNARY -> MemberName(
+                        "io.github.timortel.kotlin_multiplatform_grpc_lib.rpc",
+                        "simpleCallImplementation"
+                    )
+
+                    ProtoRpc.Method.SERVER_STREAMING -> MemberName(
                         "io.github.timortel.kotlin_multiplatform_grpc_lib.rpc", "serverSideStreamingCallImplementation"
                     )
-                else MemberName("io.github.timortel.kotlin_multiplatform_grpc_lib.rpc", "simpleCallImplementation"),
+                },
                 rpc.response.jsType
             )
 
-            if (!rpc.isResponseStream) addCode(" callback -> ")
+            if (rpc.method == ProtoRpc.Method.UNARY) addCode(" callback -> ")
 
             addCode(clientCallCode)
             addCode("\n}")
 
-            if (rpc.isResponseStream) {
-                addCode(".%M { %M(it) }", MemberName("kotlinx.coroutines.flow", "map"), responseCommonMember)
-            } else {
-                addCode(")")
+            when (rpc.method) {
+                ProtoRpc.Method.UNARY -> addCode(")")
+                ProtoRpc.Method.SERVER_STREAMING -> addCode(
+                    ".%M { %M(it) }",
+                    MemberName("kotlinx.coroutines.flow", "map"),
+                    responseCommonMember
+                )
             }
         }
     }

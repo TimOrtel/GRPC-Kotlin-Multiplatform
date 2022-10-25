@@ -7,7 +7,7 @@ allprojects {
 
 buildscript {
     dependencies {
-        classpath("org.antlr:antlr4-runtime:4.10.1")
+        classpath("org.antlr:antlr4-runtime:4.11.1")
     }
 }
 
