@@ -8,6 +8,9 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfor
 object Const {
     object Service {
 
+        const val CHANNEL_PROPERTY_NAME = "channel"
+        const val CALL_OPTIONS_PROPERTY_NAME = "callOptions"
+
         fun getName(service: ProtoService): String = "KM${service.serviceName.capitalize()}Stub"
 
         object Constructor {
@@ -40,14 +43,6 @@ object Const {
 
             fun nativeServiceClassName(protoFile: ProtoFile, service: ProtoService) =
                 ClassName(protoFile.pkg, jsServiceName(service))
-        }
-
-        object IOS {
-        }
-
-        object IosJvm {
-            const val CHANNEL_PROPERTY_NAME = "channel"
-            const val CALL_OPTIONS_PROPERTY_NAME = "callOptions"
         }
 
         object RpcCall {

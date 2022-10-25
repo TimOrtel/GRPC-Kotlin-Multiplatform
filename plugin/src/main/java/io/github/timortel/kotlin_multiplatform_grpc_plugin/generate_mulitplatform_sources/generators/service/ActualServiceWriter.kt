@@ -6,13 +6,13 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfor
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.kmChannel
 
-abstract class IosJvmServiceWriter : ServiceWriter(true) {
+abstract class ActualServiceWriter : ServiceWriter(true) {
 
     abstract val callOptionsType: TypeName
 
     /**
-     * Create empty call options for your platform, e.g. CallOptions.empty() or CallOptions()
-     */
+    * Create empty call options for your platform, e.g. CallOptions.empty() or CallOptions()
+    */
     abstract val createEmptyCallOptionsCode: CodeBlock
 
     override fun applyToClass(
@@ -25,29 +25,29 @@ abstract class IosJvmServiceWriter : ServiceWriter(true) {
             primaryConstructor(
                 FunSpec
                     .constructorBuilder()
-                    .addParameter(Const.Service.IosJvm.CHANNEL_PROPERTY_NAME, kmChannel)
-                    .addParameter(Const.Service.IosJvm.CALL_OPTIONS_PROPERTY_NAME, callOptionsType)
+                    .addParameter(Const.Service.CHANNEL_PROPERTY_NAME, kmChannel)
+                    .addParameter(Const.Service.CALL_OPTIONS_PROPERTY_NAME, callOptionsType)
                     .build()
             )
 
             addProperty(
                 PropertySpec.builder(
-                    Const.Service.IosJvm.CHANNEL_PROPERTY_NAME,
+                    Const.Service.CHANNEL_PROPERTY_NAME,
                     kmChannel,
                     KModifier.OVERRIDE
                 )
-                    .initializer(Const.Service.IosJvm.CHANNEL_PROPERTY_NAME)
+                    .initializer(Const.Service.CHANNEL_PROPERTY_NAME)
                     .build()
             )
 
             addProperty(
                 PropertySpec
                     .builder(
-                        Const.Service.IosJvm.CALL_OPTIONS_PROPERTY_NAME,
+                        Const.Service.CALL_OPTIONS_PROPERTY_NAME,
                         callOptionsType,
                         KModifier.OVERRIDE
                     )
-                    .initializer(Const.Service.IosJvm.CALL_OPTIONS_PROPERTY_NAME)
+                    .initializer(Const.Service.CALL_OPTIONS_PROPERTY_NAME)
                     .build()
             )
 
@@ -55,14 +55,14 @@ abstract class IosJvmServiceWriter : ServiceWriter(true) {
                 FunSpec
                     .builder("build")
                     .addModifiers(KModifier.OVERRIDE)
-                    .addParameter(Const.Service.IosJvm.CHANNEL_PROPERTY_NAME, kmChannel)
-                    .addParameter(Const.Service.IosJvm.CALL_OPTIONS_PROPERTY_NAME, callOptionsType)
+                    .addParameter(Const.Service.CHANNEL_PROPERTY_NAME, kmChannel)
+                    .addParameter(Const.Service.CALL_OPTIONS_PROPERTY_NAME, callOptionsType)
                     .returns(serviceName)
                     .addStatement(
                         "return %T(%N, %N)",
                         serviceName,
-                        Const.Service.IosJvm.CHANNEL_PROPERTY_NAME,
-                        Const.Service.IosJvm.CALL_OPTIONS_PROPERTY_NAME
+                        Const.Service.CHANNEL_PROPERTY_NAME,
+                        Const.Service.CALL_OPTIONS_PROPERTY_NAME
                     )
                     .build()
             )

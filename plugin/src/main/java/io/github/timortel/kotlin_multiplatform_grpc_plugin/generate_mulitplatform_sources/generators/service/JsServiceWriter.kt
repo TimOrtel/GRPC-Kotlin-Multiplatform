@@ -10,11 +10,14 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfor
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.kmMetadata
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.kmStub
 
-object JsServiceWriter : ServiceWriter(true) {
+object JsServiceWriter : ActualServiceWriter() {
 
     override val classAndFunctionModifiers: List<KModifier> = listOf(KModifier.ACTUAL)
     override val channelConstructorModifiers: List<KModifier> = listOf(KModifier.ACTUAL)
     override val primaryConstructorModifiers: List<KModifier> = listOf(KModifier.PRIVATE, KModifier.ACTUAL)
+
+    override val callOptionsType: TypeName = kmMetadata
+    override val createEmptyCallOptionsCode: CodeBlock = CodeBlock.of("%T()", kmMetadata)
 
     override fun applyToClass(
         builder: TypeSpec.Builder,
@@ -22,71 +25,27 @@ object JsServiceWriter : ServiceWriter(true) {
         service: ProtoService,
         serviceName: ClassName
     ) {
+        super.applyToClass(builder, protoFile, service, serviceName)
+
         builder.apply {
-            addProperty(
-                PropertySpec
-                    .builder("channel", kmChannel, KModifier.PRIVATE, KModifier.LATEINIT).mutable(true)
-                    .build()
-            )
             addProperty(
                 PropertySpec
                     .builder(
                         "client",
                         Const.Service.JS.nativeServiceClassName(protoFile, service),
                         KModifier.PRIVATE,
-                        KModifier.LATEINIT
                     )
-                    .mutable(true)
-                    .build()
-            )
-            addProperty(
-                PropertySpec
-                    .builder("metadata", kmMetadata, KModifier.OVERRIDE)
-                    .mutable(true)
-                    .initializer("%T()", kmMetadata)
-                    .build()
-            )
-
-            addFunction(
-                FunSpec
-                    .constructorBuilder()
-                    .addParameter("channel", kmChannel)
-                    .addParameter("metadata", kmMetadata)
-                    .callThisConstructor("channel")
-                    .addStatement("this.metadata = metadata")
-                    .build()
-            )
-
-            addFunction(
-                FunSpec
-                    .builder("build")
-                    .addModifiers(KModifier.OVERRIDE)
-                    .addParameter("metadata", kmMetadata)
-                    .returns(serviceName)
-                    .addStatement("return %T(channel, metadata)", serviceName)
+                    .initializer(
+                        CodeBlock.of(
+                            "%T(%N.connectionString)",
+                            Const.Service.JS.nativeServiceClassName(protoFile, service),
+                            Const.Service.CHANNEL_PROPERTY_NAME
+                        )
+                    )
                     .build()
             )
 
             overrideWithDeadlineAfter(builder, serviceName)
-        }
-    }
-
-    override fun applyToChannelConstructor(
-        builder: FunSpec.Builder,
-        protoFile: ProtoFile,
-        service: ProtoService
-    ) {
-        builder.apply {
-            addStatement("this.%N = %N", "channel", "channel")
-            addStatement(
-                "this.client = %T(channel.connectionString)",
-                Const.Service.JS.nativeServiceClassName(
-                    protoFile,
-                    service
-                )
-            )
-
-            callThisConstructor()
         }
     }
 
@@ -99,7 +58,7 @@ object JsServiceWriter : ServiceWriter(true) {
         builder.apply {
             val responseCommonMember = Const.Message.CommonFunction.JS.commonFunction(rpc.response.commonType)
 
-            addStatement("val actMetadata = this.metadata + metadata")
+            addStatement("val actMetadata = this.%N + metadata", Const.Service.CALL_OPTIONS_PROPERTY_NAME)
 
             val clientCallCode = CodeBlock
                 .builder()

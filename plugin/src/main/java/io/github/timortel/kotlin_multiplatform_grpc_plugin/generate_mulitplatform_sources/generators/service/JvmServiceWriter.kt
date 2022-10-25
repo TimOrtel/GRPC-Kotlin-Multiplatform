@@ -8,7 +8,7 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfor
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoService
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
 
-object JvmServiceWriter : IosJvmServiceWriter() {
+object JvmServiceWriter : ActualServiceWriter() {
 
     override val classAndFunctionModifiers: List<KModifier> = listOf(KModifier.ACTUAL)
     override val channelConstructorModifiers: List<KModifier> = listOf(KModifier.ACTUAL)
@@ -23,15 +23,12 @@ object JvmServiceWriter : IosJvmServiceWriter() {
     override val callOptionsType: TypeName = ClassName("io.grpc", "CallOptions")
     override val createEmptyCallOptionsCode: CodeBlock = CodeBlock.of("%T.DEFAULT", callOptionsType)
 
-
     override fun applyToClass(
         builder: TypeSpec.Builder,
         protoFile: ProtoFile,
         service: ProtoService,
         serviceName: ClassName
     ) {
-        super.applyToClass(builder, protoFile, service, serviceName)
-
         builder.apply {
             addSuperinterface(ClassName(PACKAGE_STUB, "AndroidJvmKMStub").parameterizedBy(serviceName))
 
@@ -108,8 +105,8 @@ object JvmServiceWriter : IosJvmServiceWriter() {
             }
 
             addCode("return %T.%N(", CLIENT_CALLS, funName)
-            addCode("channel = %N.managedChannel,", Const.Service.IosJvm.CHANNEL_PROPERTY_NAME)
-            addCode("callOptions = %N,", Const.Service.IosJvm.CALL_OPTIONS_PROPERTY_NAME)
+            addCode("channel = %N.managedChannel,", Const.Service.CHANNEL_PROPERTY_NAME)
+            addCode("callOptions = %N,", Const.Service.CALL_OPTIONS_PROPERTY_NAME)
             addCode("method = %N,", Const.Service.JVM.Companion.methodDescriptorPropertyName(service, rpc))
             addCode("headers = metadata.%M,", jvmMetadataMember)
             addCode("request = %N", Const.Service.RpcCall.PARAM_REQUEST)

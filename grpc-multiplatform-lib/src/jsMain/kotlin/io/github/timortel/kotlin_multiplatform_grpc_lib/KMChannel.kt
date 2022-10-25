@@ -1,11 +1,10 @@
 package io.github.timortel.kotlin_multiplatform_grpc_lib
 
-import io.github.timortel.kotlin_multiplatform_grpc_lib.util.TimeUnit
 
 actual class KMChannel private constructor(
-    private val name: String,
-    private val port: Int,
-    private val usePlainText: Boolean,
+    name: String,
+    port: Int,
+    usePlainText: Boolean,
     val metadata: KMMetadata
 ) {
 
@@ -27,17 +26,6 @@ actual class KMChannel private constructor(
             return this
         }
 
-        actual fun build(): KMChannel =
-            io.github.timortel.kotlin_multiplatform_grpc_lib.KMChannel(name, port, usePlainText)
-    }
-
-    actual fun withDeadlineAfter(
-        duration: Long,
-        unit: TimeUnit
-    ): KMChannel {
-        val newMetadata = metadata.copy()
-        newMetadata["deadline"] = (duration * unit.toMilliFactor).toString()
-
-        return KMChannel(name, port, usePlainText, newMetadata)
+        actual fun build(): KMChannel = KMChannel(name, port, usePlainText, KMMetadata())
     }
 }
