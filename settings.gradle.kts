@@ -19,3 +19,6 @@ pluginManagement {
 }
 //include("plugin")
 include("grpc-multiplatform-lib")
+include("grpc-mp-test:test-android-protos")
+include("grpc-mp-test")
+include("grpc-mp-test:test-jvm-protos")
