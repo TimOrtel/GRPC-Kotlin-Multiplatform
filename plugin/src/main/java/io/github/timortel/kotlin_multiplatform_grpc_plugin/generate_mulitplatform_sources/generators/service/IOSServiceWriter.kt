@@ -26,6 +26,8 @@ object IOSServiceWriter : ActualServiceWriter() {
         service: ProtoService,
         serviceName: ClassName
     ) {
+        super.applyToClass(builder, protoFile, service, serviceName)
+
         overrideWithDeadlineAfter(builder, serviceName)
     }
 
@@ -41,7 +43,11 @@ object IOSServiceWriter : ActualServiceWriter() {
         }
 
         builder.apply {
-            addStatement("val callOptions = %N.mutableCopy() as %T", Const.Service.CALL_OPTIONS_PROPERTY_NAME, GRPC_MUTABLE_CALL_OPTIONS)
+            addStatement(
+                "val callOptions = %N.mutableCopy() as %T",
+                Const.Service.CALL_OPTIONS_PROPERTY_NAME,
+                GRPC_MUTABLE_CALL_OPTIONS
+            )
             addStatement("callOptions.setInitialMetadata(%N.metadataMap.toMap())", Const.Service.RpcCall.PARAM_METADATA)
         }
 

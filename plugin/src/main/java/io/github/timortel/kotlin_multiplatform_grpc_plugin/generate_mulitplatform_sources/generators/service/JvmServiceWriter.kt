@@ -29,10 +29,19 @@ object JvmServiceWriter : ActualServiceWriter() {
         service: ProtoService,
         serviceName: ClassName
     ) {
+        super.applyToClass(builder, protoFile, service, serviceName)
+
         builder.apply {
             addSuperinterface(ClassName(PACKAGE_STUB, "AndroidJvmKMStub").parameterizedBy(serviceName))
 
             overrideWithDeadlineAfter(builder, serviceName)
+
+//            addFunction(
+//                FunSpec.constructorBuilder()
+//                    .addParameter("channel", kmChannel)
+//                    .callThisConstructor(CodeBlock.of("channel"), CodeBlock.of())
+//                    .build()
+//            )
 
             addType(
                 TypeSpec
