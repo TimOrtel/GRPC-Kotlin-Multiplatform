@@ -49,7 +49,11 @@ abstract class ServiceWriter(private val isActual: Boolean) {
                             addFunction(
                                 FunSpec
                                     .builder(rpc.rpcName)
-                                    .addModifiers(KModifier.SUSPEND)
+                                    .apply {
+                                        if (rpc.method == ProtoRpc.Method.UNARY) {
+                                            this.addModifiers(KModifier.SUSPEND)
+                                        }
+                                    }
                                     .addModifiers(classAndFunctionModifiers)
                                     .addParameter(Const.Service.RpcCall.PARAM_REQUEST, rpc.request.commonType)
                                     .addParameter(
