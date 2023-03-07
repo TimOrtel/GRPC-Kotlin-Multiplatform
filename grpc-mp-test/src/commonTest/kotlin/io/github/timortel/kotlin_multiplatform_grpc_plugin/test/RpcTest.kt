@@ -1,10 +1,7 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.test
 
 import io.github.timortel.kotlin_multiplatform_grpc_lib.KMChannel
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.basic_messages.KMMessageWithEverything
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.basic_messages.KMSimpleMessage
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.basic_messages.KMTestServiceStub
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.basic_messages.kmSimpleMessage
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.basic_messages.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.toCollection
@@ -21,6 +18,17 @@ class RpcTest {
         .build()
 
     private val stub = KMTestServiceStub(channel)
+
+    @Test
+    fun testEmpty() {
+        runTest {
+            val message = kmEmptyMessage {  }
+            val response = stub
+                .emptyRpc(message)
+
+            assertEquals(message, response)
+        }
+    }
 
     @Test
     fun testSimple() {
@@ -52,6 +60,17 @@ class RpcTest {
                 .everythingRpc(message)
 
             assertEquals(message, response)
+        }
+    }
+
+    @Test
+    fun testStreamEmpty() {
+        runTest {
+            val message = kmEmptyMessage {  }
+            val flow: Flow<KMEmptyMessage> = stub
+                .emptyStream(message)
+
+            assertEquals(listOf(message, message, message), flow.toList())
         }
     }
 

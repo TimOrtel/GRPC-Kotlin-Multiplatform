@@ -4,6 +4,10 @@ package io.github.timortel.kotlin_multiplatform_grpc_plugin.test.basic_messages;
 
 option java_multiple_files = true;
 
+message EmptyMessage {
+
+}
+
 message SimpleMessage {
   string field1 = 1;
 }
@@ -112,10 +116,13 @@ message OneOfMessage {
 }
 
 service TestService {
+  rpc emptyRpc (EmptyMessage) returns (EmptyMessage);
+
   rpc simpleRpc (SimpleMessage) returns (SimpleMessage);
   rpc scalarRpc (ScalarTypes) returns (ScalarTypes);
   rpc everythingRpc (MessageWithEverything) returns (MessageWithEverything);
 
+  rpc emptyStream (EmptyMessage) returns (stream EmptyMessage);
   rpc simpleStreamingRpc (SimpleMessage) returns (stream SimpleMessage);
   rpc everythingStreamingRpc (MessageWithEverything) returns (stream MessageWithEverything);
 }

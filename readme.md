@@ -1,5 +1,5 @@
 [![GitHub license](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg?style=flat)](http://www.apache.org/licenses/LICENSE-2.0)
-![version](https://img.shields.io/badge/version-0.2.0-blue)
+![version](https://img.shields.io/badge/version-0.3.0-blue)
 
 ![badge][badge-android]
 ![badge][badge-jvm]
@@ -8,6 +8,10 @@
 
 # gRPC Kotlin Multiplatform
 This projects implements client-side gRPC for Android, JVM, iOS and the web.
+
+**⚠️ Warning: This project is still under development and does not support all gRPC features!**
+
+**⚠️ Warning: The implementation for javascript is currently not covered by unit tests!**
 
 ## Table of contents
 - [Features](#features)

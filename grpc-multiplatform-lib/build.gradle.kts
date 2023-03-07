@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "io.github.timortel"
-version = "0.2.1"
+version = "0.3.0"
 
 repositories {
     mavenCentral()

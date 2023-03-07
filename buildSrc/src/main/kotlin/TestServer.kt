@@ -15,6 +15,10 @@ object TestServer {
         server = NettyServerBuilder
             .forPort(17888)
             .addService(object : TestServiceGrpcKt.TestServiceCoroutineImplBase() {
+                override suspend fun emptyRpc(request: EmptyMessage): EmptyMessage {
+                    return request
+                }
+
                 override suspend fun simpleRpc(request: SimpleMessage): SimpleMessage {
                     return request
                 }
@@ -25,6 +29,14 @@ object TestServer {
 
                 override suspend fun everythingRpc(request: MessageWithEverything): MessageWithEverything {
                     return request
+                }
+
+                override fun emptyStream(request: EmptyMessage): Flow<EmptyMessage> {
+                    return flow {
+                        emit(request)
+                        emit(request)
+                        emit(request)
+                    }
                 }
 
                 override fun simpleStreamingRpc(request: SimpleMessage): Flow<SimpleMessage> {

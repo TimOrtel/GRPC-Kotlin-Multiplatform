@@ -123,7 +123,10 @@ abstract class IosJvmProtoFileWriteBase(private val protoFile: ProtoFile) :
                         FunSpec
                             .builder(Const.Message.Companion.IOS.DataDeserializationFunction.NAME)
                             .addModifiers(KModifier.OVERRIDE)
-                            .addParameter(Const.Message.Companion.IOS.DataDeserializationFunction.DATA_PARAM, serializedDataType)
+                            .addParameter(
+                                Const.Message.Companion.IOS.DataDeserializationFunction.DATA_PARAM,
+                                serializedDataType
+                            )
                             .addCode(
                                 deserializeFunctionCode
                             )
@@ -233,6 +236,11 @@ abstract class IosJvmProtoFileWriteBase(private val protoFile: ProtoFile) :
                         Const.Message.OneOf.propertyName(message, oneOf),
                         Const.Message.OneOf.IosJvm.REQUIRED_SIZE_PROPERTY_NAME
                     )
+                }
+
+                // Fallback for messages without any fields.
+                if (onlyNonOneOfAttributes.isEmpty() && message.oneOfs.isEmpty()) {
+                    add("0")
                 }
             }
             .build()
