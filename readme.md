@@ -177,10 +177,6 @@ kotlin {
         }
 
         val jvmMain by getting {
-            dependencies {
-                //Make sure the generated Kotlin JVM protos are available
-                api(project(":generate-proto"))
-            }
         }
     }
 }
@@ -197,10 +193,6 @@ grpcKotlinMultiplatform {
 
 ```
 
-### JVM/Android
-Make sure your Kotlin-Protobuf and Kotlin-GRPC generated files are available in you JVM and Android modules.
-An example on how to configure this can be found in [here](example).
-
 ### JS
 You must add the following npm dependencies to your JS module:
 ```kotlin
@@ -216,7 +208,7 @@ dependencies {
 This library uses the updated memory manager. Therefore, you might have to [enable this memory manager in your project](https://github.com/JetBrains/kotlin/blob/master/kotlin-native/NEW_MM.md#switch-to-the-new-mm), too.
 
 ## Roadmap
-- Similar to the message generation in iOS, the messages should also be generated for JVM/Android. Therefore, it should no longer be necessary to include the generated proto files by protoc.
+- Support all proto data types
 
 ## Contributing
 Feel free to implement improvements, bug fixes and features and create a pull request.

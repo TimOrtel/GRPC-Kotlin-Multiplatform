@@ -1,11 +1,11 @@
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.GenerateMultiplatformSourcesTask
 
-val libVersion = "0.1.1"
+val libVersion = "0.3.0"
 
 plugins {
     kotlin("multiplatform")
 
-    id("io.github.timortel.kotlin-multiplatform-grpc-plugin") version "0.1.1"
+    id("io.github.timortel.kotlin-multiplatform-grpc-plugin") version "0.3.0"
 }
 
 group = "io.github.timortel.grpc_multiplaform.example.common"
@@ -41,7 +41,6 @@ kotlin {
 
         val jvmMain by getting {
             dependencies {
-                api(project(":generate-proto"))
                 api("com.github.TimOrtel.GRPC-Kotlin-Multiplatform:grpc-multiplatform-lib-jvm:$libVersion")
             }
 

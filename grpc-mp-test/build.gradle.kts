@@ -62,13 +62,11 @@ kotlin {
 
         val jvmMain by getting {
             dependencies {
-                api(project("test-jvm-protos"))
             }
         }
 
         val androidMain by getting {
             dependencies {
-                api(project("test-android-protos"))
             }
 
             kotlin.srcDir(projectDir.resolve("build/generated/source/kmp-grpc/jvmMain/kotlin").canonicalPath)
