@@ -7,12 +7,12 @@ pluginManagement {
         gradlePluginPortal()
         google()
     }
-    val kotlinVersion: String = "1.7.20"
+    val kotlinVersion = "1.8.10"
 
     plugins {
         kotlin("jvm") version kotlinVersion
         kotlin("multiplatform") version kotlinVersion
-        id("com.android.library") version "7.0.4"
+        id("com.android.library") version "7.4.2"
 
         id("com.google.protobuf") version "0.8.18" apply false
     }
