@@ -73,11 +73,11 @@ kotlin {
         val jvmMain by getting {
             dependsOn(androidJvmCommon)
             dependencies {
-                implementation("com.google.protobuf:protobuf-kotlin:${PROTOBUF}")
-                implementation("com.google.protobuf:protobuf-java-util:${PROTOBUF}")
-                implementation("io.grpc:grpc-protobuf:${GRPC}")
-                implementation("io.grpc:grpc-stub:${GRPC}")
-                implementation("io.grpc:grpc-kotlin-stub:${GRPC_KOTLIN}")
+                api("com.google.protobuf:protobuf-kotlin:${PROTOBUF}")
+                api("com.google.protobuf:protobuf-java-util:${PROTOBUF}")
+                api("io.grpc:grpc-protobuf:${GRPC}")
+                api("io.grpc:grpc-stub:${GRPC}")
+                api("io.grpc:grpc-kotlin-stub:${GRPC_KOTLIN}")
             }
         }
 
@@ -85,10 +85,10 @@ kotlin {
             dependsOn(androidJvmCommon)
 
             dependencies {
-                implementation("io.grpc:grpc-stub:${GRPC}")
-                implementation("io.grpc:grpc-protobuf-lite:${GRPC}")
-                implementation("io.grpc:grpc-kotlin-stub:${GRPC_KOTLIN}")
-                implementation("com.google.protobuf:protobuf-kotlin-lite:${PROTOBUF}")
+                api("io.grpc:grpc-stub:${GRPC}")
+                api("io.grpc:grpc-protobuf-lite:${GRPC}")
+                api("io.grpc:grpc-kotlin-stub:${GRPC_KOTLIN}")
+                api("com.google.protobuf:protobuf-kotlin-lite:${PROTOBUF}")
             }
         }
 
