@@ -1,5 +1,8 @@
 package io.github.timortel.kotlin_multiplatform_grpc_lib.message
 
+/**
+ * The supported data types that can be used as message fields.
+ */
 expect enum class DataType {
     DOUBLE,
     FLOAT,

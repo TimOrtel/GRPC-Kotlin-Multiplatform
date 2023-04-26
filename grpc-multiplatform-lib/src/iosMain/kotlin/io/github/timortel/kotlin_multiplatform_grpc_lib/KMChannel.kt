@@ -2,6 +2,9 @@ package io.github.timortel.kotlin_multiplatform_grpc_lib
 
 import cocoapods.GRPCClient.*
 
+/**
+ * On ios the channel equivalent are the [GRPCCallOptions].
+ */
 actual class KMChannel(private val name: String, private val port: Int, private val usePlaintext: Boolean) {
 
     fun buildRequestOptions(path: String) = GRPCRequestOptions("$name:$port", path, safety = GRPCCallSafetyDefault)

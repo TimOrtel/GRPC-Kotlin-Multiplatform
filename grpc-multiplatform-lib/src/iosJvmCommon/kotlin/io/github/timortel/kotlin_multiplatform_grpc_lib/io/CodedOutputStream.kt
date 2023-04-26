@@ -2,6 +2,10 @@ package io.github.timortel.kotlin_multiplatform_grpc_lib.io
 
 import io.github.timortel.kotlin_multiplatform_grpc_lib.message.KMMessage
 
+/**
+ * Base class that encodes messages to send them over the network connection. Counterpart to [CodedInputStream].
+ * See [the java CodedOutputStream implementation](https://github.com/protocolbuffers/protobuf/blob/main/java/core/src/main/java/com/google/protobuf/CodedOutputStream.java) for further details.
+ */
 expect class CodedOutputStream {
     fun writeBool(fieldNumber: Int, value: Boolean)
 

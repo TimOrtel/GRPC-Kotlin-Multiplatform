@@ -9,6 +9,9 @@ import kotlinx.cinterop.memScoped
 import platform.Foundation.NSData
 import platform.Foundation.create
 
+/**
+ * Implements the functionality by wrapping [GPBCodedOutputStream].
+ */
 actual class CodedOutputStream(private val impl: GPBCodedOutputStream) {
 
     companion object {

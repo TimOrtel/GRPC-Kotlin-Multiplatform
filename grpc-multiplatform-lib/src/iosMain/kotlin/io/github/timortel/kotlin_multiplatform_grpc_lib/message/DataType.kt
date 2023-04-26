@@ -2,6 +2,9 @@ package io.github.timortel.kotlin_multiplatform_grpc_lib.message
 
 import cocoapods.Protobuf.*
 
+/**
+ * On ios, the data type is represented by its [nativeValue].
+ */
 actual enum class DataType(val nativeValue: UByte) {
     DOUBLE(GPBDataTypeBool),
     FLOAT(GPBDataTypeFloat),

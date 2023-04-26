@@ -3,6 +3,10 @@ package io.github.timortel.kotlin_multiplatform_grpc_lib.io
 import io.github.timortel.kotlin_multiplatform_grpc_lib.message.DataType
 import io.github.timortel.kotlin_multiplatform_grpc_lib.message.KMMessage
 
+/**
+ * Base class that decodes messages sent over the network connection. Counterpart to [CodedOutputStream].
+ * See [the java CodedInputStream implementation](https://github.com/protocolbuffers/protobuf/blob/main/java/core/src/main/java/com/google/protobuf/CodedInputStream.java) for further details.
+ */
 expect class CodedInputStream {
 
     var recursionDepth: Int
@@ -38,8 +42,14 @@ expect class CodedInputStream {
 
     fun readString(): String
 
+    /**
+     * Read a [KMMessage] from the stream.
+     */
     fun <M : KMMessage> readKMMessage(messageFactory: (CodedInputStream) -> M): M
 
+    /**
+     * Read a map entry from the stream following the grpc specification.
+     */
     fun <K, V> readMapEntry(
         map: MutableMap<K, V>,
         keyDataType: DataType,

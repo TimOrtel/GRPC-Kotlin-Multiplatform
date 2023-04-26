@@ -3,9 +3,11 @@ package io.github.timortel.kotlin_multiplatform_grpc_lib.stub
 import io.github.timortel.kotlin_multiplatform_grpc_lib.KMChannel
 import io.github.timortel.kotlin_multiplatform_grpc_lib.util.TimeUnit
 import io.grpc.CallOptions
-import io.grpc.stub.AbstractStub
 
-//Additional layer of abstraction for the second generic argument.
+// Additional layer of abstraction for the second generic argument.
+/**
+ * The Android and Jvm stub type.
+ */
 interface AndroidJvmKMStub<S : KMStub<S>> {
 
     val channel: KMChannel

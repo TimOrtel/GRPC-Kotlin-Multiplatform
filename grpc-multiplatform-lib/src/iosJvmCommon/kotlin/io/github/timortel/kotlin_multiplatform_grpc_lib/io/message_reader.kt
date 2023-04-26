@@ -3,6 +3,9 @@ package io.github.timortel.kotlin_multiplatform_grpc_lib.io
 import io.github.timortel.kotlin_multiplatform_grpc_lib.message.DataType
 import io.github.timortel.kotlin_multiplatform_grpc_lib.message.KMMessage
 
+/**
+ * Read a [KMMessage] from the [wrapper] using the provided [messageFactory].
+ */
 fun <M : KMMessage> readKMMessage(
     wrapper: CodedInputStream,
     messageFactory: (CodedInputStream) -> M

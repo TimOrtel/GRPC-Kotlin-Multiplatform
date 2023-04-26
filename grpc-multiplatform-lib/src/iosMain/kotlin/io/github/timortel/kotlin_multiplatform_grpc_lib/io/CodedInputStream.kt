@@ -13,6 +13,9 @@ import platform.Foundation.NSData
 import platform.Foundation.create
 import platform.posix.memcpy
 
+/**
+ * Implements the functionality by wrapping [GPBCodedInputStream].
+ */
 actual class CodedInputStream(private val impl: GPBCodedInputStream, actual var recursionDepth: Int = 0) {
 
     actual val bytesUntilLimit: Int
