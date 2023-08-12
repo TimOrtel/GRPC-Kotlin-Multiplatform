@@ -9,8 +9,8 @@ pluginManagement {
     }
 
     plugins {
-        kotlin("jvm")
-        kotlin("multiplatform")
+        kotlin("jvm") version "1.9.0"
+        kotlin("multiplatform") version "1.9.0"
         id("com.android.library")
 
         id("com.google.protobuf")

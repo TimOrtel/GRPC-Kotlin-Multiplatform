@@ -3,6 +3,7 @@ package io.github.timortel.kotlin_multiplatform_grpc_lib.io
 import cocoapods.Protobuf.GPBCodedInputStream
 import io.github.timortel.kotlin_multiplatform_grpc_lib.message.DataType
 import io.github.timortel.kotlin_multiplatform_grpc_lib.message.KMMessage
+import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.usePinned
 import kotlinx.cinterop.memScoped
@@ -16,6 +17,7 @@ import platform.posix.memcpy
 /**
  * Implements the functionality by wrapping [GPBCodedInputStream].
  */
+@OptIn(ExperimentalForeignApi::class)
 actual class CodedInputStream(private val impl: GPBCodedInputStream, actual var recursionDepth: Int = 0) {
 
     actual val bytesUntilLimit: Int

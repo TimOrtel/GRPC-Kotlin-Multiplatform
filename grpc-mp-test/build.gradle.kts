@@ -1,3 +1,5 @@
+@file:Suppress("UNUSED_VARIABLE")
+
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.GrpcMultiplatformExtension.OutputTarget
 import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeSimulatorTest
 
@@ -16,7 +18,7 @@ repositories {
 }
 
 kotlin {
-    android("android")
+    androidTarget("android")
 
     jvm {
         testRuns["test"].executionTask.configure {
@@ -115,7 +117,6 @@ android {
 
     defaultConfig {
         minSdk = libs.versions.androidMinSdk.get().toInt()
-        targetSdk = libs.versions.androidCompileSdk.get().toInt()
     }
 
     compileOptions {
@@ -159,8 +160,6 @@ grpcKotlinMultiplatform {
     )
 }
 
-tasks.replace("podGenIOS", PatchedPodGenTask::class)
-
 tasks.findByName("jvmTest")?.let {
     it.doFirst {
         TestServer.start()
@@ -172,7 +171,7 @@ tasks.findByName("jvmTest")?.let {
 }
 
 tasks.named("iosSimulatorArm64Test", KotlinNativeSimulatorTest::class).configure {
-    deviceId = "iPhone 14"
+    device = "iPhone 14"
 
     doFirst {
         TestServer.start()

@@ -14,8 +14,7 @@ repositories {
 }
 
 dependencies {
-    // TODO: Replace in combination with patched podgen task
-    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:1.7.20") {
+    implementation(libs.kotlin.gradle.plugin) {
         exclude("org.antlr")
     }
     implementation(libs.android.gradle.plugin) {

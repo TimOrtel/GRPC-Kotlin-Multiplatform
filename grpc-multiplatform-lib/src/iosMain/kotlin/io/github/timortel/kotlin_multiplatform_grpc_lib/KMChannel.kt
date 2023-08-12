@@ -1,6 +1,7 @@
 package io.github.timortel.kotlin_multiplatform_grpc_lib
 
 import cocoapods.GRPCClient.*
+import kotlinx.cinterop.ExperimentalForeignApi
 
 /**
  * On ios the channel equivalent are the [GRPCCallOptions].
@@ -14,6 +15,7 @@ actual class KMChannel(private val name: String, private val port: Int, private 
      * If any mutations are performed, a new copy of call options is returned. The original call options
      * are left unmodified.
      */
+    @OptIn(ExperimentalForeignApi::class)
     fun applyToCallOptions(callOptions: GRPCCallOptions): GRPCCallOptions {
         return if (usePlaintext) {
             val newCallOptions = callOptions.mutableCopy() as GRPCMutableCallOptions

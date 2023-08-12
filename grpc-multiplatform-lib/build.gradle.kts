@@ -1,3 +1,5 @@
+@file:Suppress("UNUSED_VARIABLE")
+
 plugins {
     id("com.android.library")
     kotlin("multiplatform")
@@ -14,7 +16,7 @@ repositories {
 }
 
 kotlin {
-    android("android") {
+    androidTarget("android") {
         publishLibraryVariants("release", "debug")
     }
     js(IR) {
@@ -36,7 +38,7 @@ kotlin {
             baseName = "GRPCKotlinMultiplatform"
         }
 
-        ios.deploymentTarget = "14.1"
+        ios.deploymentTarget = "16.4"
 
         pod("gRPC-ProtoRPC", moduleName = "GRPCClient")
         pod("Protobuf", version = "~> 3.21", moduleName = "Protobuf")
@@ -63,7 +65,6 @@ kotlin {
         val androidJvmCommon by creating {
             dependsOn(iosJvmCommon)
         }
-
 
         val jvmMain by getting {
             dependsOn(androidJvmCommon)
@@ -122,7 +123,6 @@ android {
 
     defaultConfig {
         minSdk = libs.versions.androidMinSdk.get().toInt()
-        targetSdk = libs.versions.androidCompileSdk.get().toInt()
     }
 
     compileOptions {
@@ -143,5 +143,3 @@ kotlin.targets.withType(org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarge
         binaryOptions["memoryModel"] = "experimental"
     }
 }
-
-tasks.replace("podGenIOS", PatchedPodGenTask::class)
