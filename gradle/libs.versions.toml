@@ -1,0 +1,46 @@
+[versions]
+grpcKotlinMultiplatform = "0.3.0"
+
+androidGradlePlugin = "7.4.2"
+androidCompileSdk = "31"
+androidMinSdk = "21"
+
+kotlin = "1.8.21"
+
+grpcJvm = "1.46.0"
+grpcKotlin = "1.2.1"
+protobufJvm = "3.20.1"
+protobufGradlePlugin = "0.8.18"
+
+kotlinxCoroutines = "1.6.4"
+antlr = "4.11.1"
+
+gradlePluginPublish = "0.18.0"
+
+[libraries]
+antlr = { group = "org.antlr", name = "antlr4", version.ref = "antlr" }
+
+kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }
+kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
+google-protobuf-kotlin = { group = "com.google.protobuf", name = "protobuf-kotlin", version.ref = "protobufJvm" }
+google-protobuf-kotlin-lite = { group = "com.google.protobuf", name = "protobuf-kotlin-lite", version.ref = "protobufJvm" }
+google-protobuf-java-util = { group = "com.google.protobuf", name = "protobuf-java-util", version.ref = "protobufJvm" }
+
+google-guava = { group = "com.google.guava", name = "guava", version = "31.1-jre" }
+
+grpc-protobuf = { group = "io.grpc", name = "grpc-protobuf", version.ref = "grpcJvm" }
+grpc-protobuf-lite = { group = "io.grpc", name = "grpc-protobuf-lite", version.ref = "grpcJvm" }
+grpc-stub = { group = "io.grpc", name = "grpc-stub", version.ref = "grpcJvm" }
+grpc-kotlin-stub = { group = "io.grpc", name = "grpc-kotlin-stub", version.ref = "grpcKotlin" }
+grpc-netty = { group = "io.grpc", name = "grpc-netty", version = "1.50.2" }
+grpc-netty-shaded = { group = "io.grpc", name = "grpc-netty-shaded", version = "1.50.2" }
+
+squareup-kotlinpoet = { group = "com.squareup", name = "kotlinpoet", version = "1.12.0" }
+
+kotlin-gradle-plugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
+android-gradle-plugin = { group = "com.android.tools.build", name = "gradle", version.ref = "androidGradlePlugin" }
+
+[plugins]
+android-library = { id = "com.android.library", version.ref = "androidGradlePlugin" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }

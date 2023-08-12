@@ -6,7 +6,7 @@ plugins {
     kotlin("multiplatform")
     kotlin("native.cocoapods")
 
-    id("io.github.timortel.kotlin-multiplatform-grpc-plugin") version "0.2.0"
+    id("io.github.timortel.kotlin-multiplatform-grpc-plugin") version libs.versions.grpcKotlinMultiplatform.get()
 }
 
 version = "dev"
@@ -47,14 +47,14 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 api(project(":grpc-multiplatform-lib"))
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
+                implementation(libs.kotlinx.coroutines.core)
             }
         }
 
         val commonTest by getting {
             dependencies {
                 implementation(kotlin("test"))
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.4")
+                implementation(libs.kotlinx.coroutines.test)
             }
         }
 
@@ -94,7 +94,7 @@ kotlin {
             dependsOn(serializationTest)
 
             dependencies {
-                runtimeOnly("io.grpc:grpc-netty:1.50.2")
+                runtimeOnly(libs.grpc.netty)
             }
         }
 
@@ -109,11 +109,11 @@ kotlin {
 }
 
 android {
-    compileSdk = (31)
+    compileSdk = libs.versions.androidCompileSdk.get().toInt()
 
     defaultConfig {
-        minSdk = (21)
-        targetSdk = (31)
+        minSdk = libs.versions.androidMinSdk.get().toInt()
+        targetSdk = libs.versions.androidCompileSdk.get().toInt()
     }
 
     compileOptions {

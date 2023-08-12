@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "io.github.timortel"
-version = "0.3.0"
+version = libs.versions.grpcKotlinMultiplatform.get()
 
 repositories {
     mavenCentral()
@@ -40,14 +40,13 @@ kotlin {
 
         pod("gRPC-ProtoRPC", moduleName = "GRPCClient")
         pod("Protobuf", version = "~> 3.21", moduleName = "Protobuf")
-        //pod("gRPC-Core")
     }
 
     sourceSets {
         val commonMain by getting {
             dependencies {
                 implementation(kotlin("stdlib-common"))
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1")
+                implementation(libs.kotlinx.coroutines.core)
             }
         }
         val commonTest by getting {
@@ -56,10 +55,6 @@ kotlin {
                 implementation(kotlin("test-annotations-common"))
             }
         }
-
-        val GRPC = "1.46.0"
-        val GRPC_KOTLIN = "1.2.1"
-        val PROTOBUF = "3.20.1"
 
         val iosJvmCommon by creating {
             dependsOn(commonMain)
@@ -73,11 +68,11 @@ kotlin {
         val jvmMain by getting {
             dependsOn(androidJvmCommon)
             dependencies {
-                api("com.google.protobuf:protobuf-kotlin:${PROTOBUF}")
-                api("com.google.protobuf:protobuf-java-util:${PROTOBUF}")
-                api("io.grpc:grpc-protobuf:${GRPC}")
-                api("io.grpc:grpc-stub:${GRPC}")
-                api("io.grpc:grpc-kotlin-stub:${GRPC_KOTLIN}")
+                api(libs.google.protobuf.kotlin)
+                api(libs.google.protobuf.java.util)
+                api(libs.grpc.protobuf)
+                api(libs.grpc.stub)
+                api(libs.grpc.kotlin.stub)
             }
         }
 
@@ -85,10 +80,10 @@ kotlin {
             dependsOn(androidJvmCommon)
 
             dependencies {
-                api("io.grpc:grpc-stub:${GRPC}")
-                api("io.grpc:grpc-protobuf-lite:${GRPC}")
-                api("io.grpc:grpc-kotlin-stub:${GRPC_KOTLIN}")
-                api("com.google.protobuf:protobuf-kotlin-lite:${PROTOBUF}")
+                api(libs.grpc.stub)
+                api(libs.grpc.protobuf.lite)
+                api(libs.grpc.kotlin.stub)
+                api(libs.google.protobuf.kotlin.lite)
             }
         }
 
@@ -121,11 +116,11 @@ publishing {
 }
 
 android {
-    compileSdk = 31
+    compileSdk = libs.versions.androidCompileSdk.get().toInt()
 
     defaultConfig {
-        minSdk = 21
-        targetSdk = 31
+        minSdk = libs.versions.androidMinSdk.get().toInt()
+        targetSdk = libs.versions.androidCompileSdk.get().toInt()
     }
 
     compileOptions {

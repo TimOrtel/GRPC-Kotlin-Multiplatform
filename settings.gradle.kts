@@ -7,16 +7,15 @@ pluginManagement {
         gradlePluginPortal()
         google()
     }
-    val kotlinVersion = "1.8.10"
 
     plugins {
-        kotlin("jvm") version kotlinVersion
-        kotlin("multiplatform") version kotlinVersion
-        id("com.android.library") version "7.4.2"
+        kotlin("jvm")
+        kotlin("multiplatform")
+        id("com.android.library")
 
-        id("com.google.protobuf") version "0.8.18" apply false
+        id("com.google.protobuf")
     }
 }
-//include("plugin")
+
 include("grpc-multiplatform-lib")
 include("grpc-mp-test")

@@ -1,13 +1,13 @@
 plugins {
-    kotlin("jvm") version "1.7.10"
+    kotlin("jvm") version libs.versions.kotlin.get()
     id("java-gradle-plugin")
     id("maven-publish")
-    id("com.gradle.plugin-publish") version "0.18.0"
+    id("com.gradle.plugin-publish") version libs.versions.gradlePluginPublish.get()
     antlr
 }
 
 group = "io.github.timortel"
-version = "0.3.0"
+version = libs.versions.grpcKotlinMultiplatform.get()
 
 java {
     withSourcesJar()
@@ -53,12 +53,12 @@ repositories {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
-    antlr("org.antlr:antlr4:4.11.1")
-    implementation("org.antlr:antlr4:4.10.1")
+    implementation(libs.kotlinx.coroutines.core)
+    antlr(libs.antlr)
+    implementation(libs.antlr)
 
-    implementation("com.squareup:kotlinpoet:1.12.0")
-    compileOnly("org.jetbrains.kotlin:kotlin-gradle-plugin:1.7.0")
+    implementation(libs.squareup.kotlinpoet)
+    compileOnly(libs.kotlin.gradle.plugin)
 }
 
 tasks.generateGrammarSource {
