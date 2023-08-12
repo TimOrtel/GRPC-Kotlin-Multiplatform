@@ -116,6 +116,8 @@ publishing {
 }
 
 android {
+    namespace = "io.github.timortel.kotlin_multiplatform_grpc_lib"
+
     compileSdk = libs.versions.androidCompileSdk.get().toInt()
 
     defaultConfig {
