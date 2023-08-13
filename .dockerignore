@@ -1,0 +1,12 @@
+**/build
+**/.gradle
+**/.idea
+/docker
+kotlin-js-store/yarn.lock
+.gitignore
+jitpack.yml
+LICENSE.md
+local.properties
+readme.md
+example
+test-outputs

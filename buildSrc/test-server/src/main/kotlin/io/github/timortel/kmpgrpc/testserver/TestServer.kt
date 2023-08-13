@@ -1,3 +1,5 @@
+package io.github.timortel.kmpgrpc.testserver
+
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.basic_messages.*
 import io.grpc.Server
 import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder
@@ -9,10 +11,11 @@ object TestServer {
 
     private var server: Server? = null
 
-    fun start() {
-        if (server != null) return
+    fun start(): Server {
+        val currentServer = server
+        if (currentServer != null) return currentServer
 
-        server = NettyServerBuilder
+        val createdServer = NettyServerBuilder
             .forPort(17888)
             .addService(object : TestServiceGrpcKt.TestServiceCoroutineImplBase() {
                 override suspend fun emptyRpc(request: EmptyMessage): EmptyMessage {
@@ -58,6 +61,10 @@ object TestServer {
             )
             .build()
             .start()
+
+        server = createdServer
+
+        return createdServer
     }
 
     fun stop() {

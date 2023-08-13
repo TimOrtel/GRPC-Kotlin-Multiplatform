@@ -1,0 +1,41 @@
+services:
+  envoy:
+    image: envoyproxy/envoy-dev:latest
+    volumes:
+      - ./grpc-enovy.yml:/grpc-envoy.yml
+    networks:
+      - testNetwork
+    command:
+      - -c
+      - /grpc-envoy.yml
+
+  jsTest:
+    image: kmp-grpc-jstest
+    build:
+      context: .
+    networks:
+      - testNetwork
+    depends_on:
+      envoy:
+        condition: service_started
+      testServer:
+        condition: service_started
+    command:
+      - grpc-mp-test:jsTest
+    volumes:
+      - ./test-outputs/:/app/test-outputs/
+
+  testServer:
+    image: kmp-grpc-testserver
+    build:
+      context: .
+    networks:
+      - testNetwork
+    command:
+      - buildSrc:test-server:run
+
+
+networks:
+  testNetwork:
+    driver: "bridge"
+    name: jsTestNetwork

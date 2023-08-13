@@ -1,12 +1,15 @@
 import com.google.protobuf.gradle.*
 
 plugins {
-    `kotlin-dsl`
     kotlin("jvm") version libs.versions.kotlin.get()
 
     id("java")
     id("com.google.protobuf") version libs.versions.protobufGradlePlugin.get()
+    application
 }
+
+group = "io.github.timortel"
+version = libs.versions.grpcKotlinMultiplatform.get()
 
 repositories {
     gradlePluginPortal()
@@ -21,6 +24,7 @@ dependencies {
         exclude("org.antlr")
     }
 
+
     implementation(libs.google.protobuf.kotlin)
     implementation(libs.google.protobuf.java.util)
     implementation(libs.grpc.protobuf)
@@ -31,14 +35,12 @@ dependencies {
 
     implementation(libs.google.guava)
     implementation(libs.kotlinx.coroutines.core)
-
-    implementation(project(":test-server"))
 }
 
 sourceSets {
     main {
         proto {
-            srcDirs("../grpc-mp-test/src/commonMain/proto")
+            srcDirs("../../grpc-mp-test/src/commonMain/proto")
         }
         kotlin.srcDir(buildDir.resolve("generated/source/proto/main/grpc"))
         kotlin.srcDir(buildDir.resolve("generated/source/proto/main/grpckt"))
@@ -85,4 +87,8 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
 java {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
+}
+
+application {
+    mainClass.set("io.github.timortel.kmpgrpc.testserver.MainKt")
 }

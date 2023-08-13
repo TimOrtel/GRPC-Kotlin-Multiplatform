@@ -1,6 +1,9 @@
 @file:Suppress("UNUSED_VARIABLE")
 
+import io.github.timortel.kmpgrpc.testserver.TestServer
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.GrpcMultiplatformExtension.OutputTarget
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeSimulatorTest
 
 plugins {
@@ -180,4 +183,19 @@ tasks.named("iosSimulatorArm64Test", KotlinNativeSimulatorTest::class).configure
     doLast {
         TestServer.stop()
     }
+}
+
+tasks.withType(Test::class) {
+    testLogging.setEvents(listOf(TestLogEvent.FAILED))
+
+    testLogging.exceptionFormat = TestExceptionFormat.FULL
+    testLogging.showExceptions = true
+    testLogging.showCauses = true
+    testLogging.showStackTraces = true
+    testLogging.showStandardStreams = true
+
+    reports.junitXml.required.set(true)
+    reports.html.required.set(true)
+    reports.junitXml.outputLocation.set(rootProject.rootDir.resolve("test-outputs/${project.name}/$name/"))
+    reports.html.outputLocation.set(rootProject.rootDir.resolve("test-outputs/${project.name}/$name/"))
 }

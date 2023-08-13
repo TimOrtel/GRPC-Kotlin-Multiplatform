@@ -26,7 +26,10 @@ fun generateBridgeClass(parentClass: ClassName?, message: ProtoMessage): TypeSpe
     val prototypePropertyName = "prototype"
     val newFunctionName = "new"
 
-    val jsImplClassName = parentClass?.nestedClass("JS_" + message.name) ?: ClassName(message.pkg, "JS_" + message.name)
+    val jsImplClassName = parentClass?.nestedClass("JS_" + message.name) ?: ClassName(
+        message.pkg,
+        "JS_" + message.name
+    )
 
     return TypeSpec
         .classBuilder(jsImplClassName)
@@ -95,7 +98,10 @@ fun generateBridgeClass(parentClass: ClassName?, message: ProtoMessage): TypeSpe
                         .returns(message.jsType)
                         .addStatement("val reader = %T(bytes)", jspbReader)
                         .addStatement("val msg = %T()", message.jsType)
-                        .addStatement("deserializeBinaryFromReader(msg.%N, reader)", objPropertyName)
+                        .addStatement(
+                            "deserializeBinaryFromReader(msg.%N, reader)",
+                            objPropertyName
+                        )
                         .addStatement("return msg")
                         .build()
                 )
@@ -113,7 +119,7 @@ fun generateBridgeClass(parentClass: ClassName?, message: ProtoMessage): TypeSpe
                 .build()
         )
         .apply {
-            //Add getters and setters
+            // Add getters and setters
 
             message.attributes.forEach { attr ->
                 when (attr.attributeType) {
@@ -227,29 +233,44 @@ fun generateBridgeClass(parentClass: ClassName?, message: ProtoMessage): TypeSpe
                                 )
                         }
 
-                        //getter
+                        // getter
                         addFunction(
                             FunSpec
-                                .builder(Const.Message.Attribute.Scalar.JS.getFunction(message, attr).simpleName)
+                                .builder(
+                                    Const.Message.Attribute.Scalar.JS.getFunction(
+                                        message,
+                                        attr
+                                    ).simpleName
+                                )
                                 .returns(attr.types.jsType)
                                 .addCode(getterCodeBlock)
                                 .build()
                         )
 
-                        //setter
+                        // setter
                         addFunction(
                             FunSpec
-                                .builder(Const.Message.Attribute.Scalar.JS.setFunction(message, attr).simpleName)
+                                .builder(
+                                    Const.Message.Attribute.Scalar.JS.setFunction(
+                                        message,
+                                        attr
+                                    ).simpleName
+                                )
                                 .addParameter("value", attr.types.jsType.copy(nullable = false))
                                 .addCode(setterCodeBlock)
                                 .build()
                         )
 
-                        //hasField
+                        // hasField
                         if (attr.types.isNullable) {
                             addFunction(
                                 FunSpec
-                                    .builder(Const.Message.Attribute.Scalar.JS.getHasFunction(message, attr).simpleName)
+                                    .builder(
+                                        Const.Message.Attribute.Scalar.JS.getHasFunction(
+                                            message,
+                                            attr
+                                        ).simpleName
+                                    )
                                     .returns(Boolean::class)
                                     .addCode(
                                         "return %T.getField(%N, %L) != null",
@@ -360,18 +381,26 @@ fun generateBridgeClass(parentClass: ClassName?, message: ProtoMessage): TypeSpe
                                 //INT64 is broken, therefore we cast it to number instead.
                                 if (attr.types.protoType == ProtoType.INT_64) NUMBER else attr.types.jsType
                             )
-                        //List getter
+                        // List getter
                         addFunction(
                             FunSpec
-                                .builder(Const.Message.Attribute.Repeated.JS.getListFunctionName(attr))
+                                .builder(
+                                    Const.Message.Attribute.Repeated.JS.getListFunctionName(
+                                        attr
+                                    )
+                                )
                                 .returns(arrayType)
                                 .addCode(getterCode)
                                 .build()
                         )
-                        //List setter
+                        // List setter
                         addFunction(
                             FunSpec
-                                .builder(Const.Message.Attribute.Repeated.JS.setListFunctionName(attr))
+                                .builder(
+                                    Const.Message.Attribute.Repeated.JS.setListFunctionName(
+                                        attr
+                                    )
+                                )
                                 .addParameter("values", arrayType)
                                 .addCode(setterCode)
                                 .build()
@@ -449,58 +478,62 @@ private fun writeSerializeBinaryToWriter(message: ProtoMessage): CodeBlock {
         message.attributes.forEach { attr ->
             when (attr.attributeType) {
                 is Scalar -> {
-                    val getter = Const.Message.Attribute.Scalar.JS.getFunction(message, attr)
-                    addStatement("temp = message.%N()", getter)
-                    add("if (message.%N()", getter)
+                    val (writerFunction, alreadyHandled) = if (attr.types.protoType != ProtoType.MESSAGE) {
+                        val getter = Const.Message.Attribute.Scalar.JS.getFunction(message, attr)
+                        addStatement("temp = message.%N()", getter)
+                        add("if (message.%N()", getter)
 
-                    val (writerFunction, alreadyHandled) = when (attr.types.protoType) {
-                        ProtoType.DOUBLE -> {
-                            beginControlFlow(" != 0.0)")
-                            "writeDouble" to false
-                        }
+                        when (attr.types.protoType) {
+                            ProtoType.DOUBLE -> {
+                                beginControlFlow(" != 0.0)")
+                                "writeDouble" to false
+                            }
 
-                        ProtoType.FLOAT -> {
-                            beginControlFlow(" != 0f)")
-                            "writeFloat" to false
-                        }
+                            ProtoType.FLOAT -> {
+                                beginControlFlow(" != 0f)")
+                                "writeFloat" to false
+                            }
 
-                        ProtoType.INT_32 -> {
-                            beginControlFlow(" != 0)")
-                            "writeInt32" to false
-                        }
+                            ProtoType.INT_32 -> {
+                                beginControlFlow(" != 0)")
+                                "writeInt32" to false
+                            }
 
-                        ProtoType.INT_64 -> {
-                            beginControlFlow(" != 0L)")
-                            "writeInt64" to false
-                        }
+                            ProtoType.INT_64 -> {
+                                beginControlFlow(" != 0L)")
+                                "writeInt64" to false
+                            }
 
-                        ProtoType.BOOL -> {
-                            beginControlFlow(")")
-                            "writeBool" to false
-                        }
+                            ProtoType.BOOL -> {
+                                beginControlFlow(")")
+                                "writeBool" to false
+                            }
 
-                        ProtoType.STRING -> {
-                            beginControlFlow(".length > 0)")
-                            "writeString" to false
-                        }
+                            ProtoType.STRING -> {
+                                beginControlFlow(".length > 0)")
+                                "writeString" to false
+                            }
 
-                        ProtoType.MAP -> throw IllegalStateException()
-                        ProtoType.MESSAGE -> {
-                            beginControlFlow(" != null)")
-                            addStatement(
-                                "writer.writeMessage(%L, temp.%N, %T.Companion::serializeBinaryToWriter)",
-                                attr.protoId,
-                                objPropertyName,
-                                attr.types.jsType,
-                            )
-                            endControlFlow()
-                            "writeMessage" to true
-                        }
+                            ProtoType.MAP, ProtoType.MESSAGE -> throw IllegalStateException()
 
-                        ProtoType.ENUM -> {
-                            beginControlFlow(" != 0)")
-                            "writeEnum" to false
+                            ProtoType.ENUM -> {
+                                beginControlFlow(" != 0)")
+                                "writeEnum" to false
+                            }
                         }
+                    } else {
+                        beginControlFlow(
+                            "if (message.%N())",
+                            Const.Message.Attribute.Scalar.JS.getHasFunction(message, attr).simpleName
+                        )
+                        addStatement(
+                            "writer.writeMessage(%L, temp.%N, %T.Companion::serializeBinaryToWriter)",
+                            attr.protoId,
+                            objPropertyName,
+                            attr.types.jsType,
+                        )
+                        endControlFlow()
+                        "writeMessage" to true
                     }
 
                     if (!alreadyHandled) {
@@ -510,9 +543,16 @@ private fun writeSerializeBinaryToWriter(message: ProtoMessage): CodeBlock {
                 }
 
                 is Repeated -> {
-                    addStatement("temp = message.%N()", Const.Message.Attribute.Repeated.JS.getListFunctionName(attr))
+                    addStatement(
+                        "temp = message.%N()",
+                        Const.Message.Attribute.Repeated.JS.getListFunctionName(attr)
+                    )
                     beginControlFlow("if (temp.length > 0)")
-                    addStatement("writer.%N(%L, temp", getRepeatedWriterFunction(attr.types.protoType), attr.protoId)
+                    addStatement(
+                        "writer.%N(%L, temp",
+                        getRepeatedWriterFunction(attr.types.protoType),
+                        attr.protoId
+                    )
 
                     if (attr.types.protoType == ProtoType.MESSAGE) {
                         add(", %T.Companion::serializeBinaryToWriter", attr.types.jsType)
@@ -524,7 +564,10 @@ private fun writeSerializeBinaryToWriter(message: ProtoMessage): CodeBlock {
                 }
 
                 is MapType -> {
-                    addStatement("temp = message.%N(false)", Const.Message.Attribute.Map.JS.getMapFunctionName(attr))
+                    addStatement(
+                        "temp = message.%N(false)",
+                        Const.Message.Attribute.Map.JS.getMapFunctionName(attr)
+                    )
                     beginControlFlow("if (temp != null && temp.getLength() > 0)")
                     add(
                         "temp.serializeBinary(%L, writer, %T::%N.%M(writer), %T::%N.%M(writer), ",
@@ -537,7 +580,10 @@ private fun writeSerializeBinaryToWriter(message: ProtoMessage): CodeBlock {
                         functionWrapper
                     )
                     if (attr.attributeType.valueTypes.protoType == ProtoType.MESSAGE) {
-                        add("%T.Companion::serializeBinaryToWriter", attr.attributeType.valueTypes.jsType)
+                        add(
+                            "%T.Companion::serializeBinaryToWriter",
+                            attr.attributeType.valueTypes.jsType
+                        )
                     } else {
                         add("null")
                     }
@@ -577,7 +623,8 @@ private fun getRepeatedWriterFunction(protoType: ProtoType) = when (protoType) {
  * Generates the code for deserializeBinaryFromReader. Mimics the code generation of protoc for js
  */
 private fun writeDeserializeBinaryFromReader(message: ProtoMessage): CodeBlock {
-    val getRepeatedListVarName = { repeatedAttr: ProtoMessageAttribute -> "${repeatedAttr.name.decapitalize()}List" }
+    val getRepeatedListVarName =
+        { repeatedAttr: ProtoMessageAttribute -> "${repeatedAttr.name.decapitalize()}List" }
 
     return CodeBlock.builder().apply {
         addStatement("val message = %T(msg)", message.jsType)
@@ -605,7 +652,10 @@ private fun writeDeserializeBinaryFromReader(message: ProtoMessage): CodeBlock {
                 is Scalar -> {
                     when (attr.types.protoType) {
                         ProtoType.DOUBLE, ProtoType.FLOAT, ProtoType.INT_32, ProtoType.BOOL, ProtoType.ENUM, ProtoType.STRING -> {
-                            addStatement("val value = reader.%N()", getScalarReadFunctionName(attr.types.protoType))
+                            addStatement(
+                                "val value = reader.%N()",
+                                getScalarReadFunctionName(attr.types.protoType)
+                            )
                             addStatement(
                                 "message.%N(value)",
                                 Const.Message.Attribute.Scalar.JS.setFunction(message, attr)
@@ -688,7 +738,10 @@ private fun writeDeserializeBinaryFromReader(message: ProtoMessage): CodeBlock {
 
                     //Add the reader callback, for non message types = null
                     if (attr.attributeType.valueTypes.protoType == ProtoType.MESSAGE) {
-                        add("%T::deserializeBinaryFromReader, ", attr.attributeType.valueTypes.jsType)
+                        add(
+                            "%T::deserializeBinaryFromReader, ",
+                            attr.attributeType.valueTypes.jsType
+                        )
                     } else {
                         add("null, ")
                     }
