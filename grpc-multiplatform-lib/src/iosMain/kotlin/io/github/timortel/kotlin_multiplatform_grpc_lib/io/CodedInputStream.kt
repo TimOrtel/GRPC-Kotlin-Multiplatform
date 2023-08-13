@@ -20,8 +20,7 @@ import platform.posix.memcpy
 @OptIn(ExperimentalForeignApi::class)
 actual class CodedInputStream(private val impl: GPBCodedInputStream, actual var recursionDepth: Int = 0) {
 
-    actual val bytesUntilLimit: Int
-        get() = TODO()
+    actual val bytesUntilLimit: Int get() = throw NotImplementedError()
     actual val isAtEnd: Boolean
         get() = impl.isAtEnd()
 
@@ -103,6 +102,5 @@ actual class CodedInputStream(private val impl: GPBCodedInputStream, actual var 
 
     actual fun popLimit(oldLimit: Int) = impl.popLimit(oldLimit.toULong())
 
-    actual fun setSizeLimit(newLimit: Int): Int = TODO()
-
+    actual fun setSizeLimit(newLimit: Int): Int = throw NotImplementedError()
 }

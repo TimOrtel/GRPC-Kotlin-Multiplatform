@@ -87,7 +87,6 @@ actual class CodedOutputStream(private val impl: GPBCodedOutputStream) {
         tag: UInt
     ) {
         writeArray(this, fieldNumber, values, tag, ::GPBComputeFixed64SizeNoTag, ::writeFixed64NoTag, ::writeFixed64)
-
     }
 
     actual fun writeFixed64NoTag(value: ULong) = impl.writeFixed64NoTag(value)

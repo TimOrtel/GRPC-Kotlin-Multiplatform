@@ -39,7 +39,8 @@ fun <K, V> writeMap(
         //Write tag
         stream.writeInt32NoTag(tag)
         //Write the size of the message
-        val msgSize = getKeySize(kMapKeyFieldNumber, key) + getValueSize(kMapValueFieldNumber, value)
+        val msgSize =
+            getKeySize(kMapKeyFieldNumber, key) + getValueSize(kMapValueFieldNumber, value)
         stream.writeInt32NoTag(msgSize)
         //Write fields
         writeKey(stream, kMapKeyFieldNumber, key)
@@ -66,5 +67,17 @@ fun <T> writeArray(
         values.forEach(writeNoTag)
     } else {
         values.forEach { writeTag(fieldNumber, it) }
+    }
+}
+
+fun writeArray(
+    tag: UInt,
+    writeRepeated: () -> Unit,
+    writePacked: () -> Unit
+) {
+    if (tag != 0u) {
+        writePacked()
+    } else {
+        writeRepeated()
     }
 }

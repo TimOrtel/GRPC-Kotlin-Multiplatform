@@ -38,16 +38,24 @@ external object JSPB {
     fun inherits(clazz: dynamic, superClazz: dynamic)
 
     class BinaryWriter {
+
+        @JsName("encoder_")
+        val encoder: BinaryEncoder
+
         fun getResultBuffer(): dynamic
 
         fun writeDouble(field: Int, value: Double)
         fun writeFloat(field: Int, value: Float)
         fun writeInt64(field: Int, value: Long)
+        fun writeSint64(field: Int, value: Long)
         fun writeUInt64(field: Int, value: dynamic)
         fun writeInt32(field: Int, value: Int)
+        fun writeSint32(field: Int, value: Int)
         fun writeUInt32(field: Int, value: dynamic)
         fun writeFixed64(field: Int, value: dynamic)
         fun writeFixed32(field: Int, value: dynamic)
+        fun writeSfixed64(field: Int, value: dynamic)
+        fun writeSfixed32(field: Int, value: dynamic)
         fun writeBool(field: Int, value: Boolean)
         fun writeGroup(field: Int, value: dynamic)
         fun writeBytes(field: Int, value: dynamic)
@@ -55,17 +63,54 @@ external object JSPB {
         fun writeMessage(field: Int, value: dynamic, writerCallback: dynamic)
         fun writeEnum(field: Int, value: Int)
 
+        fun writeRepeatedBytes(field: Int, value: dynamic)
+
         fun writeRepeatedString(field: Int, value: dynamic)
         fun writePackedBool(field: Int, value: dynamic)
+        fun writeRepeatedBool(field: Int, value: dynamic)
         fun writePackedFloat(field: Int, value: dynamic)
+        fun writeRepeatedFloat(field: Int, value: dynamic)
         fun writePackedDouble(field: Int, value: dynamic)
+        fun writeRepeatedDouble(field: Int, value: dynamic)
         fun writePackedInt32(field: Int, value: dynamic)
+        fun writeRepeatedInt32(field: Int, value: dynamic)
         fun writePackedInt64(field: Int, value: dynamic)
+        fun writeRepeatedInt64(field: Int, value: dynamic)
         fun writeRepeatedMessage(field: Int, value: dynamic, writerCallback: dynamic)
         fun writePackedEnum(field: Int, value: dynamic)
+        fun writeRepeatedEnum(field: Int, value: dynamic)
+        fun writePackedFixed32(field: Int, value: dynamic)
+        fun writeRepeatedFixed32(field: Int, value: dynamic)
+        fun writePackedFixed64(field: Int, value: dynamic)
+        fun writeRepeatedFixed64(field: Int, value: dynamic)
+
+        fun writePackedSfixed32(field: Int, value: dynamic)
+        fun writeRepeatedSfixed32(field: Int, value: dynamic)
+        fun writePackedSfixed64(field: Int, value: dynamic)
+        fun writeRepeatedSfixed64(field: Int, value: dynamic)
+
+        fun writePackedSint32(field: Int, value: dynamic)
+        fun writeRepeatedSint32(field: Int, value: dynamic)
+        fun writePackedSint64(field: Int, value: dynamic)
+        fun writeRepeatedSint64(field: Int, value: dynamic)
+
+        fun writePackedUint32(field: Int, value: dynamic)
+        fun writeRepeatedUint32(field: Int, value: dynamic)
+        fun writePackedUint64(field: Int, value: dynamic)
+        fun writeRepeatedUint64(field: Int, value: dynamic)
+
+        @JsName("appendUint8Array_")
+        fun appendUint8Array(value: dynamic)
     }
 
     class BinaryReader(bytes: dynamic) {
+
+        @JsName("nextField_")
+        val nextField: Int
+
+        @JsName("decoder_")
+        val decoder: BinaryDecoder
+
         fun nextField(): Boolean
 
         fun isEndGroup(): Boolean
@@ -75,11 +120,16 @@ external object JSPB {
         fun readDouble(): Double
         fun readFloat(): Float
         fun readInt64(): dynamic
+        fun readSInt32(): dynamic
+        fun readSInt64(): dynamic
         fun readUInt64(): dynamic
         fun readInt32(): Int
         fun readUInt32(): dynamic
         fun readFixed64(): dynamic
         fun readFixed32(): dynamic
+        fun readSfixed32(): dynamic
+        fun readSfixed64(): dynamic
+
         fun readBool(): Boolean
         fun readBytes(): dynamic
         fun readString(): String
@@ -100,5 +150,35 @@ external object JSPB {
 
     object Map {
         fun deserializeBinary(message: dynamic, reader: dynamic, keyReader: dynamic, valueReader: dynamic, valueReaderCallback: dynamic, defaultKey: dynamic, defaultValue: dynamic)
+    }
+
+    class BinaryDecoder {
+        fun setEnd(limit: Int)
+
+        fun getEnd(): Int
+
+        fun atEnd(): Boolean
+    }
+
+    class BinaryEncoder {
+        fun writeBool(value: dynamic)
+        fun writeFloat(value: dynamic)
+        fun writeDouble(value: dynamic)
+        fun writeSplitFixed32(value: dynamic)
+        fun writeSplitFixed64(value: dynamic)
+        fun writeUint32(value: dynamic)
+        fun writeUint64(value: dynamic)
+        fun writeInt8(value: dynamic)
+        fun writeInt32(value: dynamic)
+        fun writeInt64(value: dynamic)
+
+        fun writeSignedVarint32(value: dynamic)
+        fun writeSignedVarint64(value: dynamic)
+
+        fun writeUnsignedVarint32(value: dynamic)
+        fun writeUnsignedVarint64(value: dynamic)
+
+        fun writeEnum(value: Int)
+        fun writeString(value: String)
     }
 }

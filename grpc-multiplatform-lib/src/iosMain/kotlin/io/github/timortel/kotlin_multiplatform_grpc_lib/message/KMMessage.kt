@@ -15,7 +15,7 @@ actual interface KMMessage {
     /**
      * The size this message takes up in a byte array.
      */
-    val requiredSize: Int
+    actual val requiredSize: Int
 
     /**
      * Serializes this message and returns it as [NSData].
