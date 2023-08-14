@@ -8,7 +8,7 @@ object IosJvmDslBuilder : DslBuilder(true) {
 
     override fun modifyBuildFunction(builder: FunSpec.Builder, message: ProtoMessage) {
         builder.apply {
-            addCode("return %T(", message.iosType)
+            addCode("return %T(", message.commonType)
             message.attributes.filter { !it.isOneOfAttribute }.forEach { attr ->
                 val propertyName = Const.Message.Attribute.propertyName(message, attr)
 

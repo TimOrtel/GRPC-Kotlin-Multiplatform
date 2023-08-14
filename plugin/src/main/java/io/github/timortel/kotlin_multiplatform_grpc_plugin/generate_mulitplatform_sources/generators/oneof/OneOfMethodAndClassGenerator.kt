@@ -101,7 +101,7 @@ abstract class OneOfMethodAndClassGenerator(private val isActual: Boolean) {
                         )
                     }
 
-                    //Unknown
+                    // Unknown
                     addObject(Const.Message.OneOf.unknownClassName(protoMessage, protoOneOf), ChildClassType.Unknown)
                     addObject(Const.Message.OneOf.notSetClassName(protoMessage, protoOneOf), ChildClassType.NotSet)
                 }
@@ -116,6 +116,7 @@ abstract class OneOfMethodAndClassGenerator(private val isActual: Boolean) {
     )
 
     protected open fun modifyParentClass(builder: TypeSpec.Builder, message: ProtoMessage, oneOf: ProtoOneOf) {}
+
     protected open fun modifyChildClass(
         builder: TypeSpec.Builder,
         message: ProtoMessage,

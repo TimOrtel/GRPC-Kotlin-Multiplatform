@@ -2,23 +2,18 @@ package io.github.timortel.kotlin_multiplatform_grpc_lib.message
 
 import io.github.timortel.kotlin_multiplatform_grpc_lib.JSPB
 import io.github.timortel.kotlin_multiplatform_grpc_lib.io.CodedOutputStream
+import io.github.timortel.kotlin_multiplatform_grpc_lib.io.toByteArray
 
 actual interface KMMessage {
-
-    /**
-     * The size this message takes up in a byte array.
-     */
-    actual val requiredSize: Int
 
     /**
      * Serializes this message and returns it as a [ByteArray].
      */
     fun serialize(): ByteArray {
-        val data = ByteArray(requiredSize)
         val stream = JSPB.BinaryWriter()
         serialize(CodedOutputStream(stream))
 
-        return data
+        return stream.getResultBuffer().toByteArray()
     }
 
     /**
@@ -28,4 +23,3 @@ actual interface KMMessage {
 }
 
 val serializeMessage: (KMMessage, CodedOutputStream) -> Unit = { message, stream -> message.serialize(stream) }
-val requiredSizeMessage: (KMMessage) -> UInt = { message -> message.requiredSize.toUInt() }

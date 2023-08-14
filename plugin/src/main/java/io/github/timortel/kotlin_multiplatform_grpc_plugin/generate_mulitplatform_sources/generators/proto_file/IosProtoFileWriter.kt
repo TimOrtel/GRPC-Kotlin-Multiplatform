@@ -13,7 +13,7 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfor
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.scalar.IosJvmScalarMessageMethodGenerator
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.scalar.ScalarMessageMethodGenerator
 
-class IOSProtoFileWriter(protoFile: ProtoFile) : IosJvmProtoFileWriteBase(protoFile) {
+class IosProtoFileWriter(protoFile: ProtoFile) : IosJvmProtoFileWriteBase(protoFile) {
 
     override val scalarMessageMethodGenerator: ScalarMessageMethodGenerator
         get() = IosJvmScalarMessageMethodGenerator
@@ -49,7 +49,7 @@ class IOSProtoFileWriter(protoFile: ProtoFile) : IosJvmProtoFileWriteBase(protoF
             )
             .addStatement(
                 "return %N(stream)",
-                Const.Message.Companion.IOS.WrapperDeserializationFunction.NAME
+                Const.Message.Companion.WrapperDeserializationFunction.NAME
             )
             .build()
 }

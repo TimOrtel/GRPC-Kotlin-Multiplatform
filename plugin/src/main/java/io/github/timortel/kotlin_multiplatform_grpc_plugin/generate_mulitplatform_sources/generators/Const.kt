@@ -241,16 +241,14 @@ object Const {
         }
 
         object Companion {
-            object IOS {
-                object DataDeserializationFunction {
-                    const val NAME = "deserialize"
-                    const val DATA_PARAM = "data"
-                }
+            object DataDeserializationFunction {
+                const val NAME = "deserialize"
+                const val DATA_PARAM = "data"
+            }
 
-                object WrapperDeserializationFunction {
-                    const val NAME = "deserialize"
-                    const val STREAM_PARAM = "stream"
-                }
+            object WrapperDeserializationFunction {
+                const val NAME = "deserializeFromWrapper"
+                const val STREAM_PARAM = "stream"
             }
         }
     }

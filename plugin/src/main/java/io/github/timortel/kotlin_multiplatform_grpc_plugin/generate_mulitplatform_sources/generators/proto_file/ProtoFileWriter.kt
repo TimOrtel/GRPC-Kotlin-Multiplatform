@@ -1,6 +1,15 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.proto_file
 
 import com.squareup.kotlinpoet.*
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.CodedInputStream
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.CodedOutputStream
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.DataType
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.MessageDeserializer
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.ProtoType
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.Types
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.WireFormatForType
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.WireFormatMakeTag
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.map.MapMessageMethodGenerator
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.oneof.OneOfMethodAndClassGenerator
@@ -9,6 +18,9 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfor
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.unrecognizedEnumField
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.*
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.kmMessage
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.readKMMessage
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.readMapEntry
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.writeMap
 import java.io.File
 
 abstract class ProtoFileWriter(private val protoFile: ProtoFile, private val isActual: Boolean) {
@@ -42,7 +54,10 @@ abstract class ProtoFileWriter(private val protoFile: ProtoFile, private val isA
     /**
      * Recursive function that adds a proto message class.
      */
-    private fun generateProtoMessageClass(parentClass: ClassName?, message: ProtoMessage): TypeSpec {
+    private fun generateProtoMessageClass(
+        parentClass: ClassName?,
+        message: ProtoMessage
+    ): TypeSpec {
         val isNested = parentClass != null
         val messageClassName = getChildClassName(parentClass, message.commonName)
 
@@ -62,7 +77,11 @@ abstract class ProtoFileWriter(private val protoFile: ProtoFile, private val isA
                     when (attr.attributeType) {
                         is Scalar -> addSimpleMessageFunctions(this, message, attr)
                         is Repeated -> addRepeatedMessageFunctions(this, message, attr)
-                        is MapType -> mapMessageMethodGenerator.generateFunctions(this, message, attr)
+                        is MapType -> mapMessageMethodGenerator.generateFunctions(
+                            this,
+                            message,
+                            attr
+                        )
                     }
                 }
 
@@ -94,7 +113,10 @@ abstract class ProtoFileWriter(private val protoFile: ProtoFile, private val isA
                 //Write eq function
                 addFunction(
                     FunSpec.builder(Const.Message.BasicFunctions.EqualsFunction.NAME)
-                        .addModifiers(if (isActual) KModifier.ACTUAL else KModifier.EXPECT, KModifier.OVERRIDE)
+                        .addModifiers(
+                            if (isActual) KModifier.ACTUAL else KModifier.EXPECT,
+                            KModifier.OVERRIDE
+                        )
                         .addParameter(
                             Const.Message.BasicFunctions.EqualsFunction.OTHER_PARAM,
                             ANY.copy(nullable = true)
@@ -109,7 +131,10 @@ abstract class ProtoFileWriter(private val protoFile: ProtoFile, private val isA
                 addFunction(
                     FunSpec.builder(Const.Message.BasicFunctions.HashCodeFunction.NAME)
                         .returns(INT)
-                        .addModifiers(if (isActual) KModifier.ACTUAL else KModifier.EXPECT, KModifier.OVERRIDE)
+                        .addModifiers(
+                            if (isActual) KModifier.ACTUAL else KModifier.EXPECT,
+                            KModifier.OVERRIDE
+                        )
                         .apply {
                             applyToHashCodeFunction(this, message)
                         }
@@ -239,7 +264,11 @@ abstract class ProtoFileWriter(private val protoFile: ProtoFile, private val isA
         repeatedMessageMethodGenerator.generateFunctions(builder, message, attr)
     }
 
-    private fun addOneOfEnumAndFunctions(builder: TypeSpec.Builder, message: ProtoMessage, oneOf: ProtoOneOf) {
+    private fun addOneOfEnumAndFunctions(
+        builder: TypeSpec.Builder,
+        message: ProtoMessage,
+        oneOf: ProtoOneOf
+    ) {
         oneOfMethodAndClassGenerator.generateMethodsAndClasses(builder, message, oneOf)
     }
 
@@ -247,7 +276,8 @@ abstract class ProtoFileWriter(private val protoFile: ProtoFile, private val isA
      * @param parentClass the parent class, or null if this is a top level class.
      * @return the ClassName of the class. Should consider recursion, meaning that this child class could also be the child of another child class.
      */
-    abstract fun getChildClassName(parentClass: ClassName?, childName: String): ClassName
+    private fun getChildClassName(parentClass: ClassName?, childName: String): ClassName =
+        parentClass?.nestedClass(childName) ?: ClassName(protoFile.pkg, childName)
 
     /**
      * @param getChildClassName a function that will return a child class name for the parent. So when the parent is a Class then

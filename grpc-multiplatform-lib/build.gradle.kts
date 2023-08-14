@@ -57,8 +57,12 @@ kotlin {
             }
         }
 
-        val androidJvmCommon by creating {
+        val iosJvmCommon by creating {
             dependsOn(commonMain)
+        }
+
+        val androidJvmCommon by creating {
+            dependsOn(iosJvmCommon)
         }
 
         val jvmMain by getting {
@@ -97,6 +101,7 @@ kotlin {
         val iosSimulatorArm64Main by getting
         val iosMain by creating {
             dependsOn(commonMain)
+            dependsOn(iosJvmCommon)
             iosX64Main.dependsOn(this)
             iosArm64Main.dependsOn(this)
             iosSimulatorArm64Main.dependsOn(this)

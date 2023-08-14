@@ -5,20 +5,20 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfor
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoMessage
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoOneOf
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.proto_file.ActualProtoFileWriter
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.proto_file.IosJvmProtoFileWriteBase
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.proto_file.ProtoFileWriter
 
-object IosJvmOneOfMethodAndClassGenerator : OneOfMethodAndClassGenerator(true) {
-    override val attrs: List<KModifier> = listOf(KModifier.ACTUAL)
+object IosJvmOneOfMethodAndClassGenerator : ActualOneOfMethodAndClassGenerator() {
 
-    override fun modifyOneOfProperty(builder: PropertySpec.Builder, message: ProtoMessage, oneOf: ProtoOneOf) {
-        builder.initializer(Const.Message.OneOf.propertyName(message, oneOf))
-    }
+    override fun modifyParentClass(
+        builder: TypeSpec.Builder,
+        message: ProtoMessage,
+        oneOf: ProtoOneOf
+    ) {
+        super.modifyParentClass(builder, message, oneOf)
 
-    override fun modifyParentClass(builder: TypeSpec.Builder, message: ProtoMessage, oneOf: ProtoOneOf) {
         builder.addProperty(Const.Message.OneOf.IosJvm.REQUIRED_SIZE_PROPERTY_NAME, INT, KModifier.ABSTRACT)
-        addSerializeFunction(builder, listOf(KModifier.ABSTRACT)) {
-
-        }
     }
 
     override fun modifyChildClass(
@@ -27,6 +27,8 @@ object IosJvmOneOfMethodAndClassGenerator : OneOfMethodAndClassGenerator(true) {
         oneOf: ProtoOneOf,
         childClassType: ChildClassType
     ) {
+        super.modifyChildClass(builder, message, oneOf, childClassType)
+
         builder.addProperty(
             PropertySpec
                 .builder(
@@ -47,37 +49,6 @@ object IosJvmOneOfMethodAndClassGenerator : OneOfMethodAndClassGenerator(true) {
                         ChildClassType.Unknown -> CodeBlock.of("0")
                     }
                 )
-                .build()
-        )
-
-        addSerializeFunction(builder, listOf(KModifier.OVERRIDE)) {
-            when (childClassType) {
-                is ChildClassType.Normal -> addCode(
-                    IosJvmProtoFileWriteBase.getWriteScalarFieldCode(
-                        message,
-                        childClassType.attr,
-                        Const.Message.OneOf.IosJvm.SERIALIZE_FUNCTION_STREAM_PARAM_NAME,
-                        performIsMessageSetCheck = false
-                    )
-                )
-                ChildClassType.Unknown, ChildClassType.NotSet -> {
-                }
-            }
-
-        }
-    }
-
-    private fun addSerializeFunction(
-        builder: TypeSpec.Builder,
-        modifiers: List<KModifier>,
-        modify: FunSpec.Builder.() -> Unit
-    ) {
-        builder.addFunction(
-            FunSpec
-                .builder(Const.Message.OneOf.IosJvm.SERIALIZE_FUNCTION_NAME)
-                .addModifiers(modifiers)
-                .addParameter(Const.Message.OneOf.IosJvm.SERIALIZE_FUNCTION_STREAM_PARAM_NAME, CodedOutputStream)
-                .apply(modify)
                 .build()
         )
     }

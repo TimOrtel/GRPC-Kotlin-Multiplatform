@@ -1,6 +1,9 @@
 package io.github.timortel.kotlin_multiplatform_grpc_lib
 
+import org.khronos.webgl.Uint8Array
+
 @JsModule("google-protobuf")
+@JsNonModule
 external object JSPB {
 
     object Message {
@@ -42,7 +45,7 @@ external object JSPB {
         @JsName("encoder_")
         val encoder: BinaryEncoder
 
-        fun getResultBuffer(): dynamic
+        fun getResultBuffer(): Uint8Array
 
         fun writeDouble(field: Int, value: Double)
         fun writeFloat(field: Int, value: Float)
@@ -101,15 +104,31 @@ external object JSPB {
 
         @JsName("appendUint8Array_")
         fun appendUint8Array(value: dynamic)
+
+        @JsName("beginDelimited_")
+        fun beginDelimited(field: Int): dynamic
+
+        @JsName("endDelimited_")
+        fun endDelimited(bookmark: dynamic)
+
+        fun beginSubMessage(fieldNumber: Int)
+
+        fun endSubMessage()
     }
 
     class BinaryReader(bytes: dynamic) {
 
         @JsName("nextField_")
-        val nextField: Int
+        var nextField: Int
+
+        @JsName("nextWireType_")
+        var nextWireType: Int
 
         @JsName("decoder_")
         val decoder: BinaryDecoder
+
+        @JsName("fieldCursor_")
+        var fieldCursor: dynamic
 
         fun nextField(): Boolean
 
@@ -158,6 +177,10 @@ external object JSPB {
         fun getEnd(): Int
 
         fun atEnd(): Boolean
+
+        fun readUnsignedVarint32(): Int
+
+        fun getCursor(): dynamic
     }
 
     class BinaryEncoder {

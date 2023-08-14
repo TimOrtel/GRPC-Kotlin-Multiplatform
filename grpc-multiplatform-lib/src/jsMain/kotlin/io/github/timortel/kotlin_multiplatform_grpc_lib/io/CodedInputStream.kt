@@ -6,15 +6,23 @@ import io.github.timortel.kotlin_multiplatform_grpc_lib.message.KMMessage
 import org.khronos.webgl.Int8Array
 import org.khronos.webgl.Uint8Array
 
-actual class CodedInputStream(private val impl: JSPB.BinaryReader, actual var recursionDepth: Int = 0) {
+actual class CodedInputStream(
+    private val impl: JSPB.BinaryReader,
+    actual var recursionDepth: Int = 0
+) {
 
     actual val bytesUntilLimit: Int get() = throw NotImplementedError()
     actual val isAtEnd: Boolean
         get() = impl.decoder.atEnd()
 
     actual fun readTag(): Int {
-        impl.nextField()
-        return impl.nextField
+        if (isAtEnd) return 0
+        impl.fieldCursor = impl.decoder.getCursor()
+        val tag = impl.decoder.readUnsignedVarint32()
+
+        impl.nextField = tag ushr 3
+        impl.nextWireType = tag and 0x7
+        return tag
     }
 
     actual fun checkLastTagWas(value: Int) {
@@ -48,7 +56,7 @@ actual class CodedInputStream(private val impl: JSPB.BinaryReader, actual var re
 
     actual fun readUInt64(): ULong = impl.readUInt64() as ULong
 
-    actual fun readInt64(): Long = impl.readInt64() as Long
+    actual fun readInt64(): Long = (impl.readInt64() as Number).toLong()
 
     actual fun readInt32(): Int = impl.readInt32()
 

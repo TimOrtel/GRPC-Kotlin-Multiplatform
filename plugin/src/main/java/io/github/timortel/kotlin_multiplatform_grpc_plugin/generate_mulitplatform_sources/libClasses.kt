@@ -2,6 +2,7 @@ package io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfo
 
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.MemberName
+import com.squareup.kotlinpoet.MemberName.Companion.member
 
 val kmMetadata = ClassName("io.github.timortel.kotlin_multiplatform_grpc_lib", "KMMetadata")
 val kmStub = ClassName("io.github.timortel.kotlin_multiplatform_grpc_lib.stub", "KMStub")
@@ -27,3 +28,7 @@ val readMapEntry = MemberName(PACKAGE_IO, "readMapEntry")
 
 val iosUnaryCallImplementation = MemberName("io.github.timortel.kotlin_multiplatform_grpc_lib.rpc", "unaryCallImplementation")
 val iosServerSideStreamingCallImplementation = MemberName("io.github.timortel.kotlin_multiplatform_grpc_lib.rpc", "serverSideStreamingCallImplementation")
+
+private val JSPB = ClassName("io.github.timortel.kotlin_multiplatform_grpc_lib", "JSPB")
+val JSPB_BINARY_WRITER = JSPB.nestedClass("BinaryWriter")
+val JSPB_BINARY_READER = JSPB.nestedClass("BinaryReader")

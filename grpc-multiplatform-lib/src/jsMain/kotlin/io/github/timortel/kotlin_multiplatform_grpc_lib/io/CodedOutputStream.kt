@@ -2,10 +2,9 @@ package io.github.timortel.kotlin_multiplatform_grpc_lib.io
 
 import io.github.timortel.kotlin_multiplatform_grpc_lib.JSPB
 import io.github.timortel.kotlin_multiplatform_grpc_lib.message.KMMessage
-import io.github.timortel.kotlin_multiplatform_grpc_lib.message.requiredSizeMessage
 import io.github.timortel.kotlin_multiplatform_grpc_lib.message.serializeMessage
 
-actual class CodedOutputStream(private val impl: JSPB.BinaryWriter) {
+actual class CodedOutputStream(internal val impl: JSPB.BinaryWriter) {
 
     actual fun writeBool(fieldNumber: Int, value: Boolean) = impl.writeBool(fieldNumber, value)
 
@@ -185,24 +184,20 @@ actual class CodedOutputStream(private val impl: JSPB.BinaryWriter) {
     actual fun writeMessage(
         fieldNumber: Int,
         value: KMMessage
-    ) = writeKMMessage(
-        this,
-        fieldNumber,
-        value,
-        value.requiredSize.toUInt(),
-        serializeMessage
-    )
+    ) {
+        val bookmark = impl.beginDelimited(fieldNumber)
+        value.serialize(this)
+        impl.endDelimited(bookmark)
+    }
 
     actual fun writeMessageArray(
         fieldNumber: Int,
         values: List<KMMessage>
-    ) = writeMessageList(
-        this,
-        fieldNumber,
-        values,
-        requiredSizeMessage,
-        serializeMessage
-    )
+    ) {
+        values.forEach { message ->
+            writeMessage(fieldNumber, message)
+        }
+    }
 
     actual fun writeMessageNoTag(value: KMMessage) {
         serializeMessage(value, this)

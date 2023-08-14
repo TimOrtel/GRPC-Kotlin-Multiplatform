@@ -53,7 +53,7 @@ class JvmProtoFileWriter(protoFile: ProtoFile) : IosJvmProtoFileWriteBase(protoF
             )
             .addStatement(
                 "return %N(stream)",
-                Const.Message.Companion.IOS.WrapperDeserializationFunction.NAME
+                Const.Message.Companion.WrapperDeserializationFunction.NAME
             )
             .build()
 

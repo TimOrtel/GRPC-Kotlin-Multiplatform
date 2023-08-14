@@ -17,8 +17,7 @@ import java.io.File
 /**
  * File writer that writes Kotlin Multiplatform Proto Files. These are platform independent.
  */
-class CommonProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(protoFile, false),
-    DefaultChildClassName {
+class CommonProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(protoFile, false) {
 
     override val scalarMessageMethodGenerator: ScalarMessageMethodGenerator = CommonScalarMessageMethodGenerator
 
@@ -49,9 +48,6 @@ class CommonProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(
     }
 
     override fun applyToClass(builder: TypeSpec.Builder, message: ProtoMessage, messageClassName: ClassName) = Unit
-
-    override fun getChildClassName(parentClass: ClassName?, childName: String): ClassName =
-        getChildClassName(parentClass, childName, protoFile.pkg)
 
     override fun applyToEqualsFunction(
         builder: FunSpec.Builder,
