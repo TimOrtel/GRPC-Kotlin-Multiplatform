@@ -193,7 +193,7 @@ class JvmProtoFileWriter(protoFile: ProtoFile) : IosJvmProtoFileWriteBase(protoF
                                         ClassName(PACKAGE_PROTOBUF, "ExtensionRegistryLite").copy(nullable = true)
                                     )
                                     .returns(messageClassName)
-                                    .addStatement("return deserialize(%T(input))", CodedInputStream)
+                                    .addStatement("return %N(%T(input))", Const.Message.Companion.WrapperDeserializationFunction.NAME, CodedInputStream)
                                     .build()
                             )
                             .build()
