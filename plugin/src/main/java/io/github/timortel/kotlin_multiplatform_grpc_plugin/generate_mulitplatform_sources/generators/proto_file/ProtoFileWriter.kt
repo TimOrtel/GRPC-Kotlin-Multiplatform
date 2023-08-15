@@ -23,6 +23,9 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfor
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.writeMap
 import java.io.File
 
+/**
+ * Generates the kotlin code for the .proto files.
+ */
 abstract class ProtoFileWriter(private val protoFile: ProtoFile, private val isActual: Boolean) {
 
     abstract val scalarMessageMethodGenerator: ScalarMessageMethodGenerator
@@ -91,7 +94,7 @@ abstract class ProtoFileWriter(private val protoFile: ProtoFile, private val isA
 
                 applyToClass(this, message, messageClassName)
 
-                //Write child messages
+                // Write child messages
                 message.children.forEach { childMessage ->
                     addType(
                         generateProtoMessageClass(

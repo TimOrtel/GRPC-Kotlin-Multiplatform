@@ -7,26 +7,25 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfor
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoFile
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoMessage
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.map.IosJvmMapMessageMethodGenerator
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.map.ActualMapMessageMethodGenerator
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.map.MapMessageMethodGenerator
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.oneof.IosJvmOneOfMethodAndClassGenerator
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.oneof.OneOfMethodAndClassGenerator
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.repeated.IosJvmRepeatedMessageMethodGenerator
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.repeated.ActualRepeatedMessageMethodGenerator
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.repeated.RepeatedMessageMethodGenerator
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.scalar.IosJvmScalarMessageMethodGenerator
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.scalar.ActualScalarMessageMethodGenerator
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.scalar.ScalarMessageMethodGenerator
 import java.nio.ByteBuffer
-import kotlin.reflect.jvm.internal.impl.protobuf.CodedInputStream
 
 class JvmProtoFileWriter(protoFile: ProtoFile) : IosJvmProtoFileWriteBase(protoFile) {
 
-    override val scalarMessageMethodGenerator: ScalarMessageMethodGenerator = IosJvmScalarMessageMethodGenerator
+    override val scalarMessageMethodGenerator: ScalarMessageMethodGenerator = ActualScalarMessageMethodGenerator
 
-    override val repeatedMessageMethodGenerator: RepeatedMessageMethodGenerator = IosJvmRepeatedMessageMethodGenerator
+    override val repeatedMessageMethodGenerator: RepeatedMessageMethodGenerator = ActualRepeatedMessageMethodGenerator
 
     override val oneOfMethodAndClassGenerator: OneOfMethodAndClassGenerator = IosJvmOneOfMethodAndClassGenerator
 
-    override val mapMessageMethodGenerator: MapMessageMethodGenerator = IosJvmMapMessageMethodGenerator
+    override val mapMessageMethodGenerator: MapMessageMethodGenerator = ActualMapMessageMethodGenerator
 
     override val serializeFunctionCode: CodeBlock
         get() = CodeBlock.builder()

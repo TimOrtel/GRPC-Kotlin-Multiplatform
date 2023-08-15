@@ -4,7 +4,10 @@ import com.squareup.kotlinpoet.FunSpec
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoMessage
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
 
-object IosJvmDslBuilder : DslBuilder(true) {
+/**
+ * For JVM, JS and iOS
+ */
+object ActualDslBuilder : DslBuilder(true) {
 
     override fun modifyBuildFunction(builder: FunSpec.Builder, message: ProtoMessage) {
         builder.apply {
