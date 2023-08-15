@@ -178,9 +178,27 @@ external object JSPB {
 
         fun atEnd(): Boolean
 
-        fun readUnsignedVarint32(): Int
+        fun readInt32(): Number
+        fun readInt64(): Number
 
-        fun getCursor(): dynamic
+        fun readZigzagVarint32(): Number
+        fun readZigzagVarint64(): Number
+
+        fun readUint32(): Number
+        fun readUint64(): Number
+
+        fun readUnsignedVarint32(): Int
+        fun readUnsignedVarint64(): Int
+
+        fun readSignedVarint32(): Int
+        fun readSignedVarint64(): Number
+
+        fun readFloat(): Float
+        fun readDouble(): Double
+
+        fun readBool(): Boolean
+
+        fun getCursor(): Int
     }
 
     class BinaryEncoder {
@@ -200,6 +218,9 @@ external object JSPB {
 
         fun writeUnsignedVarint32(value: dynamic)
         fun writeUnsignedVarint64(value: dynamic)
+
+        fun writeZigzagVarint32(value: dynamic)
+        fun writeZigzagVarint64(value: dynamic)
 
         fun writeEnum(value: Int)
         fun writeString(value: String)

@@ -11,27 +11,35 @@ actual class CodedInputStream(
     actual var recursionDepth: Int = 0
 ) {
 
+    private var lastReadTag: Int = 0
+
     actual val bytesUntilLimit: Int get() = throw NotImplementedError()
     actual val isAtEnd: Boolean
         get() = impl.decoder.atEnd()
 
     actual fun readTag(): Int {
-        if (isAtEnd) return 0
+        if (isAtEnd) {
+            lastReadTag = 0
+            return 0
+        }
         impl.fieldCursor = impl.decoder.getCursor()
         val tag = impl.decoder.readUnsignedVarint32()
 
         impl.nextField = tag ushr 3
         impl.nextWireType = tag and 0x7
+
+        lastReadTag = tag
+
         return tag
     }
 
     actual fun checkLastTagWas(value: Int) {
-        if (impl.nextField != value) {
+        if (lastReadTag != value) {
             throw ParseException()
         }
     }
 
-    actual fun getLastTag(): Int = impl.nextField
+    actual fun getLastTag(): Int = lastReadTag
 
     actual fun skipField(tag: Int): Boolean {
         // On an error skipField throws
@@ -50,19 +58,19 @@ actual class CodedInputStream(
         }
     }
 
-    actual fun readDouble(): Double = impl.readDouble()
+    actual fun readDouble(): Double = impl.decoder.readDouble()
 
-    actual fun readFloat(): Float = impl.readFloat()
+    actual fun readFloat(): Float = impl.decoder.readFloat()
 
-    actual fun readUInt64(): ULong = impl.readUInt64() as ULong
+    actual fun readUInt64(): ULong = impl.decoder.readUnsignedVarint64().toLong().toULong()
 
-    actual fun readInt64(): Long = (impl.readInt64() as Number).toLong()
+    actual fun readInt64(): Long = impl.decoder.readSignedVarint64().toLong()
 
-    actual fun readInt32(): Int = impl.readInt32()
+    actual fun readInt32(): Int = impl.decoder.readSignedVarint32()
 
-    actual fun readFixed32(): Int = impl.readFixed32() as Int
+    actual fun readFixed32(): Int = impl.decoder.readUint32().toInt()
 
-    actual fun readBool(): Boolean = impl.readBool()
+    actual fun readBool(): Boolean = impl.decoder.readBool()
 
     actual fun readString(): String = impl.readString()
 
@@ -100,27 +108,27 @@ actual class CodedInputStream(
 
     actual fun readByteArray(): ByteArray = throw NotImplementedError()
 
-    actual fun readUInt32(): UInt = impl.readUInt32() as UInt
+    actual fun readUInt32(): UInt = impl.decoder.readUnsignedVarint32().toUInt()
 
-    actual fun readEnum(): Int = impl.readEnum()
+    actual fun readEnum(): Int = impl.decoder.readSignedVarint64().toInt()
 
-    actual fun readSFixed32(): Int = impl.readSfixed32() as Int
+    actual fun readSFixed32(): Int = impl.decoder.readInt32().toInt()
 
-    actual fun readSFixed64(): Long = impl.readSfixed64() as Long
+    actual fun readSFixed64(): Long = impl.decoder.readInt64().toLong()
 
-    actual fun readSInt32(): Int = impl.readSInt32() as Int
+    actual fun readSInt32(): Int = impl.decoder.readZigzagVarint32().toInt()
 
-    actual fun readSInt64(): Long = impl.readSInt64() as Long
+    actual fun readSInt64(): Long = impl.decoder.readZigzagVarint32().toLong()
 
-    actual fun readRawVarint32(): Int = impl.readInt32()
+    actual fun readRawVarint32(): Int = impl.decoder.readSignedVarint32()
 
-    actual fun readRawVarint64(): Long = impl.readInt64() as Long
+    actual fun readRawVarint64(): Long = impl.decoder.readSignedVarint64().toLong()
 
     actual fun readRawByte(): Byte = throw NotImplementedError("Not available in js")
 
     actual fun pushLimit(newLimit: Int): Int {
         val oldLimit = impl.decoder.getEnd()
-        impl.decoder.setEnd(newLimit)
+        impl.decoder.setEnd(impl.decoder.getCursor() + newLimit)
         return oldLimit
     }
 

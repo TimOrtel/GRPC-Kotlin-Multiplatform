@@ -46,15 +46,3 @@ fun <T> writeArray(
         values.forEach { writeTag(fieldNumber, it) }
     }
 }
-
-fun writeArray(
-    tag: UInt,
-    writeRepeated: () -> Unit,
-    writePacked: () -> Unit
-) {
-    if (tag != 0u) {
-        writePacked()
-    } else {
-        writeRepeated()
-    }
-}

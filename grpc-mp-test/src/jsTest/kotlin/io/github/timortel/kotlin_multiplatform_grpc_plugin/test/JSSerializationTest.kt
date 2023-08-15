@@ -7,7 +7,8 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.basic_messages.*
 class JSSerializationTest : SerializationTest() {
 
     private fun <T : KMMessage> serializeImpl(msg: T, deserializer: MessageDeserializer<T, dynamic>): T {
-        return deserializer.deserialize(msg.serialize())
+        val buffer = msg.serialize()
+        return deserializer.deserialize(buffer)
     }
 
     override fun serialize(message: KMLongMessage): KMLongMessage =
@@ -25,4 +26,6 @@ class JSSerializationTest : SerializationTest() {
         serializeImpl(message, KMMessageWithEverything.Companion)
 
     override fun serialize(message: KMOneOfMessage): KMOneOfMessage = serializeImpl(message, KMOneOfMessage.Companion)
+
+    override fun serialize(message: KMComplexRepeatedMessage): KMComplexRepeatedMessage = serializeImpl(message, KMComplexRepeatedMessage.Companion)
 }

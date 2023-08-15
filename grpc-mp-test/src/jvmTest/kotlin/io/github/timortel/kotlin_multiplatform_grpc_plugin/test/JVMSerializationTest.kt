@@ -25,4 +25,6 @@ class JVMSerializationTest : SerializationTest() {
         serializeImpl(message, KMMessageWithEverything.Companion)
 
     override fun serialize(message: KMOneOfMessage): KMOneOfMessage = serializeImpl(message, KMOneOfMessage.Companion)
+
+    override fun serialize(message: KMComplexRepeatedMessage): KMComplexRepeatedMessage = serializeImpl(message, KMComplexRepeatedMessage.Companion)
 }

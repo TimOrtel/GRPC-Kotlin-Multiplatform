@@ -12,11 +12,7 @@ actual class CodedOutputStream(internal val impl: JSPB.BinaryWriter) {
         fieldNumber: Int,
         value: List<Boolean>,
         tag: UInt
-    ) = writeArray(tag, writePacked = {
-        impl.writePackedBool(fieldNumber, value)
-    }, writeRepeated = {
-        impl.writeRepeatedBool(fieldNumber, value)
-    })
+    ) = writeArray(this, fieldNumber, value, tag, writeNoTag = ::writeBoolNoTag, writeWithTag = ::writeBool)
 
     actual fun writeBoolNoTag(value: Boolean) {
         impl.encoder.writeBool(value)
@@ -48,11 +44,7 @@ actual class CodedOutputStream(internal val impl: JSPB.BinaryWriter) {
         fieldNumber: Int,
         values: List<Double>,
         tag: UInt
-    ) = writeArray(tag, writePacked = {
-        impl.writePackedDouble(fieldNumber, values)
-    }, writeRepeated = {
-        impl.writeRepeatedDouble(fieldNumber, values)
-    })
+    ) = writeArray(this, fieldNumber, values, tag, writeNoTag = ::writeDoubleNoTag, writeWithTag = ::writeDouble)
 
     actual fun writeDoubleNoTag(value: Double) {
         impl.encoder.writeDouble(value)
@@ -66,11 +58,7 @@ actual class CodedOutputStream(internal val impl: JSPB.BinaryWriter) {
         fieldNumber: Int,
         values: List<Int>,
         tag: UInt
-    ) = writeArray(tag, writePacked = {
-        impl.writePackedEnum(fieldNumber, values)
-    }, writeRepeated = {
-        impl.writeRepeatedEnum(fieldNumber, values)
-    })
+    ) = writeArray(this, fieldNumber, values, tag, writeNoTag = ::writeEnumNoTag, writeWithTag = ::writeEnum)
 
     actual fun writeEnumNoTag(value: Int) {
         impl.encoder.writeEnum(value)
@@ -84,11 +72,7 @@ actual class CodedOutputStream(internal val impl: JSPB.BinaryWriter) {
         fieldNumber: Int,
         values: List<UInt>,
         tag: UInt
-    ) = writeArray(tag, writePacked = {
-        impl.writePackedFixed32(fieldNumber, values)
-    }, writeRepeated = {
-        impl.writeRepeatedFixed32(fieldNumber, values)
-    })
+    ) = writeArray(this, fieldNumber, values, tag, writeNoTag = ::writeFixed32NoTag, writeWithTag = ::writeFixed32)
 
     actual fun writeFixed32NoTag(value: UInt) {
         impl.encoder.writeUint32(value)
@@ -102,11 +86,7 @@ actual class CodedOutputStream(internal val impl: JSPB.BinaryWriter) {
         fieldNumber: Int,
         values: List<ULong>,
         tag: UInt
-    ) = writeArray(tag, writePacked = {
-        impl.writePackedFixed64(fieldNumber, values)
-    }, writeRepeated = {
-        impl.writeRepeatedFixed64(fieldNumber, values)
-    })
+    ) = writeArray(this, fieldNumber, values, tag, writeNoTag = ::writeFixed64NoTag, writeWithTag = ::writeFixed64)
 
     actual fun writeFixed64NoTag(value: ULong) {
         impl.encoder.writeUint64(value)
@@ -120,11 +100,7 @@ actual class CodedOutputStream(internal val impl: JSPB.BinaryWriter) {
         fieldNumber: Int,
         values: List<Float>,
         tag: UInt
-    ) = writeArray(tag, writePacked = {
-        impl.writePackedFloat(fieldNumber, values)
-    }, writeRepeated = {
-        impl.writeRepeatedFloat(fieldNumber, values)
-    })
+    ) = writeArray(this, fieldNumber, values, tag, writeNoTag = ::writeFloatNoTag, writeWithTag = ::writeFloat)
 
     actual fun writeFloatNoTag(value: Float) {
         impl.encoder.writeFloat(value)
@@ -153,14 +129,10 @@ actual class CodedOutputStream(internal val impl: JSPB.BinaryWriter) {
         fieldNumber: Int,
         values: List<Int>,
         tag: UInt
-    ) = writeArray(tag, writePacked = {
-        impl.writePackedInt32(fieldNumber, values)
-    }, writeRepeated = {
-        impl.writeRepeatedInt32(fieldNumber, values)
-    })
+    ) = writeArray(this, fieldNumber, values, tag, writeNoTag = ::writeInt32NoTag, writeWithTag = ::writeInt32)
 
     actual fun writeInt32NoTag(value: Int) {
-        impl.encoder.writeInt32(value)
+        impl.encoder.writeSignedVarint32(value)
     }
 
     actual fun writeInt64(fieldNumber: Int, value: Long) {
@@ -171,14 +143,10 @@ actual class CodedOutputStream(internal val impl: JSPB.BinaryWriter) {
         fieldNumber: Int,
         values: List<Long>,
         tag: UInt
-    ) = writeArray(tag, writePacked = {
-        impl.writePackedInt64(fieldNumber, values)
-    }, writeRepeated = {
-        impl.writeRepeatedInt64(fieldNumber, values)
-    })
+    ) = writeArray(this, fieldNumber, values, tag, writeNoTag = ::writeInt64NoTag, writeWithTag = ::writeInt64)
 
     actual fun writeInt64NoTag(value: Long) {
-        impl.encoder.writeInt64(value)
+        impl.encoder.writeSignedVarint64(value)
     }
 
     actual fun writeMessage(
@@ -245,11 +213,7 @@ actual class CodedOutputStream(internal val impl: JSPB.BinaryWriter) {
         fieldNumber: Int,
         values: List<Int>,
         tag: UInt
-    ) = writeArray(tag, writePacked = {
-        impl.writePackedSfixed32(fieldNumber, values)
-    }, writeRepeated = {
-        impl.writeRepeatedSfixed32(fieldNumber, values)
-    })
+    ) = writeArray(this, fieldNumber, values, tag, writeNoTag = ::writeSFixed32NoTag, writeWithTag = ::writeSFixed32)
 
     actual fun writeSFixed32NoTag(value: Int) {
         impl.encoder.writeSplitFixed32(value)
@@ -263,11 +227,7 @@ actual class CodedOutputStream(internal val impl: JSPB.BinaryWriter) {
         fieldNumber: Int,
         values: List<Long>,
         tag: UInt
-    ) = writeArray(tag, writePacked = {
-        impl.writePackedSfixed64(fieldNumber, values)
-    }, writeRepeated = {
-        impl.writeRepeatedSfixed64(fieldNumber, values)
-    })
+    ) = writeArray(this, fieldNumber, values, tag, writeNoTag = ::writeSFixed64NoTag, writeWithTag = ::writeSFixed64)
 
     actual fun writeSFixed64NoTag(value: Long) {
         impl.encoder.writeSplitFixed64(value)
@@ -281,14 +241,10 @@ actual class CodedOutputStream(internal val impl: JSPB.BinaryWriter) {
         fieldNumber: Int,
         values: List<Int>,
         tag: UInt
-    ) = writeArray(tag, writePacked = {
-        impl.writePackedSint32(fieldNumber, values)
-    }, writeRepeated = {
-        impl.writeRepeatedSint32(fieldNumber, values)
-    })
+    ) = writeArray(this, fieldNumber, values, tag, writeNoTag = ::writeSInt32NoTag, writeWithTag = ::writeSInt32)
 
     actual fun writeSInt32NoTag(value: Int) {
-        impl.encoder.writeSignedVarint32(value)
+        impl.encoder.writeZigzagVarint32(value)
     }
 
     actual fun writeSInt64(fieldNumber: Int, value: Long) {
@@ -299,14 +255,10 @@ actual class CodedOutputStream(internal val impl: JSPB.BinaryWriter) {
         fieldNumber: Int,
         values: List<Long>,
         tag: UInt
-    ) = writeArray(tag, writePacked = {
-        impl.writePackedSint64(fieldNumber, values)
-    }, writeRepeated = {
-        impl.writeRepeatedSint64(fieldNumber, values)
-    })
+    ) = writeArray(this, fieldNumber, values, tag, writeNoTag = ::writeSInt64NoTag, writeWithTag = ::writeSInt64)
 
     actual fun writeSInt64NoTag(value: Long) {
-        impl.encoder.writeSignedVarint64(value)
+        impl.encoder.writeZigzagVarint64(value)
     }
 
     actual fun writeString(fieldNumber: Int, value: String) {
@@ -317,7 +269,7 @@ actual class CodedOutputStream(internal val impl: JSPB.BinaryWriter) {
         fieldNumber: Int,
         values: List<String>
     ) {
-        impl.writeRepeatedString(fieldNumber, values)
+        values.forEach { value -> writeString(fieldNumber, value) }
     }
 
     actual fun writeStringNoTag(value: String) {
@@ -339,11 +291,7 @@ actual class CodedOutputStream(internal val impl: JSPB.BinaryWriter) {
         fieldNumber: Int,
         values: List<UInt>,
         tag: UInt
-    ) = writeArray(tag, writePacked = {
-        impl.writePackedUint32(fieldNumber, values)
-    }, writeRepeated = {
-        impl.writeRepeatedUint32(fieldNumber, values)
-    })
+    ) = writeArray(this, fieldNumber, values, tag, writeNoTag = ::writeUInt32NoTag, writeWithTag = ::writeUInt32)
 
     actual fun writeUInt32NoTag(value: UInt) {
         impl.encoder.writeUnsignedVarint32(value)
@@ -357,11 +305,7 @@ actual class CodedOutputStream(internal val impl: JSPB.BinaryWriter) {
         fieldNumber: Int,
         values: List<ULong>,
         tag: UInt
-    ) = writeArray(tag, writePacked = {
-        impl.writePackedUint64(fieldNumber, values)
-    }, writeRepeated = {
-        impl.writeRepeatedUint64(fieldNumber, values)
-    })
+    ) = writeArray(this, fieldNumber, values, tag, writeNoTag = ::writeUInt64NoTag, writeWithTag = ::writeUInt64)
 
     actual fun writeUInt64NoTag(value: ULong) {
         impl.encoder.writeUnsignedVarint64(value)

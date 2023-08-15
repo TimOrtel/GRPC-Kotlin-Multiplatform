@@ -291,7 +291,7 @@ abstract class ActualProtoFileWriter(protoFile: ProtoFile) : ProtoFileWriter(pro
                     }
 
                     is MapType -> {
-
+                        buildMapAttributeSerializeCode(builder, message, attr, attr.attributeType)
                     }
                 }
             }
