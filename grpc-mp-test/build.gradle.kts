@@ -55,6 +55,12 @@ kotlin {
     }
 
     sourceSets {
+        all {
+            languageSettings {
+                optIn("kotlinx.cinterop.ExperimentalForeignApi")
+            }
+        }
+
         commonMain {
             dependencies {
                 api(project(":grpc-multiplatform-lib"))
@@ -158,8 +164,6 @@ tasks.findByName("jvmTest")?.let {
 }
 
 tasks.named("iosSimulatorArm64Test", KotlinNativeSimulatorTest::class).configure {
-    device = "iPhone 14"
-
     doFirst {
         TestServer.start()
     }
