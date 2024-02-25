@@ -32,7 +32,6 @@ kotlin {
     js(IR) {
         useCommonJs()
 
-        nodejs()
         browser()
     }
 

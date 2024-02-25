@@ -99,9 +99,9 @@ kotlin {
 
         jsMain {
             dependencies {
-                api(npm("google-protobuf", "^3.19.1"))
-                api(npm("grpc-web", "^1.3.0"))
-                api(npm("protobufjs", "^6.11.2"))
+                api(npm("google-protobuf", "^3.21.2"))
+                api(npm("grpc-web", "^1.5.0"))
+                api(npm("protobufjs", "^7.2.6"))
             }
         }
 

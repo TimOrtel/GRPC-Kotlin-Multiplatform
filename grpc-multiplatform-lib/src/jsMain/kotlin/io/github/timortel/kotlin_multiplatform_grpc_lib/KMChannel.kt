@@ -4,8 +4,7 @@ package io.github.timortel.kotlin_multiplatform_grpc_lib
 actual class KMChannel private constructor(
     name: String,
     port: Int,
-    usePlainText: Boolean,
-    val metadata: KMMetadata
+    usePlainText: Boolean
 ) {
 
     val connectionString = (if (usePlainText) "http://" else "https://") + "$name:$port"
@@ -26,6 +25,6 @@ actual class KMChannel private constructor(
             return this
         }
 
-        actual fun build(): KMChannel = KMChannel(name, port, usePlainText, KMMetadata())
+        actual fun build(): KMChannel = KMChannel(name, port, usePlainText)
     }
 }

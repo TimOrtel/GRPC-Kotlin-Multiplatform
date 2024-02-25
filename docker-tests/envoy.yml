@@ -19,7 +19,7 @@ static_resources:
                   name: local_route
                   virtual_hosts:
                     - name: local_service
-                      domains: ["*"]
+                      domains: [ "*" ]
                       routes:
                         - match: { prefix: "/" }
                           route:
@@ -48,7 +48,7 @@ static_resources:
     - name: echo_service
       connect_timeout: 0.25s
       type: logical_dns
-      http2_protocol_options: {}
+      http2_protocol_options: { }
       lb_policy: round_robin
       load_assignment:
         cluster_name: cluster_0
@@ -58,4 +58,4 @@ static_resources:
                   address:
                     socket_address:
                       address: 127.0.0.1
-                      port_value: 17600
+                      port_value: 17888

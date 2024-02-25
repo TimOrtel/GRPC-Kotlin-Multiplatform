@@ -43,12 +43,18 @@ fun <JS_RESPONSE> serverSideStreamingCallImplementation(performCall: () -> dynam
 
         stream.on("end") {
             close()
+            Unit
         }
 
         stream.on("status") { status ->
             //If the status is not ok, we throw an error
             if (status.code as Int != 0) {
-                close(KMStatusException(KMStatus(KMCode.getCodeForValue(status.code as Int), status.details as String), null))
+                close(
+                    KMStatusException(
+                        KMStatus(KMCode.getCodeForValue(status.code as Int), status.details as String),
+                        null
+                    )
+                )
             }
         }
 
@@ -60,4 +66,6 @@ fun <JS_RESPONSE> serverSideStreamingCallImplementation(performCall: () -> dynam
             stream.cancel() as Unit
         }
     }
+        // Catch a very weird bug that occurs when calling close()
+        .catch { if (it !is ClassCastException) throw it }
 }
