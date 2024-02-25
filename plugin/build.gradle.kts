@@ -69,3 +69,7 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().all {
         freeCompilerArgs = listOf("-Xopt-in=kotlin.RequiresOptIn", "-Xopt-in=kotlin.ExperimentalStdlibApi")
     }
 }
+
+tasks.withType<Jar>().all {
+    dependsOn("generateGrammarSource")
+}

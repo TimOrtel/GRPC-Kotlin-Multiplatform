@@ -1,5 +1,5 @@
 [versions]
-grpcKotlinMultiplatform = "0.3.0"
+grpcKotlinMultiplatform = "0.4.0"
 
 androidGradlePlugin = "8.2.0"
 androidCompileSdk = "34"
@@ -13,7 +13,7 @@ protobufJvm = "3.25.3"
 protobufGradlePlugin = "0.9.4"
 
 kotlinxCoroutines = "1.8.0"
-antlr = "4.11.1"
+antlr = "4.13.1"
 
 gradlePluginPublish = "1.2.1"
 
