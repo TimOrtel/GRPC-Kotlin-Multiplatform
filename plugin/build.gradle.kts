@@ -14,13 +14,10 @@ java {
     withJavadocJar()
 }
 
-pluginBundle {
+gradlePlugin {
     website = "https://github.com/TimOrtel/GRPC-Kotlin-Multiplatform"
     vcsUrl = "https://github.com/TimOrtel/GRPC-Kotlin-Multiplatform.git"
-    tags = listOf("grpc", "protobuf", "kotlin-multiplatform", "kotlin", "multiplatform")
-}
 
-gradlePlugin {
     plugins {
         create("kotlin-multiplatform-grpc-plugin") {
             id = "io.github.timortel.kotlin-multiplatform-grpc-plugin"

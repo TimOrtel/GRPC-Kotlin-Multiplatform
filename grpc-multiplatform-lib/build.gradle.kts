@@ -81,10 +81,8 @@ kotlin {
         jvmMain {
             dependsOn(androidJvmCommon)
             dependencies {
-                api(libs.google.protobuf.kotlin)
-                api(libs.google.protobuf.java.util)
-                api(libs.grpc.protobuf)
                 api(libs.grpc.stub)
+                api(libs.grpc.protobuf.lite)
                 api(libs.grpc.kotlin.stub)
             }
         }
@@ -96,7 +94,6 @@ kotlin {
                 api(libs.grpc.stub)
                 api(libs.grpc.protobuf.lite)
                 api(libs.grpc.kotlin.stub)
-                api(libs.google.protobuf.kotlin.lite)
             }
         }
 

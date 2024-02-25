@@ -15,7 +15,6 @@ import platform.Foundation.create
  */
 actual class CodedOutputStream(private val impl: GPBCodedOutputStream) {
 
-    @OptIn(ExperimentalForeignApi::class)
     companion object {
         private val ByteArray.native: NSData get() {
             return memScoped {
