@@ -36,9 +36,10 @@ kotlin {
         browser()
     }
 
-    ios()
     iosArm64()
     iosSimulatorArm64()
+
+    applyDefaultHierarchyTemplate()
 
     cocoapods {
         summary = "GRPC Kotlin Multiplatform test library"
@@ -49,67 +50,48 @@ kotlin {
         pod("Protobuf")
     }
 
+    compilerOptions {
+        freeCompilerArgs.add("-Xexpect-actual-classes")
+    }
+
     sourceSets {
-        val commonMain by getting {
+        commonMain {
             dependencies {
                 api(project(":grpc-multiplatform-lib"))
                 implementation(libs.kotlinx.coroutines.core)
             }
         }
 
-        val commonTest by getting {
+        commonTest {
             dependencies {
                 implementation(kotlin("test"))
                 implementation(libs.kotlinx.coroutines.test)
             }
         }
 
-        val iosMain by getting
-
-        val jvmMain by getting {
-            dependencies {
-            }
-        }
-
-        val androidMain by getting {
-            dependencies {
-            }
-
-            kotlin.srcDir(projectDir.resolve("build/generated/source/kmp-grpc/jvmMain/kotlin").canonicalPath)
-        }
-
         val serializationTest by creating {
-            dependsOn(commonMain)
-            dependsOn(commonTest)
+            dependsOn(commonMain.get())
+            dependsOn(commonTest.get())
             dependencies {
                 implementation(kotlin("test"))
             }
             kotlin.srcDir(projectDir.resolve("build/generated/source/kmp-grpc/commonMain/kotlin").canonicalPath)
         }
 
-        val jsTest by getting {
+        jsTest {
             dependsOn(serializationTest)
         }
 
-        val iosTest by getting {
+        iosTest {
             dependsOn(serializationTest)
         }
 
-        val jvmTest by getting {
-            dependsOn(jvmMain)
+        jvmTest {
             dependsOn(serializationTest)
 
             dependencies {
                 runtimeOnly(libs.grpc.netty)
             }
-        }
-
-        val iosSimulatorArm64Main by getting {
-            dependsOn(iosMain)
-        }
-
-        val iosSimulatorArm64Test by getting {
-            dependsOn(iosTest)
         }
     }
 }
@@ -139,24 +121,25 @@ android {
 grpcKotlinMultiplatform {
     targetSourcesMap.put(
         OutputTarget.COMMON,
-        listOf(kotlin.sourceSets.getByName("commonMain"))
+        listOf(kotlin.sourceSets.commonMain.get())
     )
 
-    targetSourcesMap.put(
-        OutputTarget.JS,
-        listOf(kotlin.sourceSets.getByName("jsMain"), kotlin.sourceSets.getByName("jsTest"))
-    )
-    targetSourcesMap.put(
-        OutputTarget.JVM,
-        listOf(kotlin.sourceSets.getByName("androidMain"), kotlin.sourceSets.getByName("jvmMain"))
-    )
-    targetSourcesMap.put(
-        OutputTarget.IOS,
-        listOf(
-            kotlin.sourceSets.getByName("iosMain"),
-            kotlin.sourceSets.getByName("iosTest")
+    with(kotlin) {
+        targetSourcesMap.put(
+            OutputTarget.JS,
+            listOf(kotlin.sourceSets.jsMain.get(), kotlin.sourceSets.jsTest.get())
         )
-    )
+
+        targetSourcesMap.put(
+            OutputTarget.JVM,
+            listOf(kotlin.sourceSets.androidMain.get(), kotlin.sourceSets.jvmMain.get(), kotlin.sourceSets.jvmTest.get())
+        )
+
+        targetSourcesMap.put(
+            OutputTarget.IOS,
+            listOf(kotlin.sourceSets.iosMain.get(), kotlin.sourceSets.iosTest.get())
+        )
+    }
 
     val protoFolder = projectDir.resolve("src/commonMain/proto")
     protoSourceFolders.set(

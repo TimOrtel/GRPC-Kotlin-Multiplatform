@@ -16,7 +16,6 @@ class GrpcMultiplatformPlugin : Plugin<Project> {
         project.tasks.register("generateMPProtos", GenerateMultiplatformSourcesTask::class.java)
 
         project.plugins.withType(KotlinMultiplatformPluginWrapper::class.java) {
-
             project.afterEvaluate {
                 val generateMpProtosTask = project.tasks.withType(GenerateMultiplatformSourcesTask::class.java)
 

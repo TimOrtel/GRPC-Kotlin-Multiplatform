@@ -1,18 +1,18 @@
 [versions]
 grpcKotlinMultiplatform = "0.3.0"
 
-androidGradlePlugin = "8.0.2"
-androidCompileSdk = "31"
+androidGradlePlugin = "8.2.0"
+androidCompileSdk = "34"
 androidMinSdk = "21"
 
-kotlin = "1.9.0"
+kotlin = "1.9.22"
 
 grpcJvm = "1.46.0"
 grpcKotlin = "1.2.1"
 protobufJvm = "3.20.1"
 protobufGradlePlugin = "0.8.18"
 
-kotlinxCoroutines = "1.7.1"
+kotlinxCoroutines = "1.8.0"
 antlr = "4.11.1"
 
 gradlePluginPublish = "0.18.0"

@@ -15,7 +15,6 @@ actual class KMChannel(private val name: String, private val port: Int, private 
      * If any mutations are performed, a new copy of call options is returned. The original call options
      * are left unmodified.
      */
-    @OptIn(ExperimentalForeignApi::class)
     fun applyToCallOptions(callOptions: GRPCCallOptions): GRPCCallOptions {
         return if (usePlaintext) {
             val newCallOptions = callOptions.mutableCopy() as GRPCMutableCallOptions

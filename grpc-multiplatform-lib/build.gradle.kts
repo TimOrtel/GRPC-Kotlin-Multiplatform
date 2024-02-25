@@ -27,6 +27,12 @@ kotlin {
     iosArm64()
     iosSimulatorArm64()
 
+    applyDefaultHierarchyTemplate()
+
+    compilerOptions {
+        freeCompilerArgs.add("-Xexpect-actual-classes")
+    }
+
     cocoapods {
         version = "1.0"
         summary = "GRPC Kotlin Multiplatform Implementation"
@@ -44,13 +50,20 @@ kotlin {
     }
 
     sourceSets {
-        val commonMain by getting {
+        all {
+            languageSettings {
+                optIn("kotlinx.cinterop.ExperimentalForeignApi")
+            }
+        }
+
+        commonMain {
             dependencies {
                 implementation(kotlin("stdlib-common"))
                 implementation(libs.kotlinx.coroutines.core)
             }
         }
-        val commonTest by getting {
+
+        commonTest {
             dependencies {
                 implementation(kotlin("test-common"))
                 implementation(kotlin("test-annotations-common"))
@@ -58,14 +71,14 @@ kotlin {
         }
 
         val iosJvmCommon by creating {
-            dependsOn(commonMain)
+            dependsOn(commonMain.get())
         }
 
         val androidJvmCommon by creating {
             dependsOn(iosJvmCommon)
         }
 
-        val jvmMain by getting {
+        jvmMain {
             dependsOn(androidJvmCommon)
             dependencies {
                 api(libs.google.protobuf.kotlin)
@@ -76,7 +89,7 @@ kotlin {
             }
         }
 
-        val androidMain by getting {
+        androidMain {
             dependsOn(androidJvmCommon)
 
             dependencies {
@@ -87,7 +100,7 @@ kotlin {
             }
         }
 
-        val jsMain by getting {
+        jsMain {
             dependencies {
                 api(npm("google-protobuf", "^3.19.1"))
                 api(npm("grpc-web", "^1.3.0"))
@@ -95,16 +108,9 @@ kotlin {
             }
         }
 
-        val iosX64Main by getting
-        val iosArm64Main by getting
-
-        val iosSimulatorArm64Main by getting
-        val iosMain by creating {
-            dependsOn(commonMain)
+        iosMain {
+            dependsOn(commonMain.get())
             dependsOn(iosJvmCommon)
-            iosX64Main.dependsOn(this)
-            iosArm64Main.dependsOn(this)
-            iosSimulatorArm64Main.dependsOn(this)
         }
     }
 }
@@ -125,8 +131,8 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     sourceSets {
