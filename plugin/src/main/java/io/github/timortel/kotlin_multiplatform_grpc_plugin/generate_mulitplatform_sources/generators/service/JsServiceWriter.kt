@@ -63,7 +63,7 @@ object JsServiceWriter : ActualServiceWriter() {
             val clientCallCode = CodeBlock
                 .builder()
                 .add("client.${rpc.rpcName}(")
-                .add("request.jsImpl, ")
+                .add("request, ")
                 .add("actMetadata.%M", MemberName("io.github.timortel.kotlin_multiplatform_grpc_lib", "jsMetadata"))
                 .apply {
                     when (rpc.method) {
@@ -75,12 +75,8 @@ object JsServiceWriter : ActualServiceWriter() {
 
             addCode("return ")
 
-            if (rpc.method == ProtoRpc.Method.UNARY) {
-                addCode("%M(", responseCommonMember)
-            }
-
             addCode(
-                "%M<%T> {\n",
+                "%M {\n",
                 when (rpc.method) {
                     ProtoRpc.Method.UNARY -> MemberName(
                         "io.github.timortel.kotlin_multiplatform_grpc_lib.rpc",
@@ -90,23 +86,13 @@ object JsServiceWriter : ActualServiceWriter() {
                     ProtoRpc.Method.SERVER_STREAMING -> MemberName(
                         "io.github.timortel.kotlin_multiplatform_grpc_lib.rpc", "serverSideStreamingCallImplementation"
                     )
-                },
-                rpc.response.jsType
+                }
             )
 
             if (rpc.method == ProtoRpc.Method.UNARY) addCode(" callback -> ")
 
             addCode(clientCallCode)
             addCode("\n}")
-
-            when (rpc.method) {
-                ProtoRpc.Method.UNARY -> addCode(")")
-                ProtoRpc.Method.SERVER_STREAMING -> addCode(
-                    ".%M { %M(it) }",
-                    MemberName("kotlinx.coroutines.flow", "map"),
-                    responseCommonMember
-                )
-            }
         }
     }
 

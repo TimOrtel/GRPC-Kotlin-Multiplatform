@@ -1,9 +1,6 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.test
 
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.basic_messages.KMSimpleEnum
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.basic_messages.kmMessageWithEverything
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.basic_messages.kmScalarTypes
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.basic_messages.kmSimpleMessage
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.basic_messages.*
 
 fun createScalarMessage() = kmScalarTypes {
     field1 = "Test"
@@ -12,6 +9,15 @@ fun createScalarMessage() = kmScalarTypes {
     field4 = 25L
     field5 = 3f
     field6 = 7.0
+}
+
+fun createComplexRepeated() = kmComplexRepeatedMessage {
+    field1List += listOf("Foo", "Bar", "Baz")
+    field2List += listOf(true, false, true)
+    field3List += listOf(14, 142, 1, -35)
+    field4List += listOf(12L, 23424L, 10312313L, -123131L)
+    field5List += listOf(-1f, 2f, 2.5f, -0.5f)
+    field6List += listOf(-0.5, 15.0)
 }
 
 fun createMessageWithAllTypes() = kmMessageWithEverything {

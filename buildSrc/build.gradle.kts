@@ -2,10 +2,10 @@ import com.google.protobuf.gradle.*
 
 plugins {
     `kotlin-dsl`
-    kotlin("jvm") version "1.7.20"
+    kotlin("jvm") version libs.versions.kotlin.get()
 
     id("java")
-    id("com.google.protobuf") version "0.8.18"
+    id("com.google.protobuf") version libs.versions.protobufGradlePlugin.get()
 }
 
 repositories {
@@ -14,23 +14,25 @@ repositories {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:1.7.20") {
+    implementation(libs.kotlin.gradle.plugin) {
         exclude("org.antlr")
     }
-    implementation("com.android.tools.build:gradle:7.0.4") {
+    implementation(libs.android.gradle.plugin) {
         exclude("org.antlr")
     }
 
-    implementation("com.google.protobuf:protobuf-kotlin:3.20.1")
-    implementation("com.google.protobuf:protobuf-java-util:3.20.1")
-    implementation("io.grpc:grpc-protobuf:1.47.0")
-    implementation("io.grpc:grpc-stub:1.47.0")
-    implementation("io.grpc:grpc-kotlin-stub:1.2.1")
+    implementation(libs.google.protobuf.kotlin)
+    implementation(libs.google.protobuf.java.util)
+    implementation(libs.grpc.protobuf)
+    implementation(libs.grpc.stub)
+    implementation(libs.grpc.kotlin.stub)
 
-    implementation("io.grpc:grpc-netty-shaded:1.48.1")
+    implementation(libs.grpc.netty.shaded)
 
-    implementation("com.google.guava:guava:31.1-jre")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
+    implementation(libs.google.guava)
+    implementation(libs.kotlinx.coroutines.core)
+
+    implementation(project(":test-server"))
 }
 
 sourceSets {
@@ -44,7 +46,6 @@ sourceSets {
         kotlin.srcDir(buildDir.resolve("generated/source/proto/main/kotlin"))
     }
 }
-
 
 protobuf {
     protoc {
@@ -78,9 +79,10 @@ protobuf {
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions.jvmTarget = "17"
 }
+
 java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }

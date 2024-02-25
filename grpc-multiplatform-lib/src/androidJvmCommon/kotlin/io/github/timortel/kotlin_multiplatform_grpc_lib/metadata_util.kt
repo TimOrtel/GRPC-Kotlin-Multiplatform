@@ -1,5 +1,8 @@
 package io.github.timortel.kotlin_multiplatform_grpc_lib
 
+/**
+ * Convert the given multiplatform metadata to Jvm native [io.grpc.Metadata].
+ */
 val KMMetadata.jvmMetadata: io.grpc.Metadata
     get() = io.grpc.Metadata().apply {
         metadataMap.forEach { (key, value) ->

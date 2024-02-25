@@ -21,6 +21,9 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
+/**
+ * Perform a unary rpc call as a suspending function. Uses [GRPCCall2] for the actual call.
+ */
 @Throws(KMStatusException::class, CancellationException::class)
 suspend fun <REQ : KMMessage, RES : KMMessage> unaryCallImplementation(
     channel: KMChannel,
@@ -62,6 +65,10 @@ suspend fun <REQ : KMMessage, RES : KMMessage> unaryCallImplementation(
     }
 }
 
+/**
+ * Performs a server side stream call and returns a [Flow] that emits whenever we receive a new message from the server.
+ * Uses [GRPCCall2] for the actual call.
+ */
 fun <REQ : KMMessage, RES : KMMessage> serverSideStreamingCallImplementation(
     channel: KMChannel,
     callOptions: GRPCCallOptions,

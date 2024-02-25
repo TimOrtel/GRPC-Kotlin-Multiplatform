@@ -1,4 +1,9 @@
+@file:Suppress("UNUSED_VARIABLE")
+
+import io.github.timortel.kmpgrpc.testserver.TestServer
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.GrpcMultiplatformExtension.OutputTarget
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeSimulatorTest
 
 plugins {
@@ -6,7 +11,7 @@ plugins {
     kotlin("multiplatform")
     kotlin("native.cocoapods")
 
-    id("io.github.timortel.kotlin-multiplatform-grpc-plugin") version "0.2.0"
+    id("io.github.timortel.kotlin-multiplatform-grpc-plugin") version libs.versions.grpcKotlinMultiplatform.get()
 }
 
 version = "dev"
@@ -16,7 +21,7 @@ repositories {
 }
 
 kotlin {
-    android("android")
+    androidTarget("android")
 
     jvm {
         testRuns["test"].executionTask.configure {
@@ -30,9 +35,10 @@ kotlin {
         browser()
     }
 
-    ios()
     iosArm64()
     iosSimulatorArm64()
+
+    applyDefaultHierarchyTemplate()
 
     cocoapods {
         summary = "GRPC Kotlin Multiplatform test library"
@@ -43,82 +49,70 @@ kotlin {
         pod("Protobuf")
     }
 
+    compilerOptions {
+        freeCompilerArgs.add("-Xexpect-actual-classes")
+    }
+
     sourceSets {
-        val commonMain by getting {
+        all {
+            languageSettings {
+                optIn("kotlinx.cinterop.ExperimentalForeignApi")
+            }
+        }
+
+        commonMain {
             dependencies {
                 api(project(":grpc-multiplatform-lib"))
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
+                implementation(libs.kotlinx.coroutines.core)
             }
         }
 
-        val commonTest by getting {
+        commonTest {
             dependencies {
                 implementation(kotlin("test"))
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.4")
+                implementation(libs.kotlinx.coroutines.test)
             }
-        }
-
-        val iosMain by getting
-
-        val jvmMain by getting {
-            dependencies {
-            }
-        }
-
-        val androidMain by getting {
-            dependencies {
-            }
-
-            kotlin.srcDir(projectDir.resolve("build/generated/source/kmp-grpc/jvmMain/kotlin").canonicalPath)
         }
 
         val serializationTest by creating {
-            dependsOn(commonMain)
-            dependsOn(commonTest)
+            dependsOn(commonMain.get())
+            dependsOn(commonTest.get())
             dependencies {
                 implementation(kotlin("test"))
             }
             kotlin.srcDir(projectDir.resolve("build/generated/source/kmp-grpc/commonMain/kotlin").canonicalPath)
         }
 
-        val jsTest by getting {
+        jsTest {
             dependsOn(serializationTest)
         }
 
-        val iosTest by getting {
+        iosTest {
             dependsOn(serializationTest)
         }
 
-        val jvmTest by getting {
-            dependsOn(jvmMain)
+        jvmTest {
             dependsOn(serializationTest)
 
             dependencies {
-                runtimeOnly("io.grpc:grpc-netty:1.50.2")
+                runtimeOnly(libs.grpc.netty)
             }
-        }
-
-        val iosSimulatorArm64Main by getting {
-            dependsOn(iosMain)
-        }
-
-        val iosSimulatorArm64Test by getting {
-            dependsOn(iosTest)
         }
     }
 }
 
 android {
-    compileSdk = (31)
+    namespace = "io.github.timortel.kotlin_multiplatform_grpc_plugin.test"
+
+    compileSdk = libs.versions.androidCompileSdk.get().toInt()
 
     defaultConfig {
-        minSdk = (21)
-        targetSdk = (31)
+        minSdk = libs.versions.androidMinSdk.get().toInt()
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     sourceSets {
@@ -132,32 +126,31 @@ android {
 grpcKotlinMultiplatform {
     targetSourcesMap.put(
         OutputTarget.COMMON,
-        listOf(kotlin.sourceSets.getByName("commonMain"))
+        listOf(kotlin.sourceSets.commonMain.get())
     )
 
-    targetSourcesMap.put(
-        OutputTarget.JS,
-        listOf(kotlin.sourceSets.getByName("jsMain"), kotlin.sourceSets.getByName("jsTest"))
-    )
-    targetSourcesMap.put(
-        OutputTarget.JVM,
-        listOf(kotlin.sourceSets.getByName("androidMain"), kotlin.sourceSets.getByName("jvmMain"))
-    )
-    targetSourcesMap.put(
-        OutputTarget.IOS,
-        listOf(
-            kotlin.sourceSets.getByName("iosMain"),
-            kotlin.sourceSets.getByName("iosTest")
+    with(kotlin) {
+        targetSourcesMap.put(
+            OutputTarget.JS,
+            listOf(kotlin.sourceSets.jsMain.get(), kotlin.sourceSets.jsTest.get())
         )
-    )
+
+        targetSourcesMap.put(
+            OutputTarget.JVM,
+            listOf(kotlin.sourceSets.androidMain.get(), kotlin.sourceSets.jvmMain.get(), kotlin.sourceSets.jvmTest.get())
+        )
+
+        targetSourcesMap.put(
+            OutputTarget.IOS,
+            listOf(kotlin.sourceSets.iosMain.get(), kotlin.sourceSets.iosTest.get())
+        )
+    }
 
     val protoFolder = projectDir.resolve("src/commonMain/proto")
     protoSourceFolders.set(
         listOf(protoFolder)
     )
 }
-
-tasks.replace("podGenIOS", PatchedPodGenTask::class)
 
 tasks.findByName("jvmTest")?.let {
     it.doFirst {
@@ -170,8 +163,6 @@ tasks.findByName("jvmTest")?.let {
 }
 
 tasks.named("iosSimulatorArm64Test", KotlinNativeSimulatorTest::class).configure {
-    deviceId = "iPhone 14"
-
     doFirst {
         TestServer.start()
     }
@@ -179,4 +170,19 @@ tasks.named("iosSimulatorArm64Test", KotlinNativeSimulatorTest::class).configure
     doLast {
         TestServer.stop()
     }
+}
+
+tasks.withType(Test::class) {
+    testLogging.setEvents(listOf(TestLogEvent.FAILED))
+
+    testLogging.exceptionFormat = TestExceptionFormat.FULL
+    testLogging.showExceptions = true
+    testLogging.showCauses = true
+    testLogging.showStackTraces = true
+    testLogging.showStandardStreams = true
+
+    reports.junitXml.required.set(true)
+    reports.html.required.set(true)
+    reports.junitXml.outputLocation.set(rootProject.rootDir.resolve("test-outputs/${project.name}/$name/"))
+    reports.html.outputLocation.set(rootProject.rootDir.resolve("test-outputs/${project.name}/$name/"))
 }

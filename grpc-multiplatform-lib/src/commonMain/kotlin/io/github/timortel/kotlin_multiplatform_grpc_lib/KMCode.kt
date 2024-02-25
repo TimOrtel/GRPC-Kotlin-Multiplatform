@@ -24,6 +24,9 @@ enum class KMCode(val value: Int) {
     UNAUTHENTICATED(16);
 
     companion object {
+        /**
+         * Map the value back to the [KMCode].
+         */
         fun getCodeForValue(value: Int): KMCode = when (value) {
             0 -> OK
             1 -> CANCELLED

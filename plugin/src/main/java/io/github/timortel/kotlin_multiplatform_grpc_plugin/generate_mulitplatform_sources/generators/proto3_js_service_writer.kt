@@ -7,18 +7,25 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfor
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.service.JsServiceWriter
 import java.io.File
 
-private val grpcWebClientBase = ClassName("io.github.timortel.kotlin_multiplatform_grpc_lib.rpc", "GrpcWebClientBase")
-private val clientOptions = ClassName("io.github.timortel.kotlin_multiplatform_grpc_lib.rpc", "ClientOptions")
-private val methodDescriptor = ClassName("io.github.timortel.kotlin_multiplatform_grpc_lib.rpc", "MethodDescriptor")
+private val grpcWebClientBase =
+    ClassName("io.github.timortel.kotlin_multiplatform_grpc_lib.rpc", "GrpcWebClientBase")
+private val clientOptions =
+    ClassName("io.github.timortel.kotlin_multiplatform_grpc_lib.rpc", "ClientOptions")
+private val methodDescriptor =
+    ClassName("io.github.timortel.kotlin_multiplatform_grpc_lib.rpc", "MethodDescriptor")
 
 fun writeJsServiceFile(protoFile: ProtoFile, service: ProtoService, jsOutputFolder: File) {
     JsServiceWriter.writeServiceStub(protoFile, service, jsOutputFolder)
 
-    val getMethodDescriptorName = { rpc: ProtoRpc -> "${rpc.rpcName.decapitalize()}MethodDescriptor" }
+    val getMethodDescriptorName =
+        { rpc: ProtoRpc -> "${rpc.rpcName.decapitalize()}MethodDescriptor" }
 
     //js bridge
     FileSpec
-        .builder(protoFile.pkg, "${protoFile.fileNameWithoutExtension}_${service.serviceName}_service_js_bridge")
+        .builder(
+            protoFile.pkg,
+            "${protoFile.fileNameWithoutExtension}_${service.serviceName}_service_js_bridge"
+        )
         .addType(
             TypeSpec
                 .classBuilder(getJSServiceName(service))
@@ -58,17 +65,17 @@ fun writeJsServiceFile(protoFile: ProtoFile, service: ProtoService, jsOutputFold
                                 .builder(methodDescriptorName, methodDescriptor, KModifier.PRIVATE)
                                 .initializer(CodeBlock.builder().apply {
                                     addStatement(
-                                        "%T(%S, %S, ::%T, ::%T, {·request:·dynamic -> %T(request).serializeBinary() }, %T::deserializeBinary)",
+                                        "%T(%S, %S, ::%T, ::%T, {·request:·%T -> request.serialize() }, %T.Companion::deserialize)",
                                         methodDescriptor,
                                         "/${protoFile.pkg}.${service.serviceName}/${rpc.rpcName}",
                                         when (rpc.method) {
                                             ProtoRpc.Method.UNARY -> "unary"
                                             ProtoRpc.Method.SERVER_STREAMING -> "server_streaming"
                                         },
-                                        rpc.request.jsType,
-                                        rpc.response.jsType,
-                                        rpc.request.jsType,
-                                        rpc.response.jsType
+                                        rpc.request.commonType,
+                                        rpc.response.commonType,
+                                        rpc.request.commonType,
+                                        rpc.response.commonType
                                     )
                                 }.build())
                                 .build()
@@ -77,23 +84,22 @@ fun writeJsServiceFile(protoFile: ProtoFile, service: ProtoService, jsOutputFold
                         addFunction(
                             FunSpec
                                 .builder(rpc.rpcName)
-                                .addParameter("request", rpc.request.jsType)
+                                .addParameter("request", rpc.request.commonType)
                                 .addParameter("metadata", Dynamic)
                                 .apply {
                                     addCode(
-                                        "return client.%N(\"\$hostname/%L/%L\", request.%N, metadata ?: js(%S), %N",
+                                        "return client.%N(\"\$hostname/%L/%L\", request, metadata ?: js(%S), %N",
                                         when (rpc.method) {
                                             ProtoRpc.Method.UNARY -> "rpcCall"
                                             ProtoRpc.Method.SERVER_STREAMING -> "serverStreaming"
                                         },
                                         "${protoFile.pkg}.${service.serviceName}",
                                         rpc.rpcName,
-                                        objPropertyName,
                                         "{}",
                                         methodDescriptorName
                                     )
 
-                                    when(rpc.method) {
+                                    when (rpc.method) {
                                         ProtoRpc.Method.UNARY -> {
                                             addParameter(
                                                 "callback",
@@ -101,14 +107,15 @@ fun writeJsServiceFile(protoFile: ProtoFile, service: ProtoService, jsOutputFold
                                                     parameters =
                                                     arrayOf(
                                                         Dynamic,
-                                                        rpc.response.jsType
+                                                        rpc.response.commonType
                                                     ),
-                                                    returnType = Unit::class.asTypeName()
+                                                    returnType = UNIT
                                                 )
                                             )
 
                                             addCode(", callback)")
                                         }
+
                                         ProtoRpc.Method.SERVER_STREAMING -> {
                                             returns(Dynamic)
                                             addCode(")")

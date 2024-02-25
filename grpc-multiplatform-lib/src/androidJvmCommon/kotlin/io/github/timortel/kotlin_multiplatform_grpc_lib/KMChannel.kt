@@ -3,6 +3,9 @@ package io.github.timortel.kotlin_multiplatform_grpc_lib
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
 
+/**
+ * The Jvm [KMChannel] wraps the grpc [ManagedChannel] and delegates its operations to the wrapped native channel.
+ */
 actual class KMChannel private constructor(val managedChannel: ManagedChannel) {
     actual class Builder(private val impl: ManagedChannelBuilder<*>) {
 

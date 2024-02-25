@@ -4,11 +4,15 @@ import cocoapods.Protobuf.*
 import io.github.timortel.kotlin_multiplatform_grpc_lib.message.KMMessage
 import io.github.timortel.kotlin_multiplatform_grpc_lib.message.requiredSizeMessage
 import io.github.timortel.kotlin_multiplatform_grpc_lib.message.serializeMessage
+import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.allocArrayOf
 import kotlinx.cinterop.memScoped
 import platform.Foundation.NSData
 import platform.Foundation.create
 
+/**
+ * Implements the functionality by wrapping [GPBCodedOutputStream].
+ */
 actual class CodedOutputStream(private val impl: GPBCodedOutputStream) {
 
     companion object {
@@ -82,7 +86,6 @@ actual class CodedOutputStream(private val impl: GPBCodedOutputStream) {
         tag: UInt
     ) {
         writeArray(this, fieldNumber, values, tag, ::GPBComputeFixed64SizeNoTag, ::writeFixed64NoTag, ::writeFixed64)
-
     }
 
     actual fun writeFixed64NoTag(value: ULong) = impl.writeFixed64NoTag(value)

@@ -32,3 +32,4 @@ generated
 local.properties
 *.podspec
 *.lock
+test-outputs

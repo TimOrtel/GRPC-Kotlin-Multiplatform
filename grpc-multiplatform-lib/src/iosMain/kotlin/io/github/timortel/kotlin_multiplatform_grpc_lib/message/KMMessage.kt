@@ -12,8 +12,14 @@ import platform.posix.size_t
  */
 actual interface KMMessage {
 
+    /**
+     * The size this message takes up in a byte array.
+     */
     val requiredSize: Int
 
+    /**
+     * Serializes this message and returns it as [NSData].
+     */
     fun serialize(): NSData {
         val data = NSMutableData().apply { setLength(requiredSize.toULong()) }
         val stream = GPBCodedOutputStream(data)
@@ -22,6 +28,9 @@ actual interface KMMessage {
         return data
     }
 
+    /**
+     * Serializes this message and writes it directly to [CodedOutputStream].
+     */
     fun serialize(stream: CodedOutputStream)
 }
 

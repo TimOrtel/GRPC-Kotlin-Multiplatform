@@ -1,3 +1,5 @@
+@file:Suppress("UNUSED_VARIABLE")
+
 plugins {
     id("com.android.library")
     kotlin("multiplatform")
@@ -6,7 +8,7 @@ plugins {
 }
 
 group = "io.github.timortel"
-version = "0.3.0"
+version = libs.versions.grpcKotlinMultiplatform.get()
 
 repositories {
     mavenCentral()
@@ -14,17 +16,22 @@ repositories {
 }
 
 kotlin {
-    android("android") {
+    androidTarget("android") {
         publishLibraryVariants("release", "debug")
     }
     js(IR) {
         browser()
-        nodejs()
     }
     jvm("jvm")
     iosX64()
     iosArm64()
     iosSimulatorArm64()
+
+    applyDefaultHierarchyTemplate()
+
+    compilerOptions {
+        freeCompilerArgs.add("-Xexpect-actual-classes")
+    }
 
     cocoapods {
         version = "1.0"
@@ -36,80 +43,71 @@ kotlin {
             baseName = "GRPCKotlinMultiplatform"
         }
 
-        ios.deploymentTarget = "14.1"
+        ios.deploymentTarget = "16.4"
 
         pod("gRPC-ProtoRPC", moduleName = "GRPCClient")
         pod("Protobuf", version = "~> 3.21", moduleName = "Protobuf")
-        //pod("gRPC-Core")
     }
 
     sourceSets {
-        val commonMain by getting {
-            dependencies {
-                implementation(kotlin("stdlib-common"))
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1")
+        all {
+            languageSettings {
+                optIn("kotlinx.cinterop.ExperimentalForeignApi")
             }
         }
-        val commonTest by getting {
+
+        commonMain {
+            dependencies {
+                implementation(kotlin("stdlib-common"))
+                implementation(libs.kotlinx.coroutines.core)
+            }
+        }
+
+        commonTest {
             dependencies {
                 implementation(kotlin("test-common"))
                 implementation(kotlin("test-annotations-common"))
             }
         }
 
-        val GRPC = "1.46.0"
-        val GRPC_KOTLIN = "1.2.1"
-        val PROTOBUF = "3.20.1"
-
         val iosJvmCommon by creating {
-            dependsOn(commonMain)
+            dependsOn(commonMain.get())
         }
 
         val androidJvmCommon by creating {
             dependsOn(iosJvmCommon)
         }
 
-
-        val jvmMain by getting {
+        jvmMain {
             dependsOn(androidJvmCommon)
             dependencies {
-                implementation("com.google.protobuf:protobuf-kotlin:${PROTOBUF}")
-                implementation("com.google.protobuf:protobuf-java-util:${PROTOBUF}")
-                implementation("io.grpc:grpc-protobuf:${GRPC}")
-                implementation("io.grpc:grpc-stub:${GRPC}")
-                implementation("io.grpc:grpc-kotlin-stub:${GRPC_KOTLIN}")
+                api(libs.grpc.stub)
+                api(libs.grpc.protobuf.lite)
+                api(libs.grpc.kotlin.stub)
             }
         }
 
-        val androidMain by getting {
+        androidMain {
             dependsOn(androidJvmCommon)
 
             dependencies {
-                implementation("io.grpc:grpc-stub:${GRPC}")
-                implementation("io.grpc:grpc-protobuf-lite:${GRPC}")
-                implementation("io.grpc:grpc-kotlin-stub:${GRPC_KOTLIN}")
-                implementation("com.google.protobuf:protobuf-kotlin-lite:${PROTOBUF}")
+                api(libs.grpc.stub)
+                api(libs.grpc.protobuf.lite)
+                api(libs.grpc.kotlin.stub)
             }
         }
 
-        val jsMain by getting {
+        jsMain {
             dependencies {
-                api(npm("google-protobuf", "^3.19.1"))
-                api(npm("grpc-web", "^1.3.0"))
-                api(npm("protobufjs", "^6.11.2"))
+                api(npm("google-protobuf", "^3.21.2"))
+                api(npm("grpc-web", "^1.5.0"))
+                api(npm("protobufjs", "^7.2.6"))
             }
         }
 
-        val iosX64Main by getting
-        val iosArm64Main by getting
-
-        val iosSimulatorArm64Main by getting
-        val iosMain by creating {
-            dependsOn(commonMain)
+        iosMain {
+            dependsOn(commonMain.get())
             dependsOn(iosJvmCommon)
-            iosX64Main.dependsOn(this)
-            iosArm64Main.dependsOn(this)
-            iosSimulatorArm64Main.dependsOn(this)
         }
     }
 }
@@ -121,16 +119,17 @@ publishing {
 }
 
 android {
-    compileSdk = 31
+    namespace = "io.github.timortel.kotlin_multiplatform_grpc_lib"
+
+    compileSdk = libs.versions.androidCompileSdk.get().toInt()
 
     defaultConfig {
-        minSdk = 21
-        targetSdk = 31
+        minSdk = libs.versions.androidMinSdk.get().toInt()
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     sourceSets {
@@ -146,5 +145,3 @@ kotlin.targets.withType(org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarge
         binaryOptions["memoryModel"] = "experimental"
     }
 }
-
-tasks.replace("podGenIOS", PatchedPodGenTask::class)
