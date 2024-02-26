@@ -25,6 +25,7 @@ gradlePlugin {
             description = "Plugin that generates Kotlin multiplatform wrapper classes for GRPC"
 
             implementationClass = "io.github.timortel.kotlin_multiplatform_grpc_plugin.GrpcMultiplatformPlugin"
+            tags = listOf("grpc", "kotlin", "kotlin-multiplatform")
         }
     }
 }

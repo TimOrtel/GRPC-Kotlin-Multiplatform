@@ -1,5 +1,6 @@
 [![GitHub license](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg?style=flat)](http://www.apache.org/licenses/LICENSE-2.0)
-![version](https://img.shields.io/badge/version-0.3.0-blue)
+[![Download](https://img.shields.io/maven-central/v/io.github.timortel/grpc-multiplatform-lib) ](https://central.sonatype.com/artifact/io.github.timortel/grpc-multiplatform-lib)
+![version](https://img.shields.io/badge/version-0.4.0-blue)
 
 ![badge][badge-android]
 ![badge][badge-jvm]
@@ -153,7 +154,7 @@ plugins {
 
 repositories {
     //...
-    maven(url = "https://jitpack.io")
+    mavenCentral()
 }
 
 kotlin {
@@ -171,7 +172,7 @@ kotlin {
         commonMain {
             dependencies {
                 implementation(kotlin("stdlib-common"))
-                api("com.github.TimOrtel.GRPC-Kotlin-Multiplatform:grpc-multiplatform-lib:<latest version>")
+                api("io.github.timortel:grpc-multiplatform-lib:<latest version>")
                 api("org.jetbrains.kotlinx:kotlinx-coroutines-core:<latest version>")
             }
         }
