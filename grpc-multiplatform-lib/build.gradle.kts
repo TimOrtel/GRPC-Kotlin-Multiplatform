@@ -38,15 +38,14 @@ kotlin {
         summary = "GRPC Kotlin Multiplatform Implementation"
         homepage = "https://github.com/TimOrtel/GRPC-Kotlin-Multiplatform"
 
-
         framework {
             baseName = "GRPCKotlinMultiplatform"
         }
 
         ios.deploymentTarget = "16.4"
 
-        pod("gRPC-ProtoRPC", moduleName = "GRPCClient")
-        pod("Protobuf", version = "~> 3.21", moduleName = "Protobuf")
+        pod("gRPC-ProtoRPC", version = "~> 1.69.0", moduleName = "GRPCClient")
+        pod("Protobuf", version = "~> 3.29.3", moduleName = "Protobuf")
     }
 
     sourceSets {

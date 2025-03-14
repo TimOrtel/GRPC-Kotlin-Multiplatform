@@ -45,8 +45,8 @@ kotlin {
         homepage = "https://github.com/TimOrtel/GRPC-Kotlin-Multiplatform"
         ios.deploymentTarget = "14.1"
 
-        pod("gRPC-ProtoRPC", moduleName = "GRPCClient")
-        pod("Protobuf")
+        //pod("gRPC-ProtoRPC", moduleName = "GRPCClient")
+        //pod("Protobuf")
     }
 
     compilerOptions {
