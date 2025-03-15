@@ -4,14 +4,10 @@ import io.github.timortel.kotlin_multiplatform_grpc_lib.KMChannel
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.basic_messages.*
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.toCollection
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNotEquals
-import kotlin.test.fail
 
 abstract class RpcTest {
 
@@ -32,6 +28,7 @@ abstract class RpcTest {
             val response = stub
                 .emptyRpc(message)
 
+            println(response)
             assertEquals(message, response)
         } catch (e: Exception) {
             e.printStackTrace()
@@ -45,7 +42,9 @@ abstract class RpcTest {
         val message = kmSimpleMessage { field1 = "Test" }
 
         val response = async {
-            stub.simpleRpc(message)
+            val x = stub.simpleRpc(message)
+            println(x.field1)
+            x
         }
 
         assertEquals(message, response.await())

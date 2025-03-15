@@ -40,6 +40,7 @@ abstract class ServiceWriter(private val isActual: Boolean) {
                     .apply {
                         specifyInheritance(this, serviceClass, protoFile, service)
                         applyToClass(this, protoFile, service, serviceClass)
+
                         service.rpcs.forEach { rpc ->
                             val returnType = when(rpc.method) {
                                 ProtoRpc.Method.UNARY -> rpc.response.commonType
@@ -80,7 +81,7 @@ abstract class ServiceWriter(private val isActual: Boolean) {
         builder: TypeSpec.Builder,
         protoFile: ProtoFile,
         service: ProtoService,
-        serviceName: ClassName
+        serviceClass: ClassName
     )
 
     /**

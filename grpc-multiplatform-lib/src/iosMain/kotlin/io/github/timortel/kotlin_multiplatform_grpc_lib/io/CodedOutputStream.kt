@@ -4,7 +4,6 @@ import cocoapods.Protobuf.*
 import io.github.timortel.kotlin_multiplatform_grpc_lib.message.KMMessage
 import io.github.timortel.kotlin_multiplatform_grpc_lib.message.requiredSizeMessage
 import io.github.timortel.kotlin_multiplatform_grpc_lib.message.serializeMessage
-import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.allocArrayOf
 import kotlinx.cinterop.memScoped
 import platform.Foundation.NSData
@@ -18,7 +17,7 @@ actual class CodedOutputStream(private val impl: GPBCodedOutputStream) {
     companion object {
         private val ByteArray.native: NSData get() {
             return memScoped {
-                NSData.create(bytes = allocArrayOf(this@native), length = this@native.size.toULong())
+                NSData.  create(bytes = allocArrayOf(this@native), length = this@native.size.toULong())
             }
         }
     }

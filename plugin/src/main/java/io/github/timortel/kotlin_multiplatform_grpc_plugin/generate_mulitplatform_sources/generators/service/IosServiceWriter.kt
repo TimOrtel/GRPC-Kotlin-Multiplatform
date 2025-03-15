@@ -24,11 +24,11 @@ object IosServiceWriter : ActualServiceWriter() {
         builder: TypeSpec.Builder,
         protoFile: ProtoFile,
         service: ProtoService,
-        serviceName: ClassName
+        serviceClass: ClassName
     ) {
-        super.applyToClass(builder, protoFile, service, serviceName)
+        super.applyToClass(builder, protoFile, service, serviceClass)
 
-        overrideWithDeadlineAfter(builder, serviceName)
+        overrideWithDeadlineAfter(builder, serviceClass)
     }
 
     override fun applyToRpcFunction(

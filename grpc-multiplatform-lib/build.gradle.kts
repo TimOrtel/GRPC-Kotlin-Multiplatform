@@ -1,5 +1,3 @@
-@file:Suppress("UNUSED_VARIABLE")
-
 plugins {
     id("com.android.library")
     kotlin("multiplatform")
@@ -44,7 +42,7 @@ kotlin {
 
         ios.deploymentTarget = "16.4"
 
-        pod("gRPC-ProtoRPC", version = "~> 1.69.0", moduleName = "GRPCClient")
+        pod("gRPC-ProtoRPC", version = "~> 1.71.0", moduleName = "GRPCClient")
         pod("Protobuf", version = "~> 3.29.3", moduleName = "Protobuf")
     }
 
@@ -144,3 +142,5 @@ kotlin.targets.withType(org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarge
         binaryOptions["memoryModel"] = "experimental"
     }
 }
+
+replacePodBuildWithCustomPodBuild()

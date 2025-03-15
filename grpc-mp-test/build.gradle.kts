@@ -1,5 +1,3 @@
-@file:Suppress("UNUSED_VARIABLE")
-
 import io.github.timortel.kmpgrpc.testserver.TestServer
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.GrpcMultiplatformExtension.OutputTarget
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
@@ -45,8 +43,8 @@ kotlin {
         homepage = "https://github.com/TimOrtel/GRPC-Kotlin-Multiplatform"
         ios.deploymentTarget = "14.1"
 
-        //pod("gRPC-ProtoRPC", moduleName = "GRPCClient")
-        //pod("Protobuf")
+        pod("gRPC-ProtoRPC", moduleName = "GRPCClient")
+        pod("Protobuf")
     }
 
     compilerOptions {
@@ -80,7 +78,6 @@ kotlin {
             dependencies {
                 implementation(kotlin("test"))
             }
-            kotlin.srcDir(projectDir.resolve("build/generated/source/kmp-grpc/commonMain/kotlin").canonicalPath)
         }
 
         jsTest {
@@ -164,11 +161,11 @@ tasks.findByName("jvmTest")?.let {
 
 tasks.named("iosSimulatorArm64Test", KotlinNativeSimulatorTest::class).configure {
     doFirst {
-        TestServer.start()
+        //TestServer.start()
     }
 
     doLast {
-        TestServer.stop()
+        //TestServer.stop()
     }
 }
 
@@ -186,3 +183,5 @@ tasks.withType(Test::class) {
     reports.junitXml.outputLocation.set(rootProject.rootDir.resolve("test-outputs/${project.name}/$name/"))
     reports.html.outputLocation.set(rootProject.rootDir.resolve("test-outputs/${project.name}/$name/"))
 }
+
+replacePodBuildWithCustomPodBuild()

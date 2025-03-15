@@ -19,7 +19,7 @@ abstract class ActualServiceWriter : ServiceWriter(true) {
         builder: TypeSpec.Builder,
         protoFile: ProtoFile,
         service: ProtoService,
-        serviceName: ClassName
+        serviceClass: ClassName
     ) {
         builder.apply {
             primaryConstructor(
@@ -57,10 +57,10 @@ abstract class ActualServiceWriter : ServiceWriter(true) {
                     .addModifiers(KModifier.OVERRIDE)
                     .addParameter(Const.Service.CHANNEL_PROPERTY_NAME, kmChannel)
                     .addParameter(Const.Service.CALL_OPTIONS_PROPERTY_NAME, callOptionsType)
-                    .returns(serviceName)
+                    .returns(serviceClass)
                     .addStatement(
                         "return %T(%N, %N)",
-                        serviceName,
+                        serviceClass,
                         Const.Service.CHANNEL_PROPERTY_NAME,
                         Const.Service.CALL_OPTIONS_PROPERTY_NAME
                     )

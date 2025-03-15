@@ -7,7 +7,7 @@ androidMinSdk = "21"
 
 kotlin = "2.1.10"
 
-grpcJvm = "1.71.0"
+grpcJvm = "1.69.0"
 grpcKotlin = "1.4.1"
 protobufJvm = "3.25.6"
 protobufGradlePlugin = "0.9.4"
@@ -27,12 +27,14 @@ google-protobuf-java-util = { group = "com.google.protobuf", name = "protobuf-ja
 
 google-guava = { group = "com.google.guava", name = "guava", version = "33.0.0-jre" }
 
+grpc-core = { group = "io.grpc", name = "grpc-core", version.ref = "grpcJvm" }
+grpc-api = { group = "io.grpc", name = "grpc-api", version.ref = "grpcJvm" }
 grpc-protobuf = { group = "io.grpc", name = "grpc-protobuf", version.ref = "grpcJvm" }
 grpc-protobuf-lite = { group = "io.grpc", name = "grpc-protobuf-lite", version.ref = "grpcJvm" }
 grpc-stub = { group = "io.grpc", name = "grpc-stub", version.ref = "grpcJvm" }
 grpc-kotlin-stub = { group = "io.grpc", name = "grpc-kotlin-stub", version.ref = "grpcKotlin" }
 grpc-netty = { group = "io.grpc", name = "grpc-netty", version = "1.61.1" }
-grpc-netty-shaded = { group = "io.grpc", name = "grpc-netty-shaded", version = "1.61.1" }
+grpc-netty-shaded = { group = "io.grpc", name = "grpc-netty-shaded", version.ref = "grpcJvm" }
 
 squareup-kotlinpoet = { group = "com.squareup", name = "kotlinpoet", version = "1.16.0" }
 
