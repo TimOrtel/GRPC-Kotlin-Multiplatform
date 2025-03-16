@@ -48,9 +48,6 @@ kotlin {
         summary = "GRPC Kotlin Multiplatform test library"
         homepage = "https://github.com/TimOrtel/GRPC-Kotlin-Multiplatform"
         ios.deploymentTarget = "14.1"
-
-        pod("gRPC-ProtoRPC", moduleName = "GRPCClient")
-        pod("Protobuf")
     }
 
     compilerOptions {
@@ -189,5 +186,3 @@ tasks.withType(Test::class) {
     reports.junitXml.outputLocation.set(rootProject.rootDir.resolve("test-outputs/${project.name}/$name/"))
     reports.html.outputLocation.set(rootProject.rootDir.resolve("test-outputs/${project.name}/$name/"))
 }
-
-replacePodBuildWithCustomPodBuild()

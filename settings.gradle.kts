@@ -2,6 +2,7 @@ rootProject.name = "kotlin-multiplatform-grpc-plugin"
 
 pluginManagement {
     includeBuild("plugin")
+    includeBuild("pod-build-workaround")
 
     repositories {
         gradlePluginPortal()

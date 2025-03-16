@@ -1,6 +1,6 @@
 [![GitHub license](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg?style=flat)](http://www.apache.org/licenses/LICENSE-2.0)
 [![Download](https://img.shields.io/maven-central/v/io.github.timortel/grpc-multiplatform-lib) ](https://central.sonatype.com/artifact/io.github.timortel/grpc-multiplatform-lib)
-![version](https://img.shields.io/badge/version-0.4.0-blue)
+![version](https://img.shields.io/badge/version-0.5.0-blue)
 
 ![badge][badge-android]
 ![badge][badge-jvm]
@@ -68,11 +68,11 @@ val myMessage = kmMyMessage {
 ```kotlin
  suspend fun makeCall() {
     val channel = KMChannel.Builder()
-        .forAddress("localhost", 8082) //replace with your address and your port
-        .usePlaintext() //To force grpc to allow plaintext traffic, if you don't call this https is used.
+        .forAddress("localhost", 8082) // replace with your address and your port
+        .usePlaintext() // To force grpc to allow plaintext traffic, if you don't call this https is used.
         .build()
     
-    //For each service a unique class is generated. KM(serviceName)Stub
+    // For each service a unique class is generated. KM(serviceName)Stub
     val stub = KMMyServiceStub(channel)
     
     val request = kmRequest {
@@ -81,7 +81,7 @@ val myMessage = kmMyMessage {
      
      try {
          val response = stub
-             .withDeadlineAfter(10, TimeUnit.SECONDS) //Specify a deadline if you need to
+             .withDeadlineAfter(10, TimeUnit.SECONDS) // Specify a deadline if you need to
              .myRpc(request)
 
          //Handle response
@@ -103,7 +103,7 @@ buildscript {
         gradlePluginPortal()
     }
 
-    //...
+    // ...
 }
 ```
 
@@ -119,10 +119,10 @@ plugins {
 }
 ```
 
-Configure your JS configuration:
+Update your JS configuration:
 ```kotlin
 kotlin {
-    //...
+    // ...
 
     js(IR) {
         useCommonJs()
@@ -136,45 +136,34 @@ kotlin {
         binaries.executable()
     }
     
-    //...
+    // ...
 }
 ```
-Other configurations may work, but I have not tested others.
+While other configurations may work, I have only tested this one.
 
 Add the library as a dependency:
 ```kotlin
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.GrpcMultiplatformExtension.OutputTarget
 
 plugins {
-    //Required when targeting iOS
+    // Required when targeting iOS
     kotlin("native.cocoapods")
 }
 
 repositories {
-    //...
+    // ...
     mavenCentral()
 }
 
 kotlin {
-    //For iOS support, configure cocoapods
+    // For iOS support, configure cocoapods
     cocoapods {
         summary = "..."
         homepage = "..."
         ios.deploymentTarget = //...
-            
-        pod("gRPC-ProtoRPC", moduleName = "GRPCClient")
-        pod("Protobuf")
     }
     
-    sourceSets {
-        commonMain {
-            dependencies {
-                implementation(kotlin("stdlib-common"))
-                api("io.github.timortel:grpc-multiplatform-lib:<latest version>")
-                api("org.jetbrains.kotlinx:kotlinx-coroutines-core:<latest version>")
-            }
-        }
-    }
+    // ...
 }
 
 grpcKotlinMultiplatform {
@@ -190,20 +179,6 @@ grpcKotlinMultiplatform {
 }
 
 ```
-
-### JS
-You must add the following npm dependencies to your JS module:
-```kotlin
-dependencies {
-    //...
-    api(npm("google-protobuf", "^<latest version>"))
-    api(npm("grpc-web", "^<latest version>"))
-    api(npm("protobufjs", "^<latest version>"))
-}
-```
-
-### iOS
-This library uses the updated memory manager. Therefore, you might have to [enable this memory manager in your project](https://github.com/JetBrains/kotlin/blob/master/kotlin-native/NEW_MM.md#switch-to-the-new-mm), too.
 
 ## Roadmap
 - Support all proto data types

@@ -5,6 +5,7 @@ val libVersion = "0.5.0"
 plugins {
     kotlin("multiplatform")
     id("com.android.library")
+    kotlin("native.cocoapods")
 
     id("io.github.timortel.kotlin-multiplatform-grpc-plugin") version "0.5.0"
 }
@@ -27,16 +28,36 @@ kotlin {
         browser()
     }
 
-    iosSimulatorArm64()
+    listOf(
+        iosX64(),
+        iosArm64(),
+        iosSimulatorArm64()
+    ).forEach { iosTarget ->
+        iosTarget.binaries.framework {
+            baseName = "Common"
+            isStatic = true
+        }
+    }
 
     sourceSets {
         commonMain {
             dependencies {
                 implementation(kotlin("stdlib-common"))
-                api("io.github.timortel:grpc-multiplatform-lib:$libVersion")
                 api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.1")
             }
         }
+    }
+
+    cocoapods {
+        version = "1.0"
+        summary = "gRPC KMP Example Common"
+        homepage = "https://github.com/TimOrtel/GRPC-Kotlin-Multiplatform"
+
+        framework {
+            baseName = "GRPCKotlinMultiplatformExampleCommon"
+        }
+
+        ios.deploymentTarget = "18.2"
     }
 }
 
@@ -54,7 +75,11 @@ grpcKotlinMultiplatform {
 
         targetSourcesMap.put(
             OutputTarget.JVM,
-            listOf(kotlin.sourceSets.androidMain.get(), kotlin.sourceSets.jvmMain.get(), kotlin.sourceSets.jvmTest.get())
+            listOf(
+                kotlin.sourceSets.androidMain.get(),
+                kotlin.sourceSets.jvmMain.get(),
+                kotlin.sourceSets.jvmTest.get()
+            )
         )
 
         targetSourcesMap.put(

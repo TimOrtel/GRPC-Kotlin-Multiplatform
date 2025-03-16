@@ -60,8 +60,8 @@ abstract class CustomPodBuildTask @Inject constructor(
     val buildResult: FileCollection = objectFactory.fileTree()
         .from(synthetic.map { it.dir("build") })
         .matching {
-            include("**/${pod.get().schemeName}.*/")
-            include("**/${pod.get().schemeName}/")
+            it.include("**/${pod.get().schemeName}.*/")
+            it.include("**/${pod.get().schemeName}/")
         }
 
     @get:Internal

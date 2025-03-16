@@ -3,6 +3,7 @@ plugins {
     kotlin("multiplatform")
     kotlin("native.cocoapods")
     id("maven-publish")
+    id("io.github.timortel.pod-build-workaround") version "1.0"
 }
 
 group = "io.github.timortel"
@@ -142,5 +143,3 @@ kotlin.targets.withType(org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarge
         binaryOptions["memoryModel"] = "experimental"
     }
 }
-
-replacePodBuildWithCustomPodBuild()

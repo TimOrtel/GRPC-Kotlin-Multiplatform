@@ -2,38 +2,39 @@ import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.kotlin.dsl.register
-import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.plugin.cocoapods.CocoapodsExtension.CocoapodsDependency
 import org.jetbrains.kotlin.gradle.targets.native.tasks.PodBuildTask
 import org.jetbrains.kotlin.konan.target.Family
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.jvm.isAccessible
 
-fun Project.replacePodBuildWithCustomPodBuild() {
-    tasks.withType<PodBuildTask>().forEach { oldTask: PodBuildTask ->
-        val newTaskName = oldTask.name + "-patched"
-        val newTask = tasks.register(newTaskName, CustomPodBuildTask::class) {
-            group = oldTask.group
-            description = oldTask.description
-            buildSettingsFile.set(oldTask.buildSettingsFile)
+// Workaround for https://youtrack.jetbrains.com/issue/KT-76035/Allow-extra-command-line-arguments-in-PodBuildTask
+fun Project.replacePodBuildWithCustomPodBuildTask() {
+    tasks.withType(PodBuildTask::class.java)
+        .filter { it.name.contains("ProtoRPC") || it.name.contains("podBuildProtobuf") }
+        .forEach { oldTask: PodBuildTask ->
+            val newTaskName = oldTask.name + "-patched"
+            val newTask = tasks.register(newTaskName, CustomPodBuildTask::class.java) { newTask ->
+                group = oldTask.group
+                description = oldTask.description
+                newTask.buildSettingsFile.set(oldTask.buildSettingsFile)
 
-            val data = extractPodBuildTaskData(oldTask)
-            pod.set(data.pod.get())
-            family.set(data.family.get())
-            podsXcodeProjDir.set(data.podsXcodeProjDir.get())
-            appleTarget.set(extractAppleTarget(data.appleTarget))
-            oldTask.dependsOn.forEach {
-                it as TaskProvider<*>
-                if (it.get() != this) {
-                    dependsOn(it.get())
+                val data = extractPodBuildTaskData(oldTask)
+                newTask.pod.set(data.pod.get())
+                newTask.family.set(data.family.get())
+                newTask.podsXcodeProjDir.set(data.podsXcodeProjDir.get())
+                newTask.appleTarget.set(extractAppleTarget(data.appleTarget))
+                oldTask.dependsOn.forEach {
+                    it as TaskProvider<*>
+                    if (it.get() != newTask) {
+                        newTask.dependsOn(it.get())
+                    }
                 }
             }
-        }
 
-        oldTask.isEnabled = false
-        oldTask.dependsOn(newTask)
-    }
+            oldTask.isEnabled = false
+            oldTask.dependsOn(newTask)
+        }
 }
 
 data class PodBuildTaskData(

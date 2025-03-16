@@ -3,6 +3,7 @@ plugins {
     id("java-gradle-plugin")
     id("maven-publish")
     id("com.gradle.plugin-publish") version libs.versions.gradlePluginPublish.get()
+    id("com.github.gmazzo.buildconfig") version libs.versions.buildConfigPlugin.get()
     antlr
 }
 
@@ -30,6 +31,37 @@ gradlePlugin {
     }
 }
 
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation(libs.kotlinx.coroutines.core)
+    antlr(libs.antlr)
+    implementation(libs.antlr)
+
+    implementation(libs.squareup.kotlinpoet)
+    compileOnly(libs.kotlin.gradle.plugin)
+}
+
+buildConfig {
+    useKotlinOutput {
+        internalVisibility = true
+        topLevelConstants = true
+    }
+
+    buildConfigField("String", "VERSION", "\"${libs.versions.grpcKotlinMultiplatform.get()}\"")
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs("../pod-build-workaround/shared-src/main/java")
+        }
+    }
+}
+
 publishing {
     repositories {
         mavenLocal()
@@ -44,19 +76,6 @@ publishing {
             artifactId = "kotlin-multiplatform-grpc-plugin"
         }
     }
-}
-
-repositories {
-    mavenCentral()
-}
-
-dependencies {
-    implementation(libs.kotlinx.coroutines.core)
-    antlr(libs.antlr)
-    implementation(libs.antlr)
-
-    implementation(libs.squareup.kotlinpoet)
-    compileOnly(libs.kotlin.gradle.plugin)
 }
 
 tasks.generateGrammarSource {
