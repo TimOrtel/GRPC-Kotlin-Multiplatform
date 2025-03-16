@@ -210,6 +210,11 @@ This library uses the updated memory manager. Therefore, you might have to [enab
 ## Roadmap
 - Support all proto data types
 
+## Building locally
+Run the following Gradle commands:
+1. To build the library `gradle grpc-multiplatform-lib:publishToMavenLocal`
+2. To build the plugin `gradle plugin:publishToMavenLocal`
+
 ## Contributing
 Feel free to implement improvements, bug fixes and features and create a pull request.
 Please send all pull requests to the develop branch, as the master always holds the code for the latest version.
