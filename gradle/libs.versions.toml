@@ -7,7 +7,7 @@ androidMinSdk = "21"
 
 kotlin = "2.1.10"
 
-grpcJvm = "1.69.0"
+grpcJvm = "1.71.0"
 grpcKotlin = "1.4.1"
 protobufJvm = "3.25.6"
 protobufGradlePlugin = "0.9.4"

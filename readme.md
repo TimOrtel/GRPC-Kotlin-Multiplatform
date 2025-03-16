@@ -12,8 +12,6 @@ This projects implements client-side gRPC for Android, JVM, iOS and the web.
 
 **⚠️ Warning: This project is still under development and does not support all gRPC features!**
 
-**⚠️ Warning: The implementation for javascript is currently not covered by unit tests!**
-
 ## Table of contents
 - [Features](#features)
 - [Usage](#usage)
