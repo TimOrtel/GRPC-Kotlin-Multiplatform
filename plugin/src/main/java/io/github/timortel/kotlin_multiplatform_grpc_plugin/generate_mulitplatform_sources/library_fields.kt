@@ -2,7 +2,6 @@ package io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfo
 
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.MemberName
-import com.squareup.kotlinpoet.MemberName.Companion.member
 
 val kmMetadata = ClassName("io.github.timortel.kotlin_multiplatform_grpc_lib", "KMMetadata")
 val kmStub = ClassName("io.github.timortel.kotlin_multiplatform_grpc_lib.stub", "KMStub")

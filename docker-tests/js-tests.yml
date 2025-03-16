@@ -20,7 +20,7 @@ services:
     command:
       - grpc-mp-test:jsTest
     volumes:
-      - ./test-outputs/:/app/test-outputs/
+      - ./test-outputs/:/tests/grpc-mp-test/build/reports/tests
 
   test-server:
     image: kmp-grpc-testserver

@@ -30,7 +30,13 @@ kotlin {
     js(IR) {
         useCommonJs()
 
-        browser()
+        browser {
+            testTask {
+                useKarma {
+                    useFirefox()
+                }
+            }
+        }
     }
 
     iosArm64()
