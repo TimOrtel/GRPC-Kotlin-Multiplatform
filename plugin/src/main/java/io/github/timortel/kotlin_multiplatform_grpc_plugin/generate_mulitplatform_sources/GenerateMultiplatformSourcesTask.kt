@@ -15,11 +15,11 @@ import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.OutputFiles
+import org.gradle.api.tasks.OutputDirectories
+import org.gradle.api.tasks.TaskAction
 import org.slf4j.Logger
 import java.io.File
 
-@Suppress("LeakingThis")
 abstract class GenerateMultiplatformSourcesTask : DefaultTask() {
 
     companion object {
@@ -38,40 +38,40 @@ abstract class GenerateMultiplatformSourcesTask : DefaultTask() {
     @get:Input
     abstract val targetSourcesMap: MapProperty<String, List<String>>
 
-    @get:OutputFiles
+    @get:OutputDirectories
     val outputFolders: ConfigurableFileCollection = project.objects.fileCollection()
 
     init {
-        val tsm = targetSourcesMap.get()
-
         outputFolders.setFrom(
-            buildList {
-                add(getCommonOutputFolder(project))
-
-                if (GrpcMultiplatformExtension.JVM in tsm) add(getJVMOutputFolder(project))
-                if (GrpcMultiplatformExtension.JS in tsm) add(getJSOutputFolder(project))
-                if (GrpcMultiplatformExtension.IOS in tsm) add(getIOSOutputFolder(project))
-            }
+            listOf(
+                getCommonOutputFolder(project),
+                getJVMOutputFolder(project),
+                getJSOutputFolder(project),
+                getIOSOutputFolder(project)
+            )
         )
+    }
+
+    @TaskAction
+    fun generateSources() {
+        val tsm = targetSourcesMap.get()
 
         val shouldGenerateTargetMap = GrpcMultiplatformExtension.targets.associateWith { target ->
             tsm[target].orEmpty().isNotEmpty()
         }
 
-        doLast {
-            val outputFolder = getOutputFolder(project)
-            outputFolder.mkdirs()
+        val outputFolder = getOutputFolder(project)
+        outputFolder.mkdirs()
 
-            generateProtoFiles(
-                log = logger,
-                protoFolders = sourceFolders.files.toList(),
-                shouldGenerateTargetMap = shouldGenerateTargetMap,
-                commonOutputFolder = getCommonOutputFolder(project),
-                jvmOutputFolder = getJVMOutputFolder(project),
-                jsOutputFolder = getJSOutputFolder(project),
-                iosOutputDir = getIOSOutputFolder(project)
-            )
-        }
+        generateProtoFiles(
+            log = logger,
+            protoFolders = sourceFolders.files.toList(),
+            shouldGenerateTargetMap = shouldGenerateTargetMap,
+            commonOutputFolder = getCommonOutputFolder(project),
+            jvmOutputFolder = getJVMOutputFolder(project),
+            jsOutputFolder = getJSOutputFolder(project),
+            iosOutputDir = getIOSOutputFolder(project)
+        )
     }
 }
 
@@ -118,7 +118,22 @@ private fun generateProtoFiles(
         }
 
     protoFiles.forEach { protoFile ->
-        writeProtoFile(protoFile, shouldGenerateTargetMap, commonOutputFolder, jvmOutputFolder, jsOutputFolder, iosOutputDir)
-        writeServiceFile(protoFile, shouldGenerateTargetMap, commonOutputFolder, jvmOutputFolder, jsOutputFolder, iosOutputDir)
+        writeProtoFile(
+            protoFile = protoFile,
+            generateTarget = shouldGenerateTargetMap,
+            commonOutputDir = commonOutputFolder,
+            jvmOutputDir = jvmOutputFolder,
+            jsOutputDir = jsOutputFolder,
+            iosOutputDir = iosOutputDir
+        )
+
+        writeServiceFile(
+            protoFile = protoFile,
+            generateTarget = shouldGenerateTargetMap,
+            commonOutputFolder = commonOutputFolder,
+            jvmOutputFolder = jvmOutputFolder,
+            jsOutputFolder = jsOutputFolder,
+            iosOutputFolder = iosOutputDir
+        )
     }
 }

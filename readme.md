@@ -16,9 +16,10 @@ This projects implements client-side gRPC for Android, JVM, iOS and the web.
 - [Features](#features)
 - [Usage](#usage)
 - [Setup](#setup)
+- [Example Implementation](#example-implementation)
 - [Roadmap](#roadmap)
 - [Contributing](#contributing)
-- [Implementation details](#implementation_details)
+- [Implementation details](#implementation-details)
 - [License](#license)
 
 ## Features
@@ -172,8 +173,10 @@ grpcKotlinMultiplatform {
     // Specify the folders where your proto files are located, you can list multiple.
     protoSourceFolders = project.files("<source to your protos>")
 }
-
 ```
+
+## Example Implementation
+See an example implementation of an Android app and an iOS app in the `example` folder. 
 
 ## Roadmap
 - Support all proto data types

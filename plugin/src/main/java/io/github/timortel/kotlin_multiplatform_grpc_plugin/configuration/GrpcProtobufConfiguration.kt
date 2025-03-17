@@ -7,6 +7,7 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinMultiplatformPluginWrapper
 import org.jetbrains.kotlin.gradle.tasks.Kotlin2JsCompile
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompileCommon
 import org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile
 
 object GrpcProtobufConfiguration {
@@ -41,6 +42,12 @@ object GrpcProtobufConfiguration {
 
                 targetSourceMap[GrpcMultiplatformExtension.IOS].orEmpty().forEach {
                     kotlinExtension.sourceSets.findByName(it)?.kotlin?.srcDir(GenerateMultiplatformSourcesTask.getIOSOutputFolder(project))
+                }
+
+                project.tasks.withType(KotlinCompileCommon::class.java).all { kotlinCompile ->
+                    generateMpProtosTask.forEach { generateProtoTask ->
+                        kotlinCompile.dependsOn(generateProtoTask)
+                    }
                 }
 
                 //JVM
