@@ -41,9 +41,9 @@ kotlin {
             baseName = "GRPCKotlinMultiplatform"
         }
 
-        ios.deploymentTarget = "16.4"
+        ios.deploymentTarget = "18.2"
 
-        pod("gRPC-ProtoRPC", version = "~> 1.71.0", moduleName = "GRPCClient")
+        pod("gRPC-ProtoRPC", version = "~> 1.69.0", moduleName = "GRPCClient")
         pod("Protobuf", version = "~> 3.29.3", moduleName = "Protobuf")
     }
 

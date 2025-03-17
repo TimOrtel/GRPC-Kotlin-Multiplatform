@@ -11,8 +11,19 @@ object ProjectSetupConfiguration {
         project.afterEvaluate {
             val kotlinExtension = project.extensions.getByType(KotlinMultiplatformExtension::class.java)
 
-            kotlinExtension.sourceSets.findByName("common")?.dependencies {
-                implementation("io.github.timortel:grpc-multiplatform-lib:$VERSION")
+            kotlinExtension.sourceSets.findByName("commonMain")?.dependencies {
+                if (project.providers.gradleProperty("io.github.timortel.grpc-kt-mp.internal").orNull != "true") {
+                    api("io.github.timortel:grpc-multiplatform-lib:$VERSION")
+                }
+            }
+
+            kotlinExtension.compilerOptions {
+                freeCompilerArgs.set(
+                    freeCompilerArgs.get() + listOf(
+                        "-Xopt-in=kotlinx.cinterop.ExperimentalForeignApi",
+                        "-Xexpect-actual-classes"
+                    )
+                )
             }
 
             val cocoapodsExtension = kotlinExtension.extensions.findByType(CocoapodsExtension::class.java)
