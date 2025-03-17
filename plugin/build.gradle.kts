@@ -31,6 +31,14 @@ gradlePlugin {
     }
 }
 
+kotlin {
+    sourceSets.all {
+        languageSettings {
+            optIn("kotlin.RequiresOptIn")
+            optIn("kotlin.ExperimentalStdlibApi")
+        }
+    }
+}
 
 repositories {
     mavenCentral()
@@ -84,10 +92,6 @@ tasks.generateGrammarSource {
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().all {
     dependsOn("generateGrammarSource")
-
-    kotlinOptions {
-        freeCompilerArgs = listOf("-Xopt-in=kotlin.RequiresOptIn", "-Xopt-in=kotlin.ExperimentalStdlibApi")
-    }
 }
 
 tasks.withType<Jar>().all {

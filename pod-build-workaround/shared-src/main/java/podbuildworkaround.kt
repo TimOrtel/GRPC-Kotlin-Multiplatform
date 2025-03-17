@@ -15,8 +15,8 @@ fun Project.replacePodBuildWithCustomPodBuildTask() {
         .forEach { oldTask: PodBuildTask ->
             val newTaskName = oldTask.name + "-patched"
             val newTask = tasks.register(newTaskName, CustomPodBuildTask::class.java) { newTask ->
-                group = oldTask.group
-                description = oldTask.description
+                newTask.group = oldTask.group
+                newTask.description = oldTask.description
                 newTask.buildSettingsFile.set(oldTask.buildSettingsFile)
 
                 val data = extractPodBuildTaskData(oldTask)

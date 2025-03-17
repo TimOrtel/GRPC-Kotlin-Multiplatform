@@ -1,4 +1,5 @@
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.GrpcMultiplatformExtension.OutputTarget
+import org.jetbrains.kotlin.gradle.plugin.mpp.NativeBuildType
 
 val libVersion = "0.5.0"
 
@@ -20,6 +21,8 @@ repositories {
 }
 
 kotlin {
+    applyDefaultHierarchyTemplate()
+
     jvm("jvm")
     androidTarget()
 
@@ -28,16 +31,9 @@ kotlin {
         browser()
     }
 
-    listOf(
-        iosX64(),
-        iosArm64(),
-        iosSimulatorArm64()
-    ).forEach { iosTarget ->
-        iosTarget.binaries.framework {
-            baseName = "Common"
-            isStatic = true
-        }
-    }
+    iosX64()
+    iosArm64()
+    iosSimulatorArm64()
 
     sourceSets {
         commonMain {
@@ -53,8 +49,13 @@ kotlin {
         summary = "gRPC KMP Example Common"
         homepage = "https://github.com/TimOrtel/GRPC-Kotlin-Multiplatform"
 
+        podfile = project.file("../iosApp/Podfile")
+
         framework {
-            baseName = "GRPCKotlinMultiplatformExampleCommon"
+            baseName = "common"
+            isStatic = true
+
+            transitiveExport = true
         }
 
         ios.deploymentTarget = "18.2"
@@ -70,21 +71,20 @@ grpcKotlinMultiplatform {
     with(kotlin) {
         targetSourcesMap.put(
             OutputTarget.JS,
-            listOf(kotlin.sourceSets.jsMain.get(), kotlin.sourceSets.jsTest.get())
+            listOf(kotlin.sourceSets.jsMain.get())
         )
 
         targetSourcesMap.put(
             OutputTarget.JVM,
             listOf(
                 kotlin.sourceSets.androidMain.get(),
-                kotlin.sourceSets.jvmMain.get(),
-                kotlin.sourceSets.jvmTest.get()
+                kotlin.sourceSets.jvmMain.get()
             )
         )
 
         targetSourcesMap.put(
             OutputTarget.IOS,
-            listOf(kotlin.sourceSets.iosMain.get(), kotlin.sourceSets.iosTest.get())
+            listOf(kotlin.sourceSets.iosMain.get())
         )
     }
 

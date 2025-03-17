@@ -3,7 +3,15 @@ Illustrates how grpc multiplatform can work.
 ## 1. Run the server
 Run the server located in the jvm module.
 
-## Android/JVM example
+# Android example
+Run the Android app in the android module.
+![image](img/android_screenshot.png)
+
+# iOS example
+Run the iOS app in the iosApp folder
+![image](img/ios_screenshot.png)
+
+## JVM example
 Run the client in the jvm module.
 
 ## Web/JS example

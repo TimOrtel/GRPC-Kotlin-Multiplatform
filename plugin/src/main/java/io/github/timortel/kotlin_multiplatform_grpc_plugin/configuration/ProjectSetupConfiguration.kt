@@ -17,12 +17,15 @@ object ProjectSetupConfiguration {
                 }
             }
 
+            kotlinExtension.sourceSets.forEach {
+                it.languageSettings {
+                    optIn("kotlinx.cinterop.ExperimentalForeignApi")
+                }
+            }
+
             kotlinExtension.compilerOptions {
                 freeCompilerArgs.set(
-                    freeCompilerArgs.get() + listOf(
-                        "-Xopt-in=kotlinx.cinterop.ExperimentalForeignApi",
-                        "-Xexpect-actual-classes"
-                    )
+                    freeCompilerArgs.get() + listOf("-Xexpect-actual-classes")
                 )
             }
 
