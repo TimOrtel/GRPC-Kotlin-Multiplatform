@@ -32,6 +32,7 @@ object GrpcProtobufConfiguration {
                 targetSourceMap[GrpcMultiplatformExtension.OutputTarget.JS].orEmpty().forEach {
                     it.kotlin.srcDir(GenerateMultiplatformSourcesTask.getJSOutputFolder(project))
                 }
+
                 targetSourceMap[GrpcMultiplatformExtension.OutputTarget.IOS].orEmpty().forEach {
                     it.kotlin.srcDir(GenerateMultiplatformSourcesTask.getIOSOutputFolder(project))
                 }

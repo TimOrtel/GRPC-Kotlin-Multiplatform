@@ -4,6 +4,7 @@ import io.github.timortel.plugin.VERSION
 import org.gradle.api.Project
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.cocoapods.CocoapodsExtension
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import replacePodBuildWithCustomPodBuildTask
 
 object ProjectSetupConfiguration {
@@ -17,11 +18,17 @@ object ProjectSetupConfiguration {
                 }
             }
 
-            kotlinExtension.sourceSets.forEach {
-                it.languageSettings {
-                    optIn("kotlinx.cinterop.ExperimentalForeignApi")
+            kotlinExtension
+                .targets
+                .filterIsInstance<KotlinNativeTarget>()
+                .flatMap { it.compilations }
+                .flatMap { it.allKotlinSourceSets }
+                .filter { it.name != "commonMain" }
+                .forEach {
+                    it.languageSettings {
+                        optIn("kotlinx.cinterop.ExperimentalForeignApi")
+                    }
                 }
-            }
 
             kotlinExtension.compilerOptions {
                 freeCompilerArgs.set(

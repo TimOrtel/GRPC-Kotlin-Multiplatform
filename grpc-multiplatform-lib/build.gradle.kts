@@ -104,7 +104,6 @@ kotlin {
         }
 
         iosMain {
-            dependsOn(commonMain.get())
             dependsOn(iosJvmCommon)
         }
     }

@@ -55,12 +55,6 @@ kotlin {
     }
 
     sourceSets {
-        all {
-            languageSettings {
-                optIn("kotlinx.cinterop.ExperimentalForeignApi")
-            }
-        }
-
         commonMain {
             dependencies {
                 api(project(":grpc-multiplatform-lib"))
@@ -76,7 +70,6 @@ kotlin {
         }
 
         val serializationTest by creating {
-            dependsOn(commonMain.get())
             dependsOn(commonTest.get())
             dependencies {
                 implementation(kotlin("test"))

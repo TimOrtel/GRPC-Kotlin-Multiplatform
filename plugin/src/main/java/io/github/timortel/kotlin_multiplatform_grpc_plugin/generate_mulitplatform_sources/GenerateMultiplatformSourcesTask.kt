@@ -11,8 +11,6 @@ import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.tree.ParseTreeWalker
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
-import org.gradle.api.provider.ListProperty
-import org.gradle.api.tasks.Input
 import org.slf4j.Logger
 import java.io.File
 
@@ -31,7 +29,7 @@ abstract class GenerateMultiplatformSourcesTask : DefaultTask() {
         val grpcMultiplatformExtension = project.extensions.findByType(GrpcMultiplatformExtension::class.java)
             ?: throw IllegalStateException("grpc multiplatform extension not specified.")
 
-        val generateTarget = GrpcMultiplatformExtension.OutputTarget.values().associateWith { target ->
+        val generateTarget = GrpcMultiplatformExtension.OutputTarget.entries.associateWith { target ->
             grpcMultiplatformExtension.targetSourcesMap.get()[target].orEmpty().isNotEmpty()
         }
 
@@ -73,7 +71,7 @@ private fun generateProtoFiles(
 
     val protoFiles = sourceProtoFiles
         .map { protoFile ->
-            log.debug("Generating KMP sources for proto file=$protoFile")
+            log.debug("Generating KMP sources for proto file={}", protoFile)
             val lexer = Proto3Lexer(CharStreams.fromStream(protoFile.inputStream()))
             val parser = Proto3Parser(CommonTokenStream(lexer))
 
