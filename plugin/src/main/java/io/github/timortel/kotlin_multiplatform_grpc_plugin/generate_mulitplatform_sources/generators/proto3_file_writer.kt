@@ -11,7 +11,7 @@ import java.io.File
  */
 fun writeProtoFile(
     protoFile: ProtoFile,
-    generateTarget: Map<GrpcMultiplatformExtension.OutputTarget, Boolean>,
+    generateTarget: Map<String, Boolean>,
     commonOutputDir: File,
     jvmOutputDir: File,
     jsOutputDir: File,
@@ -19,9 +19,9 @@ fun writeProtoFile(
 ) {
     CommonProtoFileWriter(protoFile).writeFile(commonOutputDir)
 
-    if (generateTarget[GrpcMultiplatformExtension.OutputTarget.JS] == true) writeJsFiles(protoFile, jsOutputDir)
-    if (generateTarget[GrpcMultiplatformExtension.OutputTarget.JVM] == true) writeJvmFiles(protoFile, jvmOutputDir)
-    if (generateTarget[GrpcMultiplatformExtension.OutputTarget.IOS] == true) writeIOSFiles(protoFile, iosOutputDir)
+    if (generateTarget[GrpcMultiplatformExtension.JS] == true) writeJsFiles(protoFile, jsOutputDir)
+    if (generateTarget[GrpcMultiplatformExtension.JVM] == true) writeJvmFiles(protoFile, jvmOutputDir)
+    if (generateTarget[GrpcMultiplatformExtension.IOS] == true) writeIOSFiles(protoFile, iosOutputDir)
     writeDSLBuilder(protoFile, CommonDslBuilder, commonOutputDir)
 }
 

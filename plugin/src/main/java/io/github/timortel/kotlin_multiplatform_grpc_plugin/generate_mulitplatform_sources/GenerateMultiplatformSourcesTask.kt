@@ -11,6 +11,11 @@ import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.tree.ParseTreeWalker
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
+import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.provider.MapProperty
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.OutputFiles
 import org.slf4j.Logger
 import java.io.File
 
@@ -18,30 +23,49 @@ import java.io.File
 abstract class GenerateMultiplatformSourcesTask : DefaultTask() {
 
     companion object {
-        fun getOutputFolder(project: Project): File = project.buildDir.resolve("generated/source/kmp-grpc/")
+        fun getOutputFolder(project: Project): File =
+            project.layout.buildDirectory.dir("generated/source/kmp-grpc/").get().asFile
+
         fun getCommonOutputFolder(project: Project): File = getOutputFolder(project).resolve("commonMain/kotlin")
         fun getJVMOutputFolder(project: Project): File = getOutputFolder(project).resolve("jvmMain/kotlin")
         fun getJSOutputFolder(project: Project): File = getOutputFolder(project).resolve("jsMain/kotlin")
         fun getIOSOutputFolder(project: Project): File = getOutputFolder(project).resolve("iosMain/kotlin")
     }
 
-    init {
-        val grpcMultiplatformExtension = project.extensions.findByType(GrpcMultiplatformExtension::class.java)
-            ?: throw IllegalStateException("grpc multiplatform extension not specified.")
+    @get:InputFiles
+    abstract val sourceFolders: ConfigurableFileCollection
 
-        val generateTarget = GrpcMultiplatformExtension.OutputTarget.entries.associateWith { target ->
-            grpcMultiplatformExtension.targetSourcesMap.get()[target].orEmpty().isNotEmpty()
+    @get:Input
+    abstract val targetSourcesMap: MapProperty<String, List<String>>
+
+    @get:OutputFiles
+    val outputFolders: ConfigurableFileCollection = project.objects.fileCollection()
+
+    init {
+        val tsm = targetSourcesMap.get()
+
+        outputFolders.setFrom(
+            buildList {
+                add(getCommonOutputFolder(project))
+
+                if (GrpcMultiplatformExtension.JVM in tsm) add(getJVMOutputFolder(project))
+                if (GrpcMultiplatformExtension.JS in tsm) add(getJSOutputFolder(project))
+                if (GrpcMultiplatformExtension.IOS in tsm) add(getIOSOutputFolder(project))
+            }
+        )
+
+        val shouldGenerateTargetMap = GrpcMultiplatformExtension.targets.associateWith { target ->
+            tsm[target].orEmpty().isNotEmpty()
         }
 
         doLast {
-            val sourceFolders = grpcMultiplatformExtension.protoSourceFolders.get()
             val outputFolder = getOutputFolder(project)
             outputFolder.mkdirs()
 
             generateProtoFiles(
-                logger,
-                sourceFolders,
-                generateTarget,
+                log = logger,
+                protoFolders = sourceFolders.files.toList(),
+                shouldGenerateTargetMap = shouldGenerateTargetMap,
                 commonOutputFolder = getCommonOutputFolder(project),
                 jvmOutputFolder = getJVMOutputFolder(project),
                 jsOutputFolder = getJSOutputFolder(project),
@@ -54,7 +78,7 @@ abstract class GenerateMultiplatformSourcesTask : DefaultTask() {
 private fun generateProtoFiles(
     log: Logger,
     protoFolders: List<File>,
-    generateTarget: Map<GrpcMultiplatformExtension.OutputTarget, Boolean>,
+    shouldGenerateTargetMap: Map<String, Boolean>,
     commonOutputFolder: File,
     jvmOutputFolder: File,
     jsOutputFolder: File,
@@ -94,7 +118,7 @@ private fun generateProtoFiles(
         }
 
     protoFiles.forEach { protoFile ->
-        writeProtoFile(protoFile, generateTarget, commonOutputFolder, jvmOutputFolder, jsOutputFolder, iosOutputDir)
-        writeServiceFile(protoFile, generateTarget, commonOutputFolder, jvmOutputFolder, jsOutputFolder, iosOutputDir)
+        writeProtoFile(protoFile, shouldGenerateTargetMap, commonOutputFolder, jvmOutputFolder, jsOutputFolder, iosOutputDir)
+        writeServiceFile(protoFile, shouldGenerateTargetMap, commonOutputFolder, jvmOutputFolder, jsOutputFolder, iosOutputDir)
     }
 }

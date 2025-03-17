@@ -1,5 +1,4 @@
 import io.github.timortel.kmpgrpc.testserver.TestServer
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.GrpcMultiplatformExtension.OutputTarget
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeSimulatorTest
@@ -76,6 +75,10 @@ kotlin {
             }
         }
 
+        iosMain {
+
+        }
+
         jsTest {
             dependsOn(serializationTest)
         }
@@ -117,32 +120,13 @@ android {
 }
 
 grpcKotlinMultiplatform {
-    targetSourcesMap.put(
-        OutputTarget.COMMON,
-        listOf(kotlin.sourceSets.commonMain.get())
-    )
+    common()
+    jvm()
+    android()
+    js()
+    ios()
 
-    with(kotlin) {
-        targetSourcesMap.put(
-            OutputTarget.JS,
-            listOf(kotlin.sourceSets.jsMain.get(), kotlin.sourceSets.jsTest.get())
-        )
-
-        targetSourcesMap.put(
-            OutputTarget.JVM,
-            listOf(kotlin.sourceSets.androidMain.get(), kotlin.sourceSets.jvmMain.get(), kotlin.sourceSets.jvmTest.get())
-        )
-
-        targetSourcesMap.put(
-            OutputTarget.IOS,
-            listOf(kotlin.sourceSets.iosMain.get(), kotlin.sourceSets.iosTest.get())
-        )
-    }
-
-    val protoFolder = projectDir.resolve("src/commonMain/proto")
-    protoSourceFolders.set(
-        listOf(protoFolder)
-    )
+    protoSourceFolders = project.files("src/commonMain/proto")
 }
 
 tasks.findByName("jvmTest")?.let {

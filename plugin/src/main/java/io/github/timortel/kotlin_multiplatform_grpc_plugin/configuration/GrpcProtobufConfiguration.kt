@@ -3,6 +3,7 @@ package io.github.timortel.kotlin_multiplatform_grpc_plugin.configuration
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.GrpcMultiplatformExtension
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.GenerateMultiplatformSourcesTask
 import org.gradle.api.Project
+import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinMultiplatformPluginWrapper
 import org.jetbrains.kotlin.gradle.tasks.Kotlin2JsCompile
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
@@ -13,7 +14,12 @@ object GrpcProtobufConfiguration {
         val grpcMultiplatformExtension =
             project.extensions.create("grpcKotlinMultiplatform", GrpcMultiplatformExtension::class.java)
 
-        project.tasks.register("generateMPProtos", GenerateMultiplatformSourcesTask::class.java)
+        val kotlinExtension = project.extensions.getByType(KotlinMultiplatformExtension::class.java)
+
+        project.tasks.register("generateMPProtos", GenerateMultiplatformSourcesTask::class.java) {
+            it.sourceFolders.setFrom(grpcMultiplatformExtension.protoSourceFolders.from)
+            it.targetSourcesMap.set(grpcMultiplatformExtension.targetSourcesMap.get().toMap())
+        }
 
         project.plugins.withType(KotlinMultiplatformPluginWrapper::class.java) {
             project.afterEvaluate {
@@ -21,20 +27,20 @@ object GrpcProtobufConfiguration {
 
                 val targetSourceMap = grpcMultiplatformExtension.targetSourcesMap.getOrElse(emptyMap())
 
-                targetSourceMap[GrpcMultiplatformExtension.OutputTarget.COMMON].orEmpty().forEach {
-                    it.kotlin.srcDir(GenerateMultiplatformSourcesTask.getCommonOutputFolder(project))
+                targetSourceMap[GrpcMultiplatformExtension.COMMON].orEmpty().forEach {
+                    kotlinExtension.sourceSets.findByName(it)?.kotlin?.srcDir(GenerateMultiplatformSourcesTask.getCommonOutputFolder(project))
                 }
 
-                targetSourceMap[GrpcMultiplatformExtension.OutputTarget.JVM].orEmpty().forEach {
-                    it.kotlin.srcDir(GenerateMultiplatformSourcesTask.getJVMOutputFolder(project))
+                targetSourceMap[GrpcMultiplatformExtension.JVM].orEmpty().forEach {
+                    kotlinExtension.sourceSets.findByName(it)?.kotlin?.srcDir(GenerateMultiplatformSourcesTask.getJVMOutputFolder(project))
                 }
 
-                targetSourceMap[GrpcMultiplatformExtension.OutputTarget.JS].orEmpty().forEach {
-                    it.kotlin.srcDir(GenerateMultiplatformSourcesTask.getJSOutputFolder(project))
+                targetSourceMap[GrpcMultiplatformExtension.JS].orEmpty().forEach {
+                    kotlinExtension.sourceSets.findByName(it)?.kotlin?.srcDir(GenerateMultiplatformSourcesTask.getJSOutputFolder(project))
                 }
 
-                targetSourceMap[GrpcMultiplatformExtension.OutputTarget.IOS].orEmpty().forEach {
-                    it.kotlin.srcDir(GenerateMultiplatformSourcesTask.getIOSOutputFolder(project))
+                targetSourceMap[GrpcMultiplatformExtension.IOS].orEmpty().forEach {
+                    kotlinExtension.sourceSets.findByName(it)?.kotlin?.srcDir(GenerateMultiplatformSourcesTask.getIOSOutputFolder(project))
                 }
 
                 //JVM

@@ -1,4 +1,3 @@
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.GrpcMultiplatformExtension.OutputTarget
 import org.jetbrains.kotlin.gradle.plugin.mpp.NativeBuildType
 
 val libVersion = "0.5.0"
@@ -63,33 +62,13 @@ kotlin {
 }
 
 grpcKotlinMultiplatform {
-    targetSourcesMap.put(
-        OutputTarget.COMMON,
-        listOf(kotlin.sourceSets.commonMain.get())
-    )
+    common()
+    jvm()
+    android()
+    js()
+    ios()
 
-    with(kotlin) {
-        targetSourcesMap.put(
-            OutputTarget.JS,
-            listOf(kotlin.sourceSets.jsMain.get())
-        )
-
-        targetSourcesMap.put(
-            OutputTarget.JVM,
-            listOf(
-                kotlin.sourceSets.androidMain.get(),
-                kotlin.sourceSets.jvmMain.get()
-            )
-        )
-
-        targetSourcesMap.put(
-            OutputTarget.IOS,
-            listOf(kotlin.sourceSets.iosMain.get())
-        )
-    }
-
-    val protoFolder = projectDir.resolve("../protos/src/main/proto")
-    protoSourceFolders.set(listOf(protoFolder))
+    protoSourceFolders = project.files("../protos/src/main/proto")
 }
 
 android {

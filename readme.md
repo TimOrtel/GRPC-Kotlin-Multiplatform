@@ -114,8 +114,10 @@ plugins {
     kotlin("multiplatform")
 
     //...
-    
     id("io.github.timortel.kotlin-multiplatform-grpc-plugin") version "<latest version>"
+
+    // Required when targeting iOS
+    kotlin("native.cocoapods")
 }
 ```
 
@@ -143,13 +145,6 @@ While other configurations may work, I have only tested this one.
 
 Add the library as a dependency:
 ```kotlin
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.GrpcMultiplatformExtension.OutputTarget
-
-plugins {
-    // Required when targeting iOS
-    kotlin("native.cocoapods")
-}
-
 repositories {
     // ...
     mavenCentral()
@@ -167,15 +162,15 @@ kotlin {
 }
 
 grpcKotlinMultiplatform {
-    with(kotlin) {
-        targetSourcesMap.put(OutputTarget.COMMON, listOf(kotlin.sourceSets.commonMain.get()))
-        targetSourcesMap.put(OutputTarget.IOS, listOf(kotlin.sourceSets.iosMain.get()))
-        targetSourcesMap.put(OutputTarget.JVM, listOf(kotlin.sourceSets.androidMain.get()))
-        targetSourcesMap.put(OutputTarget.JS, listOf(kotlin.sourceSets.jsMain.get()))
-    }
+    // declare the targets you need.
+    common() // required
+    jvm()
+    androidMain()
+    js()
+    ios()
 
     // Specify the folders where your proto files are located, you can list multiple.
-    protoSourceFolders.set(listOf(projectDir.resolve("../protos/src/main/proto")))
+    protoSourceFolders = project.files("<source to your protos>")
 }
 
 ```
