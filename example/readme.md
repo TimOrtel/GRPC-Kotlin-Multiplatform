@@ -13,7 +13,7 @@ Run the iOS app in the iosApp folder:
 2. Run the gradle command `gradle :commmon:build`
 3. In a terminal, execute `pod install` in `/iosApp`
 4. In Xcode, open `/iosApp/iosApp.xcworkspace` as a new project.
-5. In Xcode, double-click on the `Pods` project and for project `iosApp` go to `Build Settings`. Search for `C++ Language Dialect` and set it to `C++17`.
+5. In Xcode, double-click on the `Pods` project and for project `Pods` go to `Build Settings`. Search for `C++ Language Dialect` and set it to `C++17`.
 6. You can now build the app.
 
 ![image](img/ios_screenshot.png)

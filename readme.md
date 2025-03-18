@@ -178,7 +178,7 @@ grpcKotlinMultiplatform {
 ### iOS setup
 This library is using Cocoapods, so please refer to the [Kotlin Multiplatform Documentation](https://kotlinlang.org/docs/native-cocoapods.html) on how to setup your iOS app with a Kotlin Multiplatform project, or refer to the example iOS app in the `example` folder.
 When you build your app, you might encounter compilation errors of multiple Pods. This is because the gRPC Pod required C++17 to be enabled:
-1. In Xcode, double-click on the `Pods` project and for project `iosApp` go to `Build Settings`. Search for `C++ Language Dialect` and set it to `C++17`. 
+1. In Xcode, double-click on the `Pods` project and for project `Pods` go to `Build Settings`. Search for `C++ Language Dialect` and set it to `C++17`. 
 2. You can now build the app.
 
 ## Example Implementation
