@@ -49,7 +49,7 @@ abstract class DslBuilder(private val isActual: Boolean) {
                 )
                 .apply {
                     message.attributes.filter { !it.isOneOfAttribute }.forEach { attr ->
-                        when (attr.attributeType) {
+                        when (attr.fieldCardinality) {
                             is Scalar -> {
                                 addProperty(
                                     PropertySpec
@@ -92,7 +92,7 @@ abstract class DslBuilder(private val isActual: Boolean) {
                                     PropertySpec
                                         .builder(
                                             Const.DSL.Attribute.Map.propertyName(attr),
-                                            attr.attributeType.commonMutableMapType
+                                            attr.fieldCardinality.commonMutableMapType
                                         )
                                         .addModifiers(modifier)
                                         .apply {

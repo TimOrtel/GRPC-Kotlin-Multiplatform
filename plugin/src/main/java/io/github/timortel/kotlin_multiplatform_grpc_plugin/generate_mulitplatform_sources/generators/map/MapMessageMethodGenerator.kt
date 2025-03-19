@@ -7,7 +7,7 @@ import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asTypeName
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.MapType
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoMessage
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoMessageAttribute
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoMessageField
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
 
 abstract class MapMessageMethodGenerator {
@@ -21,9 +21,9 @@ abstract class MapMessageMethodGenerator {
     fun generateFunctions(
         builder: TypeSpec.Builder,
         protoMessage: ProtoMessage,
-        messageAttribute: ProtoMessageAttribute
+        messageAttribute: ProtoMessageField
     ) {
-        val attributeType = messageAttribute.attributeType as MapType
+        val attributeType = messageAttribute.fieldCardinality as MapType
 
         builder.addProperty(
             PropertySpec
@@ -39,5 +39,5 @@ abstract class MapMessageMethodGenerator {
         )
     }
 
-    protected abstract fun modifyMapProperty(builder: PropertySpec.Builder, protoMessage: ProtoMessage, messageAttribute: ProtoMessageAttribute)
+    protected abstract fun modifyMapProperty(builder: PropertySpec.Builder, protoMessage: ProtoMessage, messageAttribute: ProtoMessageField)
 }

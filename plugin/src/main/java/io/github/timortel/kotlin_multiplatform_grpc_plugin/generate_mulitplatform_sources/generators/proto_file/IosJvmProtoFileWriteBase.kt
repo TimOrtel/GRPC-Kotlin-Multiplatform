@@ -1,7 +1,6 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.proto_file
 
 import com.squareup.kotlinpoet.*
-import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.*
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.*
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
@@ -33,7 +32,7 @@ abstract class IosJvmProtoFileWriteBase(protoFile: ProtoFile) : ActualProtoFileW
 
                 onlyNonOneOfAttributes.forEachIndexed { i, attr ->
                     if (i != 0) add("·+\n")
-                    when (attr.attributeType) {
+                    when (attr.fieldCardinality) {
                         is Scalar -> {
                             add("if·(%N·==·", Const.Message.Attribute.propertyName(message, attr))
                             add(attr.commonDefaultValue(false, useEmptyMessage = false))
@@ -103,12 +102,12 @@ abstract class IosJvmProtoFileWriteBase(protoFile: ProtoFile) : ActualProtoFileW
                                 attr.protoId,
                                 Const.Message.Attribute.propertyName(message, attr),
                                 getComputeDataTypeSizeMember(
-                                    attr.attributeType.keyTypes.protoType,
+                                    attr.fieldCardinality.keyTypes.protoType,
                                     true
                                 )
                             )
 
-                            add(getComputeMapValueRequiredSizeCode(attr.attributeType.valueTypes))
+                            add(getComputeMapValueRequiredSizeCode(attr.fieldCardinality.valueTypes))
 
                             add(")")
                         }
@@ -135,7 +134,7 @@ abstract class IosJvmProtoFileWriteBase(protoFile: ProtoFile) : ActualProtoFileW
     override fun buildMapAttributeSerializeCode(
         builder: FunSpec.Builder,
         message: ProtoMessage,
-        attr: ProtoMessageAttribute,
+        attr: ProtoMessageField,
         mapType: MapType
     ) {
         builder.apply {
@@ -218,7 +217,7 @@ abstract class IosJvmProtoFileWriteBase(protoFile: ProtoFile) : ActualProtoFileW
             }
         }
 
-        fun getCodeForRequiredSizeForScalarAttributeC(attr: ProtoMessageAttribute): CodeBlock =
+        fun getCodeForRequiredSizeForScalarAttributeC(attr: ProtoMessageField): CodeBlock =
             when (attr.types.protoType) {
                 ProtoType.DOUBLE,
                 ProtoType.FLOAT,

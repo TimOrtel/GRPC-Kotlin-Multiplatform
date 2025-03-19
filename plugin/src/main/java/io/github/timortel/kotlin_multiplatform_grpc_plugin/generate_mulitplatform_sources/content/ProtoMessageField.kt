@@ -14,11 +14,11 @@ import java.util.*
  * @property hasDefaultValue if the value is always set or if it can be null
  * @property protoId the unique integer index for this attribute
  */
-class ProtoMessageAttribute(
+class ProtoMessageField(
     val name: String,
     val commonType: ClassName,
     val types: Types,
-    val attributeType: AttributeType,
+    val fieldCardinality: FieldCardinality,
     val protoId: Int,
     val isOneOfAttribute: Boolean
 ) {
@@ -28,7 +28,7 @@ class ProtoMessageAttribute(
      * The default value for this attribute
      * @param useEmptyMessage if an empty message should be used, or null
      */
-    fun commonDefaultValue(mutable: Boolean, useEmptyMessage: Boolean): CodeBlock = when (attributeType) {
+    fun commonDefaultValue(mutable: Boolean, useEmptyMessage: Boolean): CodeBlock = when (fieldCardinality) {
         is Scalar -> when (types.protoType) {
             ProtoType.DOUBLE -> CodeBlock.of("0.0")
             ProtoType.FLOAT -> CodeBlock.of("0f")
@@ -62,16 +62,21 @@ class ProtoMessageAttribute(
     }
 }
 
-sealed class AttributeType(val isEnum: Boolean)
+sealed class FieldCardinality(val isEnum: Boolean)
 
 /**
  * @property inOneOf if this attribute is in a one of
  */
-class Scalar(val inOneOf: Boolean, isEnum: Boolean) : AttributeType(isEnum)
+class Scalar(val inOneOf: Boolean, val type: Type, isEnum: Boolean) : FieldCardinality(isEnum) {
+    enum class Type {
+        IMPLICIT,
+        OPTIONAL
+    }
+}
 
-class Repeated(isEnum: Boolean) : AttributeType(isEnum)
+class Repeated(isEnum: Boolean) : FieldCardinality(isEnum)
 
-class MapType(val keyTypes: Types, val valueTypes: Types) : AttributeType(false) {
+class MapType(val keyTypes: Types, val valueTypes: Types) : FieldCardinality(false) {
     val commonMapType = Map::class.asTypeName().parameterizedBy(keyTypes.commonType, valueTypes.commonType)
     val commonMutableMapType =
         ClassName("kotlin.collections", "MutableMap").parameterizedBy(keyTypes.commonType, valueTypes.commonType)

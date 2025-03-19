@@ -7,7 +7,7 @@ import java.util.*
 data class ProtoMessage(
     val pkg: String,
     val name: String,
-    val attributes: List<ProtoMessageAttribute>,
+    val attributes: List<ProtoMessageField>,
     val oneOfs: List<ProtoOneOf>,
     val enums: List<ProtoEnum>,
     val parent: ProtoMessage?,

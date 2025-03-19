@@ -23,7 +23,7 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfor
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.MapType
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoFile
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoMessage
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoMessageAttribute
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoMessageField
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoOneOf
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.Repeated
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.Scalar
@@ -50,7 +50,7 @@ abstract class ActualProtoFileWriter(protoFile: ProtoFile) : ProtoFileWriter(pro
                     .apply {
                         //one of attributes do not get a parameter, as they get the one of parameter
                         message.attributes.filter { !it.isOneOfAttribute }.forEach { attr ->
-                            when (attr.attributeType) {
+                            when (attr.fieldCardinality) {
                                 is Scalar -> {
                                     if (attr.types.isNullable) {
                                         addParameter(
@@ -96,8 +96,8 @@ abstract class ActualProtoFileWriter(protoFile: ProtoFile) : ProtoFileWriter(pro
                                             .builder(
                                                 Const.Message.Attribute.propertyName(message, attr),
                                                 MAP.parameterizedBy(
-                                                    attr.attributeType.keyTypes.iosType,
-                                                    attr.attributeType.valueTypes.iosType
+                                                    attr.fieldCardinality.keyTypes.iosType,
+                                                    attr.fieldCardinality.valueTypes.iosType
                                                 )
                                             )
                                             .defaultValue("emptyMap()")
@@ -195,7 +195,7 @@ abstract class ActualProtoFileWriter(protoFile: ProtoFile) : ProtoFileWriter(pro
     private fun buildSerializeFunction(builder: FunSpec.Builder, message: ProtoMessage) {
         builder.apply {
             message.attributes.filter { !it.isOneOfAttribute }.forEach { attr ->
-                when (attr.attributeType) {
+                when (attr.fieldCardinality) {
                     is Scalar -> {
                         addCode("if·(%N·!=·", Const.Message.Attribute.propertyName(message, attr))
                         addCode(attr.commonDefaultValue(false, useEmptyMessage = false))
@@ -291,7 +291,7 @@ abstract class ActualProtoFileWriter(protoFile: ProtoFile) : ProtoFileWriter(pro
                     }
 
                     is MapType -> {
-                        buildMapAttributeSerializeCode(builder, message, attr, attr.attributeType)
+                        buildMapAttributeSerializeCode(builder, message, attr, attr.fieldCardinality)
                     }
                 }
             }
@@ -313,7 +313,7 @@ abstract class ActualProtoFileWriter(protoFile: ProtoFile) : ProtoFileWriter(pro
     protected abstract fun buildMapAttributeSerializeCode(
         builder: FunSpec.Builder,
         message: ProtoMessage,
-        attr: ProtoMessageAttribute,
+        attr: ProtoMessageField,
         mapType: MapType
     )
 
@@ -380,8 +380,8 @@ abstract class ActualProtoFileWriter(protoFile: ProtoFile) : ProtoFileWriter(pro
 
         val getOneOfVarName = { oneOf: ProtoOneOf -> oneOf.name }
 
-        val getAttrVarName = { attr: ProtoMessageAttribute ->
-            when (attr.attributeType) {
+        val getAttrVarName = { attr: ProtoMessageField ->
+            when (attr.fieldCardinality) {
                 is MapType -> "${attr.name}Map"
                 is Repeated -> "${attr.name}List"
                 is Scalar -> attr.name
@@ -390,12 +390,12 @@ abstract class ActualProtoFileWriter(protoFile: ProtoFile) : ProtoFileWriter(pro
 
         builder.apply {
             message.attributes.filter { !it.isOneOfAttribute }.forEach { attr ->
-                val (type, mutable) = when (attr.attributeType) {
+                val (type, mutable) = when (attr.fieldCardinality) {
                     is Scalar -> attr.types.commonType.copy(nullable = attr.types.isNullable) to true
                     is Repeated -> MUTABLE_LIST.parameterizedBy(attr.types.iosType) to false
                     is MapType -> MUTABLE_MAP.parameterizedBy(
-                        attr.attributeType.keyTypes.iosType,
-                        attr.attributeType.valueTypes.iosType
+                        attr.fieldCardinality.keyTypes.iosType,
+                        attr.fieldCardinality.valueTypes.iosType
                     ) to false
                 }
 
@@ -428,8 +428,8 @@ abstract class ActualProtoFileWriter(protoFile: ProtoFile) : ProtoFileWriter(pro
 
             beginControlFlow("when (tag)")
 
-            val getScalarAndRepeatedTagCode = { attr: ProtoMessageAttribute ->
-                val isPacked = isAttrPackable(attr) && attr.attributeType is Repeated
+            val getScalarAndRepeatedTagCode = { attr: ProtoMessageField ->
+                val isPacked = isAttrPackable(attr) && attr.fieldCardinality is Repeated
 
                 val dataType = getDataTypeForProtoType(attr.types.protoType)
 
@@ -457,7 +457,7 @@ abstract class ActualProtoFileWriter(protoFile: ProtoFile) : ProtoFileWriter(pro
                 }
             }
 
-            val getScalarReadFieldCode = { attr: ProtoMessageAttribute ->
+            val getScalarReadFieldCode = { attr: ProtoMessageField ->
                 when (attr.types.protoType) {
                     ProtoType.DOUBLE,
                     ProtoType.FLOAT,
@@ -492,7 +492,7 @@ abstract class ActualProtoFileWriter(protoFile: ProtoFile) : ProtoFileWriter(pro
             }
 
             message.attributes.filter { !it.isOneOfAttribute }.forEach { attr ->
-                when (attr.attributeType) {
+                when (attr.fieldCardinality) {
                     is Scalar, is Repeated -> {
                         addCode(getScalarAndRepeatedTagCode(attr))
                     }
@@ -509,7 +509,7 @@ abstract class ActualProtoFileWriter(protoFile: ProtoFile) : ProtoFileWriter(pro
 
                 addCode(" -> ")
 
-                when (attr.attributeType) {
+                when (attr.fieldCardinality) {
                     is Scalar -> {
                         addCode("%N·=·", getAttrVarName(attr))
                         addCode(getScalarReadFieldCode(attr))
@@ -591,9 +591,9 @@ abstract class ActualProtoFileWriter(protoFile: ProtoFile) : ProtoFileWriter(pro
                             Const.Message.Companion.WrapperDeserializationFunction.STREAM_PARAM,
                             getAttrVarName(attr),
                             DataType,
-                            getDataTypeForProtoType(attr.attributeType.keyTypes.protoType),
+                            getDataTypeForProtoType(attr.fieldCardinality.keyTypes.protoType),
                             DataType,
-                            getDataTypeForProtoType(attr.attributeType.valueTypes.protoType),
+                            getDataTypeForProtoType(attr.fieldCardinality.valueTypes.protoType),
                         )
 
                         val getDefaultEntry = { types: Types ->
@@ -630,16 +630,16 @@ abstract class ActualProtoFileWriter(protoFile: ProtoFile) : ProtoFileWriter(pro
                         }
 
                         //Write default values
-                        addCode(getDefaultEntry(attr.attributeType.keyTypes))
+                        addCode(getDefaultEntry(attr.fieldCardinality.keyTypes))
                         addCode(", ")
-                        addCode(getDefaultEntry(attr.attributeType.valueTypes))
+                        addCode(getDefaultEntry(attr.fieldCardinality.valueTypes))
                         addCode(", ")
 
-                        when (attr.attributeType.keyTypes.protoType) {
+                        when (attr.fieldCardinality.keyTypes.protoType) {
                             ProtoType.INT_32,
                             ProtoType.INT_64,
                             ProtoType.BOOL,
-                            ProtoType.STRING -> addReadScalarCode(attr.attributeType.keyTypes)
+                            ProtoType.STRING -> addReadScalarCode(attr.fieldCardinality.keyTypes)
 
                             ProtoType.ENUM,
                             ProtoType.MESSAGE,
@@ -648,22 +648,22 @@ abstract class ActualProtoFileWriter(protoFile: ProtoFile) : ProtoFileWriter(pro
                             ProtoType.FLOAT -> throw IllegalStateException("Illegal key types")
                         }
                         addCode(", ")
-                        when (attr.attributeType.valueTypes.protoType) {
+                        when (attr.fieldCardinality.valueTypes.protoType) {
                             ProtoType.DOUBLE,
                             ProtoType.FLOAT,
                             ProtoType.INT_32,
                             ProtoType.INT_64,
                             ProtoType.BOOL,
-                            ProtoType.STRING -> addReadScalarCode(attr.attributeType.valueTypes)
+                            ProtoType.STRING -> addReadScalarCode(attr.fieldCardinality.valueTypes)
 
                             ProtoType.MESSAGE -> addCode(
                                 "{·%M(this, %T.Companion::%N)}",
                                 readKMMessage,
-                                attr.attributeType.valueTypes.iosType,
+                                attr.fieldCardinality.valueTypes.iosType,
                                 Const.Message.Companion.WrapperDeserializationFunction.NAME
                             )
 
-                            ProtoType.ENUM -> addReadEnumCode(attr.attributeType.valueTypes)
+                            ProtoType.ENUM -> addReadEnumCode(attr.fieldCardinality.valueTypes)
                             ProtoType.MAP -> throw IllegalStateException()
                         }
                         addCode(")\n")
@@ -722,7 +722,7 @@ abstract class ActualProtoFileWriter(protoFile: ProtoFile) : ProtoFileWriter(pro
             ProtoType.MAP -> throw IllegalStateException()
         }
 
-    protected fun isAttrPackable(attr: ProtoMessageAttribute) = when (attr.types.protoType) {
+    protected fun isAttrPackable(attr: ProtoMessageField) = when (attr.types.protoType) {
         ProtoType.DOUBLE,
         ProtoType.FLOAT,
         ProtoType.INT_32,
@@ -737,7 +737,7 @@ abstract class ActualProtoFileWriter(protoFile: ProtoFile) : ProtoFileWriter(pro
     companion object {
         fun getWriteScalarFieldCode(
             message: ProtoMessage,
-            attr: ProtoMessageAttribute,
+            attr: ProtoMessageField,
             streamParam: String,
             performIsMessageSetCheck: Boolean
         ): CodeBlock =

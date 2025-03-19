@@ -75,10 +75,6 @@ kotlin {
             }
         }
 
-        iosMain {
-
-        }
-
         jsTest {
             dependsOn(serializationTest)
         }
@@ -141,11 +137,11 @@ tasks.findByName("jvmTest")?.let {
 
 tasks.named("iosSimulatorArm64Test", KotlinNativeSimulatorTest::class).configure {
     doFirst {
-        //TestServer.start()
+        TestServer.start()
     }
 
     doLast {
-        //TestServer.stop()
+        TestServer.stop()
     }
 }
 

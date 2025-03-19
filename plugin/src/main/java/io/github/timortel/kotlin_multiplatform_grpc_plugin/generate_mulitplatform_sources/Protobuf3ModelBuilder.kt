@@ -1,25 +1,26 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources
 
 import com.squareup.kotlinpoet.*
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.anltr.Proto3BaseListener
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.anltr.Proto3Parser
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
+import io.github.timortel.kmpgrpc.anltr.Protobuf3BaseListener
+import io.github.timortel.kmpgrpc.anltr.Protobuf3Parser
+import io.github.timortel.kmpgrpc.anltr.Protobuf3Parser.EnumTypeContext
+import io.github.timortel.kmpgrpc.anltr.Protobuf3Parser.MessageTypeContext
+import io.github.timortel.kmpgrpc.anltr.Protobuf3Parser.Type_Context
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.*
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.message_tree.EnumNode
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.message_tree.MessageNode
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.message_tree.Node
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.message_tree.PackageNode
 import java.util.*
+import java.util.ArrayDeque
 
-/**
- * @property javaUseMultipleFiles If the java use multiple files option is set.
- */
-class Proto3FileBuilder(
+class Protobuf3ModelBuilder(
     private val fileNameWithoutExtensions: String,
     private val fileName: String,
     private val packageTree: PackageNode,
     private val javaUseMultipleFiles: Boolean
-) : Proto3BaseListener() {
+) : Protobuf3BaseListener() {
 
     private var packageName: String? = null
 
@@ -34,7 +35,7 @@ class Proto3FileBuilder(
     /**
      * not null if currently in a one of node
      */
-    private var currentOneOfAttributes: MutableList<ProtoMessageAttribute>? = null
+    private var currentOneOfAttributes: MutableList<ProtoMessageField>? = null
 
     private val services = mutableListOf<ProtoService>()
     private val currentServiceRpcs = mutableListOf<ProtoRpc>()
@@ -47,12 +48,8 @@ class Proto3FileBuilder(
      */
     var protoFile: ProtoFile? = null
 
-    override fun enterFile(ctx: Proto3Parser.FileContext?) {
-
-    }
-
-    override fun enterProto_package(ctx: Proto3Parser.Proto_packageContext) {
-        val newPackageName = ctx.pkgName.text
+    override fun enterPackageStatement(ctx: Protobuf3Parser.PackageStatementContext) {
+        val newPackageName = ctx.fullIdent().text
         packageName = newPackageName
 
         val ownPackageNodeParents = mutableListOf<PackageNode>()
@@ -70,8 +67,20 @@ class Proto3FileBuilder(
         this.ownPackageNodeParents = ownPackageNodeParents
     }
 
-    override fun enterMessage(ctx: Proto3Parser.MessageContext) {
-        val messageName = ctx.messageName.text
+    override fun exitProto(ctx: Protobuf3Parser.ProtoContext) {
+        protoFile =
+            ProtoFile(
+                packageName ?: "",
+                fileNameWithoutExtensions,
+                fileName,
+                topLevelMessages.toList(),
+                services.toList(),
+                topLevelEnums.toList()
+            )
+    }
+
+    override fun enterMessageDef(ctx: Protobuf3Parser.MessageDefContext) {
+        val messageName = ctx.messageName().text
         val newMessageNode = if (messageReadingStack.isNotEmpty()) {
             //Just look for the child in the current message
             messageReadingStack
@@ -84,10 +93,15 @@ class Proto3FileBuilder(
             ownPackageNode.nodes.first { it.name == messageName } as MessageNode
         }
 
-        messageReadingStack.push(MessageReader(name = messageName, messageNode = newMessageNode))
+        messageReadingStack.push(
+            MessageReader(
+                name = messageName,
+                messageNode = newMessageNode
+            )
+        )
     }
 
-    override fun exitMessage(ctx: Proto3Parser.MessageContext) {
+    override fun exitMessageDef(ctx: Protobuf3Parser.MessageDefContext?) {
         val messageReader = messageReadingStack.pop()
 
         if (messageReadingStack.isNotEmpty()) {
@@ -112,6 +126,7 @@ class Proto3FileBuilder(
             fileNameWithoutExtensions,
             javaUseMultipleFiles
         )
+
         children += messageReader.childMessages.map { childMessageReader ->
             buildMessageTree(childMessageReader, protoMessage)
         }
@@ -119,25 +134,65 @@ class Proto3FileBuilder(
         return protoMessage
     }
 
-    override fun enterMessage_attribute(ctx: Proto3Parser.Message_attributeContext) {
+    override fun enterField(ctx: Protobuf3Parser.FieldContext) {
+        val label = ctx.fieldLabel()?.text
+        val name = ctx.fieldName().text
+        val fieldNumber =
+            ctx.fieldNumber().text.toIntOrNull() ?: throw IllegalStateException("Could not parse field number for $ctx")
+
+        val fieldType = ctx.type_().toFieldType()
+
+        val fieldCardinality = when (label) {
+            "optional" -> FieldCardinality.OPTIONAL
+            "repeated" -> FieldCardinality.REPEATED
+            else -> FieldCardinality.IMPLICIT
+        }
+
+        enterField(
+            fieldName = name,
+            fieldNumber = fieldNumber,
+            fieldType = fieldType,
+            fieldCardinality = fieldCardinality
+        )
+    }
+
+    override fun enterOneofField(ctx: Protobuf3Parser.OneofFieldContext) {
+        val name = ctx.fieldName().text
+        val type = ctx.type_().toFieldType()
+        val fieldNumber =
+            ctx.fieldNumber().text.toIntOrNull() ?: throw IllegalStateException("Could not parse field number for $ctx")
+
+        enterField(
+            fieldName = name,
+            fieldNumber = fieldNumber,
+            fieldType = type,
+            fieldCardinality = FieldCardinality.ONE_OF
+        )
+    }
+
+    private fun enterField(
+        fieldName: String,
+        fieldNumber: Int,
+        fieldType: FieldType,
+        fieldCardinality: FieldCardinality
+    ) {
         val currentReadingStack = messageReadingStack.peekFirst()
 
-        val normalAttributeName = ctx.name.text
-        val types = resolveType(currentReadingStack.messageNode, ctx.type.text)
+        val types = resolveType(fieldType)
 
-        val isRepeated = ctx.repeated != null
+        val type = when (fieldCardinality) {
+            FieldCardinality.IMPLICIT -> Scalar(false, Scalar.Type.IMPLICIT, types.isEnum)
+            FieldCardinality.OPTIONAL -> Scalar(false, Scalar.Type.OPTIONAL, types.isEnum)
+            FieldCardinality.REPEATED -> Repeated(types.isEnum)
+            FieldCardinality.ONE_OF -> Scalar(true, Scalar.Type.IMPLICIT, types.isEnum)
+        }
 
-        val type = if (isRepeated) Repeated(types.isEnum) else Scalar(
-            ctx.parent.ruleIndex == Proto3Parser.RULE_one_of,
-            types.isEnum
-        )
-
-        val attr = ProtoMessageAttribute(
-            normalAttributeName,
-            types.commonType,
-            types,
-            type,
-            ctx.num.text.toInt(),
+        val attr = ProtoMessageField(
+            name = fieldName,
+            commonType = types.commonType,
+            types = types,
+            fieldCardinality = type,
+            protoId = fieldNumber,
             isOneOfAttribute = currentOneOfAttributes != null
         )
         currentReadingStack.attributes += attr
@@ -145,101 +200,38 @@ class Proto3FileBuilder(
         currentOneOfAttributes?.add(attr)
     }
 
-    override fun enterMap(ctx: Proto3Parser.MapContext) {
-        val currentReadingStack = messageReadingStack.peekFirst()
-
-        val keyTypes = resolveType(currentReadingStack.messageNode, ctx.key_type.text)
-        val valueTypes = resolveType(currentReadingStack.messageNode, ctx.value_type.text)
-
-        val type = MapType(keyTypes, valueTypes)
-
-        val attr = ProtoMessageAttribute(
-            ctx.name.text,
-            MAP,
-            Types(
-                MAP,
-                MAP,
-                MAP,
-                MAP,
-                doDiffer = false,
-                isEnum = false,
-                isNullable = false,
-                protoType = ProtoType.MAP
-            ),
-            type,
-            ctx.num.text.toInt(),
-            isOneOfAttribute = false
-        )
-
-        currentReadingStack.attributes += attr
-    }
-
-    override fun exitFile(ctx: Proto3Parser.FileContext) {
-        protoFile =
-            ProtoFile(
-                packageName ?: "",
-                fileNameWithoutExtensions,
-                fileName,
-                topLevelMessages.toList(),
-                services.toList(),
-                topLevelEnums.toList()
-            )
-    }
-
-    override fun enterService(ctx: Proto3Parser.ServiceContext) {
-        currentServiceRpcs.clear()
-    }
-
-    override fun exitRpc(ctx: Proto3Parser.RpcContext) {
-        val rpcName = ctx.rpcName.text
-
-        val requestTypes = resolveType(null, ctx.request.text)
-        val responseTypes = resolveType(null, ctx.response.text)
-
-        val isResponseStream = ctx.stream != null
-
-        currentServiceRpcs += ProtoRpc(
-            rpcName,
-            requestTypes,
-            responseTypes,
-            if (isResponseStream) ProtoRpc.Method.SERVER_STREAMING else ProtoRpc.Method.UNARY
-        )
-    }
-
-    override fun exitService(ctx: Proto3Parser.ServiceContext) {
-        val name = ctx.serviceName.text
-
-        services += ProtoService(name, currentServiceRpcs.toList())
-    }
-
-    override fun enterOne_of(ctx: Proto3Parser.One_ofContext?) {
-        super.enterOne_of(ctx)
+    // One-of handling
+    override fun enterOneof(ctx: Protobuf3Parser.OneofContext) {
+        super.enterOneof(ctx)
 
         currentOneOfAttributes = mutableListOf()
     }
 
-    override fun exitOne_of(ctx: Proto3Parser.One_ofContext) {
-        super.exitOne_of(ctx)
+    override fun exitOneof(ctx: Protobuf3Parser.OneofContext) {
+        super.exitOneof(ctx)
 
         messageReadingStack.peekFirst().oneOfs += ProtoOneOf(
-            ctx.one_of_name.text,
+            ctx.oneofName().text,
             currentOneOfAttributes!!,
             messageReadingStack.peekFirst().oneOfs.size
         )
+
         currentOneOfAttributes = null
     }
 
-    override fun exitEnum_field(ctx: Proto3Parser.Enum_fieldContext) {
-        val enumField = ProtoEnumField(ctx.name.text, ctx.num.text.toInt())
-        currentEnumFields += enumField
-    }
+    // Enum handling
 
-    override fun enterProto_enum(ctx: Proto3Parser.Proto_enumContext?) {
+    override fun enterEnumDef(ctx: Protobuf3Parser.EnumDefContext) {
         currentEnumFields.clear()
     }
 
-    override fun exitProto_enum(ctx: Proto3Parser.Proto_enumContext) {
-        val protoEnum = ProtoEnum(ctx.enumName.text, currentEnumFields.toList())
+    override fun exitEnumField(ctx: Protobuf3Parser.EnumFieldContext) {
+        val enumField = ProtoEnumField(ctx.ident().text, ctx.intLit().text.toInt())
+        currentEnumFields += enumField
+    }
+
+    override fun exitEnumDef(ctx: Protobuf3Parser.EnumDefContext) {
+        val protoEnum = ProtoEnum(ctx.enumName().text, currentEnumFields.toList())
 
         if (messageReadingStack.isNotEmpty()) {
             //enum is inside a message
@@ -249,49 +241,124 @@ class Proto3FileBuilder(
         }
     }
 
+    // Map handling
+
+    override fun enterMapField(ctx: Protobuf3Parser.MapFieldContext) {
+        val currentReadingStack = messageReadingStack.peekFirst()
+
+        val name = ctx.mapName().text
+        val fieldNumber = ctx.fieldNumber().text.toInt()
+
+        val keyType = FieldType.Scalar(ctx.keyType().text)
+        val valuesType = ctx.type_().toFieldType()
+
+        val keyTypes = resolveType(keyType)
+        val valueTypes = resolveType(valuesType)
+
+        val type = MapType(keyTypes, valueTypes)
+
+        val attr = ProtoMessageField(
+            name = name,
+            commonType = MAP,
+            types = Types(
+                commonType = MAP,
+                jvmType = MAP,
+                jsType = MAP,
+                iosType = MAP,
+                doDiffer = false,
+                isEnum = false,
+                isNullable = false,
+                protoType = ProtoType.MAP
+            ),
+            fieldCardinality = type,
+            protoId = fieldNumber,
+            isOneOfAttribute = false
+        )
+
+        currentReadingStack.attributes += attr
+    }
+
+    // Service handling
+
+    override fun enterServiceDef(ctx: Protobuf3Parser.ServiceDefContext?) {
+        currentServiceRpcs.clear()
+    }
+
+    override fun exitRpc(ctx: Protobuf3Parser.RpcContext) {
+        val rpcName = ctx.rpcName().text
+
+        val requestType = FieldType.Message(ctx.messageType(0).text)
+        val responseType = FieldType.Message(ctx.messageType(1).text)
+
+        val requestTypes = resolveType(requestType)
+        val responseTypes = resolveType(responseType)
+
+        if (ctx.clientStream != null) throw IllegalStateException("Client side stream is currently not supported")
+        val isResponseStream = ctx.serverStream != null
+
+        currentServiceRpcs += ProtoRpc(
+            rpcName = rpcName,
+            request = requestTypes,
+            response = responseTypes,
+            method = if (isResponseStream) ProtoRpc.Method.SERVER_STREAMING else ProtoRpc.Method.UNARY
+        )
+    }
+
+    override fun exitServiceDef(ctx: Protobuf3Parser.ServiceDefContext) {
+        val name = ctx.serviceName().text
+
+        services += ProtoService(name, currentServiceRpcs.toList())
+    }
+
     /**
      * Resolves the type with the given type text.
      * First checks if it's just a scalar.
      * Then looks in the current message node if one is supplied, then in the current file and then in the whole tree.
      */
-    private fun resolveType(messageNode: MessageNode?, typeText: String): Types {
-        val (scalar, protoType) = when (typeText) {
-            "double" -> DOUBLE to ProtoType.DOUBLE
-            "float" -> FLOAT to ProtoType.FLOAT
-            "int32" -> INT to ProtoType.INT_32
-            "int64" -> LONG to ProtoType.INT_64
-            "bool" -> BOOLEAN to ProtoType.BOOL
-            "string" -> STRING to ProtoType.STRING
-            else -> null to null
+    private fun resolveType(fieldType: FieldType): Types {
+        return when (fieldType) {
+            is FieldType.Scalar -> {
+                val (type, protoType) = when (fieldType.text) {
+                    "double" -> DOUBLE to ProtoType.DOUBLE
+                    "float" -> FLOAT to ProtoType.FLOAT
+                    "int32" -> INT to ProtoType.INT_32
+                    "int64" -> LONG to ProtoType.INT_64
+                    "bool" -> BOOLEAN to ProtoType.BOOL
+                    "string" -> STRING to ProtoType.STRING
+                    else -> throw IllegalStateException("Unknown proto type ${fieldType.text}")
+                }
+
+                return Types(
+                    commonType = type,
+                    jvmType = type,
+                    jsType = type,
+                    iosType = type,
+                    doDiffer = false,
+                    isEnum = false,
+                    isNullable = false,
+                    protoType = protoType
+                )
+            }
+
+            is FieldType.Enum, is FieldType.Message -> {
+                val messageNode = messageReadingStack.peekFirst()?.messageNode
+
+                if (messageNode != null) {
+                    //Priority 1: Look for the message in the current message node
+                    val relativeInMessage =
+                        resolveMessageOrEnumInMessageTree(packageName ?: "", messageNode, fieldType.text)
+                    if (relativeInMessage != null) return relativeInMessage
+                }
+
+                //Priority 2: Look in the current proto file
+                val relativeInFile = resolveTypeInTree(ownPackageNode, ownPackageNodeParents, fieldType.text)
+                if (relativeInFile != null) return relativeInFile
+
+                //Priority 3: Look in the whole package structure
+                return resolveTypeInTree(packageTree, emptyList(), fieldType.text)
+                    ?: throw RuntimeException("No message or enum ${fieldType.text} found.")
+            }
         }
-
-        //Scalar types have the same type on all platforms
-        if (scalar != null && protoType != null) {
-            return Types(
-                scalar,
-                scalar,
-                scalar,
-                scalar,
-                doDiffer = false,
-                isEnum = false,
-                isNullable = false,
-                protoType = protoType
-            )
-        }
-
-        if (messageNode != null) {
-            //Priority 1: Look for the message in the current message node
-            val relativeInMessage = resolveMessageOrEnumInMessageTree(packageName ?: "", messageNode, typeText)
-            if (relativeInMessage != null) return relativeInMessage
-        }
-
-        //Priority 2: Look in the current proto file
-        val relativeInFile = resolveTypeInTree(ownPackageNode, ownPackageNodeParents, typeText)
-        if (relativeInFile != null) return relativeInFile
-
-        //Priority 3: Look in the whole package structure
-        return resolveTypeInTree(packageTree, emptyList(), typeText)
-            ?: throw RuntimeException("No message or enum $typeText found.")
     }
 
     private fun resolveTypeInTree(node: PackageNode, parents: List<PackageNode>, typeText: String): Types? {
@@ -390,6 +457,7 @@ class Proto3FileBuilder(
         val remainingTypeText = typeText.substringAfter('.', "")
 
         return when (node) {
+
             is EnumNode -> {
                 //If this is an enum node but the remainingTypeText is not empty, this cannot be correct
                 //because enum nodes have no children
@@ -410,10 +478,31 @@ class Proto3FileBuilder(
      */
     private class MessageReader(
         val name: String,
-        val attributes: MutableList<ProtoMessageAttribute> = mutableListOf(),
+        val attributes: MutableList<ProtoMessageField> = mutableListOf(),
         val oneOfs: MutableList<ProtoOneOf> = mutableListOf(),
         val enums: MutableList<ProtoEnum> = mutableListOf(),
         val childMessages: MutableList<MessageReader> = mutableListOf(),
         val messageNode: MessageNode
     )
+
+    private enum class FieldCardinality {
+        IMPLICIT,
+        OPTIONAL,
+        REPEATED,
+        ONE_OF
+    }
+
+    private sealed class FieldType {
+        abstract val text: String
+
+        data class Scalar(override val text: String) : FieldType()
+        data class Message(override val text: String) : FieldType()
+        data class Enum(override val text: String) : FieldType()
+    }
+
+    private fun Type_Context.toFieldType(): FieldType = when (getChild(0)) {
+        is MessageTypeContext -> FieldType.Message(text)
+        is EnumTypeContext -> FieldType.Enum(text)
+        else -> FieldType.Scalar(text)
+    }
 }

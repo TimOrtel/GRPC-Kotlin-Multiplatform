@@ -5,7 +5,7 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfor
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.MapType
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoFile
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoMessage
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoMessageAttribute
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoMessageField
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.map.ActualMapMessageMethodGenerator
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.map.MapMessageMethodGenerator
@@ -58,7 +58,7 @@ class JsProtoFileWriter(protoFile: ProtoFile) : ActualProtoFileWriter(protoFile)
     override fun buildMapAttributeSerializeCode(
         builder: FunSpec.Builder,
         message: ProtoMessage,
-        attr: ProtoMessageAttribute,
+        attr: ProtoMessageField,
         mapType: MapType
     ) {
         builder.apply {

@@ -1,7 +1,7 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.message_tree
 
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.anltr.Proto3Lexer
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.anltr.Proto3Parser
+import io.github.timortel.kmpgrpc.anltr.Protobuf3Lexer
+import io.github.timortel.kmpgrpc.anltr.Protobuf3Parser
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import java.io.File
@@ -13,13 +13,14 @@ object PacketTreeBuilder {
      */
     fun buildPacketTree(protoFiles: List<File>): PackageNode {
         val nodes = protoFiles.map { protoFile ->
-            val lexer = Proto3Lexer(CharStreams.fromStream(protoFile.inputStream()))
+            val lexer = Protobuf3Lexer(CharStreams.fromStream(protoFile.inputStream()))
 
-            val parser = Proto3Parser(CommonTokenStream(lexer))
+            val parser = Protobuf3Parser(CommonTokenStream(lexer))
 
-            val file = parser.file()
+            val file = parser.proto()
             val messageNodes = Proto3MessageTreeBuilder().visit(file)
-            val fullPackage = file.proto_package().firstOrNull()?.pkgName?.text ?: ""
+
+            val fullPackage = file.packageStatement().firstOrNull()?.fullIdent()?.text.orEmpty()
 
             var remainingPackageString = fullPackage
             var child: PackageNode? = null
@@ -35,14 +36,14 @@ object PacketTreeBuilder {
             child ?: PackageNode("", messageNodes, emptyList())
         }
 
-        //messages without a package
+        // messages without a package
         val topLevelMessages = nodes.filter { it.packageName.isEmpty() }.map { it.nodes }.flatten()
-        val topLevelEnums = nodes.filter { it.packageName.isEmpty() }.map { it.nodes }
+        val topLevelEnums = nodes.filter { it.packageName.isEmpty() }.map { it.nodes }.flatten()
 
-        //Merge the nodes
+        // Merge the nodes
         val mergedNodes = mergeTree(nodes.filter { it.packageName.isNotEmpty() })
 
-        return PackageNode("", topLevelMessages, mergedNodes)
+        return PackageNode("", topLevelMessages + topLevelEnums, mergedNodes)
     }
 
     private fun mergeTree(nodesInSameLevel: List<PackageNode>): List<PackageNode> {

@@ -68,13 +68,13 @@ object Const {
             const val PARAMETER_NATIVE = "native"
 
             object JVM {
-                fun commonFunction(attr: ProtoMessageAttribute): MemberName = commonFunction(attr.types.jvmType)
+                fun commonFunction(attr: ProtoMessageField): MemberName = commonFunction(attr.types.jvmType)
 
                 fun commonFunction(jvmType: ClassName) = MemberName(jvmType.packageName, NAME)
             }
 
             object JS {
-                fun commonFunction(attr: ProtoMessageAttribute): MemberName = commonFunction(attr.types.jsType)
+                fun commonFunction(attr: ProtoMessageField): MemberName = commonFunction(attr.types.jsType)
 
                 fun commonFunction(jsType: ClassName) = MemberName(jsType.packageName, NAME)
             }
@@ -84,7 +84,7 @@ object Const {
             fun parentSealedClassName(message: ProtoMessage, oneOf: ProtoOneOf) =
                 message.commonType.nestedClass(oneOf.capitalizedName)
 
-            fun childClassName(message: ProtoMessage, oneOf: ProtoOneOf, attr: ProtoMessageAttribute) =
+            fun childClassName(message: ProtoMessage, oneOf: ProtoOneOf, attr: ProtoMessageField) =
                 parentSealedClassName(message, oneOf).nestedClass(attr.capitalizedName)
 
             fun unknownClassName(message: ProtoMessage, oneOf: ProtoOneOf) = parentSealedClassName(message, oneOf).nestedClass("Unknown")
@@ -108,8 +108,8 @@ object Const {
             /**
              * @return the property name of the given attribute in the generated kotlin file for the message.
              */
-            fun propertyName(protoMessage: ProtoMessage, attr: ProtoMessageAttribute): String {
-                return when (attr.attributeType) {
+            fun propertyName(protoMessage: ProtoMessage, attr: ProtoMessageField): String {
+                return when (attr.fieldCardinality) {
                     is io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.Scalar -> attr.name
                     is io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.Repeated -> Repeated.listPropertyName(
                         attr
@@ -121,32 +121,32 @@ object Const {
 
             object Scalar {
                 object JVM {
-                    fun getFunction(message: ProtoMessage, attr: ProtoMessageAttribute) =
+                    fun getFunction(message: ProtoMessage, attr: ProtoMessageField) =
                         message.jvmType.member(attr.name)
 
-                    fun setFunction(message: ProtoMessage, attr: ProtoMessageAttribute) =
+                    fun setFunction(message: ProtoMessage, attr: ProtoMessageField) =
                         message.jvmType.member("set${attr.capitalizedName}")
 
-                    fun setEnumValueFunction(message: ProtoMessage, attr: ProtoMessageAttribute) =
+                    fun setEnumValueFunction(message: ProtoMessage, attr: ProtoMessageField) =
                         message.jvmType.member("set${attr.capitalizedName}Value")
 
-                    fun getHasFunction(message: ProtoMessage, attr: ProtoMessageAttribute) =
+                    fun getHasFunction(message: ProtoMessage, attr: ProtoMessageField) =
                         message.jvmType.member("has${attr.capitalizedName}")
                 }
 
                 object JS {
-                    fun getFunction(message: ProtoMessage, attr: ProtoMessageAttribute) =
+                    fun getFunction(message: ProtoMessage, attr: ProtoMessageField) =
                         message.jsType.member("get${attr.name.lowercase().capitalize()}")
 
-                    fun getHasFunction(message: ProtoMessage, attr: ProtoMessageAttribute) =
+                    fun getHasFunction(message: ProtoMessage, attr: ProtoMessageField) =
                         message.jsType.member("has${attr.name.lowercase().capitalize()}")
 
-                    fun setFunction(message: ProtoMessage, attr: ProtoMessageAttribute) =
+                    fun setFunction(message: ProtoMessage, attr: ProtoMessageField) =
                         message.jsType.member("set${attr.name.lowercase().capitalize()}")
                 }
 
                 object IosJvm {
-                    fun isMessageSetFunctionName(message: ProtoMessage, attr: ProtoMessageAttribute): String {
+                    fun isMessageSetFunctionName(message: ProtoMessage, attr: ProtoMessageField): String {
                         var name = "is${attr.capitalizedName}Set"
                         val attrNames = message.attributes.map { it.name }
 
@@ -161,29 +161,29 @@ object Const {
 
             object Repeated {
 
-                fun listPropertyName(attr: ProtoMessageAttribute) = "${attr.name}List"
+                fun listPropertyName(attr: ProtoMessageField) = "${attr.name}List"
 
-                fun countPropertyName(attr: ProtoMessageAttribute) = "${attr.name}Count"
+                fun countPropertyName(attr: ProtoMessageField) = "${attr.name}Count"
 
                 object JS {
-                    fun setListFunctionName(attr: ProtoMessageAttribute): String =
+                    fun setListFunctionName(attr: ProtoMessageField): String =
                         "set${attr.name.lowercase().capitalize()}List"
 
-                    fun getListFunctionName(attr: ProtoMessageAttribute): String =
+                    fun getListFunctionName(attr: ProtoMessageField): String =
                         "get${attr.name.lowercase().capitalize()}List"
 
-                    fun clearListFunctionName(attr: ProtoMessageAttribute): String =
+                    fun clearListFunctionName(attr: ProtoMessageField): String =
                         "clear${attr.name.lowercase().capitalize()}List"
                 }
 
                 object JVM {
-                    fun getListFunction(message: ProtoMessage, attr: ProtoMessageAttribute) =
+                    fun getListFunction(message: ProtoMessage, attr: ProtoMessageField) =
                         message.jvmType.member("${attr.name}List")
 
-                    fun addAllFunction(message: ProtoMessage, attr: ProtoMessageAttribute) =
+                    fun addAllFunction(message: ProtoMessage, attr: ProtoMessageField) =
                         message.jvmType.member("addAll${attr.capitalizedName}")
 
-                    fun addAllValuesFunction(message: ProtoMessage, attr: ProtoMessageAttribute) =
+                    fun addAllValuesFunction(message: ProtoMessage, attr: ProtoMessageField) =
                         message.jvmType.member("addAll${attr.capitalizedName}Value")
                 }
             }
@@ -191,33 +191,33 @@ object Const {
             object Enum {
 
                 object JVM {
-                    fun getValueFunction(message: ProtoMessage, attr: ProtoMessageAttribute) =
+                    fun getValueFunction(message: ProtoMessage, attr: ProtoMessageField) =
                         message.jvmType.member("${attr.name}Value")
 
-                    fun getValueListFunction(message: ProtoMessage, attr: ProtoMessageAttribute) =
+                    fun getValueListFunction(message: ProtoMessage, attr: ProtoMessageField) =
                         message.jvmType.member("${attr.name}ValueList()")
                 }
 
                 object JS {
-                    fun getValueFunction(message: ProtoMessage, attr: ProtoMessageAttribute) =
+                    fun getValueFunction(message: ProtoMessage, attr: ProtoMessageField) =
                         message.jsType.member("get${attr.name.lowercase().capitalize()}")
 
-                    fun getValueListFunction(message: ProtoMessage, attr: ProtoMessageAttribute) =
+                    fun getValueListFunction(message: ProtoMessage, attr: ProtoMessageField) =
                         message.jsType.member("get${attr.name.lowercase().capitalize()}List")
                 }
             }
 
             object Map {
-                fun propertyName(attr: ProtoMessageAttribute): String = "${attr.name}Map"
+                fun propertyName(attr: ProtoMessageField): String = "${attr.name}Map"
 
                 object JVM {
-                    fun propertyName(attr: ProtoMessageAttribute): String = "${attr.name}Map"
+                    fun propertyName(attr: ProtoMessageField): String = "${attr.name}Map"
 
-                    fun putAllFunctionName(attr: ProtoMessageAttribute): String = "putAll${attr.capitalizedName}"
+                    fun putAllFunctionName(attr: ProtoMessageField): String = "putAll${attr.capitalizedName}"
                 }
 
                 object JS {
-                    fun getMapFunctionName(attr: ProtoMessageAttribute): String =
+                    fun getMapFunctionName(attr: ProtoMessageField): String =
                         "get${attr.name.lowercase().capitalize()}Map"
                 }
             }
@@ -269,15 +269,15 @@ object Const {
 
         object Attribute {
             object Scalar {
-                fun propertyName(attr: ProtoMessageAttribute): String = attr.name
+                fun propertyName(attr: ProtoMessageField): String = attr.name
             }
 
             object Repeated {
-                fun propertyName(attr: ProtoMessageAttribute): String = "${attr.name}List"
+                fun propertyName(attr: ProtoMessageField): String = "${attr.name}List"
             }
 
             object Map {
-                fun propertyName(attr: ProtoMessageAttribute): String = "${attr.name}Map"
+                fun propertyName(attr: ProtoMessageField): String = "${attr.name}Map"
             }
         }
 

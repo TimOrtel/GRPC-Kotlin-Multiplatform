@@ -1,8 +1,8 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources
 
+import io.github.timortel.kmpgrpc.anltr.Protobuf3Lexer
+import io.github.timortel.kmpgrpc.anltr.Protobuf3Parser
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.GrpcMultiplatformExtension
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.anltr.Proto3Lexer
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.anltr.Proto3Parser
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.writeProtoFile
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.writeServiceFile
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.message_tree.PacketTreeBuilder
@@ -96,16 +96,17 @@ private fun generateProtoFiles(
     val protoFiles = sourceProtoFiles
         .map { protoFile ->
             log.debug("Generating KMP sources for proto file={}", protoFile)
-            val lexer = Proto3Lexer(CharStreams.fromStream(protoFile.inputStream()))
-            val parser = Proto3Parser(CommonTokenStream(lexer))
+            val lexer = Protobuf3Lexer(CharStreams.fromStream(protoFile.inputStream()))
+            val parser = Protobuf3Parser(CommonTokenStream(lexer))
 
-            val proto3File = parser.file()
+            val proto3File = parser.proto()
 
-            val javaUseMultipleFiles = proto3File.option()
-                .any { it.optionName.text == "java_multiple_files" && it.optionValueExpression.text == "true" }
+            val javaUseMultipleFiles = proto3File.optionStatement()
+                .any { it.optionName().text == "java_multiple_files" && it.constant().text == "true" }
 
             val proto3FileBuilder =
-                Proto3FileBuilder(protoFile.nameWithoutExtension, protoFile.name, packetTree, javaUseMultipleFiles)
+                Protobuf3ModelBuilder(protoFile.nameWithoutExtension, protoFile.name, packetTree, javaUseMultipleFiles)
+
             ParseTreeWalker().walk(
                 proto3FileBuilder,
                 proto3File

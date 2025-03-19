@@ -6,7 +6,7 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfor
 /**
  * @property oneOfIndex the index of the oneof in the message.
  */
-data class ProtoOneOf(val name: String, val attributes: List<ProtoMessageAttribute>, val oneOfIndex: Int) {
+data class ProtoOneOf(val name: String, val attributes: List<ProtoMessageField>, val oneOfIndex: Int) {
     val capitalizedName: String = name.capitalize()
 
     fun defaultValue(message: ProtoMessage): CodeBlock = CodeBlock.of("%T", Const.Message.OneOf.notSetClassName(message, this))

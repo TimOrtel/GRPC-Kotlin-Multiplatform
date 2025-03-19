@@ -1,15 +1,6 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.proto_file
 
 import com.squareup.kotlinpoet.*
-import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.CodedInputStream
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.CodedOutputStream
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.DataType
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.MessageDeserializer
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.ProtoType
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.Types
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.WireFormatForType
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.WireFormatMakeTag
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.map.MapMessageMethodGenerator
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.oneof.OneOfMethodAndClassGenerator
@@ -18,9 +9,6 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfor
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.unrecognizedEnumField
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.*
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.kmMessage
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.readKMMessage
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.readMapEntry
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.writeMap
 import java.io.File
 
 /**
@@ -77,7 +65,7 @@ abstract class ProtoFileWriter(private val protoFile: ProtoFile, private val isA
 
                 message.attributes.forEach { attr ->
                     //We change nothing here
-                    when (attr.attributeType) {
+                    when (attr.fieldCardinality) {
                         is Scalar -> addSimpleMessageFunctions(this, message, attr)
                         is Repeated -> addRepeatedMessageFunctions(this, message, attr)
                         is MapType -> mapMessageMethodGenerator.generateFunctions(
@@ -165,7 +153,7 @@ abstract class ProtoFileWriter(private val protoFile: ProtoFile, private val isA
                 addStatement("if (%N !is %T) return false", otherParamName, thisClassName)
 
                 message.attributes.filter { !it.isOneOfAttribute }.forEach { attr ->
-                    when (attr.attributeType) {
+                    when (attr.fieldCardinality) {
                         is Scalar -> {
                             addStatement(
                                 "if (%1N != %2N.%1N) return false",
@@ -205,7 +193,7 @@ abstract class ProtoFileWriter(private val protoFile: ProtoFile, private val isA
     private sealed class Property {
         abstract fun propertyName(message: ProtoMessage): String
 
-        class Attribute(val attr: ProtoMessageAttribute) : Property() {
+        class Attribute(val attr: ProtoMessageField) : Property() {
             override fun propertyName(message: ProtoMessage): String {
                 return Const.Message.Attribute.propertyName(message, attr)
             }
@@ -254,7 +242,7 @@ abstract class ProtoFileWriter(private val protoFile: ProtoFile, private val isA
     private fun addSimpleMessageFunctions(
         builder: TypeSpec.Builder,
         message: ProtoMessage,
-        attr: ProtoMessageAttribute
+        attr: ProtoMessageField
     ) {
         scalarMessageMethodGenerator.generateProperties(builder, message, attr)
     }
@@ -262,7 +250,7 @@ abstract class ProtoFileWriter(private val protoFile: ProtoFile, private val isA
     private fun addRepeatedMessageFunctions(
         builder: TypeSpec.Builder,
         message: ProtoMessage,
-        attr: ProtoMessageAttribute
+        attr: ProtoMessageField
     ) {
         repeatedMessageMethodGenerator.generateFunctions(builder, message, attr)
     }

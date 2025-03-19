@@ -3,7 +3,7 @@ package io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfo
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoMessage
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoMessageAttribute
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoMessageField
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
 
 /**
@@ -13,7 +13,7 @@ abstract class RepeatedMessageMethodGenerator(private val isActual: Boolean) {
 
     protected abstract val attrs: List<KModifier>
 
-    fun generateFunctions(builder: TypeSpec.Builder, message: ProtoMessage, messageAttribute: ProtoMessageAttribute) {
+    fun generateFunctions(builder: TypeSpec.Builder, message: ProtoMessage, messageAttribute: ProtoMessageField) {
         val type = getType(messageAttribute)
 
         val listProperty = PropertySpec
@@ -38,18 +38,18 @@ abstract class RepeatedMessageMethodGenerator(private val isActual: Boolean) {
     /**
      * @return the type of the list property
      */
-    protected abstract fun getType(messageAttribute: ProtoMessageAttribute): TypeName
+    protected abstract fun getType(messageAttribute: ProtoMessageField): TypeName
 
     protected abstract fun modifyListProperty(
         builder: PropertySpec.Builder,
         message: ProtoMessage,
-        attr: ProtoMessageAttribute
+        attr: ProtoMessageField
     )
 
     protected open fun modifyCountProperty(
         builder: PropertySpec.Builder,
         message: ProtoMessage,
-        attr: ProtoMessageAttribute
+        attr: ProtoMessageField
     ) {
         if (isActual) {
             builder.initializer("%N.size", Const.Message.Attribute.Repeated.listPropertyName(attr))

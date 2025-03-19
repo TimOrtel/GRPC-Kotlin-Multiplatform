@@ -3,17 +3,17 @@ package io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfo
 import com.squareup.kotlinpoet.*
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.ProtoType
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoMessage
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoMessageAttribute
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoMessageField
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
 
 object ActualScalarMessageMethodGenerator : ScalarMessageMethodGenerator(true) {
 
     override val attrs: List<KModifier> = listOf(KModifier.ACTUAL)
 
-    override fun getTypeForAttribute(protoMessageAttribute: ProtoMessageAttribute): TypeName =
-        protoMessageAttribute.commonType
+    override fun getTypeForAttribute(protoMessageField: ProtoMessageField): TypeName =
+        protoMessageField.commonType
 
-    override fun modifyProperty(builder: PropertySpec.Builder, message: ProtoMessage, attr: ProtoMessageAttribute) {
+    override fun modifyProperty(builder: PropertySpec.Builder, message: ProtoMessage, attr: ProtoMessageField) {
         when (attr.types.protoType) {
             ProtoType.MESSAGE -> builder.initializer("%N ?: %T()", attr.name, attr.commonType)
             else -> builder.initializer(attr.name)
@@ -23,7 +23,7 @@ object ActualScalarMessageMethodGenerator : ScalarMessageMethodGenerator(true) {
     override fun generateProperties(
         builder: TypeSpec.Builder,
         protoMessage: ProtoMessage,
-        messageAttribute: ProtoMessageAttribute,
+        messageAttribute: ProtoMessageField,
         type: TypeName
     ) {
         super.generateProperties(builder, protoMessage, messageAttribute, type)
@@ -43,7 +43,7 @@ object ActualScalarMessageMethodGenerator : ScalarMessageMethodGenerator(true) {
         }
     }
 
-    override fun modifyHasFunction(builder: FunSpec.Builder, message: ProtoMessage, attr: ProtoMessageAttribute) {
+    override fun modifyHasFunction(builder: FunSpec.Builder, message: ProtoMessage, attr: ProtoMessageField) {
         builder.apply {
             addStatement("return %N", Const.Message.Attribute.Scalar.IosJvm.isMessageSetFunctionName(message, attr))
         }

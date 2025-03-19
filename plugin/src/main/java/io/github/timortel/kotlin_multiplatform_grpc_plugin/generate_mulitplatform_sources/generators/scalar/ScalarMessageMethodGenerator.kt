@@ -2,7 +2,7 @@ package io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfo
 
 import com.squareup.kotlinpoet.*
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoMessage
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoMessageAttribute
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoMessageField
 
 /**
  * Generates methods for scalar proto fields. Scalar means the simple, non-repeated message field.
@@ -14,7 +14,7 @@ abstract class ScalarMessageMethodGenerator(private val isActual: Boolean) {
     fun generateProperties(
         builder: TypeSpec.Builder,
         protoMessage: ProtoMessage,
-        messageAttribute: ProtoMessageAttribute
+        messageAttribute: ProtoMessageField
     ) {
         val type = getTypeForAttribute(messageAttribute)
 
@@ -27,7 +27,7 @@ abstract class ScalarMessageMethodGenerator(private val isActual: Boolean) {
     open fun generateProperties(
         builder: TypeSpec.Builder,
         protoMessage: ProtoMessage,
-        messageAttribute: ProtoMessageAttribute,
+        messageAttribute: ProtoMessageField,
         type: TypeName
     ) {
         builder.addProperty(
@@ -53,17 +53,17 @@ abstract class ScalarMessageMethodGenerator(private val isActual: Boolean) {
         }
     }
 
-    protected abstract fun getTypeForAttribute(protoMessageAttribute: ProtoMessageAttribute): TypeName
+    protected abstract fun getTypeForAttribute(protoMessageField: ProtoMessageField): TypeName
 
     protected abstract fun modifyProperty(
         builder: PropertySpec.Builder,
         message: ProtoMessage,
-        attr: ProtoMessageAttribute
+        attr: ProtoMessageField
     )
 
     protected abstract fun modifyHasFunction(
         builder: FunSpec.Builder,
         message: ProtoMessage,
-        attr: ProtoMessageAttribute
+        attr: ProtoMessageField
     )
 }

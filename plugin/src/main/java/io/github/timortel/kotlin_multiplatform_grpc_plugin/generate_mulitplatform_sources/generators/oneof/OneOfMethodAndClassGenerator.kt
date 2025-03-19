@@ -2,7 +2,7 @@ package io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfo
 
 import com.squareup.kotlinpoet.*
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoMessage
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoMessageAttribute
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoMessageField
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoOneOf
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
 
@@ -126,7 +126,7 @@ abstract class OneOfMethodAndClassGenerator(private val isActual: Boolean) {
     }
 
     sealed class ChildClassType {
-        class Normal(val attr: ProtoMessageAttribute) : ChildClassType()
+        class Normal(val attr: ProtoMessageField) : ChildClassType()
         object NotSet : ChildClassType()
         object Unknown : ChildClassType()
     }
