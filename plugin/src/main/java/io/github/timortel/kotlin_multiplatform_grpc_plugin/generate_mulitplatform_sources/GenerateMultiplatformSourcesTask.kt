@@ -3,12 +3,11 @@ package io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfo
 import io.github.timortel.kmpgrpc.anltr.Protobuf3Lexer
 import io.github.timortel.kmpgrpc.anltr.Protobuf3Parser
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.GrpcMultiplatformExtension
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.writeProtoFile
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.writeServiceFile
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.message_tree.PacketTreeBuilder
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.ProtoFile
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.ProtoFolder
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.ProtoProject
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
-import org.antlr.v4.runtime.tree.ParseTreeWalker
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileCollection
@@ -89,52 +88,86 @@ private fun generateProtoFiles(
             .walk(FileWalkDirection.TOP_DOWN)
             .filter { it.isFile && it.extension == "proto" }
             .toList()
-    }.flatten()
+    }
 
-    val packetTree = PacketTreeBuilder.buildPacketTree(sourceProtoFiles)
+    val folders = protoFolders.mapNotNull { sourceFolder ->
+        walkFolder(sourceFolder)
+    }
 
-    val protoFiles = sourceProtoFiles
-        .map { protoFile ->
-            log.debug("Generating KMP sources for proto file={}", protoFile)
-            val lexer = Protobuf3Lexer(CharStreams.fromStream(protoFile.inputStream()))
-            val parser = Protobuf3Parser(CommonTokenStream(lexer))
-
-            val proto3File = parser.proto()
-
-            val javaUseMultipleFiles = proto3File.optionStatement()
-                .any { it.optionName().text == "java_multiple_files" && it.constant().text == "true" }
-
-            val proto3FileBuilder =
-                Protobuf3ModelBuilder(protoFile.nameWithoutExtension, protoFile.name, packetTree, javaUseMultipleFiles)
-
-            ParseTreeWalker().walk(
-                proto3FileBuilder,
-                proto3File
-            )
-
-            val result = proto3FileBuilder.protoFile
-                ?: throw IllegalArgumentException("Failed generating protos for $protoFile because builder returned null.")
-
-            result
+    val project = ProtoProject(
+        // All source folders are treated as if all of their files were in the same folder
+        rootFolder = folders.fold(ProtoFolder(emptyList(), emptyList())) { l, r ->
+            ProtoFolder(folders = l.folders + r.folders, files = l.files + r.files)
         }
+    )
 
-    protoFiles.forEach { protoFile ->
-        writeProtoFile(
-            protoFile = protoFile,
-            generateTarget = shouldGenerateTargetMap,
-            commonOutputDir = commonOutputFolder,
-            jvmOutputDir = jvmOutputFolder,
-            jsOutputDir = jsOutputFolder,
-            iosOutputDir = iosOutputDir
-        )
+    println(project)
 
-        writeServiceFile(
-            protoFile = protoFile,
-            generateTarget = shouldGenerateTargetMap,
-            commonOutputFolder = commonOutputFolder,
-            jvmOutputFolder = jvmOutputFolder,
-            jsOutputFolder = jsOutputFolder,
-            iosOutputFolder = iosOutputDir
-        )
+//    protoFiles.forEach { protoFile ->
+//        writeProtoFile(
+//            protoFile = protoFile,
+//            generateTarget = shouldGenerateTargetMap,
+//            commonOutputDir = commonOutputFolder,
+//            jvmOutputDir = jvmOutputFolder,
+//            jsOutputDir = jsOutputFolder,
+//            iosOutputDir = iosOutputDir
+//        )
+//
+//        writeServiceFile(
+//            protoFile = protoFile,
+//            generateTarget = shouldGenerateTargetMap,
+//            commonOutputFolder = commonOutputFolder,
+//            jvmOutputFolder = jvmOutputFolder,
+//            jsOutputFolder = jsOutputFolder,
+//            iosOutputFolder = iosOutputDir
+//        )
+//    }
+}
+
+/**
+ * @return the proto folder only if the folder or any of its subfolders did contain proto files
+ */
+private fun walkFolder(folder: File): ProtoFolder? {
+    val folders = mutableListOf<ProtoFolder>()
+    val files = mutableListOf<ProtoFile>()
+
+    folder.listFiles()?.forEach { file ->
+        when {
+            file.isDirectory -> {
+                val subFolder = walkFolder(file)
+                if (subFolder != null) folders.add(subFolder)
+            }
+
+            file.isFile && file.extension == "proto" -> {
+                val protoFile = readProtoFile(file)
+                files.add(protoFile)
+            }
+        }
+    }
+
+    return if (folders.isNotEmpty() || files.isNotEmpty()) {
+        ProtoFolder(folders = folders, files = files)
+    } else {
+        null
+    }
+}
+
+private fun readProtoFile(file: File): ProtoFile {
+    val lexer = Protobuf3Lexer(CharStreams.fromStream(file.inputStream()))
+    val parser = Protobuf3Parser(CommonTokenStream(lexer))
+
+    val proto3File = parser.proto()
+
+    return Protobuf3ModelBuilderVisitor(file.nameWithoutExtension, file.name).visitProto(proto3File)
+}
+
+private fun buildSubFolderStructure(sourceFolder: File, sourceFile: File): List<String> {
+    return buildList {
+        var currentFolder = sourceFile.parentFile
+        while (currentFolder != sourceFolder) {
+            add(currentFolder.name)
+
+            currentFolder = currentFolder.parentFile
+        }
     }
 }
