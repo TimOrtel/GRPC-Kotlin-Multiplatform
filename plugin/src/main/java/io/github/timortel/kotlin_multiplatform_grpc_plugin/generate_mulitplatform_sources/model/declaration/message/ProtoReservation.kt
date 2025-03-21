@@ -1,4 +1,4 @@
-package io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.message
+package io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.declaration.message
 
 data class ProtoReservation(val nums: List<Int> = emptyList(), val ranges: List<IntRange> = emptyList()) {
 

@@ -5,17 +5,17 @@ import io.github.timortel.kmpgrpc.anltr.Protobuf3Visitor
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.ProtoFile
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.ProtoImport
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.ProtoOption
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.enumeration.ProtoEnum
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.message.ProtoMessage
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.message.ProtoOneOf
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.message.ProtoReservation
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.message.ProtoReservation.Companion.fold
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.message.field.ProtoFieldCardinality
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.message.field.ProtoMapField
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.message.field.ProtoMessageField
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.message.field.ProtoOneOfField
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.declaration.ProtoEnum
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.declaration.ProtoMessage
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.declaration.message.ProtoOneOf
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.declaration.message.ProtoReservation
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.declaration.message.ProtoReservation.Companion.fold
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.declaration.message.field.ProtoFieldCardinality
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.declaration.message.field.ProtoMapField
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.declaration.message.field.ProtoMessageField
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.declaration.message.field.ProtoOneOfField
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.ProtoType
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.enumeration.ProtoEnumField
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.declaration.enumeration.ProtoEnumField
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.service.ProtoRpc
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.service.ProtoService
 import org.antlr.v4.runtime.ParserRuleContext
@@ -28,6 +28,7 @@ typealias CompileException = Protobuf3CompilationException
 typealias ParseException = Protobuf3ParserException
 
 class Protobuf3ModelBuilderVisitor(
+    private val filePath: String,
     private val fileName: String,
     private val fileNameWithoutExtension: String,
 ) : Protobuf3Visitor<Any> {
@@ -35,7 +36,7 @@ class Protobuf3ModelBuilderVisitor(
         val imports = ctx.importStatement().map { visitImportStatement(it) }
         val options = ctx.optionStatement().map { visitOptionStatement(it) }
 
-        if (ctx.packageStatement().size > 1) throw CompileException("Found more than one package statements", ctx)
+        if (ctx.packageStatement().size > 1) throw CompileException("Found more than one package statements", filePath, ctx)
 
         val pkg = ctx.packageStatement().firstOrNull()?.fullIdent()?.text
 
@@ -48,7 +49,7 @@ class Protobuf3ModelBuilderVisitor(
             fileName = fileName,
             fileNameWithoutExtension = fileNameWithoutExtension,
             messages = messages,
-            topLevelEnums = topLevelEnums,
+            enums = topLevelEnums,
             services = services,
             options = options,
             imports = imports
@@ -56,11 +57,11 @@ class Protobuf3ModelBuilderVisitor(
     }
 
     override fun visitImportStatement(ctx: Protobuf3Parser.ImportStatementContext): ProtoImport {
-        return ProtoImport(ctx.strLit().text)
+        return ProtoImport(ctx.strLit().text, ctx)
     }
 
     override fun visitOptionStatement(ctx: Protobuf3Parser.OptionStatementContext): ProtoOption {
-        return ProtoOption(ctx.optionName().text, ctx.constant().text)
+        return ProtoOption(ctx.optionName().text, ctx.constant().text, ctx)
     }
 
     // Message parsing
@@ -89,7 +90,8 @@ class Protobuf3ModelBuilderVisitor(
             oneOfs = oneOfs,
             mapFields = mapFields,
             reservation = reservation,
-            options = options
+            options = options,
+            ctx = ctx
         )
     }
 
@@ -134,7 +136,7 @@ class Protobuf3ModelBuilderVisitor(
         val options = elements.mapNotNull { it.optionStatement() }.map { visitOptionStatement(it) }
         val fields = elements.mapNotNull { it.enumField() }.map { visitEnumField(it) }
 
-        return ProtoEnum(name = name, fields = fields, options = options)
+        return ProtoEnum(name = name, fields = fields, options = options, ctx = ctx)
     }
 
     // Field parsing
@@ -186,7 +188,7 @@ class Protobuf3ModelBuilderVisitor(
     }
 
     override fun visitFieldOption(ctx: Protobuf3Parser.FieldOptionContext): ProtoOption {
-        return ProtoOption(ctx.optionName().text, ctx.constant().text)
+        return ProtoOption(ctx.optionName().text, ctx.constant().text, ctx)
     }
 
     override fun visitEnumField(ctx: Protobuf3Parser.EnumFieldContext): ProtoEnumField {
@@ -206,7 +208,7 @@ class Protobuf3ModelBuilderVisitor(
     }
 
     override fun visitEnumValueOption(ctx: Protobuf3Parser.EnumValueOptionContext): ProtoOption {
-        return ProtoOption(name = ctx.optionName().text, value = ctx.constant().text)
+        return ProtoOption(name = ctx.optionName().text, value = ctx.constant().text, ctx)
     }
 
     // One-Of Parsing
@@ -261,7 +263,7 @@ class Protobuf3ModelBuilderVisitor(
 
     override fun visitType_(ctx: Protobuf3Parser.Type_Context): ProtoType {
         return when {
-            ctx.messageType() != null || ctx.enumType() != null -> ProtoType.DefType(ctx.text)
+            ctx.messageType() != null || ctx.enumType() != null -> ProtoType.DefType(ctx.text, ctx)
             ctx.DOUBLE() != null -> ProtoType.DoubleType
             ctx.FLOAT() != null -> ProtoType.FloatType
             ctx.INT32() != null -> ProtoType.Int32Type
@@ -277,7 +279,7 @@ class Protobuf3ModelBuilderVisitor(
             ctx.BOOL() != null -> ProtoType.BoolType
             ctx.STRING() != null -> ProtoType.StringType
             ctx.BYTES() != null -> ProtoType.BytesType
-            else -> throw CompileException("Unknown type found.", ctx)
+            else -> throw ParseException("Unknown type found.", ctx)
         }
     }
 
@@ -295,12 +297,12 @@ class Protobuf3ModelBuilderVisitor(
             ctx.SFIXED64() != null -> ProtoType.SFixed64Type
             ctx.BOOL() != null -> ProtoType.BoolType
             ctx.STRING() != null -> ProtoType.StringType
-            else -> throw CompileException("Unknown type found.", ctx)
+            else -> throw ParseException("Unknown type found.", ctx)
         }
     }
 
     override fun visitMessageType(ctx: Protobuf3Parser.MessageTypeContext): ProtoType.DefType {
-        return ProtoType.DefType(ctx.text)
+        return ProtoType.DefType(ctx.text, ctx)
     }
 
     override fun visit(tree: ParseTree): Any = Unit

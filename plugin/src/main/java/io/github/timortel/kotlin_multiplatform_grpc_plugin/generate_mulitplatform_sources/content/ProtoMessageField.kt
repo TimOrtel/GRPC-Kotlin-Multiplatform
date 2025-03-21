@@ -80,6 +80,4 @@ class MapType(val keyTypes: Types, val valueTypes: Types) : FieldCardinality(fal
     val commonMapType = Map::class.asTypeName().parameterizedBy(keyTypes.commonType, valueTypes.commonType)
     val commonMutableMapType =
         ClassName("kotlin.collections", "MutableMap").parameterizedBy(keyTypes.commonType, valueTypes.commonType)
-
-    val jsMapType = ClassName("kotlin.collections", "MutableMap").parameterizedBy(keyTypes.jsType, valueTypes.jsType)
 }

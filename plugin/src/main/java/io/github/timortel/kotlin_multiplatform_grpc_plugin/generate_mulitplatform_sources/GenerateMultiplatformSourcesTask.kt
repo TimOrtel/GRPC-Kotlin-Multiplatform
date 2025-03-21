@@ -96,12 +96,10 @@ private fun generateProtoFiles(
 
     val project = ProtoProject(
         // All source folders are treated as if all of their files were in the same folder
-        rootFolder = folders.fold(ProtoFolder(emptyList(), emptyList())) { l, r ->
-            ProtoFolder(folders = l.folders + r.folders, files = l.files + r.files)
+        rootFolder = folders.fold(ProtoFolder("", emptyList(), emptyList())) { l, r ->
+            ProtoFolder(name = "", folders = l.folders + r.folders, files = l.files + r.files)
         }
     )
-
-    println(project)
 
 //    protoFiles.forEach { protoFile ->
 //        writeProtoFile(
@@ -146,7 +144,7 @@ private fun walkFolder(folder: File): ProtoFolder? {
     }
 
     return if (folders.isNotEmpty() || files.isNotEmpty()) {
-        ProtoFolder(folders = folders, files = files)
+        ProtoFolder(name = folder.name,folders = folders, files = files)
     } else {
         null
     }
@@ -158,7 +156,7 @@ private fun readProtoFile(file: File): ProtoFile {
 
     val proto3File = parser.proto()
 
-    return Protobuf3ModelBuilderVisitor(file.nameWithoutExtension, file.name).visitProto(proto3File)
+    return Protobuf3ModelBuilderVisitor(filePath = file.path, fileNameWithoutExtension = file.nameWithoutExtension, fileName = file.name).visitProto(proto3File)
 }
 
 private fun buildSubFolderStructure(sourceFolder: File, sourceFile: File): List<String> {

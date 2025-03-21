@@ -2,7 +2,6 @@ package io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfo
 
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.LONG
-import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.MemberName.Companion.member
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.*
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.kmTimeUnit
@@ -63,23 +62,6 @@ object Const {
     }
 
     object Message {
-        object CommonFunction {
-            const val NAME = "common"
-            const val PARAMETER_NATIVE = "native"
-
-            object JVM {
-                fun commonFunction(attr: ProtoMessageField): MemberName = commonFunction(attr.types.jvmType)
-
-                fun commonFunction(jvmType: ClassName) = MemberName(jvmType.packageName, NAME)
-            }
-
-            object JS {
-                fun commonFunction(attr: ProtoMessageField): MemberName = commonFunction(attr.types.jsType)
-
-                fun commonFunction(jsType: ClassName) = MemberName(jsType.packageName, NAME)
-            }
-        }
-
         object OneOf {
             fun parentSealedClassName(message: ProtoMessage, oneOf: ProtoOneOf) =
                 message.commonType.nestedClass(oneOf.capitalizedName)
@@ -91,10 +73,6 @@ object Const {
             fun notSetClassName(message: ProtoMessage, oneOf: ProtoOneOf) = parentSealedClassName(message, oneOf).nestedClass("NotSet")
 
             fun propertyName(message: ProtoMessage, oneOf: ProtoOneOf) = oneOf.name
-
-            object JS {
-                fun getCaseFunctionName(oneOf: ProtoOneOf): String = "get${oneOf.name.lowercase().capitalize()}Case"
-            }
 
             object IosJvm {
                 const val REQUIRED_SIZE_PROPERTY_NAME = "requiredSize"
