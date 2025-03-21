@@ -4,7 +4,7 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfor
 
 data class ProtoProject(val rootFolder: ProtoFolder) {
 
-    private val rootPackage: ProtoPackage
+    val rootPackage: ProtoPackage
 
     init {
         rootFolder.parent = ProtoFolder.Parent.Project(this)

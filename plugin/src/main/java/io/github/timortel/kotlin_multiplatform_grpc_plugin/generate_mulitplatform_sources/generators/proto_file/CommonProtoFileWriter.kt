@@ -17,7 +17,7 @@ import java.io.File
 /**
  * File writer that writes Kotlin Multiplatform Proto Files. These are platform independent.
  */
-class CommonProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(protoFile, false) {
+object CommonProtoFileWriter : ProtoFileWriter(false) {
 
     override val scalarMessageMethodGenerator: ScalarMessageMethodGenerator = CommonScalarMessageMethodGenerator
 
@@ -27,8 +27,11 @@ class CommonProtoFileWriter(private val protoFile: ProtoFile) : ProtoFileWriter(
 
     override val mapMessageMethodGenerator: MapMessageMethodGenerator = CommonMapMessageMethodGenerator
 
-    override fun writeFile(outputDir: File) {
-        super.writeFile(outputDir)
+    override fun writeFile(
+        file: io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.ProtoFile,
+        outputDir: File
+    ) {
+        super.writeFile(, outputDir)
 
         //Top level enums are only written in the common module
         protoFile.enums.forEach { topLevelEnum ->

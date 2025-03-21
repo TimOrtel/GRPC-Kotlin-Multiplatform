@@ -8,7 +8,7 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfor
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoService
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
 
-object IosServiceWriter : ActualServiceWriter() {
+object IosProtoServiceWriter : ActualProtoServiceWriter() {
 
     override val classAndFunctionModifiers: List<KModifier> = listOf(KModifier.ACTUAL)
     override val channelConstructorModifiers: List<KModifier> = listOf(KModifier.ACTUAL)

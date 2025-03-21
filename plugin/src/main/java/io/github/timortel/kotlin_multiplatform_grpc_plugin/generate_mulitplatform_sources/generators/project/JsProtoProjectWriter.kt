@@ -1,0 +1,14 @@
+package io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.project
+
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.dsl.ActualProtoDslWriter
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.dsl.ProtoDslWriter
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.proto_file.JsProtoFileWriter
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.proto_file.ProtoFileWriter
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.service.JsProtoServiceWriter
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.service.ProtoServiceWriter
+
+object JsProtoProjectWriter : ProtoProjectWriter() {
+    override val fileWriter: ProtoFileWriter = JsProtoFileWriter
+    override val serviceWriter: ProtoServiceWriter = JsProtoServiceWriter
+    override val dslWriter: ProtoDslWriter = ActualProtoDslWriter
+}

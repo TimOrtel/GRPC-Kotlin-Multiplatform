@@ -4,7 +4,6 @@ import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.CodedInputStream
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.CodedOutputStream
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoFile
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoMessage
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.map.ActualMapMessageMethodGenerator
@@ -17,7 +16,15 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfor
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.scalar.ScalarMessageMethodGenerator
 import java.nio.ByteBuffer
 
-class JvmProtoFileWriter(protoFile: ProtoFile) : IosJvmProtoFileWriteBase(protoFile) {
+object JvmProtoFileWriter : IosJvmProtoFileWriteBase() {
+
+    const val PACKAGE_PROTOBUF = "com.google.protobuf"
+
+    private val MESSAGE_LITE = ClassName(PACKAGE_PROTOBUF, "MessageLite")
+    private val PROTO_CODED_OUTPUT_STREAM = ClassName(PACKAGE_PROTOBUF, "CodedOutputStream")
+    private val PROTO_CODED_INPUT_STREAM = ClassName(PACKAGE_PROTOBUF, "CodedInputStream")
+
+    private val BYTE_STRING = ClassName(PACKAGE_PROTOBUF, "ByteString")
 
     override val scalarMessageMethodGenerator: ScalarMessageMethodGenerator = ActualScalarMessageMethodGenerator
 
@@ -55,16 +62,6 @@ class JvmProtoFileWriter(protoFile: ProtoFile) : IosJvmProtoFileWriteBase(protoF
                 Const.Message.Companion.WrapperDeserializationFunction.NAME
             )
             .build()
-
-    companion object {
-        const val PACKAGE_PROTOBUF = "com.google.protobuf"
-
-        private val MESSAGE_LITE = ClassName(PACKAGE_PROTOBUF, "MessageLite")
-        private val PROTO_CODED_OUTPUT_STREAM = ClassName(PACKAGE_PROTOBUF, "CodedOutputStream")
-        private val PROTO_CODED_INPUT_STREAM = ClassName(PACKAGE_PROTOBUF, "CodedInputStream")
-
-        private val BYTE_STRING = ClassName(PACKAGE_PROTOBUF, "ByteString")
-    }
 
     override val additionalSuperinterfaces: List<TypeName> = listOf(MESSAGE_LITE)
 

@@ -2,11 +2,11 @@ package io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfo
 
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.proto_file.JvmProtoFileWriter
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoFile
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.dsl.ActualDslBuilder
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.dsl.ActualProtoDslWriter
 import java.io.File
 
 fun writeJvmFiles(protoFile: ProtoFile, jvmOutputDir: File) {
-    JvmProtoFileWriter(protoFile).writeFile(jvmOutputDir)
+    JvmProtoFileWriter(protoFile).writeFile(, jvmOutputDir)
 
     //JVM helper
 //    FileSpec
@@ -17,5 +17,5 @@ fun writeJvmFiles(protoFile: ProtoFile, jvmOutputDir: File) {
 //        .build()
 //        .writeTo(jvmOutputDir)
 
-    writeDSLBuilder(protoFile, ActualDslBuilder, jvmOutputDir)
+    writeDSLBuilder(protoFile, ActualProtoDslWriter, jvmOutputDir)
 }

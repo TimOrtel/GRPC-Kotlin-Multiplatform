@@ -32,7 +32,7 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfor
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.readKMMessage
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.readMapEntry
 
-abstract class ActualProtoFileWriter(protoFile: ProtoFile) : ProtoFileWriter(protoFile, true) {
+abstract class ActualProtoFileWriter : ProtoFileWriter(true) {
     abstract val serializeFunctionCode: CodeBlock
     abstract val serializedDataType: TypeName
 

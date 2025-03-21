@@ -9,7 +9,7 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfor
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.kmMetadata
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.kmStub
 
-object JsServiceWriter : ActualServiceWriter() {
+object JsProtoServiceWriter : ActualProtoServiceWriter() {
 
     override val classAndFunctionModifiers: List<KModifier> = listOf(KModifier.ACTUAL)
     override val channelConstructorModifiers: List<KModifier> = listOf(KModifier.ACTUAL)

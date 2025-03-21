@@ -11,12 +11,18 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfor
 import kotlinx.coroutines.flow.Flow
 import java.io.File
 
-abstract class ServiceWriter(private val isActual: Boolean) {
+abstract class ProtoServiceWriter(private val isActual: Boolean) {
 
     protected abstract val classAndFunctionModifiers: List<KModifier>
 
     protected abstract val primaryConstructorModifiers: List<KModifier>
     protected abstract val channelConstructorModifiers: List<KModifier>
+
+    fun writeFile(protoFile: ProtoFile, outputFolder: File) {
+        protoFile.services.forEach { service ->
+            writeServiceStub(protoFile, service, outputFolder)
+        }
+    }
 
     fun writeServiceStub(protoFile: ProtoFile, service: ProtoService, outputFolder: File) {
         val serviceFileName = Const.Service.getName(service)

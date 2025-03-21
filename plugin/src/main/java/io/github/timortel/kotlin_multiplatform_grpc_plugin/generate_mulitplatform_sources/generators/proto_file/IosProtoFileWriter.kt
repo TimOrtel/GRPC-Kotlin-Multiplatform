@@ -13,7 +13,7 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfor
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.scalar.ActualScalarMessageMethodGenerator
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.scalar.ScalarMessageMethodGenerator
 
-class IosProtoFileWriter(protoFile: ProtoFile) : IosJvmProtoFileWriteBase(protoFile) {
+object IosProtoFileWriter : IosJvmProtoFileWriteBase() {
 
     override val scalarMessageMethodGenerator: ScalarMessageMethodGenerator
         get() = ActualScalarMessageMethodGenerator

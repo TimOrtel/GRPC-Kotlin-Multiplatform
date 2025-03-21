@@ -16,11 +16,9 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfor
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.scalar.ActualScalarMessageMethodGenerator
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.scalar.ScalarMessageMethodGenerator
 
-class JsProtoFileWriter(protoFile: ProtoFile) : ActualProtoFileWriter(protoFile) {
+object JsProtoFileWriter : ActualProtoFileWriter() {
 
-    companion object {
-        private val UInt8Array = ClassName("org.khronos.webgl", "Uint8Array")
-    }
+    private val UInt8Array = ClassName("org.khronos.webgl", "Uint8Array")
 
     override val scalarMessageMethodGenerator: ScalarMessageMethodGenerator
         get() = ActualScalarMessageMethodGenerator

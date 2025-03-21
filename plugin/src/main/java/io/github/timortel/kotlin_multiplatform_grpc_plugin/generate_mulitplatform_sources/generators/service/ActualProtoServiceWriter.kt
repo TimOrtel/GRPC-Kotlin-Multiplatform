@@ -6,7 +6,7 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfor
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.kmChannel
 
-abstract class ActualServiceWriter : ServiceWriter(true) {
+abstract class ActualProtoServiceWriter : ProtoServiceWriter(true) {
 
     abstract val callOptionsType: TypeName
 

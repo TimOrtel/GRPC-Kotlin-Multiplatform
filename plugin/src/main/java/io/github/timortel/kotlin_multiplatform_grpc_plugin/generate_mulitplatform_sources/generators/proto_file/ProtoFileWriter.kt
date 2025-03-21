@@ -9,12 +9,13 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfor
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.unrecognizedEnumField
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.*
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.kmMessage
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.ProtoFile
 import java.io.File
 
 /**
  * Generates the kotlin code for the .proto files.
  */
-abstract class ProtoFileWriter(private val protoFile: ProtoFile, private val isActual: Boolean) {
+abstract class ProtoFileWriter(private val isActual: Boolean) {
 
     abstract val scalarMessageMethodGenerator: ScalarMessageMethodGenerator
 
@@ -26,8 +27,8 @@ abstract class ProtoFileWriter(private val protoFile: ProtoFile, private val isA
 
     open val additionalSuperinterfaces: List<TypeName> = emptyList()
 
-    open fun writeFile(outputDir: File) {
-        protoFile.messages.forEach { message ->
+    open fun writeFile(file: ProtoFile, outputDir: File) {
+        file.messages.forEach { message ->
             FileSpec
                 .builder(protoFile.pkg, message.commonName)
                 .addType(

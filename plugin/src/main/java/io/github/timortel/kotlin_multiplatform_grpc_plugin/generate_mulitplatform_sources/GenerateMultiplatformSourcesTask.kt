@@ -3,6 +3,10 @@ package io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfo
 import io.github.timortel.kmpgrpc.anltr.Protobuf3Lexer
 import io.github.timortel.kmpgrpc.anltr.Protobuf3Parser
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.GrpcMultiplatformExtension
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.project.CommonProtoProjectWriter
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.project.IosProtoProjectWriter
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.project.JsProtoProjectWriter
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.project.JvmProtoProjectWriter
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.ProtoFile
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.ProtoFolder
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.ProtoProject
@@ -83,13 +87,6 @@ private fun generateProtoFiles(
     jsOutputFolder: File,
     iosOutputDir: File
 ) {
-    val sourceProtoFiles = protoFolders.map { sourceFolder ->
-        sourceFolder
-            .walk(FileWalkDirection.TOP_DOWN)
-            .filter { it.isFile && it.extension == "proto" }
-            .toList()
-    }
-
     val folders = protoFolders.mapNotNull { sourceFolder ->
         walkFolder(sourceFolder)
     }
@@ -101,25 +98,21 @@ private fun generateProtoFiles(
         }
     )
 
-//    protoFiles.forEach { protoFile ->
-//        writeProtoFile(
-//            protoFile = protoFile,
-//            generateTarget = shouldGenerateTargetMap,
-//            commonOutputDir = commonOutputFolder,
-//            jvmOutputDir = jvmOutputFolder,
-//            jsOutputDir = jsOutputFolder,
-//            iosOutputDir = iosOutputDir
-//        )
-//
-//        writeServiceFile(
-//            protoFile = protoFile,
-//            generateTarget = shouldGenerateTargetMap,
-//            commonOutputFolder = commonOutputFolder,
-//            jvmOutputFolder = jvmOutputFolder,
-//            jsOutputFolder = jsOutputFolder,
-//            iosOutputFolder = iosOutputDir
-//        )
-//    }
+    if (shouldGenerateTargetMap[GrpcMultiplatformExtension.COMMON] == true) {
+        CommonProtoProjectWriter.writeProject(project, commonOutputFolder)
+    }
+
+    if (shouldGenerateTargetMap[GrpcMultiplatformExtension.JVM] == true) {
+        JvmProtoProjectWriter.writeProject(project, jvmOutputFolder)
+    }
+
+    if (shouldGenerateTargetMap[GrpcMultiplatformExtension.JS] == true) {
+        JsProtoProjectWriter.writeProject(project, jsOutputFolder)
+    }
+
+    if (shouldGenerateTargetMap[GrpcMultiplatformExtension.IOS] == true) {
+        IosProtoProjectWriter.writeProject(project, iosOutputDir)
+    }
 }
 
 /**
@@ -144,7 +137,7 @@ private fun walkFolder(folder: File): ProtoFolder? {
     }
 
     return if (folders.isNotEmpty() || files.isNotEmpty()) {
-        ProtoFolder(name = folder.name,folders = folders, files = files)
+        ProtoFolder(name = folder.name, folders = folders, files = files)
     } else {
         null
     }
@@ -156,16 +149,9 @@ private fun readProtoFile(file: File): ProtoFile {
 
     val proto3File = parser.proto()
 
-    return Protobuf3ModelBuilderVisitor(filePath = file.path, fileNameWithoutExtension = file.nameWithoutExtension, fileName = file.name).visitProto(proto3File)
-}
-
-private fun buildSubFolderStructure(sourceFolder: File, sourceFile: File): List<String> {
-    return buildList {
-        var currentFolder = sourceFile.parentFile
-        while (currentFolder != sourceFolder) {
-            add(currentFolder.name)
-
-            currentFolder = currentFolder.parentFile
-        }
-    }
+    return Protobuf3ModelBuilderVisitor(
+        filePath = file.path,
+        fileNameWithoutExtension = file.nameWithoutExtension,
+        fileName = file.name
+    ).visitProto(proto3File)
 }

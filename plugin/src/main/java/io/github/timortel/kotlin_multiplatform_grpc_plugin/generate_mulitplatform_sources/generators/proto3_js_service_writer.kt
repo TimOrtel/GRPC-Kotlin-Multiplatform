@@ -4,7 +4,7 @@ import com.squareup.kotlinpoet.*
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoFile
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoRpc
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoService
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.service.JsServiceWriter
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.service.JsProtoServiceWriter
 import java.io.File
 
 private val grpcWebClientBase =
@@ -15,7 +15,7 @@ private val methodDescriptor =
     ClassName("io.github.timortel.kotlin_multiplatform_grpc_lib.rpc", "MethodDescriptor")
 
 fun writeJsServiceFile(protoFile: ProtoFile, service: ProtoService, jsOutputFolder: File) {
-    JsServiceWriter.writeServiceStub(protoFile, service, jsOutputFolder)
+    JsProtoServiceWriter.writeServiceStub(protoFile, service, jsOutputFolder)
 
     val getMethodDescriptorName =
         { rpc: ProtoRpc -> "${rpc.rpcName.decapitalize()}MethodDescriptor" }

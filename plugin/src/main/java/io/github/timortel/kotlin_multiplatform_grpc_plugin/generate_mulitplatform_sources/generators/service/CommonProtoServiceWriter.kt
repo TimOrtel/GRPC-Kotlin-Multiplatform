@@ -9,7 +9,7 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfor
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.kmMetadata
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.kmStub
 
-object CommonServiceWriter : ServiceWriter(false) {
+object CommonProtoServiceWriter : ProtoServiceWriter(false) {
 
     override val classAndFunctionModifiers: List<KModifier> = listOf(KModifier.EXPECT)
     override val channelConstructorModifiers: List<KModifier> = emptyList()

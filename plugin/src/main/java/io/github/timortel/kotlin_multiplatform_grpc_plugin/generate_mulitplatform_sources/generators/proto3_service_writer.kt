@@ -2,7 +2,7 @@ package io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfo
 
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.GrpcMultiplatformExtension
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoFile
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.service.CommonServiceWriter
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.service.CommonProtoServiceWriter
 import java.io.File
 
 fun writeServiceFile(
@@ -14,7 +14,7 @@ fun writeServiceFile(
     iosOutputFolder: File
 ) {
     protoFile.services.forEach { service ->
-        CommonServiceWriter.writeServiceStub(protoFile, service, commonOutputFolder)
+        CommonProtoServiceWriter.writeServiceStub(protoFile, service, commonOutputFolder)
 
         if (generateTarget[GrpcMultiplatformExtension.JS] == true)
             writeJsServiceFile(protoFile, service, jsOutputFolder)

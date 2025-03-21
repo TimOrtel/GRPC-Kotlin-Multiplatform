@@ -4,10 +4,22 @@ import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.*
+import java.io.File
 
-abstract class DslBuilder(private val isActual: Boolean) {
+abstract class ProtoDslWriter(private val isActual: Boolean) {
 
-    fun generateDslBuilders(protoFile: ProtoFile, builder: FileSpec.Builder) {
+    fun writeDslBuilderFile(protoFile: ProtoFile, outputDir: File) {
+        val builder = FileSpec
+            .builder(protoFile.pkg, protoFile.fileNameWithoutExtension + "_dsl_builder")
+
+        generateDslBuilders(protoFile, builder)
+
+        builder
+            .build()
+            .writeTo(outputDir)
+    }
+
+    private fun generateDslBuilders(protoFile: ProtoFile, builder: FileSpec.Builder) {
         protoFile.messages.forEach { message ->
             writeDslBuilder(
                 null,

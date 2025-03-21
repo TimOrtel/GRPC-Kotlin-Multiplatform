@@ -7,7 +7,7 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfor
 /**
  * For JVM, JS and iOS
  */
-object ActualDslBuilder : DslBuilder(true) {
+object ActualProtoDslWriter : ProtoDslWriter(true) {
 
     override fun modifyBuildFunction(builder: FunSpec.Builder, message: ProtoMessage) {
         builder.apply {
