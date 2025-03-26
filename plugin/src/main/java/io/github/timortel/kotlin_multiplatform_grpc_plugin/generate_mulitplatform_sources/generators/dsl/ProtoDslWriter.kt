@@ -2,15 +2,19 @@ package io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfo
 
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.capitalize
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.decapitalize
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.*
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.ProtoFile
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.declaration.ProtoMessage
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.declaration.message.field.ProtoFieldCardinality
 import java.io.File
 
 abstract class ProtoDslWriter(private val isActual: Boolean) {
 
     fun writeDslBuilderFile(protoFile: ProtoFile, outputDir: File) {
         val builder = FileSpec
-            .builder(protoFile.pkg, protoFile.fileNameWithoutExtension + "_dsl_builder")
+            .builder(protoFile.javaPackage, protoFile.javaFileName + "Dsl")
 
         generateDslBuilders(protoFile, builder)
 
@@ -25,7 +29,6 @@ abstract class ProtoDslWriter(private val isActual: Boolean) {
                 null,
                 message,
                 addType = builder::addType,
-                addFunction = builder::addFunction,
                 addTopLevelFunction = builder::addFunction
             )
         }
@@ -38,16 +41,16 @@ abstract class ProtoDslWriter(private val isActual: Boolean) {
         currentClass: ClassName?,
         message: ProtoMessage,
         addType: (TypeSpec) -> Unit,
-        addFunction: (FunSpec) -> Unit,
         addTopLevelFunction: (FunSpec) -> Unit
     ) {
         //We only need the modifiers in actual declarations, and in top level expect declarations
         val modifier: List<KModifier> =
             if (isActual) listOf(KModifier.ACTUAL) else if (currentClass != null) emptyList() else listOf(KModifier.EXPECT)
 
-        val dslBuilderClassName = "KM${message.capitalizedName}DSL"
+        val dslBuilderClassName = "${message.name.capitalize()}DSL"
         val dslBuilderClassType =
-            currentClass?.nestedClass(dslBuilderClassName) ?: ClassName(message.pkg, dslBuilderClassName)
+            currentClass?.nestedClass(dslBuilderClassName) ?: ClassName(message.file.`package`.orEmpty(), dslBuilderClassName)
+
         addType(
             TypeSpec
                 .classBuilder(dslBuilderClassName)
@@ -60,14 +63,14 @@ abstract class ProtoDslWriter(private val isActual: Boolean) {
                         .build()
                 )
                 .apply {
-                    message.attributes.filter { !it.isOneOfAttribute }.forEach { attr ->
-                        when (attr.fieldCardinality) {
-                            is Scalar -> {
+                    message.fields.forEach { field ->
+                        when (field.cardinality) {
+                            is ProtoFieldCardinality.Singular -> {
                                 addProperty(
                                     PropertySpec
                                         .builder(
-                                            Const.DSL.Attribute.Scalar.propertyName(attr),
-                                            attr.commonType.copy(nullable = true)
+                                            field.fieldName,
+                                            field.type.resolve().copy(nullable = true)
                                         )
                                         .addModifiers(modifier)
                                         .mutable()
@@ -80,15 +83,12 @@ abstract class ProtoDslWriter(private val isActual: Boolean) {
                                 )
                             }
 
-                            is Repeated -> {
+                            is ProtoFieldCardinality.Repeated -> {
                                 addProperty(
                                     PropertySpec
                                         .builder(
-                                            Const.DSL.Attribute.Repeated.propertyName(attr),
-                                            ClassName(
-                                                "kotlin.collections",
-                                                "MutableList"
-                                            ).parameterizedBy(attr.commonType)
+                                            field.fieldName,
+                                            MUTABLE_LIST.parameterizedBy(field.type.resolve())
                                         ).apply {
                                             if (isActual) {
                                                 initializer("%M()", MemberName("kotlin.collections", "mutableListOf"))
@@ -98,38 +98,38 @@ abstract class ProtoDslWriter(private val isActual: Boolean) {
                                         .build()
                                 )
                             }
-
-                            is MapType -> {
-                                addProperty(
-                                    PropertySpec
-                                        .builder(
-                                            Const.DSL.Attribute.Map.propertyName(attr),
-                                            attr.fieldCardinality.commonMutableMapType
-                                        )
-                                        .addModifiers(modifier)
-                                        .apply {
-                                            if (isActual) {
-                                                initializer("mutableMapOf()")
-                                            }
-                                        }
-                                        .build()
-                                )
-                            }
                         }
+                    }
+
+                    message.mapFields.forEach { field ->
+                        addProperty(
+                            PropertySpec
+                                .builder(
+                                    name = field.fieldName,
+                                    type = MUTABLE_MAP.parameterizedBy(field.keyType.resolve(), field.valuesType.resolve())
+                                )
+                                .addModifiers(modifier)
+                                .apply {
+                                    if (isActual) {
+                                        initializer("mutableMapOf()")
+                                    }
+                                }
+                                .build()
+                        )
                     }
 
                     message.oneOfs.forEach { oneOf ->
                         addProperty(
                             PropertySpec
                                 .builder(
-                                    Const.DSL.OneOf.propertyName(message, oneOf),
-                                    Const.Message.OneOf.parentSealedClassName(message, oneOf),
+                                    oneOf.fieldName,
+                                    oneOf.sealedClassName,
                                     modifier
                                 )
                                 .mutable()
                                 .apply {
                                     if (isActual) {
-                                        initializer(oneOf.defaultValue(message))
+                                        initializer("%T", oneOf.sealedClassNameNotSet)
                                     }
                                 }
                                 .build()
@@ -140,19 +140,17 @@ abstract class ProtoDslWriter(private val isActual: Boolean) {
                     FunSpec
                         .builder(Const.DSL.buildFunctionName)
                         .addModifiers(modifier)
-                        .returns(message.commonType)
+                        .returns(message.className)
                         .apply { if (isActual) modifyBuildFunction(this, message) }
                         .build()
                 )
                 .apply {
-                    if (message.children.isNotEmpty()) {
-
-                        message.children.forEach { childMessage ->
+                    if (message.messages.isNotEmpty()) {
+                        message.messages.forEach { childMessage ->
                             writeDslBuilder(
                                 currentClass = dslBuilderClassType,
                                 message = childMessage,
                                 addType = this::addType,
-                                addFunction = this::addFunction,
                                 addTopLevelFunction = addTopLevelFunction
                             )
                         }
@@ -166,16 +164,16 @@ abstract class ProtoDslWriter(private val isActual: Boolean) {
         if (!isActual) {
             addTopLevelFunction(
                 FunSpec
-                    .builder("km${message.capitalizedName}")
+                    .builder(message.name.decapitalize())
                     .addModifiers(KModifier.INLINE)
                     .addParameter(
                         "builderDsl",
                         LambdaTypeName.get(
                             receiver = dslBuilderClassType,
-                            returnType = Unit::class.asTypeName()
+                            returnType = UNIT
                         )
                     )
-                    .returns(message.commonType)
+                    .returns(message.className)
                     .addStatement("return %T().apply(builderDsl).build()", dslBuilderClassType)
                     .build()
             )

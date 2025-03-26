@@ -2,6 +2,7 @@ package io.github.timortel.kotlin_multiplatform_grpc_lib.io
 
 import io.github.timortel.kotlin_multiplatform_grpc_lib.JSPB
 import io.github.timortel.kotlin_multiplatform_grpc_lib.message.KMMessage
+import io.github.timortel.kotlin_multiplatform_grpc_lib.message.KmEnum
 import io.github.timortel.kotlin_multiplatform_grpc_lib.message.serializeMessage
 
 actual class CodedOutputStream(internal val impl: JSPB.BinaryWriter) {
@@ -54,11 +55,10 @@ actual class CodedOutputStream(internal val impl: JSPB.BinaryWriter) {
         impl.writeEnum(fieldNumber, value)
     }
 
-    actual fun writeEnumArray(
-        fieldNumber: Int,
-        values: List<Int>,
-        tag: UInt
-    ) = writeArray(this, fieldNumber, values, tag, writeNoTag = ::writeEnumNoTag, writeWithTag = ::writeEnum)
+    actual fun writeEnum(fieldNumber: Int, value: KmEnum) = writeEnum(fieldNumber, value.number)
+
+    actual fun writeEnumArray(fieldNumber: Int, values: List<KmEnum>, tag: UInt) =
+        writeArray(this, fieldNumber, values.map { it.number }, tag, writeNoTag = ::writeEnumNoTag, writeWithTag = ::writeEnum)
 
     actual fun writeEnumNoTag(value: Int) {
         impl.encoder.writeEnum(value)

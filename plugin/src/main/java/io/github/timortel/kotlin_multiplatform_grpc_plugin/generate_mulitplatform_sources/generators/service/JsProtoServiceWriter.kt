@@ -2,56 +2,59 @@ package io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfo
 
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoFile
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoRpc
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoService
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.*
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.kmMetadata
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.kmStub
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.service.ProtoRpc
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.service.ProtoService
 
 object JsProtoServiceWriter : ActualProtoServiceWriter() {
 
-    override val classAndFunctionModifiers: List<KModifier> = listOf(KModifier.ACTUAL)
     override val channelConstructorModifiers: List<KModifier> = listOf(KModifier.ACTUAL)
     override val primaryConstructorModifiers: List<KModifier> = listOf(KModifier.PRIVATE, KModifier.ACTUAL)
 
     override val callOptionsType: TypeName = kmMetadata
     override val createEmptyCallOptionsCode: CodeBlock = CodeBlock.of("%T()", kmMetadata)
 
+    private val grpcWebClientBase =
+        ClassName("io.github.timortel.kotlin_multiplatform_grpc_lib.rpc", "GrpcWebClientBase")
+    private val clientOptions =
+        ClassName("io.github.timortel.kotlin_multiplatform_grpc_lib.rpc", "ClientOptions")
+    private val methodDescriptor =
+        ClassName("io.github.timortel.kotlin_multiplatform_grpc_lib.rpc", "MethodDescriptor")
+
     override fun applyToClass(
         builder: TypeSpec.Builder,
-        protoFile: ProtoFile,
-        service: ProtoService,
-        serviceClass: ClassName
+        service: ProtoService
     ) {
-        super.applyToClass(builder, protoFile, service, serviceClass)
+        super.applyToClass(builder, service)
 
         builder.apply {
             addProperty(
                 PropertySpec
                     .builder(
                         "client",
-                        Const.Service.JS.nativeServiceClassName(protoFile, service),
+                        service.jsServiceClassName,
                         KModifier.PRIVATE,
                     )
                     .initializer(
                         CodeBlock.of(
                             "%T(%N.connectionString)",
-                            Const.Service.JS.nativeServiceClassName(protoFile, service),
+                            service.jsServiceClassName,
                             Const.Service.CHANNEL_PROPERTY_NAME
                         )
                     )
                     .build()
             )
 
-            overrideWithDeadlineAfter(builder, serviceClass)
+            overrideWithDeadlineAfter(builder, service.className)
+
+            addType(generateJsServiceBridge(service))
         }
     }
 
     override fun applyToRpcFunction(
         builder: FunSpec.Builder,
-        protoFile: ProtoFile,
-        service: ProtoService,
         rpc: ProtoRpc
     ) {
         builder.apply {
@@ -59,13 +62,14 @@ object JsProtoServiceWriter : ActualProtoServiceWriter() {
 
             val clientCallCode = CodeBlock
                 .builder()
-                .add("client.${rpc.rpcName}(")
+                .add("client.${rpc.name}(")
                 .add("request, ")
                 .add("actMetadata.%M", MemberName("io.github.timortel.kotlin_multiplatform_grpc_lib", "jsMetadata"))
                 .apply {
-                    when (rpc.method) {
-                        ProtoRpc.Method.UNARY -> add(", callback)")
-                        ProtoRpc.Method.SERVER_STREAMING -> add(")")
+                    if (rpc.isReceivingStream) {
+                        add(")")
+                    } else {
+                        add(", callback)")
                     }
                 }
                 .build()
@@ -74,19 +78,19 @@ object JsProtoServiceWriter : ActualProtoServiceWriter() {
 
             addCode(
                 "%M {\n",
-                when (rpc.method) {
-                    ProtoRpc.Method.UNARY -> MemberName(
+                if(rpc.isReceivingStream){
+                    MemberName(
+                        "io.github.timortel.kotlin_multiplatform_grpc_lib.rpc", "serverSideStreamingCallImplementation"
+                    )
+                } else {
+                    MemberName(
                         "io.github.timortel.kotlin_multiplatform_grpc_lib.rpc",
                         "simpleCallImplementation"
-                    )
-
-                    ProtoRpc.Method.SERVER_STREAMING -> MemberName(
-                        "io.github.timortel.kotlin_multiplatform_grpc_lib.rpc", "serverSideStreamingCallImplementation"
                     )
                 }
             )
 
-            if (rpc.method == ProtoRpc.Method.UNARY) addCode(" callback -> ")
+            if (!rpc.isReceivingStream) addCode(" callback -> ")
 
             addCode(clientCallCode)
             addCode("\n}")
@@ -97,17 +101,110 @@ object JsProtoServiceWriter : ActualProtoServiceWriter() {
 
     override fun specifyInheritance(
         builder: TypeSpec.Builder,
-        serviceClass: ClassName,
-        protoFile: ProtoFile,
         service: ProtoService
     ) {
         builder.apply {
-            superclass(kmStub.parameterizedBy(serviceClass))
+            superclass(kmStub.parameterizedBy(service.className))
 
             addSuperinterface(
                 ClassName("io.github.timortel.kotlin_multiplatform_grpc_lib.stub", "JsStub")
-                    .parameterizedBy(serviceClass)
+                    .parameterizedBy(service.className)
             )
         }
+    }
+
+    private fun generateJsServiceBridge(service: ProtoService): TypeSpec {
+        return TypeSpec
+            .classBuilder(service.jsServiceClassName)
+            .primaryConstructor(
+                FunSpec
+                    .constructorBuilder()
+                    .addParameter("hostname", String::class)
+                    .addParameter(
+                        ParameterSpec
+                            .builder("options", clientOptions)
+                            .defaultValue("js(%S)", "{}")
+                            .build()
+                    )
+                    .build()
+            )
+            .addProperty(
+                PropertySpec
+                    .builder("client", grpcWebClientBase, KModifier.PRIVATE)
+                    .initializer("%T(options)", grpcWebClientBase)
+                    .build()
+            )
+            .addProperty(
+                PropertySpec
+                    .builder("hostname", String::class, KModifier.PRIVATE)
+                    .initializer("hostname")
+                    .build()
+            )
+            .addInitializerBlock(CodeBlock.builder().apply {
+                addStatement("options.format = %S", "text")
+            }.build())
+            .apply {
+                service.rpcs.forEach { rpc ->
+                    addProperty(
+                        PropertySpec
+                            .builder(rpc.jsMethodDescriptorName, methodDescriptor, KModifier.PRIVATE)
+                            .initializer(CodeBlock.builder().apply {
+                                addStatement(
+                                    "%T(%S, %S, ::%T, ::%T, {·request:·%T -> request.serialize() }, %T.Companion::deserialize)",
+                                    methodDescriptor,
+                                    "/${service.file.`package`}.${service.name}/${rpc.name}",
+                                    if(rpc.isReceivingStream) {
+                                        "server_streaming"
+                                    } else "unary",
+                                    rpc.sendType.resolve(),
+                                    rpc.returnType.resolve(),
+                                    rpc.sendType.resolve(),
+                                    rpc.returnType.resolve()
+                                )
+                            }.build())
+                            .build()
+                    )
+
+                    addFunction(
+                        FunSpec
+                            .builder(rpc.name)
+                            .addParameter("request", rpc.sendType.resolve())
+                            .addParameter("metadata", Dynamic)
+                            .apply {
+                                addCode(
+                                    "return client.%N(\"\$hostname/%L/%L\", request, metadata ?: js(%S), %N",
+                                    if(rpc.isReceivingStream) {
+                                        "serverStreaming"
+                                    } else "rpcCall",
+                                    "${service.file.`package`}.${service.name}",
+                                    rpc.name,
+                                    "{}",
+                                    rpc.jsMethodDescriptorName
+                                )
+
+                                if(rpc.isReceivingStream) {
+                                    returns(Dynamic)
+                                    addCode(")")
+                                } else {
+                                    addParameter(
+                                        "callback",
+                                        LambdaTypeName.get(
+                                            parameters =
+                                                arrayOf(
+                                                    Dynamic,
+                                                    rpc.returnType.resolve()
+                                                ),
+                                            returnType = UNIT
+                                        )
+                                    )
+
+                                    addCode(", callback)")
+                                }
+                            }
+                            .build()
+                    )
+                }
+            }
+            .build()
     }
 }

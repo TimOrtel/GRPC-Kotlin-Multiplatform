@@ -21,6 +21,12 @@ data class ProtoMessage(
 
     override lateinit var parent: ProtoDeclParent
 
+    override val isNested: Boolean
+        get() = when (parent) {
+            is ProtoDeclParent.Message -> true
+            is ProtoDeclParent.File -> super.isNested
+        }
+
     override val file: ProtoFile
         get() {
             return when (val p = parent) {
@@ -31,6 +37,12 @@ data class ProtoMessage(
 
     override val candidates: List<DeclarationResolver.Candidate> =
         messages.map { DeclarationResolver.Candidate.Message(it) } + enums.map { DeclarationResolver.Candidate.Enum(it) }
+
+    /**
+     * True if the message has no fields
+     */
+    val isEmpty: Boolean =
+        fields.isEmpty() && mapFields.isEmpty() && oneOfs.isEmpty()
 
     init {
         val parent = ProtoDeclParent.Message(this)

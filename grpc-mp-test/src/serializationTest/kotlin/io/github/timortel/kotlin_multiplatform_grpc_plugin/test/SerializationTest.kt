@@ -6,11 +6,11 @@ import kotlin.test.assertEquals
 
 abstract class SerializationTest {
 
-    abstract fun serialize(message: KMLongMessage): KMLongMessage
+    abstract fun serialize(message: LongMessage): LongMessage
 
     @Test
     fun testSerializeLong() {
-        val message = kmLongMessage {
+        val message = longMessage {
             field1 = 12L
         }
 
@@ -19,11 +19,11 @@ abstract class SerializationTest {
         assertEquals(message, serializedMessage)
     }
 
-    abstract fun serialize(message: KMRepeatedLongMessage): KMRepeatedLongMessage
+    abstract fun serialize(message: RepeatedLongMessage): RepeatedLongMessage
 
     @Test
     fun testSerializeRepeatedLong() {
-        val message: KMRepeatedLongMessage = kmRepeatedLongMessage {
+        val message: RepeatedLongMessage = repeatedLongMessage {
             field1List += listOf(12L, 13L, 25L)
         }
 
@@ -32,17 +32,17 @@ abstract class SerializationTest {
         assertEquals(message, serializedMessage)
     }
 
-    abstract fun serialize(message: KMScalarTypes): KMScalarTypes
+    abstract fun serialize(message: ScalarTypes): ScalarTypes
 
     @Test
     fun testScalarSerialization() {
-        val msg: KMScalarTypes = createScalarMessage()
+        val msg: ScalarTypes = createScalarMessage()
         val reconstructed = serialize(msg)
 
         assertEquals(msg, reconstructed)
     }
 
-    abstract fun serialize(message: KMMessageWithSubMessage): KMMessageWithSubMessage
+    abstract fun serialize(message: MessageWithSubMessage): MessageWithSubMessage
 
     @Test
     fun testComplexRepeatedSerialization() {
@@ -52,12 +52,12 @@ abstract class SerializationTest {
         assertEquals(msg, reconstructed)
     }
 
-    abstract fun serialize(message: KMComplexRepeatedMessage): KMComplexRepeatedMessage
+    abstract fun serialize(message: ComplexRepeatedMessage): ComplexRepeatedMessage
 
     @Test
     fun testSerializeMessageWithMessage() {
-        val msg: KMMessageWithSubMessage = kmMessageWithSubMessage {
-            field1 = kmSimpleMessage { field1 = "Foo" }
+        val msg: MessageWithSubMessage = messageWithSubMessage {
+            field1 = simpleMessage { field1 = "Foo" }
         }
 
         val reconstructed = serialize(msg)
@@ -65,12 +65,12 @@ abstract class SerializationTest {
         assertEquals(msg, reconstructed)
     }
 
-    abstract fun serialize(message: KMOneOfMessage): KMOneOfMessage
+    abstract fun serialize(message: OneOfMessage): OneOfMessage
 
     @Test
     fun testSerializeOneOfScalarNumeric() {
-        val msg = kmOneOfMessage {
-            oneOf1 = KMOneOfMessage.OneOf1.Field1(23)
+        val msg = oneOfMessage {
+            oneOf1 = OneOfMessage.OneOf1.Field1(23)
         }
 
         assertEquals(msg, serialize(msg))
@@ -78,18 +78,18 @@ abstract class SerializationTest {
 
     @Test
     fun testSerializeOneOfMessage() {
-        val msg = kmOneOfMessage {
-            oneOf1 = KMOneOfMessage.OneOf1.Field3(kmLongMessage { field1 = 15323L })
+        val msg = oneOfMessage {
+            oneOf1 = OneOfMessage.OneOf1.Field3(longMessage { field1 = 15323L })
         }
 
         assertEquals(msg, serialize(msg))
     }
 
-    abstract fun serialize(message: KMMessageWithEverything): KMMessageWithEverything
+    abstract fun serialize(message: MessageWithEverything): MessageWithEverything
 
     @Test
     fun testSerialization() {
-        val msg: KMMessageWithEverything = createMessageWithAllTypes()
+        val msg: MessageWithEverything = createMessageWithAllTypes()
 
         val reconstructed = serialize(msg)
 

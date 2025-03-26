@@ -3,14 +3,12 @@ package io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfo
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.*
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoFile
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoRpc
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoService
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.service.ProtoRpc
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.service.ProtoService
 
 object JvmProtoServiceWriter : ActualProtoServiceWriter() {
 
-    override val classAndFunctionModifiers: List<KModifier> = listOf(KModifier.ACTUAL)
     override val channelConstructorModifiers: List<KModifier> = listOf(KModifier.ACTUAL)
     override val primaryConstructorModifiers: List<KModifier> = listOf(KModifier.PRIVATE, KModifier.ACTUAL)
 
@@ -25,23 +23,14 @@ object JvmProtoServiceWriter : ActualProtoServiceWriter() {
 
     override fun applyToClass(
         builder: TypeSpec.Builder,
-        protoFile: ProtoFile,
-        service: ProtoService,
-        serviceClass: ClassName
+        service: ProtoService
     ) {
-        super.applyToClass(builder, protoFile, service, serviceClass)
+        super.applyToClass(builder, service)
 
         builder.apply {
-            addSuperinterface(ClassName(PACKAGE_STUB, "AndroidJvmKMStub").parameterizedBy(serviceClass))
+            addSuperinterface(ClassName(PACKAGE_STUB, "AndroidJvmKMStub").parameterizedBy(service.className))
 
-            overrideWithDeadlineAfter(builder, serviceClass)
-
-//            addFunction(
-//                FunSpec.constructorBuilder()
-//                    .addParameter("channel", kmChannel)
-//                    .callThisConstructor(CodeBlock.of("channel"), CodeBlock.of())
-//                    .build()
-//            )
+            overrideWithDeadlineAfter(builder, service.className)
 
             addType(
                 TypeSpec
@@ -52,27 +41,28 @@ object JvmProtoServiceWriter : ActualProtoServiceWriter() {
                             addProperty(
                                 PropertySpec
                                     .builder(
-                                        Const.Service.JVM.Companion.methodDescriptorPropertyName(service, rpc),
+                                        rpc.jvmMethodDescriptorName,
                                         METHOD_DESCRIPTOR.parameterizedBy(
-                                            rpc.request.commonType,
-                                            rpc.response.commonType
+                                            rpc.sendType.resolve(),
+                                            rpc.returnType.resolve()
                                         )
                                     )
                                     .initializer(
                                         CodeBlock.builder().apply {
-                                            val methodType = when (rpc.method) {
-                                                ProtoRpc.Method.UNARY -> "UNARY"
-                                                ProtoRpc.Method.SERVER_STREAMING -> "SERVER_STREAMING"
+                                            val methodType = if (rpc.isReceivingStream) {
+                                                "SERVER_STREAMING"
+                                            } else {
+                                                "UNARY"
                                             }
 
                                             val fullMethodName =
-                                                "${protoFile.pkg}.${service.serviceName}/${rpc.rpcName}"
+                                                "${service.file.`package`.orEmpty()}.${service.name}/${rpc.name}"
 
                                             addStatement(
                                                 "%T.newBuilder<%T, %T>()",
                                                 METHOD_DESCRIPTOR,
-                                                rpc.request.commonType,
-                                                rpc.response.commonType
+                                                rpc.sendType.resolve(),
+                                                rpc.returnType.resolve()
                                             )
                                             add(".setType(%T.%N)", METHOD_TYPE, methodType)
                                             add(".setFullMethodName(%S)", fullMethodName)
@@ -80,12 +70,12 @@ object JvmProtoServiceWriter : ActualProtoServiceWriter() {
                                             add(
                                                 ".setRequestMarshaller(%T.marshaller(%T()))",
                                                 PROTO_LITE_UTILS,
-                                                rpc.request.commonType
+                                                rpc.sendType.resolve()
                                             )
                                             add(
                                                 ".setResponseMarshaller(%T.marshaller(%T()))",
                                                 PROTO_LITE_UTILS,
-                                                rpc.response.commonType
+                                                rpc.returnType.resolve()
                                             )
                                             add(".build()")
                                         }.build()
@@ -101,22 +91,21 @@ object JvmProtoServiceWriter : ActualProtoServiceWriter() {
 
     override fun applyToRpcFunction(
         builder: FunSpec.Builder,
-        protoFile: ProtoFile,
-        service: ProtoService,
         rpc: ProtoRpc
     ) {
         val jvmMetadataMember = MemberName("io.github.timortel.kotlin_multiplatform_grpc_lib", "jvmMetadata")
 
         builder.apply {
-            val funName = when (rpc.method) {
-                ProtoRpc.Method.UNARY -> "unaryRpc"
-                ProtoRpc.Method.SERVER_STREAMING -> "serverStreamingRpc"
+            val funName = if (rpc.isReceivingStream) {
+                "serverStreamingRpc"
+            } else {
+               "unaryRpc"
             }
 
             addCode("return %T.%N(", CLIENT_CALLS, funName)
             addCode("channel = %N.managedChannel,", Const.Service.CHANNEL_PROPERTY_NAME)
             addCode("callOptions = %N,", Const.Service.CALL_OPTIONS_PROPERTY_NAME)
-            addCode("method = %N,", Const.Service.JVM.Companion.methodDescriptorPropertyName(service, rpc))
+            addCode("method = %N,", rpc.jvmMethodDescriptorName)
             addCode("headers = metadata.%M,", jvmMetadataMember)
             addCode("request = %N", Const.Service.RpcCall.PARAM_REQUEST)
             addCode(")")
@@ -127,10 +116,8 @@ object JvmProtoServiceWriter : ActualProtoServiceWriter() {
 
     override fun specifyInheritance(
         builder: TypeSpec.Builder,
-        serviceClass: ClassName,
-        protoFile: ProtoFile,
         service: ProtoService
     ) {
-        builder.superclass(kmStub.parameterizedBy(serviceClass))
+        builder.superclass(kmStub.parameterizedBy(service.className))
     }
 }

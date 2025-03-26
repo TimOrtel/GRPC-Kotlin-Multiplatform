@@ -10,21 +10,21 @@ class JVMSerializationTest : SerializationTest() {
         return deserializer.deserialize(msg.serialize())
     }
 
-    override fun serialize(message: KMLongMessage): KMLongMessage =
-        serializeImpl(message, KMLongMessage.Companion)
+    override fun serialize(message: LongMessage): LongMessage =
+        serializeImpl(message, LongMessage.Companion)
 
-    override fun serialize(message: KMRepeatedLongMessage): KMRepeatedLongMessage =
-        serializeImpl(message, KMRepeatedLongMessage.Companion)
+    override fun serialize(message: RepeatedLongMessage): RepeatedLongMessage =
+        serializeImpl(message, RepeatedLongMessage.Companion)
 
-    override fun serialize(message: KMScalarTypes): KMScalarTypes = serializeImpl(message, KMScalarTypes.Companion)
+    override fun serialize(message: ScalarTypes): ScalarTypes = serializeImpl(message, ScalarTypes.Companion)
 
-    override fun serialize(message: KMMessageWithSubMessage): KMMessageWithSubMessage =
-        serializeImpl(message, KMMessageWithSubMessage.Companion)
+    override fun serialize(message: MessageWithSubMessage): MessageWithSubMessage =
+        serializeImpl(message, MessageWithSubMessage.Companion)
 
-    override fun serialize(message: KMMessageWithEverything): KMMessageWithEverything =
-        serializeImpl(message, KMMessageWithEverything.Companion)
+    override fun serialize(message: MessageWithEverything): MessageWithEverything =
+        serializeImpl(message, MessageWithEverything.Companion)
 
-    override fun serialize(message: KMOneOfMessage): KMOneOfMessage = serializeImpl(message, KMOneOfMessage.Companion)
+    override fun serialize(message: OneOfMessage): OneOfMessage = serializeImpl(message, OneOfMessage.Companion)
 
-    override fun serialize(message: KMComplexRepeatedMessage): KMComplexRepeatedMessage = serializeImpl(message, KMComplexRepeatedMessage.Companion)
+    override fun serialize(message: ComplexRepeatedMessage): ComplexRepeatedMessage = serializeImpl(message, ComplexRepeatedMessage.Companion)
 }

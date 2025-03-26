@@ -1,10 +1,12 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model
 
+import com.squareup.kotlinpoet.ClassName
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.Protobuf3CompilationException
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.declaration.ProtoDeclaration
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.declaration.ProtoEnum
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.declaration.ProtoMessage
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.service.ProtoService
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.util.snakeCaseToCamelCase
 
 data class ProtoFile(
     val `package`: String?,
@@ -38,6 +40,16 @@ data class ProtoFile(
             project.rootFolder.resolveImport(import.path)
                 ?: throw Protobuf3CompilationException("Unable to resolve import ${import.identifier}", this, import.ctx)
         }
+
+    val javaPackage: String get() {
+        return Options.javaPackage.get(this) ?: `package`.orEmpty()
+    }
+
+    val javaFileName: String get() {
+        return Options.javaOuterClassName.get(this) ?: fileNameWithoutExtension.snakeCaseToCamelCase()
+    }
+
+    val className: ClassName get() = ClassName(javaPackage, javaFileName)
 
     init {
         val parent = ProtoDeclParent.File(this)

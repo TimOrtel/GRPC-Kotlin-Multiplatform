@@ -5,6 +5,7 @@ import com.squareup.kotlinpoet.LONG
 import com.squareup.kotlinpoet.MemberName.Companion.member
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.*
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.kmTimeUnit
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.declaration.message.field.ProtoFieldCardinality
 
 object Const {
     object Service {
@@ -62,6 +63,11 @@ object Const {
     }
 
     object Message {
+        object SerializeFunction {
+            const val NAME = "serialize"
+            const val STREAM_PARAM = "stream"
+        }
+
         object OneOf {
             fun parentSealedClassName(message: ProtoMessage, oneOf: ProtoOneOf) =
                 message.commonType.nestedClass(oneOf.capitalizedName)
@@ -72,28 +78,22 @@ object Const {
             fun unknownClassName(message: ProtoMessage, oneOf: ProtoOneOf) = parentSealedClassName(message, oneOf).nestedClass("Unknown")
             fun notSetClassName(message: ProtoMessage, oneOf: ProtoOneOf) = parentSealedClassName(message, oneOf).nestedClass("NotSet")
 
-            fun propertyName(message: ProtoMessage, oneOf: ProtoOneOf) = oneOf.name
+            fun propertyName(oneOf: io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.declaration.message.ProtoOneOf) = oneOf.name
 
-            object IosJvm {
-                const val REQUIRED_SIZE_PROPERTY_NAME = "requiredSize"
+            const val REQUIRED_SIZE_PROPERTY_NAME = "requiredSize"
 
-                const val SERIALIZE_FUNCTION_NAME = "serialize"
-                const val SERIALIZE_FUNCTION_STREAM_PARAM_NAME = "stream"
-            }
+            const val SERIALIZE_FUNCTION_NAME = "serialize"
+            const val SERIALIZE_FUNCTION_STREAM_PARAM_NAME = "stream"
         }
 
         object Attribute {
             /**
              * @return the property name of the given attribute in the generated kotlin file for the message.
              */
-            fun propertyName(protoMessage: ProtoMessage, attr: ProtoMessageField): String {
-                return when (attr.fieldCardinality) {
-                    is io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.Scalar -> attr.name
-                    is io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.Repeated -> Repeated.listPropertyName(
-                        attr
-                    )
-
-                    is MapType -> Map.propertyName(attr)
+            fun propertyName(field: io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.declaration.message.field.ProtoMessageField): String {
+                return when (field.cardinality) {
+                    ProtoFieldCardinality.Implicit, ProtoFieldCardinality.Optional -> field.name
+                    ProtoFieldCardinality.Repeated -> Repeated.listPropertyName(field)
                 }
             }
 
@@ -139,9 +139,7 @@ object Const {
 
             object Repeated {
 
-                fun listPropertyName(attr: ProtoMessageField) = "${attr.name}List"
-
-                fun countPropertyName(attr: ProtoMessageField) = "${attr.name}Count"
+                fun listPropertyName(attr: io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.declaration.message.field.ProtoMessageField) = "${attr.name}List"
 
                 object JS {
                     fun setListFunctionName(attr: ProtoMessageField): String =
@@ -186,7 +184,7 @@ object Const {
             }
 
             object Map {
-                fun propertyName(attr: ProtoMessageField): String = "${attr.name}Map"
+                fun propertyName(attr: io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.declaration.message.field.ProtoMapField): String = "${attr.name}Map"
 
                 object JVM {
                     fun propertyName(attr: ProtoMessageField): String = "${attr.name}Map"
@@ -219,13 +217,6 @@ object Const {
 
             object HashCodeFunction {
                 const val NAME = "hashCode"
-            }
-        }
-
-        object IOS {
-            object SerializeFunction {
-                const val NAME = "serialize"
-                const val STREAM_PARAM = "stream"
             }
         }
 
@@ -266,7 +257,7 @@ object Const {
 
     object Enum {
         const val getEnumForNumFunctionName = "getEnumForNumber"
-        const val VALUE_PROPERTY_NAME = "value"
+        const val NUMBER_PROPERTY_NAME = "number"
 
         fun commonEnumName(protoEnum: ProtoEnum): String = "KM${protoEnum.name.capitalize()}"
         fun commonEnumName(protoEnumName: String): String = "KM${protoEnumName.capitalize()}"

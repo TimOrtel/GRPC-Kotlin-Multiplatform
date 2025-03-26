@@ -1,0 +1,14 @@
+package io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.protofile
+
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.protofile.enumeration.ActualProtoEnumerationWriter
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.protofile.enumeration.ProtoEnumerationWriter
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.protofile.message.IosProtoMessageWriter
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.protofile.message.ProtoMessageWriter
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.service.IosProtoServiceWriter
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.service.ProtoServiceWriter
+
+object IosProtoFileWriter : ProtoFileWriter(isActual = true) {
+    override val protoServiceWriter: ProtoServiceWriter = IosProtoServiceWriter
+    override val protoMessageWriter: ProtoMessageWriter = IosProtoMessageWriter
+    override val protoEnumWriter: ProtoEnumerationWriter = ActualProtoEnumerationWriter
+}

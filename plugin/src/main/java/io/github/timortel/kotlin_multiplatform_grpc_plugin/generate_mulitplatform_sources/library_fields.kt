@@ -13,6 +13,7 @@ val JSImpl = ClassName("io.github.timortel.kotlin_multiplatform_grpc_lib.message
 val MessageDeserializer = ClassName("io.github.timortel.kotlin_multiplatform_grpc_lib.message", "MessageDeserializer")
 
 val kmMessage = ClassName("io.github.timortel.kotlin_multiplatform_grpc_lib.message", "KMMessage")
+val kmEnum = ClassName("io.github.timortel.kotlin_multiplatform_grpc_lib.message", "KmEnum")
 
 val writeKMMessage = MemberName(PACKAGE_IO, "writeKMMessage")
 val readKMMessage = MemberName(PACKAGE_IO, "readKMMessage")

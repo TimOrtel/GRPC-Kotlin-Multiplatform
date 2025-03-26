@@ -3,14 +3,12 @@ package io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfo
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.*
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoFile
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoRpc
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoService
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.service.ProtoRpc
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.service.ProtoService
 
 object IosProtoServiceWriter : ActualProtoServiceWriter() {
 
-    override val classAndFunctionModifiers: List<KModifier> = listOf(KModifier.ACTUAL)
     override val channelConstructorModifiers: List<KModifier> = listOf(KModifier.ACTUAL)
     override val primaryConstructorModifiers: List<KModifier> = listOf(KModifier.PRIVATE, KModifier.ACTUAL)
 
@@ -22,24 +20,21 @@ object IosProtoServiceWriter : ActualProtoServiceWriter() {
 
     override fun applyToClass(
         builder: TypeSpec.Builder,
-        protoFile: ProtoFile,
-        service: ProtoService,
-        serviceClass: ClassName
+        service: ProtoService
     ) {
-        super.applyToClass(builder, protoFile, service, serviceClass)
+        super.applyToClass(builder, service)
 
-        overrideWithDeadlineAfter(builder, serviceClass)
+        overrideWithDeadlineAfter(builder, service.className)
     }
 
     override fun applyToRpcFunction(
         builder: FunSpec.Builder,
-        protoFile: ProtoFile,
-        service: ProtoService,
         rpc: ProtoRpc
     ) {
-        val impl = when (rpc.method) {
-            ProtoRpc.Method.UNARY -> iosUnaryCallImplementation
-            ProtoRpc.Method.SERVER_STREAMING -> iosServerSideStreamingCallImplementation
+        val impl = if (rpc.isReceivingStream) {
+            iosServerSideStreamingCallImplementation
+        } else {
+            iosUnaryCallImplementation
         }
 
         builder.apply {
@@ -55,9 +50,9 @@ object IosProtoServiceWriter : ActualProtoServiceWriter() {
             "return %M(%N, callOptions, %S, %N, %T.Companion)",
             impl,
             Const.Service.CHANNEL_PROPERTY_NAME,
-            "/${protoFile.pkg}.${service.serviceName}/${rpc.rpcName}",
+            "/${rpc.file.`package`.orEmpty()}.${rpc.service.name}/${rpc.name}",
             Const.Service.RpcCall.PARAM_REQUEST,
-            rpc.response.iosType
+            rpc.returnType.resolve()
         )
     }
 
@@ -66,16 +61,14 @@ object IosProtoServiceWriter : ActualProtoServiceWriter() {
 
     override fun specifyInheritance(
         builder: TypeSpec.Builder,
-        serviceClass: ClassName,
-        protoFile: ProtoFile,
         service: ProtoService
     ) {
-        builder.superclass(kmStub.parameterizedBy(serviceClass))
+        builder.superclass(kmStub.parameterizedBy(service.className))
         builder.addSuperinterface(
             ClassName(
                 "io.github.timortel.kotlin_multiplatform_grpc_lib.stub",
                 "IOSKMStub"
-            ).parameterizedBy(serviceClass)
+            ).parameterizedBy(service.className)
         )
     }
 }

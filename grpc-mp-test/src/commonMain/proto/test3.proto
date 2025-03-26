@@ -1,9 +1,0 @@
-syntax = "proto3";
-
-package de.foo.zar;
-
-import "test2.proto";
-
-message X {
-  bar.Y y = 1;
-}

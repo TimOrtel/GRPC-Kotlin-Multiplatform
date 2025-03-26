@@ -1,8 +1,8 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.dsl
 
 import com.squareup.kotlinpoet.FunSpec
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoMessage
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.joinToCodeBlock
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.declaration.ProtoMessage
 
 /**
  * For JVM, JS and iOS
@@ -11,22 +11,36 @@ object ActualProtoDslWriter : ProtoDslWriter(true) {
 
     override fun modifyBuildFunction(builder: FunSpec.Builder, message: ProtoMessage) {
         builder.apply {
-            addCode("return %T(", message.commonType)
-            message.attributes.filter { !it.isOneOfAttribute }.forEach { attr ->
-                val propertyName = Const.Message.Attribute.propertyName(message, attr)
+            addCode("return %T(", message.className)
 
-                addCode("\n%N = %N ?: ", propertyName, propertyName)
-                addCode(attr.commonDefaultValue(mutable = false, useEmptyMessage = false))
-                addCode(",")
+            val separator = ",\n"
+
+            val fields = message.fields.joinToCodeBlock(separator) { field ->
+                add("%N = %N ?: ", field.fieldName, field.fieldName)
+                add(field.defaultValue())
             }
-            message.oneOfs.forEach { oneOf ->
-                addCode(
-                    "\n%N = %N,",
-                    Const.Message.OneOf.propertyName(message, oneOf),
-                    Const.DSL.OneOf.propertyName(message, oneOf)
+
+            val mapFields = message.mapFields.joinToCodeBlock(separator) { field ->
+                add("%N = %N ?: emptyMap()", field.fieldName, field.fieldName)
+            }
+
+            val oneOfFields = message.oneOfs.joinToCodeBlock(separator) { oneOf ->
+                add(
+                    "%N = %N",
+                    oneOf.fieldName,
+                    oneOf.fieldName
                 )
             }
-            addCode("\n)")
+
+            addCode(
+                listOf(fields, mapFields, oneOfFields)
+                    .filter { it.isNotEmpty() }
+                    .joinToCodeBlock(separator) { add(it) }
+            )
+
+            if (fields.isNotEmpty() || mapFields.isNotEmpty() || oneOfFields.isNotEmpty()) addCode("\n")
+
+            addCode(")")
         }
     }
 }

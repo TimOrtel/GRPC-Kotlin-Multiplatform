@@ -2,6 +2,7 @@ package io.github.timortel.kotlin_multiplatform_grpc_lib.io
 
 import cocoapods.Protobuf.*
 import io.github.timortel.kotlin_multiplatform_grpc_lib.message.KMMessage
+import io.github.timortel.kotlin_multiplatform_grpc_lib.message.KmEnum
 import io.github.timortel.kotlin_multiplatform_grpc_lib.message.requiredSizeMessage
 import io.github.timortel.kotlin_multiplatform_grpc_lib.message.serializeMessage
 import kotlinx.cinterop.BetaInteropApi
@@ -61,9 +62,10 @@ actual class CodedOutputStream(private val impl: GPBCodedOutputStream) {
 
     actual fun writeEnum(fieldNumber: Int, value: Int) = impl.writeEnum(fieldNumber, value)
 
-    actual fun writeEnumArray(fieldNumber: Int, values: List<Int>, tag: UInt) {
-        writeArray(this, fieldNumber, values, tag, ::GPBComputeEnumSizeNoTag, ::writeEnumNoTag, ::writeEnum)
-    }
+    actual fun writeEnum(fieldNumber: Int, value: KmEnum) = writeEnum(fieldNumber, value.number)
+
+    actual fun writeEnumArray(fieldNumber: Int, values: List<KmEnum>, tag: UInt) =
+        writeArray(this, fieldNumber, values.map { it.number }, tag, ::GPBComputeEnumSizeNoTag, ::writeEnumNoTag, ::writeEnum)
 
     actual fun writeEnumNoTag(value: Int) = impl.writeEnumNoTag(value)
 

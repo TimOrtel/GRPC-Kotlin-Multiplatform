@@ -145,9 +145,9 @@ class Protobuf3ModelBuilderVisitor(
         val label = ctx.fieldLabel()
 
         val fieldCardinality = when {
-            label?.OPTIONAL() != null -> ProtoFieldCardinality.OPTIONAL
-            label?.REPEATED() != null -> ProtoFieldCardinality.REPEATED
-            else -> ProtoFieldCardinality.IMPLICIT
+            label?.OPTIONAL() != null -> ProtoFieldCardinality.Optional
+            label?.REPEATED() != null -> ProtoFieldCardinality.Repeated
+            else -> ProtoFieldCardinality.Implicit
         }
 
         val type = visitType_(ctx.type_())
@@ -242,7 +242,8 @@ class Protobuf3ModelBuilderVisitor(
         return ProtoService(
             name = name,
             options = options,
-            rpcs = rpcs
+            rpcs = rpcs,
+            ctx = ctx
         )
     }
 

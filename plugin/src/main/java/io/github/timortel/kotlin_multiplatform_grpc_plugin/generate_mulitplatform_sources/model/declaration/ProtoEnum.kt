@@ -1,5 +1,6 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.declaration
 
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.Protobuf3CompilationException
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.*
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.declaration.enumeration.ProtoEnumField
 import org.antlr.v4.runtime.ParserRuleContext
@@ -10,6 +11,11 @@ data class ProtoEnum(
     val options: List<ProtoOption>,
     override val ctx: ParserRuleContext
 ) : ProtoDeclaration, BaseDeclarationResolver {
+
+    companion object {
+        const val UNRECOGNIZED_FIELD_NAME = "UNRECOGNIZED"
+    }
+
     override lateinit var parent: ProtoDeclParent
 
     override val file: ProtoFile
@@ -17,6 +23,12 @@ data class ProtoEnum(
             is ProtoDeclParent.File -> p.file
             is ProtoDeclParent.Message -> p.message.file
         }
+
+    val defaultField: ProtoEnumField
+        get() =
+            fields
+                .firstOrNull { it.number == 0 }
+                ?: throw Protobuf3CompilationException("Enumeration does not have field with value 0.", file, ctx)
 
     init {
         fields.forEach { it.enum = this }

@@ -1,10 +1,9 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.service
 
 import com.squareup.kotlinpoet.*
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoFile
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoService
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.kmChannel
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.service.ProtoService
 
 abstract class ActualProtoServiceWriter : ProtoServiceWriter(true) {
 
@@ -17,9 +16,7 @@ abstract class ActualProtoServiceWriter : ProtoServiceWriter(true) {
 
     override fun applyToClass(
         builder: TypeSpec.Builder,
-        protoFile: ProtoFile,
-        service: ProtoService,
-        serviceClass: ClassName
+        service: ProtoService
     ) {
         builder.apply {
             primaryConstructor(
@@ -57,10 +54,10 @@ abstract class ActualProtoServiceWriter : ProtoServiceWriter(true) {
                     .addModifiers(KModifier.OVERRIDE)
                     .addParameter(Const.Service.CHANNEL_PROPERTY_NAME, kmChannel)
                     .addParameter(Const.Service.CALL_OPTIONS_PROPERTY_NAME, callOptionsType)
-                    .returns(serviceClass)
+                    .returns(service.className)
                     .addStatement(
                         "return %T(%N, %N)",
-                        serviceClass,
+                        service.className,
                         Const.Service.CHANNEL_PROPERTY_NAME,
                         Const.Service.CALL_OPTIONS_PROPERTY_NAME
                     )
@@ -69,7 +66,7 @@ abstract class ActualProtoServiceWriter : ProtoServiceWriter(true) {
         }
     }
 
-    override fun applyToChannelConstructor(builder: FunSpec.Builder, protoFile: ProtoFile, service: ProtoService) {
+    override fun applyToChannelConstructor(builder: FunSpec.Builder, service: ProtoService) {
         //Fill the call options with the default call options
         builder.apply {
             callThisConstructor(

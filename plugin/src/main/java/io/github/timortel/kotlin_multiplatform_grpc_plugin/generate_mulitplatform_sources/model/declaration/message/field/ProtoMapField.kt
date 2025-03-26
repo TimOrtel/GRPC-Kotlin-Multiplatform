@@ -16,6 +16,8 @@ data class ProtoMapField(
 
     val file: ProtoFile get() = message.file
 
+    override val fieldName: String = "${name}Map"
+
     init {
         keyType.parent = ProtoType.Parent.MapField(this)
         valuesType.parent = ProtoType.Parent.MapField(this)

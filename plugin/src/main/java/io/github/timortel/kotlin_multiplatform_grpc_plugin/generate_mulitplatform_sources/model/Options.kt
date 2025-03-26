@@ -4,14 +4,26 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfor
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.toFilePositionString
 
 object Options {
-    val javaUseMultipleFiles = Option(
-        name = "java_use_multiple_files",
+    val javaMultipleFiles = Option(
+        name = "java_multiple_files",
         parse = String::toBooleanStrictOrNull,
         default = false
     )
 
-    class Option<T>(val name: String, val parse: (String) -> T?, val default: T & Any) {
-        fun get(file: ProtoFile, options: List<ProtoOption>): T {
+    val javaPackage = Option(
+        name = "java_package",
+        parse = { it },
+        default = null
+    )
+
+    val javaOuterClassName = Option(
+        name = "java_outer_classname",
+        parse = { it },
+        default = null
+    )
+
+    class Option<T>(val name: String, val parse: (String) -> T?, val default: T) {
+        fun get(file: ProtoFile, options: List<ProtoOption> = file.options): T {
             val matches = options.filter { it.name == name }
             if (matches.size > 1) {
                 val message = buildString {
@@ -25,7 +37,11 @@ object Options {
             }
 
             val match = matches.firstOrNull() ?: return default
-            return parse(match.value) ?: throw Protobuf3CompilationException("Could not parse option value.", file, match.ctx)
+            return parse(match.value) ?: throw Protobuf3CompilationException(
+                "Could not parse option value.",
+                file,
+                match.ctx
+            )
         }
     }
 }

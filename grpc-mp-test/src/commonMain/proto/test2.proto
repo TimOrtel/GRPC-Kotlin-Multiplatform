@@ -1,7 +1,0 @@
-syntax = "proto3";
-
-package de.foo.bar;
-
-message Y {
-
-}

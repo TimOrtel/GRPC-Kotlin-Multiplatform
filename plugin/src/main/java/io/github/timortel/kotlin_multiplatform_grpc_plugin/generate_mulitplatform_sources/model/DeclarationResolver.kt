@@ -83,6 +83,11 @@ interface DeclarationResolver : BaseDeclarationResolver {
                         )
                     }
 
+                    canTryNextInnerScope -> {
+                        // Go higher up into the tree
+                        resolveDeclarationInParent(type)
+                    }
+
                     else -> null
                 }
             }
