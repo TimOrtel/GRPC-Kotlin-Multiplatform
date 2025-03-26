@@ -2,7 +2,6 @@ package io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfo
 
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.PropertySpec
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.declaration.message.field.ProtoMapField
 
 object ActualProtoMapFieldWriter : ProtoMapFieldWriter() {
@@ -11,7 +10,7 @@ object ActualProtoMapFieldWriter : ProtoMapFieldWriter() {
         builder: PropertySpec.Builder,
         field: ProtoMapField
     ) {
-        builder.initializer(Const.Message.Attribute.Map.propertyName(field))
+        builder.initializer(field.fieldName)
         builder.addModifiers(KModifier.ACTUAL)
     }
 }

@@ -16,7 +16,7 @@ abstract class ProtoOneOfWriter(private val isActual: Boolean) {
         builder.addProperty(
             PropertySpec
                 .builder(
-                    name = Const.Message.OneOf.propertyName(protoOneOf),
+                    name = protoOneOf.fieldName,
                     type = protoOneOf.sealedClassName,
                     modifiers = attrs
                 )

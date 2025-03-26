@@ -128,7 +128,7 @@ abstract class ProtoMessageWriter(private val isActual: Boolean) {
                         ProtoFieldCardinality.Repeated -> {
                             addStatement(
                                 "if (%1N != %2N.%1N) return false",
-                                Const.Message.Attribute.Repeated.listPropertyName(field),
+                                field.fieldName,
                                 otherParamName
                             )
                         }
@@ -138,16 +138,16 @@ abstract class ProtoMessageWriter(private val isActual: Boolean) {
                 message.mapFields.forEach { mapField ->
                     addStatement(
                         "if (%1N != %2N.%1N) return false",
-                        Const.Message.Attribute.Map.propertyName(mapField),
+                        mapField.fieldName,
                         otherParamName
                     )
                 }
 
-                //Assume that each one of sealed class has their equals method set properly
+                // Assume that each one of sealed class has their equals method set properly
                 message.oneOfs.forEach { oneOf ->
                     addStatement(
                         "if (%1N != %2N.%1N) return false",
-                        Const.Message.OneOf.propertyName(oneOf),
+                        oneOf.fieldName,
                         otherParamName
                     )
                 }

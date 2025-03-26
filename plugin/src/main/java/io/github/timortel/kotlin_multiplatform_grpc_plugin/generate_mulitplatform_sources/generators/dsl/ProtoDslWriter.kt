@@ -138,7 +138,7 @@ abstract class ProtoDslWriter(private val isActual: Boolean) {
                 }
                 .addFunction(
                     FunSpec
-                        .builder(Const.DSL.buildFunctionName)
+                        .builder(Const.DSL.BUILD_FUNCTION_NAME)
                         .addModifiers(modifier)
                         .returns(message.className)
                         .apply { if (isActual) modifyBuildFunction(this, message) }

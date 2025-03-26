@@ -4,7 +4,6 @@ import com.squareup.kotlinpoet.MAP
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.declaration.message.field.ProtoMapField
 
 abstract class ProtoMapFieldWriter {
@@ -13,7 +12,7 @@ abstract class ProtoMapFieldWriter {
         builder.addProperty(
             PropertySpec
                 .builder(
-                    Const.Message.Attribute.Map.propertyName(field),
+                    field.fieldName,
                     MAP.parameterizedBy(field.keyType.resolve(), field.valuesType.resolve())
                 )
                 .apply {

@@ -77,7 +77,7 @@ abstract class ProtoEnumerationWriter(val isActual: Boolean) {
                     }
                     .addFunction(
                         FunSpec
-                            .builder(Const.Enum.getEnumForNumFunctionName)
+                            .builder(Const.Enum.GET_ENUM_FOR_FUNCTION_NAME)
                             .returns(protoEnum.className)
                             .addParameter("num", INT)
                             .apply {

@@ -12,7 +12,7 @@ abstract class RepeatedProtoFieldWriter {
     fun addField(builder: TypeSpec.Builder, field: ProtoMessageField) {
         val listProperty = PropertySpec
             .builder(
-                Const.Message.Attribute.Repeated.listPropertyName(field),
+                field.fieldName,
                 LIST.parameterizedBy(field.type.resolve())
             )
             .addModifiers(attrs)

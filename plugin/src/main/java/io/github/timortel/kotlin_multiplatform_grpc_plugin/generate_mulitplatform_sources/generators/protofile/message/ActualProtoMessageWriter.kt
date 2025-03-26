@@ -405,7 +405,7 @@ abstract class ActualProtoMessageWriter : ProtoMessageWriter(true) {
                                 CodeBlock.of(
                                     "%T.%N(%N.readEnum())",
                                     field.type.resolve(),
-                                    Const.Enum.getEnumForNumFunctionName,
+                                    Const.Enum.GET_ENUM_FOR_FUNCTION_NAME,
                                     wrapperParamName
                                 )
                             }
@@ -468,7 +468,7 @@ abstract class ActualProtoMessageWriter : ProtoMessageWriter(true) {
                                     addCode(
                                         "{·%T.%N(readEnum())·}",
                                         type.resolve(),
-                                        Const.Enum.getEnumForNumFunctionName
+                                        Const.Enum.GET_ENUM_FOR_FUNCTION_NAME
                                     )
                                 }
                             }
@@ -551,7 +551,7 @@ abstract class ActualProtoMessageWriter : ProtoMessageWriter(true) {
                                         "%N += %T.%N(%N.readEnum())",
                                         field.fieldName,
                                         field.type.resolve(),
-                                        Const.Enum.getEnumForNumFunctionName,
+                                        Const.Enum.GET_ENUM_FOR_FUNCTION_NAME,
                                         wrapperParamName
                                     )
                                 } else {

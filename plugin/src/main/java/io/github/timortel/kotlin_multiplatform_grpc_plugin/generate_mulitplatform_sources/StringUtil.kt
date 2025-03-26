@@ -27,3 +27,7 @@ fun <T> List<T>.joinToCodeBlock(separator: String, append: CodeBlock.Builder.(T)
         }
     }.build()
 }
+
+fun String.snakeCaseToCamelCase(): String {
+    return split('_').joinToString(separator = "") { it.capitalize() }
+}

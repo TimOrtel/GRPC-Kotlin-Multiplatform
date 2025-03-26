@@ -6,7 +6,7 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfor
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.declaration.ProtoEnum
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.declaration.ProtoMessage
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.model.service.ProtoService
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.util.snakeCaseToCamelCase
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.snakeCaseToCamelCase
 
 data class ProtoFile(
     val `package`: String?,
