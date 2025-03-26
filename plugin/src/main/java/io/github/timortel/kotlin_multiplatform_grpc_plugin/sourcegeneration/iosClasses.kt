@@ -1,0 +1,9 @@
+package io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration
+
+import com.squareup.kotlinpoet.ClassName
+
+const val COCOAPODS_PROTOBUF_PACKAGE = "cocoapods.Protobuf"
+
+val GPBCodedInputStream = ClassName(COCOAPODS_PROTOBUF_PACKAGE, "GPBCodedInputStream")
+val NSData = ClassName("platform.Foundation", "NSData")
+val NSMutableData = ClassName("platform.Foundation", "NSMutableData")
