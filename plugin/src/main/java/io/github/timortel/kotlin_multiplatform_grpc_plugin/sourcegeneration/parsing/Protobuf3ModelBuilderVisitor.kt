@@ -1,12 +1,15 @@
-package io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration
+package io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.parsing
 
 import io.github.timortel.kmpgrpc.anltr.Protobuf3Parser
 import io.github.timortel.kmpgrpc.anltr.Protobuf3Visitor
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.Protobuf3CompilationException
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.ProtoFile
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.ProtoImport
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.ProtoOption
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.ProtoType
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.declaration.ProtoEnum
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.declaration.ProtoMessage
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.declaration.enumeration.ProtoEnumField
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.declaration.message.ProtoOneOf
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.declaration.message.ProtoReservation
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.declaration.message.ProtoReservation.Companion.fold
@@ -14,8 +17,6 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.mode
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.declaration.message.field.ProtoMapField
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.declaration.message.field.ProtoMessageField
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.declaration.message.field.ProtoOneOfField
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.ProtoType
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.declaration.enumeration.ProtoEnumField
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.service.ProtoRpc
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.service.ProtoService
 import org.antlr.v4.runtime.ParserRuleContext
@@ -36,7 +37,11 @@ class Protobuf3ModelBuilderVisitor(
         val imports = ctx.importStatement().map { visitImportStatement(it) }
         val options = ctx.optionStatement().map { visitOptionStatement(it) }
 
-        if (ctx.packageStatement().size > 1) throw CompileException("Found more than one package statements", filePath, ctx)
+        if (ctx.packageStatement().size > 1) throw CompileException(
+            "Found more than one package statements",
+            filePath,
+            ctx
+        )
 
         val pkg = ctx.packageStatement().firstOrNull()?.fullIdent()?.text
 

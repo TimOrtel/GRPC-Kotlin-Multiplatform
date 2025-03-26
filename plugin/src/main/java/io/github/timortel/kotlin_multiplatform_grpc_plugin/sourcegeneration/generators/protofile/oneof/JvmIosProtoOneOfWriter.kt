@@ -1,7 +1,7 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.generators.protofile.oneof
 
 import com.squareup.kotlinpoet.*
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.generators.Const
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.constants.Const
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.generators.protofile.message.IosJvmProtoMessageWriteBase
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.declaration.message.ProtoOneOf
 

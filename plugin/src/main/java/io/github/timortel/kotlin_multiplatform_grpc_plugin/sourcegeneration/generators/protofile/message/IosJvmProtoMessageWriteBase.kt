@@ -1,15 +1,15 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.generators.protofile.message
 
 import com.squareup.kotlinpoet.*
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.generators.Const
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.generators.protofile.oneof.JvmIosProtoOneOfWriter
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.generators.protofile.oneof.ProtoOneOfWriter
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.ProtoType
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.declaration.ProtoMessage
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.declaration.message.field.ProtoFieldCardinality
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.*
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.constants.*
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.declaration.message.field.ProtoMapField
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.declaration.message.field.ProtoRegularField
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.util.joinToCodeBlock
 
 abstract class IosJvmProtoMessageWriteBase : ActualProtoMessageWriter() {
 

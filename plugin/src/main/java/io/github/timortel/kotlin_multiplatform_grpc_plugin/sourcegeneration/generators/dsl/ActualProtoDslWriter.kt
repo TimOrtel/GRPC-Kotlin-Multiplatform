@@ -1,7 +1,7 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.generators.dsl
 
 import com.squareup.kotlinpoet.FunSpec
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.joinToCodeBlock
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.util.joinToCodeBlock
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.declaration.ProtoMessage
 
 /**

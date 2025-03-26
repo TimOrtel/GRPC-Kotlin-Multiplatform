@@ -10,6 +10,7 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.gene
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.ProtoFile
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.ProtoFolder
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.ProtoProject
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.parsing.Protobuf3ModelBuilderVisitor
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import org.gradle.api.DefaultTask

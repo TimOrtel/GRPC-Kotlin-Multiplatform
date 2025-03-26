@@ -1,4 +1,4 @@
-package io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration
+package io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.constants
 
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.MemberName

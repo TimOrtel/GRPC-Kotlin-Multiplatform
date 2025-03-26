@@ -1,4 +1,4 @@
-package io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration
+package io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.util
 
 import org.antlr.v4.runtime.ParserRuleContext
 

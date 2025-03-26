@@ -2,8 +2,7 @@ package io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.gen
 
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.*
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.generators.Const
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.constants.*
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.generators.service.IosProtoServiceWriter
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.generators.service.ProtoServiceWriter
 

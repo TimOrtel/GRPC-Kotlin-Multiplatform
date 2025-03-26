@@ -1,7 +1,7 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.service
 
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.capitalize
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.decapitalize
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.util.capitalize
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.util.decapitalize
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.ProtoFile
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.ProtoOption
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.ProtoType

@@ -2,9 +2,9 @@ package io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.gen
 
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.CodedInputStream
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.CodedOutputStream
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.generators.Const
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.constants.CodedInputStream
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.constants.CodedOutputStream
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.constants.Const
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.generators.service.JvmProtoServiceWriter
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.generators.service.ProtoServiceWriter
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.declaration.ProtoMessage

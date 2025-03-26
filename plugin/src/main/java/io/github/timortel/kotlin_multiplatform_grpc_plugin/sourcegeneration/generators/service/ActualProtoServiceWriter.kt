@@ -1,8 +1,8 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.generators.service
 
 import com.squareup.kotlinpoet.*
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.generators.Const
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.kmChannel
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.constants.Const
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.constants.kmChannel
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.service.ProtoService
 
 abstract class ActualProtoServiceWriter : ProtoServiceWriter(true) {

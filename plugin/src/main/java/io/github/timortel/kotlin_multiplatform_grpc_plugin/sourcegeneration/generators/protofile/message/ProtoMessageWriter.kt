@@ -1,12 +1,12 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.generators.protofile.message
 
 import com.squareup.kotlinpoet.*
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.generators.Const
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.constants.Const
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.generators.protofile.enumeration.ProtoEnumerationWriter
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.generators.protofile.field.ProtoFieldWriter
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.generators.protofile.oneof.ProtoOneOfWriter
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.generators.service.ProtoServiceWriter
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.kmMessage
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.constants.kmMessage
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.ProtoFile
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.declaration.ProtoMessage
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.declaration.message.ProtoMessageProperty

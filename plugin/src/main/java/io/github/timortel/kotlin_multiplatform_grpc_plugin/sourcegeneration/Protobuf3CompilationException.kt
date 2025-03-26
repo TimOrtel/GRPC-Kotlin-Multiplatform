@@ -1,6 +1,7 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration
 
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.ProtoFile
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.util.toFilePositionString
 import org.antlr.v4.runtime.ParserRuleContext
 
 class Protobuf3CompilationException(val msg: String, val filePath: String, val ctx: ParserRuleContext?) : Exception() {

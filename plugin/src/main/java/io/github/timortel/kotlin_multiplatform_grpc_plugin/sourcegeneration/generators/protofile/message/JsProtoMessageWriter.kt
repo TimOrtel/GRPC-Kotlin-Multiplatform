@@ -4,13 +4,12 @@ import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.TypeName
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.generators.Const
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.generators.protofile.oneof.JsProtoOneOfWriter
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.generators.protofile.oneof.ProtoOneOfWriter
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.generators.service.JsProtoServiceWriter
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.generators.service.ProtoServiceWriter
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.declaration.message.field.ProtoMapField
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.*
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.constants.*
 
 object JsProtoMessageWriter : ActualProtoMessageWriter() {
 

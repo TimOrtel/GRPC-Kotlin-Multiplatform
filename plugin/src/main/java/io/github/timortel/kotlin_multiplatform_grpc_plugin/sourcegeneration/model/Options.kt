@@ -1,7 +1,7 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model
 
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.Protobuf3CompilationException
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.toFilePositionString
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.util.toFilePositionString
 
 object Options {
     val javaMultipleFiles = Option(

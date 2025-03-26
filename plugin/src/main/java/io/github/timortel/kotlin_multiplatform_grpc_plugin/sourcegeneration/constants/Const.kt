@@ -1,7 +1,6 @@
-package io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.generators
+package io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.constants
 
 import com.squareup.kotlinpoet.LONG
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.kmTimeUnit
 
 object Const {
     object Service {

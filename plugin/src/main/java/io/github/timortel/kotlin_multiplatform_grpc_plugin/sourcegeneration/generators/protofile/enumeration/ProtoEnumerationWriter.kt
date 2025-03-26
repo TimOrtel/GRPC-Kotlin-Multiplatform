@@ -1,8 +1,8 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.generators.protofile.enumeration
 
 import com.squareup.kotlinpoet.*
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.generators.Const
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.kmEnum
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.constants.Const
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.constants.kmEnum
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.declaration.ProtoEnum
 
 abstract class ProtoEnumerationWriter(val isActual: Boolean) {
