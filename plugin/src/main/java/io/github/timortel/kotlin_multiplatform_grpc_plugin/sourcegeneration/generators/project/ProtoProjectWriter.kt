@@ -2,7 +2,7 @@ package io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.gen
 
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.generators.dsl.ProtoDslWriter
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.generators.protofile.ProtoFileWriter
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.ProtoPackage
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.structure.ProtoPackage
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.ProtoProject
 import java.io.File
 

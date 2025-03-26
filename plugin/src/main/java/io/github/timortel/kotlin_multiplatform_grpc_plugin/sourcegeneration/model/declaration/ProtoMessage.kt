@@ -5,6 +5,7 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.mode
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.declaration.message.ProtoReservation
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.declaration.message.field.ProtoMapField
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.declaration.message.field.ProtoMessageField
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.file.ProtoFile
 import org.antlr.v4.runtime.ParserRuleContext
 
 data class ProtoMessage(

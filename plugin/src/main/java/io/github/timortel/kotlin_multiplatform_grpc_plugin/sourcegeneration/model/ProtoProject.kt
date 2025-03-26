@@ -1,6 +1,9 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model
 
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.declaration.ProtoDeclaration
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.file.ProtoFile
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.structure.ProtoFolder
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.structure.ProtoPackage
 
 data class ProtoProject(val rootFolder: ProtoFolder) {
 

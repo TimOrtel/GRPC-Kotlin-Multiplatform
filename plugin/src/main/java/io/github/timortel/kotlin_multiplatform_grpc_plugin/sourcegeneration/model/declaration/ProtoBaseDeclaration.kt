@@ -3,7 +3,7 @@ package io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.mod
 import com.squareup.kotlinpoet.ClassName
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.util.capitalize
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.Options
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.ProtoFile
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.file.ProtoFile
 import org.antlr.v4.runtime.ParserRuleContext
 
 interface ProtoBaseDeclaration {

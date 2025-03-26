@@ -3,8 +3,8 @@ package io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.par
 import io.github.timortel.kmpgrpc.anltr.Protobuf3Parser
 import io.github.timortel.kmpgrpc.anltr.Protobuf3Visitor
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.Protobuf3CompilationException
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.ProtoFile
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.ProtoImport
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.file.ProtoFile
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.file.ProtoImport
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.ProtoOption
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.ProtoType
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.declaration.ProtoEnum

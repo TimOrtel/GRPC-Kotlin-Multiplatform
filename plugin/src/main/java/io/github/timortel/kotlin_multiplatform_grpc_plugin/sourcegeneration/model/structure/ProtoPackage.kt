@@ -1,5 +1,9 @@
-package io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model
+package io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.structure
 
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.DeclarationResolver
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.file.ProtoFile
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.ProtoProject
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.ProtoType
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.declaration.ProtoDeclaration
 
 data class ProtoPackage(val name: String, val packages: List<ProtoPackage>, val files: List<ProtoFile>) :

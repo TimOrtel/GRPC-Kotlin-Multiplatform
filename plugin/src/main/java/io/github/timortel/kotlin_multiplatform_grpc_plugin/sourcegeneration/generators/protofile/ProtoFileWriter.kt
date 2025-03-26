@@ -7,7 +7,7 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.gene
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.generators.protofile.message.ProtoMessageWriter
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.generators.service.ProtoServiceWriter
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.Options
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.ProtoFile
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.file.ProtoFile
 import java.io.File
 
 abstract class ProtoFileWriter(val isActual: Boolean) {

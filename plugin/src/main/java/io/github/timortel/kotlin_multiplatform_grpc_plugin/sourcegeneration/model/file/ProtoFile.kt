@@ -1,11 +1,14 @@
-package io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model
+package io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.file
 
 import com.squareup.kotlinpoet.ClassName
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.Protobuf3CompilationException
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.*
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.declaration.ProtoDeclaration
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.declaration.ProtoEnum
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.declaration.ProtoMessage
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.service.ProtoService
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.structure.ProtoFolder
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.structure.ProtoPackage
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.util.snakeCaseToCamelCase
 
 data class ProtoFile(
