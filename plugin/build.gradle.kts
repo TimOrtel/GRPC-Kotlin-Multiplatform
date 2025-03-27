@@ -51,6 +51,12 @@ dependencies {
 
     implementation(libs.squareup.kotlinpoet)
     compileOnly(libs.kotlin.gradle.plugin)
+
+    testImplementation(platform(libs.junit.bom))
+    testImplementation(libs.junit.jupiter)
+    testRuntimeOnly(libs.junit.platform.launcher)
+
+    testImplementation(libs.mockk)
 }
 
 buildConfig {
@@ -84,6 +90,10 @@ publishing {
             artifactId = "kotlin-multiplatform-grpc-plugin"
         }
     }
+}
+
+tasks.test.configure {
+    useJUnitPlatform()
 }
 
 tasks.generateGrammarSource {

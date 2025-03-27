@@ -4,8 +4,9 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.mode
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.file.ProtoFile
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.structure.ProtoFolder
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.structure.ProtoPackage
+import org.slf4j.Logger
 
-data class ProtoProject(val rootFolder: ProtoFolder) {
+data class ProtoProject(val rootFolder: ProtoFolder, val logger: Logger) : ProtoNode {
 
     val rootPackage: ProtoPackage
 
@@ -14,6 +15,10 @@ data class ProtoProject(val rootFolder: ProtoFolder) {
 
         rootPackage = buildPackageTree(rootFolder.collectFiles(), emptyList())
         rootPackage.parent = ProtoPackage.Parent.Project(this)
+    }
+
+    override fun validate() {
+        rootPackage.validate()
     }
 
     fun resolveDeclarationFullyQualified(type: ProtoType.DefType): ProtoDeclaration? {

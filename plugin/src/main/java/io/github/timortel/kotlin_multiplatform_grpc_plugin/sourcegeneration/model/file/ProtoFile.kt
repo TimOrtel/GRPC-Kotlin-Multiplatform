@@ -1,7 +1,7 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.file
 
 import com.squareup.kotlinpoet.ClassName
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.Protobuf3CompilationException
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.CompilationException
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.*
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.declaration.ProtoDeclaration
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.declaration.ProtoEnum
@@ -20,7 +20,7 @@ data class ProtoFile(
     val services: List<ProtoService>,
     val options: List<ProtoOption>,
     val imports: List<ProtoImport>
-) : DeclarationResolver {
+) : FileBasedDeclarationResolver {
     lateinit var folder: ProtoFolder
     lateinit var protoPackage: ProtoPackage
 
@@ -35,13 +35,16 @@ data class ProtoFile(
     val project: ProtoProject
         get() = folder.project
 
+    override val file: ProtoFile
+        get() = this
+
     override val candidates: List<DeclarationResolver.Candidate> =
         messages.map { DeclarationResolver.Candidate.Message(it) } + enums.map { DeclarationResolver.Candidate.Enum(it) }
 
     val importedFiles: List<ProtoFile>
         get() = imports.map { import ->
             project.rootFolder.resolveImport(import.path)
-                ?: throw Protobuf3CompilationException("Unable to resolve import ${import.identifier}", this, import.ctx)
+                ?: throw CompilationException.UnresolvedImport("Unable to resolve import ${import.identifier}", this, import.ctx)
         }
 
     val javaPackage: String get() {
@@ -64,5 +67,12 @@ data class ProtoFile(
 
     override fun resolveDeclarationInParent(type: ProtoType.DefType): ProtoDeclaration? {
         return protoPackage.resolveDeclaration(type)
+    }
+
+    override fun validate() {
+        super.validate()
+        messages.forEach { it.validate() }
+        enums.forEach { it.validate() }
+        services.forEach { it.validate() }
     }
 }

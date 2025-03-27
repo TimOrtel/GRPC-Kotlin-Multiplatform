@@ -18,7 +18,7 @@ data class ProtoMessage(
     val reservation: ProtoReservation,
     val options: List<ProtoOption>,
     override val ctx: ParserRuleContext
-) : ProtoDeclaration, DeclarationResolver {
+) : ProtoDeclaration, FileBasedDeclarationResolver {
 
     override lateinit var parent: ProtoDeclParent
 
@@ -61,5 +61,12 @@ data class ProtoMessage(
             is ProtoDeclParent.File -> p.file.resolveDeclaration(type)
             is ProtoDeclParent.Message -> p.message.resolveDeclaration(type)
         }
+    }
+
+    override fun validate() {
+        super.validate()
+
+        messages.forEach { it.validate() }
+        enums.forEach { it.validate() }
     }
 }

@@ -1,6 +1,6 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model
 
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.Protobuf3CompilationException
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.CompilationException
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.declaration.ProtoDeclaration
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.declaration.ProtoEnum
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.declaration.ProtoMessage
@@ -77,7 +77,7 @@ interface DeclarationResolver : BaseDeclarationResolver {
                     matchingCandidates.isNotEmpty() -> when (val candidate = matchingCandidates.first()) {
                         is Candidate.Message -> candidate.message
                         is Candidate.Enum -> candidate.enum
-                        is Candidate.Package -> throw Protobuf3CompilationException(
+                        is Candidate.Package -> throw CompilationException.ResolvedToPackage(
                             "Declaration was resolved to package, but message or enumeration was expected",
                             type.file,
                             type.ctx
@@ -118,7 +118,7 @@ interface DeclarationResolver : BaseDeclarationResolver {
                 )
             }
 
-            throw Protobuf3CompilationException(message, type.file, type.ctx)
+            throw CompilationException.ConflictingResolution(message, type.file, type.ctx)
         }
     }
 

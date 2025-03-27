@@ -1,7 +1,7 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model
 
 import com.squareup.kotlinpoet.*
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.Protobuf3CompilationException
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.CompilationException
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.declaration.ProtoDeclaration
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.declaration.ProtoEnum
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.declaration.ProtoMessage
@@ -119,7 +119,7 @@ sealed interface ProtoType {
             }
 
             if (decl == null) {
-                throw Protobuf3CompilationException("Unresolved reference $declaration", file, ctx)
+                throw CompilationException.UnresolvedReference("Unresolved reference $declaration", file, ctx)
             }
 
             return decl

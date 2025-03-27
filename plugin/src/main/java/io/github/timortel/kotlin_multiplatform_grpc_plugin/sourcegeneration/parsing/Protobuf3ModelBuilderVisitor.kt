@@ -2,7 +2,7 @@ package io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.par
 
 import io.github.timortel.kmpgrpc.anltr.Protobuf3Parser
 import io.github.timortel.kmpgrpc.anltr.Protobuf3Visitor
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.Protobuf3CompilationException
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.CompilationException
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.file.ProtoFile
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.file.ProtoImport
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.ProtoOption
@@ -25,7 +25,6 @@ import org.antlr.v4.runtime.tree.ParseTree
 import org.antlr.v4.runtime.tree.RuleNode
 import org.antlr.v4.runtime.tree.TerminalNode
 
-typealias CompileException = Protobuf3CompilationException
 typealias ParseException = Protobuf3ParserException
 
 class Protobuf3ModelBuilderVisitor(
@@ -37,7 +36,7 @@ class Protobuf3ModelBuilderVisitor(
         val imports = ctx.importStatement().map { visitImportStatement(it) }
         val options = ctx.optionStatement().map { visitOptionStatement(it) }
 
-        if (ctx.packageStatement().size > 1) throw CompileException(
+        if (ctx.packageStatement().size > 1) throw CompilationException.DuplicatePackageStatement(
             "Found more than one package statements",
             filePath,
             ctx
@@ -124,7 +123,8 @@ class Protobuf3ModelBuilderVisitor(
 
     override fun visitReservedFieldNames(ctx: Protobuf3Parser.ReservedFieldNamesContext): ProtoReservation {
         return ProtoReservation(
-            nums = ctx.strLit().map { it.parseInt() }
+            // Remove ""
+            names = ctx.strLit().map { it.text.substring(1, it.text.length - 1) }
         )
     }
 
@@ -140,8 +140,15 @@ class Protobuf3ModelBuilderVisitor(
 
         val options = elements.mapNotNull { it.optionStatement() }.map { visitOptionStatement(it) }
         val fields = elements.mapNotNull { it.enumField() }.map { visitEnumField(it) }
+        val reservation = elements.mapNotNull { it.reserved() }.map { visitReserved(it) }.fold()
 
-        return ProtoEnum(name = name, fields = fields, options = options, ctx = ctx)
+        return ProtoEnum(
+            name = name,
+            fields = fields,
+            options = options,
+            reservation = reservation,
+            ctx = ctx
+        )
     }
 
     // Field parsing
@@ -204,7 +211,8 @@ class Protobuf3ModelBuilderVisitor(
         return ProtoEnumField(
             name = name,
             number = if (ctx.MINUS() != null) -number else number,
-            options = options
+            options = options,
+            ctx = ctx
         )
     }
 

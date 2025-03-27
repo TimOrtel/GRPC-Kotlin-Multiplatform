@@ -14,6 +14,7 @@
  * Direct copy from https://github.com/antlr/grammars-v4/blob/25ad11e4ff672b1eca69d6eeff109ce11bbb663d/protobuf3/Protobuf3.g4
  * Changes from the source above:
  * - Added package header
+ * - Added reserved fields to enum
  * - Adapted rpc definition to expose clientStream and serverStream attributes
  * @author Tim Ortel
  */
@@ -173,6 +174,8 @@ enumBody
 enumElement
     : optionStatement
     | enumField
+    | reserved
+    | reservedFieldNames
     | emptyStatement_
     ;
 

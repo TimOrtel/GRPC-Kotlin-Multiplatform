@@ -1,7 +1,7 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.configuration
 
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.GrpcMultiplatformExtension
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.GenerateMultiplatformSourcesTask
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.GenerateMultiplatformSourcesTask
 import org.gradle.api.Project
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinMultiplatformPluginWrapper

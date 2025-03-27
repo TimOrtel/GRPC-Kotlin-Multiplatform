@@ -1,6 +1,6 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model
 
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.Protobuf3CompilationException
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.CompilationException
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.file.ProtoFile
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.util.toFilePositionString
 
@@ -23,6 +23,12 @@ object Options {
         default = null
     )
 
+    val allowAlias = Option(
+        name = "allow_alias",
+        parse = String::toBooleanStrictOrNull,
+        default = false
+    )
+
     class Option<T>(val name: String, val parse: (String) -> T?, val default: T) {
         fun get(file: ProtoFile, options: List<ProtoOption> = file.options): T {
             val matches = options.filter { it.name == name }
@@ -34,11 +40,11 @@ object Options {
                     }
                 }
 
-                throw Protobuf3CompilationException(message, file)
+                throw CompilationException.DuplicateDeclaration(message, file)
             }
 
             val match = matches.firstOrNull() ?: return default
-            return parse(match.value) ?: throw Protobuf3CompilationException(
+            return parse(match.value) ?: throw CompilationException.OptionFailedParse(
                 "Could not parse option value.",
                 file,
                 match.ctx
