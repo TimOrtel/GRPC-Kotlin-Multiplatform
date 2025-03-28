@@ -25,8 +25,8 @@ jobs:
 
       - name: Build Android app
         run: |
-          cd example/android
-          ./gradlew assembleDebug
+          cd example
+          ./gradlew android:assembleDebug
 
   build-ios:
     runs-on: macos-latest
@@ -42,8 +42,8 @@ jobs:
 
       - name: Build common module
         run: |
-          cd example/common
-          ./gradlew build
+          cd example
+          ./gradlew common:build
 
       - name: Install CocoaPods dependencies
         run: |

@@ -1,0 +1,64 @@
+name: Gradle Plugin Tests
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  test-jvm:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Run tests in plugin module
+        run: ./gradlew :grpc-mp-test:jvmTest
+
+  test-js:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Start Envoy service
+        run: docker compose -f docker-tests/js-test.yml up -d envoy
+
+      - name: Run tests in plugin module
+        run: ./gradlew :grpc-mp-test:jsTest
+
+      - name: Stop Envoy service
+        run: docker compose -f docker-tests/js-test.yml down
+        if: always()
+
+  test-ios:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Run tests in plugin module
+        run: ./gradlew :grpc-mp-test:iosSimulatorArm64Test
