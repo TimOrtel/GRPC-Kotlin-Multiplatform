@@ -1,9 +1,11 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators
 
 import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.LONG
 import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.MemberName.Companion.member
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.*
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.kmTimeUnit
 
 object Const {
     object Service {
@@ -15,6 +17,15 @@ object Const {
 
         object Constructor {
             const val CHANNEL_PARAMETER_NAME = "channel"
+        }
+
+        object Functions {
+            object WithDeadlineAfter {
+                const val NAME = "withDeadlineAfter"
+
+                val ParamDuration = Property("duration", LONG)
+                val ParamUnit = Property("unit", kmTimeUnit)
+            }
         }
 
         object JVM {

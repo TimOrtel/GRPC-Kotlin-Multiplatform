@@ -27,6 +27,7 @@ dependencies {
 
     implementation(libs.google.protobuf.kotlin)
     implementation(libs.google.protobuf.java.util)
+    implementation(libs.grpc.api)
     implementation(libs.grpc.protobuf)
     implementation(libs.grpc.stub)
     implementation(libs.grpc.kotlin.stub)
@@ -51,15 +52,15 @@ sourceSets {
 
 protobuf {
     protoc {
-        artifact = "com.google.protobuf:protoc:3.21.1"
+        artifact = "com.google.protobuf:protoc:${libs.versions.protobufJvm.get()}"
     }
 
     plugins {
         id("grpc") {
-            artifact = "io.grpc:protoc-gen-grpc-java:1.48.1"
+            artifact = "io.grpc:protoc-gen-grpc-java:${libs.versions.grpcJvm.get()}"
         }
         id("grpckt") {
-            artifact = "io.grpc:protoc-gen-grpc-kotlin:1.2.1:jdk7@jar"
+            artifact = "io.grpc:protoc-gen-grpc-kotlin:${libs.versions.grpcKotlin.get()}:jdk8@jar"
         }
     }
     generateProtoTasks {

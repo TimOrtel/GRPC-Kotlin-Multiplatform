@@ -1,28 +1,48 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin
 
-import org.gradle.api.provider.ListProperty
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.provider.MapProperty
-import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
-import java.io.File
 
 abstract class GrpcMultiplatformExtension {
+
+    companion object {
+        internal const val COMMON = "common"
+        internal const val JVM = "jvm"
+        internal const val JS = "js"
+        internal const val IOS = "ios"
+
+        internal val targets = listOf(COMMON, JVM, JS, IOS)
+    }
 
     /**
      * Maps the output target to the source sets that require it.
      */
-    abstract val targetSourcesMap: MapProperty<OutputTarget, List<KotlinSourceSet>>
+    abstract val targetSourcesMap: MapProperty<String, List<String>>
 
-    abstract val protoSourceFolders: ListProperty<File>
+    abstract val protoSourceFolders: ConfigurableFileCollection
 
-    enum class OutputTarget {
-        COMMON,
-        JVM,
-        JS,
-        IOS
+    fun common(targets: List<String> = listOf("commonMain")) {
+        targetSourcesMap.put(COMMON, targets)
+    }
+
+    fun jvm(targets: List<String> = listOf("jvmMain")) {
+        targetSourcesMap.put(JVM, targetSourcesMap.get()[JVM].orEmpty() + targets)
+    }
+
+    fun android(targets: List<String> = listOf("androidMain")) {
+        targetSourcesMap.put(JVM, targetSourcesMap.get()[JVM].orEmpty() + targets)
+    }
+
+    fun js(targets: List<String> = listOf("jsMain")) {
+        targetSourcesMap.put(JS, targets)
+    }
+
+    fun ios(targets: List<String> = listOf("iosMain")) {
+        targetSourcesMap.put(IOS, targets)
     }
 
     init {
         targetSourcesMap.convention(emptyMap())
-        protoSourceFolders.convention(emptyList())
     }
 }
+

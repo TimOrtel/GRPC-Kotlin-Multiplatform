@@ -1,6 +1,6 @@
 [![GitHub license](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg?style=flat)](http://www.apache.org/licenses/LICENSE-2.0)
 [![Download](https://img.shields.io/maven-central/v/io.github.timortel/grpc-multiplatform-lib) ](https://central.sonatype.com/artifact/io.github.timortel/grpc-multiplatform-lib)
-![version](https://img.shields.io/badge/version-0.4.0-blue)
+![version](https://img.shields.io/badge/version-0.5.0-blue)
 
 ![badge][badge-android]
 ![badge][badge-jvm]
@@ -12,15 +12,14 @@ This projects implements client-side gRPC for Android, JVM, iOS and the web.
 
 **⚠️ Warning: This project is still under development and does not support all gRPC features!**
 
-**⚠️ Warning: The implementation for javascript is currently not covered by unit tests!**
-
 ## Table of contents
 - [Features](#features)
 - [Usage](#usage)
 - [Setup](#setup)
+- [Example Implementation](#example-implementation)
 - [Roadmap](#roadmap)
 - [Contributing](#contributing)
-- [Implementation details](#implementation_details)
+- [Implementation details](#implementation-details)
 - [License](#license)
 
 ## Features
@@ -70,11 +69,11 @@ val myMessage = kmMyMessage {
 ```kotlin
  suspend fun makeCall() {
     val channel = KMChannel.Builder()
-        .forAddress("localhost", 8082) //replace with your address and your port
-        .usePlaintext() //To force grpc to allow plaintext traffic, if you don't call this https is used.
+        .forAddress("localhost", 8082) // replace with your address and your port
+        .usePlaintext() // To force grpc to allow plaintext traffic, if you don't call this https is used.
         .build()
     
-    //For each service a unique class is generated. KM(serviceName)Stub
+    // For each service a unique class is generated. KM(serviceName)Stub
     val stub = KMMyServiceStub(channel)
     
     val request = kmRequest {
@@ -83,7 +82,7 @@ val myMessage = kmMyMessage {
      
      try {
          val response = stub
-             .withDeadlineAfter(10, TimeUnit.SECONDS) //Specify a deadline if you need to
+             .withDeadlineAfter(10, TimeUnit.SECONDS) // Specify a deadline if you need to
              .myRpc(request)
 
          //Handle response
@@ -105,7 +104,7 @@ buildscript {
         gradlePluginPortal()
     }
 
-    //...
+    // ...
 }
 ```
 
@@ -116,15 +115,17 @@ plugins {
     kotlin("multiplatform")
 
     //...
-    
     id("io.github.timortel.kotlin-multiplatform-grpc-plugin") version "<latest version>"
+
+    // Required when targeting iOS
+    kotlin("native.cocoapods")
 }
 ```
 
-Configure your JS configuration:
+Update your JS configuration:
 ```kotlin
 kotlin {
-    //...
+    // ...
 
     js(IR) {
         useCommonJs()
@@ -138,77 +139,58 @@ kotlin {
         binaries.executable()
     }
     
-    //...
+    // ...
 }
 ```
-Other configurations may work, but I have not tested others.
+While other configurations may work, I have only tested this one.
 
 Add the library as a dependency:
 ```kotlin
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.GrpcMultiplatformExtension.OutputTarget
-
-plugins {
-    //Required when targeting iOS
-    kotlin("native.cocoapods")
-}
-
 repositories {
-    //...
+    // ...
     mavenCentral()
 }
 
 kotlin {
-    //For iOS support, configure cocoapods
+    // For iOS support, configure cocoapods
     cocoapods {
         summary = "..."
         homepage = "..."
         ios.deploymentTarget = //...
-            
-        pod("gRPC-ProtoRPC", moduleName = "GRPCClient")
-        pod("Protobuf")
     }
     
-    sourceSets {
-        commonMain {
-            dependencies {
-                implementation(kotlin("stdlib-common"))
-                api("io.github.timortel:grpc-multiplatform-lib:<latest version>")
-                api("org.jetbrains.kotlinx:kotlinx-coroutines-core:<latest version>")
-            }
-        }
-    }
+    // ...
 }
 
 grpcKotlinMultiplatform {
-    with(kotlin) {
-        targetSourcesMap.put(OutputTarget.COMMON, listOf(kotlin.sourceSets.commonMain.get()))
-        targetSourcesMap.put(OutputTarget.IOS, listOf(kotlin.sourceSets.iosMain.get()))
-        targetSourcesMap.put(OutputTarget.JVM, listOf(kotlin.sourceSets.androidMain.get()))
-        targetSourcesMap.put(OutputTarget.JS, listOf(kotlin.sourceSets.jsMain.get()))
-    }
+    // declare the targets you need.
+    common() // required
+    jvm()
+    androidMain()
+    js()
+    ios()
 
     // Specify the folders where your proto files are located, you can list multiple.
-    protoSourceFolders.set(listOf(projectDir.resolve("../protos/src/main/proto")))
-}
-
-```
-
-### JS
-You must add the following npm dependencies to your JS module:
-```kotlin
-dependencies {
-    //...
-    api(npm("google-protobuf", "^<latest version>"))
-    api(npm("grpc-web", "^<latest version>"))
-    api(npm("protobufjs", "^<latest version>"))
+    protoSourceFolders = project.files("<source to your protos>")
 }
 ```
 
-### iOS
-This library uses the updated memory manager. Therefore, you might have to [enable this memory manager in your project](https://github.com/JetBrains/kotlin/blob/master/kotlin-native/NEW_MM.md#switch-to-the-new-mm), too.
+### iOS setup
+This library is using Cocoapods, so please refer to the [Kotlin Multiplatform Documentation](https://kotlinlang.org/docs/native-cocoapods.html) on how to setup your iOS app with a Kotlin Multiplatform project, or refer to the example iOS app in the `example` folder.
+When you build your app, you might encounter compilation errors of multiple Pods. This is because the gRPC Pod required C++17 to be enabled:
+1. In Xcode, double-click on the `Pods` project and for project `Pods` go to `Build Settings`. Search for `C++ Language Dialect` and set it to `C++17`. 
+2. You can now build the app.
+
+## Example Implementation
+See an example implementation of an Android app and an iOS app in the `example` folder. 
 
 ## Roadmap
 - Support all proto data types
+
+## Building locally
+Run the following Gradle commands:
+1. To build the library `gradle grpc-multiplatform-lib:publishToMavenLocal`
+2. To build the plugin `gradle plugin:publishToMavenLocal`
 
 ## Contributing
 Feel free to implement improvements, bug fixes and features and create a pull request.
@@ -222,7 +204,7 @@ Please send all pull requests to the develop branch, as the master always holds 
 - The iOS implementation uses the objective-c implementation of gRPC. The necessary message implementations are generated by the gradle plugin.
 
 ## License
-Copyright 2024 Tim Ortel
+Copyright 2025 Tim Ortel
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
 

@@ -4,16 +4,21 @@ import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeSpec
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.kmTimeUnit
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
 
 fun overrideWithDeadlineAfter(builder: TypeSpec.Builder, serviceClass: ClassName) {
     builder.addFunction(
-        FunSpec.builder("withDeadlineAfter")
-            .addModifiers(KModifier.OVERRIDE)
-            .addParameter("duration", Long::class)
-            .addParameter("unit", kmTimeUnit)
+        FunSpec.builder(Const.Service.Functions.WithDeadlineAfter.NAME)
+            .addModifiers(KModifier.OVERRIDE, KModifier.ACTUAL)
+            .addParameter(Const.Service.Functions.WithDeadlineAfter.ParamDuration.toParamSpec())
+            .addParameter(Const.Service.Functions.WithDeadlineAfter.ParamUnit.toParamSpec())
             .returns(serviceClass)
-            .addStatement("return super.withDeadlineAfter(duration, unit)")
+            .addStatement(
+                "return super.%N(%N, %N)",
+                Const.Service.Functions.WithDeadlineAfter.NAME,
+                Const.Service.Functions.WithDeadlineAfter.ParamDuration.toParamSpec(),
+                Const.Service.Functions.WithDeadlineAfter.ParamUnit.toParamSpec()
+            )
             .build()
     )
 }

@@ -11,52 +11,74 @@ import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.tree.ParseTreeWalker
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
-import org.gradle.api.provider.ListProperty
+import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.OutputDirectories
+import org.gradle.api.tasks.TaskAction
 import org.slf4j.Logger
 import java.io.File
 
-@Suppress("LeakingThis")
 abstract class GenerateMultiplatformSourcesTask : DefaultTask() {
 
     companion object {
-        fun getOutputFolder(project: Project): File = project.buildDir.resolve("generated/source/kmp-grpc/")
+        fun getOutputFolder(project: Project): File =
+            project.layout.buildDirectory.dir("generated/source/kmp-grpc/").get().asFile
+
         fun getCommonOutputFolder(project: Project): File = getOutputFolder(project).resolve("commonMain/kotlin")
         fun getJVMOutputFolder(project: Project): File = getOutputFolder(project).resolve("jvmMain/kotlin")
         fun getJSOutputFolder(project: Project): File = getOutputFolder(project).resolve("jsMain/kotlin")
         fun getIOSOutputFolder(project: Project): File = getOutputFolder(project).resolve("iosMain/kotlin")
     }
 
+    @get:InputFiles
+    abstract val sourceFolders: ConfigurableFileCollection
+
+    @get:Input
+    abstract val targetSourcesMap: MapProperty<String, List<String>>
+
+    @get:OutputDirectories
+    val outputFolders: ConfigurableFileCollection = project.objects.fileCollection()
+
     init {
-        val grpcMultiplatformExtension = project.extensions.findByType(GrpcMultiplatformExtension::class.java)
-            ?: throw IllegalStateException("grpc multiplatform extension not specified.")
-
-        val generateTarget = GrpcMultiplatformExtension.OutputTarget.values().associateWith { target ->
-            grpcMultiplatformExtension.targetSourcesMap.get()[target].orEmpty().isNotEmpty()
-        }
-
-        doLast {
-            val sourceFolders = grpcMultiplatformExtension.protoSourceFolders.get()
-            val outputFolder = getOutputFolder(project)
-            outputFolder.mkdirs()
-
-            generateProtoFiles(
-                logger,
-                sourceFolders,
-                generateTarget,
-                commonOutputFolder = getCommonOutputFolder(project),
-                jvmOutputFolder = getJVMOutputFolder(project),
-                jsOutputFolder = getJSOutputFolder(project),
-                iosOutputDir = getIOSOutputFolder(project)
+        outputFolders.setFrom(
+            listOf(
+                getCommonOutputFolder(project),
+                getJVMOutputFolder(project),
+                getJSOutputFolder(project),
+                getIOSOutputFolder(project)
             )
+        )
+    }
+
+    @TaskAction
+    fun generateSources() {
+        val tsm = targetSourcesMap.get()
+
+        val shouldGenerateTargetMap = GrpcMultiplatformExtension.targets.associateWith { target ->
+            tsm[target].orEmpty().isNotEmpty()
         }
+
+        val outputFolder = getOutputFolder(project)
+        outputFolder.mkdirs()
+
+        generateProtoFiles(
+            log = logger,
+            protoFolders = sourceFolders.files.toList(),
+            shouldGenerateTargetMap = shouldGenerateTargetMap,
+            commonOutputFolder = getCommonOutputFolder(project),
+            jvmOutputFolder = getJVMOutputFolder(project),
+            jsOutputFolder = getJSOutputFolder(project),
+            iosOutputDir = getIOSOutputFolder(project)
+        )
     }
 }
 
 private fun generateProtoFiles(
     log: Logger,
     protoFolders: List<File>,
-    generateTarget: Map<GrpcMultiplatformExtension.OutputTarget, Boolean>,
+    shouldGenerateTargetMap: Map<String, Boolean>,
     commonOutputFolder: File,
     jvmOutputFolder: File,
     jsOutputFolder: File,
@@ -73,7 +95,7 @@ private fun generateProtoFiles(
 
     val protoFiles = sourceProtoFiles
         .map { protoFile ->
-            log.debug("Generating KMP sources for proto file=$protoFile")
+            log.debug("Generating KMP sources for proto file={}", protoFile)
             val lexer = Proto3Lexer(CharStreams.fromStream(protoFile.inputStream()))
             val parser = Proto3Parser(CommonTokenStream(lexer))
 
@@ -96,7 +118,22 @@ private fun generateProtoFiles(
         }
 
     protoFiles.forEach { protoFile ->
-        writeProtoFile(protoFile, generateTarget, commonOutputFolder, jvmOutputFolder, jsOutputFolder, iosOutputDir)
-        writeServiceFile(protoFile, generateTarget, commonOutputFolder, jvmOutputFolder, jsOutputFolder, iosOutputDir)
+        writeProtoFile(
+            protoFile = protoFile,
+            generateTarget = shouldGenerateTargetMap,
+            commonOutputDir = commonOutputFolder,
+            jvmOutputDir = jvmOutputFolder,
+            jsOutputDir = jsOutputFolder,
+            iosOutputDir = iosOutputDir
+        )
+
+        writeServiceFile(
+            protoFile = protoFile,
+            generateTarget = shouldGenerateTargetMap,
+            commonOutputFolder = commonOutputFolder,
+            jvmOutputFolder = jvmOutputFolder,
+            jsOutputFolder = jsOutputFolder,
+            iosOutputFolder = iosOutputDir
+        )
     }
 }

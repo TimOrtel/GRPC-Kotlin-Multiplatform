@@ -27,14 +27,14 @@ object JvmServiceWriter : ActualServiceWriter() {
         builder: TypeSpec.Builder,
         protoFile: ProtoFile,
         service: ProtoService,
-        serviceName: ClassName
+        serviceClass: ClassName
     ) {
-        super.applyToClass(builder, protoFile, service, serviceName)
+        super.applyToClass(builder, protoFile, service, serviceClass)
 
         builder.apply {
-            addSuperinterface(ClassName(PACKAGE_STUB, "AndroidJvmKMStub").parameterizedBy(serviceName))
+            addSuperinterface(ClassName(PACKAGE_STUB, "AndroidJvmKMStub").parameterizedBy(serviceClass))
 
-            overrideWithDeadlineAfter(builder, serviceName)
+            overrideWithDeadlineAfter(builder, serviceClass)
 
 //            addFunction(
 //                FunSpec.constructorBuilder()

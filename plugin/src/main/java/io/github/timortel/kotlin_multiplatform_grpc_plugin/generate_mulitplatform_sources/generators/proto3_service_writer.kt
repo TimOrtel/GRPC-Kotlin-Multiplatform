@@ -7,7 +7,7 @@ import java.io.File
 
 fun writeServiceFile(
     protoFile: ProtoFile,
-    generateTarget: Map<GrpcMultiplatformExtension.OutputTarget, Boolean>,
+    generateTarget: Map<String, Boolean>,
     commonOutputFolder: File,
     jvmOutputFolder: File,
     jsOutputFolder: File,
@@ -16,11 +16,11 @@ fun writeServiceFile(
     protoFile.services.forEach { service ->
         CommonServiceWriter.writeServiceStub(protoFile, service, commonOutputFolder)
 
-        if (generateTarget[GrpcMultiplatformExtension.OutputTarget.JS] == true)
+        if (generateTarget[GrpcMultiplatformExtension.JS] == true)
             writeJsServiceFile(protoFile, service, jsOutputFolder)
-        if (generateTarget[GrpcMultiplatformExtension.OutputTarget.JVM] == true)
+        if (generateTarget[GrpcMultiplatformExtension.JVM] == true)
             writeJvmServiceFile(protoFile, service, jvmOutputFolder)
-        if (generateTarget[GrpcMultiplatformExtension.OutputTarget.IOS] == true) {
+        if (generateTarget[GrpcMultiplatformExtension.IOS] == true) {
             writeIOSServiceFile(protoFile, service, iosOutputFolder)
         }
     }

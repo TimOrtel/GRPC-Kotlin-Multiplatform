@@ -3,6 +3,7 @@ plugins {
     id("java-gradle-plugin")
     id("maven-publish")
     id("com.gradle.plugin-publish") version libs.versions.gradlePluginPublish.get()
+    id("com.github.gmazzo.buildconfig") version libs.versions.buildConfigPlugin.get()
     antlr
 }
 
@@ -30,18 +31,11 @@ gradlePlugin {
     }
 }
 
-publishing {
-    repositories {
-        mavenLocal()
-    }
-
-    publications {
-        create<MavenPublication>("maven") {
-            from(project.components["java"])
-            groupId = project.group as String
-            version = project.version as String
-
-            artifactId = "kotlin-multiplatform-grpc-plugin"
+kotlin {
+    sourceSets.all {
+        languageSettings {
+            optIn("kotlin.RequiresOptIn")
+            optIn("kotlin.ExperimentalStdlibApi")
         }
     }
 }
@@ -59,16 +53,45 @@ dependencies {
     compileOnly(libs.kotlin.gradle.plugin)
 }
 
+buildConfig {
+    useKotlinOutput {
+        internalVisibility = true
+        topLevelConstants = true
+    }
+
+    buildConfigField("String", "VERSION", "\"${libs.versions.grpcKotlinMultiplatform.get()}\"")
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs("../pod-build-workaround/shared-src/main/java")
+        }
+    }
+}
+
+publishing {
+    repositories {
+        mavenLocal()
+    }
+
+    publications {
+        create<MavenPublication>("maven") {
+            from(project.components["java"])
+            groupId = project.group as String
+            version = project.version as String
+
+            artifactId = "kotlin-multiplatform-grpc-plugin"
+        }
+    }
+}
+
 tasks.generateGrammarSource {
     arguments = arguments + listOf("-visitor")
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().all {
     dependsOn("generateGrammarSource")
-
-    kotlinOptions {
-        freeCompilerArgs = listOf("-Xopt-in=kotlin.RequiresOptIn", "-Xopt-in=kotlin.ExperimentalStdlibApi")
-    }
 }
 
 tasks.withType<Jar>().all {

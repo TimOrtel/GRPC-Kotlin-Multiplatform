@@ -1,7 +1,6 @@
 package io.github.timortel.kotlin_multiplatform_grpc_lib
 
 import cocoapods.GRPCClient.*
-import kotlinx.cinterop.ExperimentalForeignApi
 
 /**
  * On ios the channel equivalent are the [GRPCCallOptions].

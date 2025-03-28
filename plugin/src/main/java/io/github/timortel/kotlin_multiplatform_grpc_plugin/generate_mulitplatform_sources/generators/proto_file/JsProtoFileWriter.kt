@@ -1,13 +1,7 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.proto_file
 
-import com.squareup.kotlinpoet.CodeBlock
-import com.squareup.kotlinpoet.Dynamic
-import com.squareup.kotlinpoet.FunSpec
-import com.squareup.kotlinpoet.TypeName
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.CodedInputStream
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.CodedOutputStream
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.JSPB_BINARY_READER
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.JSPB_BINARY_WRITER
+import com.squareup.kotlinpoet.*
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.*
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.MapType
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoFile
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoMessage
@@ -21,9 +15,12 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfor
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.repeated.RepeatedMessageMethodGenerator
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.scalar.ActualScalarMessageMethodGenerator
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.scalar.ScalarMessageMethodGenerator
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.writeMap
 
 class JsProtoFileWriter(protoFile: ProtoFile) : ActualProtoFileWriter(protoFile) {
+
+    companion object {
+        private val UInt8Array = ClassName("org.khronos.webgl", "Uint8Array")
+    }
 
     override val scalarMessageMethodGenerator: ScalarMessageMethodGenerator
         get() = ActualScalarMessageMethodGenerator
@@ -42,7 +39,7 @@ class JsProtoFileWriter(protoFile: ProtoFile) : ActualProtoFileWriter(protoFile)
             .addStatement("return writer.getResultBuffer()")
             .build()
 
-    override val serializedDataType: TypeName = Dynamic
+    override val serializedDataType: TypeName = UInt8Array
 
     override val deserializeFunctionCode: CodeBlock
         get() = CodeBlock

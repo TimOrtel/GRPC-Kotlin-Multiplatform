@@ -1,10 +1,9 @@
-@file:Suppress("UNUSED_VARIABLE")
-
 plugins {
     id("com.android.library")
     kotlin("multiplatform")
     kotlin("native.cocoapods")
     id("maven-publish")
+    id("io.github.timortel.pod-build-workaround") version "1.0"
 }
 
 group = "io.github.timortel"
@@ -38,15 +37,14 @@ kotlin {
         summary = "GRPC Kotlin Multiplatform Implementation"
         homepage = "https://github.com/TimOrtel/GRPC-Kotlin-Multiplatform"
 
-
         framework {
             baseName = "GRPCKotlinMultiplatform"
         }
 
-        ios.deploymentTarget = "16.4"
+        ios.deploymentTarget = "18.2"
 
-        pod("gRPC-ProtoRPC", moduleName = "GRPCClient")
-        pod("Protobuf", version = "~> 3.21", moduleName = "Protobuf")
+        pod("gRPC-ProtoRPC", version = "~> 1.69.0", moduleName = "GRPCClient")
+        pod("Protobuf", version = "~> 3.29.3", moduleName = "Protobuf")
     }
 
     sourceSets {
@@ -99,14 +97,13 @@ kotlin {
 
         jsMain {
             dependencies {
-                api(npm("google-protobuf", "^3.21.2"))
-                api(npm("grpc-web", "^1.5.0"))
-                api(npm("protobufjs", "^7.2.6"))
+                api(npm("google-protobuf", "3.21.2"))
+                api(npm("grpc-web", "1.5.0"))
+                api(npm("protobufjs", "7.2.6"))
             }
         }
 
         iosMain {
-            dependsOn(commonMain.get())
             dependsOn(iosJvmCommon)
         }
     }

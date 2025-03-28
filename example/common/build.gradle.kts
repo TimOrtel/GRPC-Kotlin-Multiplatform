@@ -1,61 +1,82 @@
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.GenerateMultiplatformSourcesTask
+import org.jetbrains.kotlin.gradle.plugin.mpp.NativeBuildType
 
-val libVersion = "0.3.0"
+val libVersion = "0.5.0"
 
 plugins {
     kotlin("multiplatform")
+    id("com.android.library")
+    kotlin("native.cocoapods")
 
-    id("io.github.timortel.kotlin-multiplatform-grpc-plugin") version "0.3.0"
+    id("io.github.timortel.kotlin-multiplatform-grpc-plugin") version "0.5.0"
 }
 
 group = "io.github.timortel.grpc_multiplaform.example.common"
 version = "1.0-SNAPSHOT"
 
-dependencies {
-    commonMainApi("com.github.TimOrtel.GRPC-Kotlin-Multiplatform:grpc-multiplatform-lib:$libVersion")
-}
-
 repositories {
+    mavenLocal()
     mavenCentral()
-    maven(url = "https://jitpack.io")
+    google()
 }
 
 kotlin {
+    applyDefaultHierarchyTemplate()
+
     jvm("jvm")
+    androidTarget()
 
     js(IR) {
         useCommonJs()
         browser()
     }
 
+    iosX64()
+    iosArm64()
+    iosSimulatorArm64()
+
     sourceSets {
-        val commonMain by getting {
+        commonMain {
             dependencies {
                 implementation(kotlin("stdlib-common"))
-                api("com.github.TimOrtel.GRPC-Kotlin-Multiplatform:grpc-multiplatform-lib:$libVersion")
-                api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1")
+                api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.1")
             }
+        }
+    }
 
-            kotlin.srcDir(projectDir.resolve("build/generated/source/kmp-grpc/commonMain/kotlin").canonicalPath)
+    cocoapods {
+        version = "1.0"
+        summary = "gRPC KMP Example Common"
+        homepage = "https://github.com/TimOrtel/GRPC-Kotlin-Multiplatform"
+
+        podfile = project.file("../iosApp/Podfile")
+
+        framework {
+            baseName = "common"
+            isStatic = true
+
+            transitiveExport = true
         }
 
-        val jvmMain by getting {
-            dependencies {
-                api("com.github.TimOrtel.GRPC-Kotlin-Multiplatform:grpc-multiplatform-lib-jvm:$libVersion")
-            }
-
-            kotlin.srcDir(projectDir.resolve("build/generated/source/kmp-grpc/jvmMain/kotlin").canonicalPath)
-        }
-
-        val jsMain by getting {
-            dependencies {
-                implementation("com.github.TimOrtel.GRPC-Kotlin-Multiplatform:grpc-multiplatform-lib-js:$libVersion")
-            }
-            kotlin.srcDir(projectDir.resolve("build/generated/source/kmp-grpc/jsMain/kotlin").canonicalPath)
-        }
+        ios.deploymentTarget = "18.2"
     }
 }
 
-tasks.register<GenerateMultiplatformSourcesTask>("generateMPProtos") {
-    protoSourceFolders.set(listOf(projectDir.resolve("../protos/src/main/proto")))
+grpcKotlinMultiplatform {
+    common()
+    jvm()
+    android()
+    js()
+    ios()
+
+    protoSourceFolders = project.files("../protos/src/main/proto")
+}
+
+android {
+    compileSdk = 35
+    namespace = "io.github.timortel.grpc_multiplaform.example.common"
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
 }

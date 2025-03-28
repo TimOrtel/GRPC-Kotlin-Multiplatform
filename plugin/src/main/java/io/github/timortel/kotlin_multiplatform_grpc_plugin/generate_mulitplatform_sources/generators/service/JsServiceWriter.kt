@@ -6,7 +6,6 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatfor
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoRpc
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.content.ProtoService
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.generators.Const
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.kmChannel
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.kmMetadata
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.generate_mulitplatform_sources.kmStub
 
@@ -23,9 +22,9 @@ object JsServiceWriter : ActualServiceWriter() {
         builder: TypeSpec.Builder,
         protoFile: ProtoFile,
         service: ProtoService,
-        serviceName: ClassName
+        serviceClass: ClassName
     ) {
-        super.applyToClass(builder, protoFile, service, serviceName)
+        super.applyToClass(builder, protoFile, service, serviceClass)
 
         builder.apply {
             addProperty(
@@ -45,7 +44,7 @@ object JsServiceWriter : ActualServiceWriter() {
                     .build()
             )
 
-            overrideWithDeadlineAfter(builder, serviceName)
+            overrideWithDeadlineAfter(builder, serviceClass)
         }
     }
 
@@ -56,8 +55,6 @@ object JsServiceWriter : ActualServiceWriter() {
         rpc: ProtoRpc
     ) {
         builder.apply {
-            val responseCommonMember = Const.Message.CommonFunction.JS.commonFunction(rpc.response.commonType)
-
             addStatement("val actMetadata = this.%N + metadata", Const.Service.CALL_OPTIONS_PROPERTY_NAME)
 
             val clientCallCode = CodeBlock
