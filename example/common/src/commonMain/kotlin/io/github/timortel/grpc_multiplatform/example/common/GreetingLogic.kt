@@ -2,8 +2,8 @@ package io.github.timortel.grpc_multiplatform.example.common
 
 import io.github.timortel.kotlin_multiplatform_grpc_lib.KMChannel
 import io.github.timortel.kotlin_multiplatform_grpc_lib.util.TimeUnit
-import io.github.timortel.grpc_multiplatform.example.KMHelloServiceStub
-import io.github.timortel.grpc_multiplatform.example.kmHelloRequest
+import io.github.timortel.grpc_multiplatform.example.HelloServiceStub
+import io.github.timortel.grpc_multiplatform.example.helloRequest
 
 object GreetingLogic {
 
@@ -13,12 +13,12 @@ object GreetingLogic {
             .usePlaintext()
             .build()
 
-        val stub = KMHelloServiceStub(channel)
+        val stub = HelloServiceStub(channel)
         return try {
             stub
                 .withDeadlineAfter(3, TimeUnit.SECONDS)
                 .sayHello(
-                request = kmHelloRequest {
+                request = helloRequest {
                     greeting = message
                 }
             ).response
@@ -34,9 +34,9 @@ object GreetingLogic {
             .usePlaintext()
             .build()
 
-        val stub = KMHelloServiceStub(channel)
+        val stub = HelloServiceStub(channel)
 
-        val request = kmHelloRequest {
+        val request = helloRequest {
             greeting = message
         }
 
