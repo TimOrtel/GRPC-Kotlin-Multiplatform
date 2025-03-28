@@ -1,4 +1,4 @@
-name: Gradle Plugin Tests
+name: Serialization and RPC tests.
 
 on:
   push:
@@ -39,13 +39,13 @@ jobs:
           java-version: '17'
 
       - name: Start Envoy service
-        run: docker compose -f docker-tests/js-test.yml up -d envoy
+        run: docker compose -f docker-tests/js-tests.yml up -d envoy
 
       - name: Run tests in plugin module
         run: ./gradlew :grpc-mp-test:jsTest
 
       - name: Stop Envoy service
-        run: docker compose -f docker-tests/js-test.yml down
+        run: docker compose -f docker-tests/js-tests.yml down
         if: always()
 
   test-ios:
