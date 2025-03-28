@@ -107,3 +107,7 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().all {
 tasks.withType<Jar>().all {
     dependsOn("generateGrammarSource")
 }
+
+tasks.javadoc {
+    excludes.add("**/generated-src/**")
+}

@@ -1,4 +1,5 @@
 import com.google.protobuf.gradle.*
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     `kotlin-dsl`
@@ -40,10 +41,11 @@ sourceSets {
         proto {
             srcDirs("../grpc-mp-test/src/commonMain/proto")
         }
-        kotlin.srcDir(buildDir.resolve("generated/source/proto/main/grpc"))
-        kotlin.srcDir(buildDir.resolve("generated/source/proto/main/grpckt"))
-        kotlin.srcDir(buildDir.resolve("generated/source/proto/main/java"))
-        kotlin.srcDir(buildDir.resolve("generated/source/proto/main/kotlin"))
+
+        kotlin.srcDir(layout.buildDirectory.dir("generated/source/proto/main/grpc"))
+        kotlin.srcDir(layout.buildDirectory.dir("generated/source/proto/main/grpckt"))
+        kotlin.srcDir(layout.buildDirectory.dir("generated/source/proto/main/java"))
+        kotlin.srcDir(layout.buildDirectory.dir("generated/source/proto/main/kotlin"))
     }
 }
 
@@ -79,7 +81,9 @@ protobuf {
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-    kotlinOptions.jvmTarget = "17"
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_17)
+    }
 }
 
 java {
