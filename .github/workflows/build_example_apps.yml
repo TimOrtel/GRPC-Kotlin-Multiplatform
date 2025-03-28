@@ -1,0 +1,56 @@
+name: Build Example Android and iOS Apps
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Build Android app
+        run: |
+          cd example/android
+          ./gradlew assembleDebug
+
+  build-ios:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Build common module
+        run: |
+          cd example/common
+          ./gradlew build
+
+      - name: Install CocoaPods dependencies
+        run: |
+          cd example/iosApp
+          pod install
+
+      - name: Build iOS app
+        run: |
+          cd example/iosApp
+          xcodebuild -workspace iosApp.xcworkspace -scheme iosApp -sdk iphonesimulator -configuration Debug CLANG_CXX_LANGUAGE_STANDARD=c++17
