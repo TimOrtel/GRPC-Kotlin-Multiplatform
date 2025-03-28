@@ -1,4 +1,4 @@
-package io.github.timortel.kotlin_multiplatform_grpc_plugin.validation
+package io.github.timortel.kotlin_multiplatform_grpc_plugin
 
 fun createSingleFileProtoFolder(content: String): FakeInputDirectory {
     return FakeInputDirectory("dir", listOf(createProto3File(content)))

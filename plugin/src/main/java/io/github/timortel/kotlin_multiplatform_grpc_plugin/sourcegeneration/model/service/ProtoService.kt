@@ -1,6 +1,7 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.service
 
 import com.squareup.kotlinpoet.ClassName
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.Options
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.ProtoNode
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.file.ProtoFile
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.ProtoOption
@@ -10,7 +11,7 @@ import org.antlr.v4.runtime.ParserRuleContext
 data class ProtoService(
     override val name: String,
     val rpcs: List<ProtoRpc>,
-    val options: List<ProtoOption>,
+    override val options: List<ProtoOption>,
     override val ctx: ParserRuleContext
 ) : ProtoBaseDeclaration, ProtoNode {
 
@@ -24,7 +25,11 @@ data class ProtoService(
         rpcs.forEach { it.service = this }
     }
 
-    override fun validate() {
+    override val supportedOptions: List<Options.Option<*>> = emptyList()
 
+    override fun validate() {
+        super.validate()
+
+        rpcs.forEach { it.validate() }
     }
 }

@@ -16,7 +16,7 @@ data class ProtoMessage(
     val oneOfs: List<ProtoOneOf>,
     val mapFields: List<ProtoMapField>,
     override val reservation: ProtoReservation,
-    val options: List<ProtoOption>,
+    override val options: List<ProtoOption>,
     override val ctx: ParserRuleContext
 ) : ProtoDeclaration, FileBasedDeclarationResolver, ProtoFieldHolder {
 
@@ -48,6 +48,8 @@ data class ProtoMessage(
     val isEmpty: Boolean =
         fields.isEmpty() && mapFields.isEmpty() && oneOfs.isEmpty()
 
+    override val supportedOptions: List<Options.Option<*>> = emptyList()
+
     init {
         val parent = ProtoDeclParent.Message(this)
 
@@ -72,5 +74,9 @@ data class ProtoMessage(
 
         messages.forEach { it.validate() }
         enums.forEach { it.validate() }
+
+        fields.forEach { it.validate() }
+        mapFields.forEach { it.validate() }
+        oneOfs.forEach { it.validate() }
     }
 }

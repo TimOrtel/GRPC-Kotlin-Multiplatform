@@ -1,5 +1,6 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.validation
 
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.createSingleFileProtoFolder
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.ProtoSourceGenerator
 import io.mockk.spyk
 import org.slf4j.LoggerFactory

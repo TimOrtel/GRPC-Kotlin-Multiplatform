@@ -30,23 +30,11 @@ object Options {
     )
 
     class Option<T>(val name: String, val parse: (String) -> T?, val default: T) {
-        fun get(file: ProtoFile, options: List<ProtoOption> = file.options): T {
-            val matches = options.filter { it.name == name }
-            if (matches.size > 1) {
-                val message = buildString {
-                    append("Found clashing proto options for $name:\n")
-                    matches.joinToString(separator = "\n") {
-                        "-> $name at ${it.ctx.toFilePositionString(file.path)}"
-                    }
-                }
-
-                throw CompilationException.DuplicateDeclaration(message, file)
-            }
-
-            val match = matches.firstOrNull() ?: return default
+        fun get(optionsHolder: ProtoOptionsHolder): T {
+            val match = optionsHolder.options.firstOrNull { it.name == name } ?: return default
             return parse(match.value) ?: throw CompilationException.OptionFailedParse(
                 "Could not parse option value.",
-                file,
+                optionsHolder.file,
                 match.ctx
             )
         }

@@ -16,7 +16,7 @@ data class ProtoMapField(
 ) : ProtoBaseField() {
     lateinit var message: ProtoMessage
 
-    val file: ProtoFile get() = message.file
+    override val file: ProtoFile get() = message.file
 
     override val attributeName: String = "${name}Map"
 

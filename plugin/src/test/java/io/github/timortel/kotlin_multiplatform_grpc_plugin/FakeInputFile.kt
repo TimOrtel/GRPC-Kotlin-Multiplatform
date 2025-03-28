@@ -1,4 +1,4 @@
-package io.github.timortel.kotlin_multiplatform_grpc_plugin.validation
+package io.github.timortel.kotlin_multiplatform_grpc_plugin
 
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.InputFile
 import java.io.InputStream

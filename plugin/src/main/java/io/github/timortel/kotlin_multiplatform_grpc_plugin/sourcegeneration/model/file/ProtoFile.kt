@@ -18,9 +18,9 @@ data class ProtoFile(
     val messages: List<ProtoMessage>,
     val enums: List<ProtoEnum>,
     val services: List<ProtoService>,
-    val options: List<ProtoOption>,
+    override val options: List<ProtoOption>,
     val imports: List<ProtoImport>
-) : FileBasedDeclarationResolver {
+) : FileBasedDeclarationResolver, ProtoOptionsHolder {
     lateinit var folder: ProtoFolder
     lateinit var protoPackage: ProtoPackage
 
@@ -44,18 +44,27 @@ data class ProtoFile(
     val importedFiles: List<ProtoFile>
         get() = imports.map { import ->
             project.rootFolder.resolveImport(import.path)
-                ?: throw CompilationException.UnresolvedImport("Unable to resolve import ${import.identifier}", this, import.ctx)
+                ?: throw CompilationException.UnresolvedImport(
+                    "Unable to resolve import ${import.identifier}",
+                    this,
+                    import.ctx
+                )
         }
 
-    val javaPackage: String get() {
-        return Options.javaPackage.get(this) ?: `package`.orEmpty()
-    }
+    val javaPackage: String
+        get() {
+            return Options.javaPackage.get(this) ?: `package`.orEmpty()
+        }
 
-    val javaFileName: String get() {
-        return Options.javaOuterClassName.get(this) ?: fileNameWithoutExtension.snakeCaseToCamelCase()
-    }
+    val javaFileName: String
+        get() {
+            return Options.javaOuterClassName.get(this) ?: fileNameWithoutExtension.snakeCaseToCamelCase()
+        }
 
     val className: ClassName get() = ClassName(javaPackage, javaFileName)
+
+    override val supportedOptions: List<Options.Option<*>> =
+        listOf(Options.javaMultipleFiles, Options.javaPackage, Options.javaOuterClassName)
 
     init {
         val parent = ProtoDeclParent.File(this)
@@ -70,7 +79,9 @@ data class ProtoFile(
     }
 
     override fun validate() {
-        super.validate()
+        super<FileBasedDeclarationResolver>.validate()
+        super<ProtoOptionsHolder>.validate()
+
         messages.forEach { it.validate() }
         enums.forEach { it.validate() }
         services.forEach { it.validate() }

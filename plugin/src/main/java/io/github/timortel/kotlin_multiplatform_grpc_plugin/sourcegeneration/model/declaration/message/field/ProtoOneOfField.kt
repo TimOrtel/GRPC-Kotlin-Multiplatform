@@ -17,7 +17,7 @@ data class ProtoOneOfField(
 ) : ProtoRegularField() {
     lateinit var parent: ProtoOneOf
 
-    val file: ProtoFile get() = parent.file
+    override val file: ProtoFile get() = parent.file
 
     override val attributeName: String = name
 

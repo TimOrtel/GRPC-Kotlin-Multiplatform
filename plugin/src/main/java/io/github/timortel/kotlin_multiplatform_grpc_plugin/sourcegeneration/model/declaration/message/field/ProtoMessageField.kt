@@ -18,7 +18,7 @@ data class ProtoMessageField(
 
     lateinit var parent: ProtoMessage
 
-    val file: ProtoFile get() = parent.file
+    override val file: ProtoFile get() = parent.file
 
     override val attributeName: String = when(cardinality) {
         ProtoFieldCardinality.Implicit, ProtoFieldCardinality.Optional -> name

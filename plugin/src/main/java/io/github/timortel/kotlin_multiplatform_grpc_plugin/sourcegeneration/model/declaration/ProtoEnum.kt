@@ -12,7 +12,7 @@ import org.antlr.v4.runtime.ParserRuleContext
 data class ProtoEnum(
     override val name: String,
     val fields: List<ProtoEnumField>,
-    val options: List<ProtoOption>,
+    override val options: List<ProtoOption>,
     override val reservation: ProtoReservation,
     override val ctx: ParserRuleContext
 ) : ProtoDeclaration, BaseDeclarationResolver, ProtoFieldHolder {
@@ -38,12 +38,15 @@ data class ProtoEnum(
     override val heldFields: List<ProtoField> =
         fields
 
+    override val supportedOptions: List<Options.Option<*>> = listOf(Options.allowAlias)
+
     init {
         fields.forEach { it.enum = this }
     }
 
     override fun validate() {
-        super.validate()
+        super<ProtoDeclaration>.validate()
+        super<ProtoFieldHolder>.validate()
 
         if (fields.isEmpty()) throw CompilationException.EnumNoFields(
             message = "Proto enumeration does not have any values.",
@@ -57,7 +60,7 @@ data class ProtoEnum(
             ctx = ctx
         )
 
-        val allowAlias = Options.allowAlias.get(file, options)
+        val allowAlias = Options.allowAlias.get(this)
         fields
             .groupBy { it.number }
             .filter { it.value.size > 1 }
@@ -76,6 +79,8 @@ data class ProtoEnum(
                     file.project.logger.warn(warning)
                 }
             }
+
+        fields.forEach { it.validate() }
     }
 
     // An enum does not have children, so it cannot resolve anything
