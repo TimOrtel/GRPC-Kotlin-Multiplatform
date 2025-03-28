@@ -71,6 +71,7 @@ data class ProtoMessage(
     override fun validate() {
         super<FileBasedDeclarationResolver>.validate()
         super<ProtoFieldHolder>.validate()
+        super<ProtoDeclaration>.validate()
 
         messages.forEach { it.validate() }
         enums.forEach { it.validate() }
