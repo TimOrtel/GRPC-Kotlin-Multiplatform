@@ -32,6 +32,7 @@ dependencies {
     implementation(libs.grpc.protobuf)
     implementation(libs.grpc.stub)
     implementation(libs.grpc.kotlin.stub)
+    implementation(libs.grpc.services)
 
     implementation(libs.grpc.netty.shaded)
 

@@ -67,12 +67,26 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Install grpcurl
+        run: brew install grpcurl
+
       - name: Start test-server
-        run: docker compose -f docker-tests/js-tests.yml up -d test-server
+        run: |
+          nohup ./gradlew :buildSrc:test-server:run &
+          echo $! > gradle_pid.txt
+
+      - name: Wait for test-server to be healthy
+        run: |
+          echo "Waiting for service..."
+          while ! grpcurl -plaintext localhost:17888 io.github.timortel.kotlin_multiplatform_grpc_plugin.test.basic_messages.TestService/emptyRpc | grep -q "{}"; do
+            sleep 5
+          done
+          echo "Service is healthy!"
 
       - name: Run tests in plugin module
         run: ./gradlew :grpc-mp-test:iosSimulatorArm64Test
 
-      - name: Stop docker services
-        run: docker compose -f docker-tests/js-tests.yml down
-        if: always()
+      - name: Kill test-server
+        run: |
+          PID=$(cat gradle_pid.txt)
+          kill $PID

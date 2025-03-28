@@ -36,6 +36,7 @@ grpc-api = { group = "io.grpc", name = "grpc-api", version.ref = "grpcJvm" }
 grpc-protobuf = { group = "io.grpc", name = "grpc-protobuf", version.ref = "grpcJvm" }
 grpc-protobuf-lite = { group = "io.grpc", name = "grpc-protobuf-lite", version.ref = "grpcJvm" }
 grpc-stub = { group = "io.grpc", name = "grpc-stub", version.ref = "grpcJvm" }
+grpc-services = { group = "io.grpc", name = "grpc-services", version.ref = "grpcJvm" }
 grpc-kotlin-stub = { group = "io.grpc", name = "grpc-kotlin-stub", version.ref = "grpcKotlin" }
 grpc-netty = { group = "io.grpc", name = "grpc-netty", version = "1.69.1" }
 grpc-netty-shaded = { group = "io.grpc", name = "grpc-netty-shaded", version.ref = "grpcJvm" }
