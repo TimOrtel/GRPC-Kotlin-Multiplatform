@@ -39,7 +39,7 @@ abstract class ActualProtoMessageWriter : ProtoMessageWriter(true) {
 
                                     addParameter(
                                         ParameterSpec
-                                            .builder(field.fieldName, type)
+                                            .builder(field.attributeName, type)
                                             .defaultValue(field.type.defaultValue())
                                             .build()
                                     )
@@ -48,7 +48,7 @@ abstract class ActualProtoMessageWriter : ProtoMessageWriter(true) {
                                 ProtoFieldCardinality.Repeated -> {
                                     addParameter(
                                         ParameterSpec
-                                            .builder(field.fieldName, LIST.parameterizedBy(field.type.resolve()))
+                                            .builder(field.attributeName, LIST.parameterizedBy(field.type.resolve()))
                                             .defaultValue("emptyList()")
                                             .build()
                                     )
@@ -60,7 +60,7 @@ abstract class ActualProtoMessageWriter : ProtoMessageWriter(true) {
                             addParameter(
                                 ParameterSpec
                                     .builder(
-                                        mapField.fieldName,
+                                        mapField.attributeName,
                                         MAP.parameterizedBy(
                                             mapField.keyType.resolve(),
                                             mapField.valuesType.resolve(),
@@ -75,7 +75,7 @@ abstract class ActualProtoMessageWriter : ProtoMessageWriter(true) {
                             addParameter(
                                 ParameterSpec
                                     .builder(
-                                        oneOf.fieldName,
+                                        oneOf.attributeName,
                                         oneOf.sealedClassName
                                     )
                                     .defaultValue("%T", oneOf.sealedClassNameNotSet)
@@ -171,7 +171,7 @@ abstract class ActualProtoMessageWriter : ProtoMessageWriter(true) {
                     }
 
                     field.cardinality == ProtoFieldCardinality.Implicit -> {
-                        addCode("if·(%N·!=·", field.fieldName)
+                        addCode("if·(%N·!=·", field.attributeName)
                         addCode(field.type.defaultValue())
                         beginControlFlow(")·{ ")
                         addCode(
@@ -197,7 +197,7 @@ abstract class ActualProtoMessageWriter : ProtoMessageWriter(true) {
                                     Const.Message.SerializeFunction.STREAM_PARAM,
                                     writeArrayFunction,
                                     field.number,
-                                    field.fieldName,
+                                    field.attributeName,
                                     WireFormatMakeTag,
                                     field.number,
                                     WireFormatForType,
@@ -212,7 +212,7 @@ abstract class ActualProtoMessageWriter : ProtoMessageWriter(true) {
                                     Const.Message.SerializeFunction.STREAM_PARAM,
                                     writeArrayFunction,
                                     field.number,
-                                    field.fieldName
+                                    field.attributeName
                                 )
                             }
                         }
@@ -227,7 +227,7 @@ abstract class ActualProtoMessageWriter : ProtoMessageWriter(true) {
             message.oneOfs.forEach { oneOf ->
                 addStatement(
                     "%N.%N(%N)",
-                    oneOf.fieldName,
+                    oneOf.attributeName,
                     Const.Message.OneOf.SERIALIZE_FUNCTION_NAME,
                     Const.Message.SerializeFunction.STREAM_PARAM
                 )
@@ -319,7 +319,7 @@ abstract class ActualProtoMessageWriter : ProtoMessageWriter(true) {
                         else field.type.resolve()
 
                         addVariable(
-                            field.fieldName,
+                            field.attributeName,
                             type,
                             true,
                             field.type.defaultValue()
@@ -328,7 +328,7 @@ abstract class ActualProtoMessageWriter : ProtoMessageWriter(true) {
 
                     ProtoFieldCardinality.Repeated -> {
                         addVariable(
-                            field.fieldName,
+                            field.attributeName,
                             MUTABLE_LIST.parameterizedBy(field.type.resolve()),
                             false,
                             CodeBlock.of("mutableListOf()"))
@@ -338,7 +338,7 @@ abstract class ActualProtoMessageWriter : ProtoMessageWriter(true) {
 
             message.mapFields.forEach { field ->
                 addVariable(
-                    field.fieldName,
+                    field.attributeName,
                     MUTABLE_MAP.parameterizedBy(field.keyType.resolve(), field.valuesType.resolve()),
                     false,
                     CodeBlock.of("mutableMapOf()")
@@ -347,7 +347,7 @@ abstract class ActualProtoMessageWriter : ProtoMessageWriter(true) {
 
             message.oneOfs.forEach { oneOf ->
                 addVariable(
-                    oneOf.fieldName,
+                    oneOf.attributeName,
                     oneOf.sealedClassName,
                     true,
                     CodeBlock.of("%T", oneOf.sealedClassNameNotSet)
@@ -430,7 +430,7 @@ abstract class ActualProtoMessageWriter : ProtoMessageWriter(true) {
                     "%M(%N, %N, %T.%N, %T.%N, ",
                     readMapEntry,
                     Const.Message.Companion.WrapperDeserializationFunction.STREAM_PARAM,
-                    mapField.fieldName,
+                    mapField.attributeName,
                     DataType,
                     getDataTypeForProtoType(mapField.keyType),
                     DataType,
@@ -502,7 +502,7 @@ abstract class ActualProtoMessageWriter : ProtoMessageWriter(true) {
 
                 when (field.cardinality) {
                     is ProtoFieldCardinality.Singular -> {
-                        addCode("%N·=·", field.fieldName)
+                        addCode("%N·=·", field.attributeName)
                         addCode(getScalarReadFieldCode(field))
                         addCode("\n")
                     }
@@ -514,7 +514,7 @@ abstract class ActualProtoMessageWriter : ProtoMessageWriter(true) {
                             field.type == ProtoType.StringType -> {
                                 addCode(
                                     "%N·+=·%N.readString()",
-                                    field.fieldName,
+                                    field.attributeName,
                                     wrapperParamName
                                 )
                             }
@@ -522,7 +522,7 @@ abstract class ActualProtoMessageWriter : ProtoMessageWriter(true) {
                             field.type.isMessage -> {
                                 addCode(
                                     "%N·+=·%M(%N, %T.Companion::%N)\n",
-                                    field.fieldName,
+                                    field.attributeName,
                                     readKMMessage,
                                     wrapperParamName,
                                     field.type.resolve(),
@@ -549,7 +549,7 @@ abstract class ActualProtoMessageWriter : ProtoMessageWriter(true) {
                                 if (field.type.isEnum) {
                                     addStatement(
                                         "%N += %T.%N(%N.readEnum())",
-                                        field.fieldName,
+                                        field.attributeName,
                                         field.type.resolve(),
                                         Const.Enum.GET_ENUM_FOR_FUNCTION_NAME,
                                         wrapperParamName
@@ -559,7 +559,7 @@ abstract class ActualProtoMessageWriter : ProtoMessageWriter(true) {
 
                                     addStatement(
                                         "%N·+=·%N.%N()",
-                                        field.fieldName,
+                                        field.attributeName,
                                         wrapperParamName,
                                         functionName
                                     )
@@ -581,7 +581,7 @@ abstract class ActualProtoMessageWriter : ProtoMessageWriter(true) {
                     addCode(getScalarAndRepeatedTagCode(field.type, false, field.number))
                     addCode(
                         "·->·%N·=·%T(",
-                        oneOf.fieldName,
+                        oneOf.attributeName,
                         field.sealedClassChildName
                     )
                     addCode(getScalarReadFieldCode(field))
@@ -599,8 +599,8 @@ abstract class ActualProtoMessageWriter : ProtoMessageWriter(true) {
                     .joinToCodeBlock(separator = ", ") { field ->
                         add(
                             "%N·=·%N",
-                            field.fieldName,
-                            field.fieldName
+                            field.attributeName,
+                            field.attributeName
                         )
                     }
             )
@@ -624,7 +624,7 @@ abstract class ActualProtoMessageWriter : ProtoMessageWriter(true) {
                         streamParam,
                         functionName,
                         field.number,
-                        field.fieldName
+                        field.attributeName
                     )
                 }
 
@@ -643,7 +643,7 @@ abstract class ActualProtoMessageWriter : ProtoMessageWriter(true) {
                                     "%N.writeMessage(%L, %N)",
                                     streamParam,
                                     field.number,
-                                    field.fieldName
+                                    field.attributeName
                                 )
 
                                 if (performIsFieldSetCheck) endControlFlow()
@@ -655,7 +655,7 @@ abstract class ActualProtoMessageWriter : ProtoMessageWriter(true) {
                                 "%N.writeEnum(%L, %N.%N)\n",
                                 streamParam,
                                 field.number,
-                                field.fieldName,
+                                field.attributeName,
                                 Const.Enum.NUMBER_PROPERTY_NAME
                             )
                         }

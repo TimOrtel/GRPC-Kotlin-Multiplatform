@@ -16,19 +16,19 @@ object ActualProtoDslWriter : ProtoDslWriter(true) {
             val separator = ",\n"
 
             val fields = message.fields.joinToCodeBlock(separator) { field ->
-                add("%N = %N ?: ", field.fieldName, field.fieldName)
+                add("%N = %N ?: ", field.attributeName, field.attributeName)
                 add(field.defaultValue())
             }
 
             val mapFields = message.mapFields.joinToCodeBlock(separator) { field ->
-                add("%N = %N ?: emptyMap()", field.fieldName, field.fieldName)
+                add("%N = %N ?: emptyMap()", field.attributeName, field.attributeName)
             }
 
             val oneOfFields = message.oneOfs.joinToCodeBlock(separator) { oneOf ->
                 add(
                     "%N = %N",
-                    oneOf.fieldName,
-                    oneOf.fieldName
+                    oneOf.attributeName,
+                    oneOf.attributeName
                 )
             }
 

@@ -9,6 +9,21 @@ import org.junit.jupiter.api.assertThrows
 class EnumValidationTests : BaseValidationTest() {
 
     @Test
+    fun `test WHEN enum has two fields with the same name THEN a compilation exception is thrown`() {
+        assertThrows<CompilationException.DuplicateDeclaration> {
+            runGenerator(
+                """
+                    enum TestEnum {
+                       a = 0;
+                       b = 1;
+                       b = 2;
+                    }
+                """.trimIndent()
+            )
+        }
+    }
+
+    @Test
     fun `test WHEN enum uses a directly reserved number THEN a compilation exception is thrown`() {
         assertThrows<CompilationException.ReservedFieldNumberUsed> {
             runGenerator(

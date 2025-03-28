@@ -13,9 +13,9 @@ data class ProtoEnum(
     override val name: String,
     val fields: List<ProtoEnumField>,
     val options: List<ProtoOption>,
-    val reservation: ProtoReservation,
+    override val reservation: ProtoReservation,
     override val ctx: ParserRuleContext
-) : ProtoDeclaration, BaseDeclarationResolver, ProtoNode {
+) : ProtoDeclaration, BaseDeclarationResolver, ProtoFieldHolder {
 
     companion object {
         const val UNRECOGNIZED_FIELD_NAME = "UNRECOGNIZED"
@@ -35,11 +35,16 @@ data class ProtoEnum(
                 .firstOrNull { it.number == 0 }
                 ?: throw CompilationException.EnumIllegalFirstField("Enumeration does not have field with value 0.", file, ctx)
 
+    override val heldFields: List<ProtoField> =
+        fields
+
     init {
         fields.forEach { it.enum = this }
     }
 
     override fun validate() {
+        super.validate()
+
         if (fields.isEmpty()) throw CompilationException.EnumNoFields(
             message = "Proto enumeration does not have any values.",
             file = file,
@@ -71,22 +76,6 @@ data class ProtoEnum(
                     file.project.logger.warn(warning)
                 }
             }
-
-        fields.filter { it.number in reservation }.forEach { field ->
-            throw CompilationException.ReservedFieldNumberUsed(
-                message = "Usage of reserved field number not permitted. ${field.name} uses reserved number ${field.number}",
-                file = file,
-                ctx = field.ctx
-            )
-        }
-
-        fields.filter { it.name in reservation }.forEach { field ->
-            throw CompilationException.ReservedFieldNameUsed(
-                message = "Usage of reserved field name not permitted. ${field.name} uses reserved name ${field.name}",
-                file = file,
-                ctx = field.ctx
-            )
-        }
     }
 
     // An enum does not have children, so it cannot resolve anything

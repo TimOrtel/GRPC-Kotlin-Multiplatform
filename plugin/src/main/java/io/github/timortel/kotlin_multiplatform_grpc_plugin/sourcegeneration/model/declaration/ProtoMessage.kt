@@ -15,10 +15,10 @@ data class ProtoMessage(
     val fields: List<ProtoMessageField>,
     val oneOfs: List<ProtoOneOf>,
     val mapFields: List<ProtoMapField>,
-    val reservation: ProtoReservation,
+    override val reservation: ProtoReservation,
     val options: List<ProtoOption>,
     override val ctx: ParserRuleContext
-) : ProtoDeclaration, FileBasedDeclarationResolver {
+) : ProtoDeclaration, FileBasedDeclarationResolver, ProtoFieldHolder {
 
     override lateinit var parent: ProtoDeclParent
 
@@ -38,6 +38,9 @@ data class ProtoMessage(
 
     override val candidates: List<DeclarationResolver.Candidate> =
         messages.map { DeclarationResolver.Candidate.Message(it) } + enums.map { DeclarationResolver.Candidate.Enum(it) }
+
+    override val heldFields: List<ProtoField> =
+        fields + mapFields + oneOfs.flatMap { it.fields }
 
     /**
      * True if the message has no fields
@@ -64,7 +67,8 @@ data class ProtoMessage(
     }
 
     override fun validate() {
-        super.validate()
+        super<FileBasedDeclarationResolver>.validate()
+        super<ProtoFieldHolder>.validate()
 
         messages.forEach { it.validate() }
         enums.forEach { it.validate() }

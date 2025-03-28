@@ -26,7 +26,7 @@ data class ProtoOneOf(
     val sealedClassNameNotSet: ClassName get() = sealedClassName.nestedClass(UNSET_CLASS_NAME)
     val sealedClassNameUnknown: ClassName get() = sealedClassName.nestedClass(UNKNOWN_CLASS_NAME)
 
-    override val fieldName: String = name
+    override val attributeName: String = name
 
     init {
         fields.forEach { it.parent = this }

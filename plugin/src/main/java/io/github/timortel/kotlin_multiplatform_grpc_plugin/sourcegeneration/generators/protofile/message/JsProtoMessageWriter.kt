@@ -52,7 +52,7 @@ object JsProtoMessageWriter : ActualProtoMessageWriter() {
                 writeMap,
                 Const.Message.SerializeFunction.STREAM_PARAM,
                 field.number,
-                field.fieldName
+                field.attributeName
             )
 
             addMapKeyTypeSerializationCode(field.keyType)

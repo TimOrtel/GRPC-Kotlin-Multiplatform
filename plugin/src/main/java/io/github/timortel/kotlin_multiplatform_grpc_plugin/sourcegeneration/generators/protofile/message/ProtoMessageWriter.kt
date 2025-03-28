@@ -128,7 +128,7 @@ abstract class ProtoMessageWriter(private val isActual: Boolean) {
                         ProtoFieldCardinality.Repeated -> {
                             addStatement(
                                 "if (%1N != %2N.%1N) return false",
-                                field.fieldName,
+                                field.attributeName,
                                 otherParamName
                             )
                         }
@@ -138,7 +138,7 @@ abstract class ProtoMessageWriter(private val isActual: Boolean) {
                 message.mapFields.forEach { mapField ->
                     addStatement(
                         "if (%1N != %2N.%1N) return false",
-                        mapField.fieldName,
+                        mapField.attributeName,
                         otherParamName
                     )
                 }
@@ -147,7 +147,7 @@ abstract class ProtoMessageWriter(private val isActual: Boolean) {
                 message.oneOfs.forEach { oneOf ->
                     addStatement(
                         "if (%1N != %2N.%1N) return false",
-                        oneOf.fieldName,
+                        oneOf.attributeName,
                         otherParamName
                     )
                 }
@@ -168,12 +168,12 @@ abstract class ProtoMessageWriter(private val isActual: Boolean) {
                 }
 
                 if (properties.size == 1) {
-                    addStatement("return %N.hashCode()", properties.first().fieldName)
+                    addStatement("return %N.hashCode()", properties.first().attributeName)
                     return
                 }
 
                 properties.forEachIndexed { index, property ->
-                    val attrName = property.fieldName
+                    val attrName = property.attributeName
 
                     //Mimic the way IntelliJ generates hashCode
                     if (index == 0) {

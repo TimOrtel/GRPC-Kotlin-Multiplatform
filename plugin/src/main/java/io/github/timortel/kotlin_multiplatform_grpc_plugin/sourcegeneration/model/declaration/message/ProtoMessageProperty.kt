@@ -9,5 +9,5 @@ interface ProtoMessageProperty {
     /**
      * The name of the field in the generated message class
      */
-    val fieldName: String
+    val attributeName: String
 }

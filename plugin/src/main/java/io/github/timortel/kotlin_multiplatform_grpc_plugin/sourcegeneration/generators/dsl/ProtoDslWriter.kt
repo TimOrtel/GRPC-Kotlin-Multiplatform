@@ -69,7 +69,7 @@ abstract class ProtoDslWriter(private val isActual: Boolean) {
                                 addProperty(
                                     PropertySpec
                                         .builder(
-                                            field.fieldName,
+                                            field.attributeName,
                                             field.type.resolve().copy(nullable = true)
                                         )
                                         .addModifiers(modifier)
@@ -87,7 +87,7 @@ abstract class ProtoDslWriter(private val isActual: Boolean) {
                                 addProperty(
                                     PropertySpec
                                         .builder(
-                                            field.fieldName,
+                                            field.attributeName,
                                             MUTABLE_LIST.parameterizedBy(field.type.resolve())
                                         ).apply {
                                             if (isActual) {
@@ -105,7 +105,7 @@ abstract class ProtoDslWriter(private val isActual: Boolean) {
                         addProperty(
                             PropertySpec
                                 .builder(
-                                    name = field.fieldName,
+                                    name = field.attributeName,
                                     type = MUTABLE_MAP.parameterizedBy(field.keyType.resolve(), field.valuesType.resolve())
                                 )
                                 .addModifiers(modifier)
@@ -122,7 +122,7 @@ abstract class ProtoDslWriter(private val isActual: Boolean) {
                         addProperty(
                             PropertySpec
                                 .builder(
-                                    oneOf.fieldName,
+                                    oneOf.attributeName,
                                     oneOf.sealedClassName,
                                     modifier
                                 )

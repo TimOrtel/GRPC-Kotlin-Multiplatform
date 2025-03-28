@@ -12,7 +12,7 @@ abstract class ProtoMapFieldWriter {
         builder.addProperty(
             PropertySpec
                 .builder(
-                    field.fieldName,
+                    field.attributeName,
                     MAP.parameterizedBy(field.keyType.resolve(), field.valuesType.resolve())
                 )
                 .apply {

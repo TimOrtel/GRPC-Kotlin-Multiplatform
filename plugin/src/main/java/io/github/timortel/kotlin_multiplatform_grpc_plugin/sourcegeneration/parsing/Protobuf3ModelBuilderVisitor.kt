@@ -173,7 +173,8 @@ class Protobuf3ModelBuilderVisitor(
             name = name,
             number = number,
             options = options,
-            cardinality = fieldCardinality
+            cardinality = fieldCardinality,
+            ctx = ctx
         )
     }
 
@@ -191,7 +192,8 @@ class Protobuf3ModelBuilderVisitor(
             number = number,
             options = options,
             keyType = keyType,
-            valuesType = valuesType
+            valuesType = valuesType,
+            ctx = ctx
         )
     }
 
@@ -242,7 +244,13 @@ class Protobuf3ModelBuilderVisitor(
 
         val options = visitFieldOptions(ctx.fieldOptions())
 
-        return ProtoOneOfField(type = type, name = name, number = number, options = options)
+        return ProtoOneOfField(
+            type = type,
+            name = name,
+            number = number,
+            options = options,
+            ctx = ctx
+        )
     }
 
     // Service parsing
@@ -268,7 +276,14 @@ class Protobuf3ModelBuilderVisitor(
         val isServerStream = ctx.serverStream != null
         val options = ctx.optionStatement().map { visitOptionStatement(it) }
 
-        return ProtoRpc(name, clientType, serverType, isClientStream, isServerStream, options)
+        return ProtoRpc(
+            name = name,
+            sendType = clientType,
+            returnType = serverType,
+            isSendingStream = isClientStream,
+            isReceivingStream = isServerStream,
+            options = options
+        )
     }
 
     override fun visitServiceElement(ctx: Protobuf3Parser.ServiceElementContext?): Any = Unit

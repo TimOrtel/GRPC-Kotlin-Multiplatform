@@ -46,7 +46,7 @@ abstract class IosJvmProtoMessageWriteBase : ActualProtoMessageWriter() {
                         }
 
                         field.cardinality == ProtoFieldCardinality.Implicit -> {
-                            add("if·(%N·==·", field.fieldName)
+                            add("if·(%N·==·", field.attributeName)
                             add(field.type.defaultValue())
                             add(")·0·else·{ ")
                             add(getCodeForRequiredSizeForScalarAttributeC(field))
@@ -56,8 +56,8 @@ abstract class IosJvmProtoMessageWriteBase : ActualProtoMessageWriter() {
                         field.cardinality == ProtoFieldCardinality.Repeated -> {
                             add(
                                 "if (%N.isEmpty())·0·else·{\n%N.let·{·e·->\n",
-                                field.fieldName,
-                                field.fieldName
+                                field.attributeName,
+                                field.attributeName
                             )
                             beginControlFlow("val·dataSize·=·e.sumOf·{")
                             when (field.type) {
@@ -100,7 +100,7 @@ abstract class IosJvmProtoMessageWriteBase : ActualProtoMessageWriter() {
                                     ComputeInt32SizeNoTag
                                 )
                             } else {
-                                addStatement("dataSize + %N.size * tagSize", field.fieldName)
+                                addStatement("dataSize + %N.size * tagSize", field.attributeName)
                             }
 
                             add("\n}")
@@ -114,7 +114,7 @@ abstract class IosJvmProtoMessageWriteBase : ActualProtoMessageWriter() {
                         "%M(%L, %N, ::%M, ",
                         computeMapSize,
                         mapField.number,
-                        mapField.fieldName,
+                        mapField.attributeName,
                         getComputeDataTypeSizeMember(mapField.keyType, true)
                     )
 
@@ -126,7 +126,7 @@ abstract class IosJvmProtoMessageWriteBase : ActualProtoMessageWriter() {
                 val oneOfsBlock = message.oneOfs.joinToCodeBlock(separator) { oneOf ->
                     add(
                         "%N.%N",
-                        oneOf.fieldName,
+                        oneOf.attributeName,
                         Const.Message.OneOf.REQUIRED_SIZE_PROPERTY_NAME
                     )
                 }
@@ -152,7 +152,7 @@ abstract class IosJvmProtoMessageWriteBase : ActualProtoMessageWriter() {
                 writeMap,
                 Const.Message.SerializeFunction.STREAM_PARAM,
                 field.number,
-                field.fieldName
+                field.attributeName
             )
 
             addCode(getComputeMapValueRequiredSizeCode(field.keyType))
@@ -246,7 +246,7 @@ abstract class IosJvmProtoMessageWriteBase : ActualProtoMessageWriter() {
                         "%M(%L, %N)",
                         getComputeDataTypeSizeMember(type, true),
                         field.number,
-                        field.fieldName
+                        field.attributeName
                     )
                 }
 
@@ -260,7 +260,7 @@ abstract class IosJvmProtoMessageWriteBase : ActualProtoMessageWriter() {
                                     "computeMessageSize"
                                 ),
                                 field.number,
-                                field.fieldName
+                                field.attributeName
                             )
                         }
 
@@ -269,7 +269,7 @@ abstract class IosJvmProtoMessageWriteBase : ActualProtoMessageWriter() {
                                 "%M(%L, %N.%N)",
                                 MemberName(PACKAGE_IO, "computeEnumSize"),
                                 field.number,
-                                field.fieldName,
+                                field.attributeName,
                                 Const.Enum.NUMBER_PROPERTY_NAME
                             )
                         }
