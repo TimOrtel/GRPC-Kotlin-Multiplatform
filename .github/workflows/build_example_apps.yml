@@ -46,7 +46,7 @@ jobs:
 
       - name: Publish revision to maven local
         run:
-          ./gradlew :plugin:publishToMavenLocal :grpc-multiplatform-lib:publishToMavenLocal
+          ./gradlew :plugin:publishToMavenLocal :grpc-multiplatform-lib:publishToMavenLocal --info
 
       - name: Build common module
         run: |

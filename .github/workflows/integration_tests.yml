@@ -84,7 +84,7 @@ jobs:
           echo "Service is healthy!"
 
       - name: Run tests in plugin module
-        run: ./gradlew :grpc-mp-test:iosSimulatorArm64Test
+        run: ./gradlew :grpc-mp-test:iosSimulatorArm64Test --info
 
       - name: Kill test-server
         run: |
