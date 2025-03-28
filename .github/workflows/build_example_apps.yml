@@ -23,6 +23,10 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Publish revision to maven local
+        run:
+          ./gradlew :plugin:publishToMavenLocal :grpc-multiplatform-lib:publishToMavenLocal
+
       - name: Build Android app
         run: |
           cd example
@@ -39,6 +43,10 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
+
+      - name: Publish revision to maven local
+        run:
+          ./gradlew :plugin:publishToMavenLocal :grpc-multiplatform-lib:publishToMavenLocal
 
       - name: Build common module
         run: |

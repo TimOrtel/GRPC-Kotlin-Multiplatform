@@ -23,8 +23,15 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Start test-server
+        run: docker compose -f docker-tests/js-tests.yml up -d test-server
+
       - name: Run tests in plugin module
         run: ./gradlew :grpc-mp-test:jvmTest
+
+      - name: Stop docker services
+        run: docker compose -f docker-tests/js-tests.yml down
+        if: always()
 
   test-js:
     runs-on: ubuntu-latest
@@ -38,13 +45,13 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Start Envoy service
-        run: docker compose -f docker-tests/js-tests.yml up -d envoy
+      - name: Start envoy And test-server
+        run: docker compose -f docker-tests/js-tests.yml up -d envoy test-server
 
       - name: Run tests in plugin module
         run: ./gradlew :grpc-mp-test:jsTest
 
-      - name: Stop Envoy service
+      - name: Stop docker services
         run: docker compose -f docker-tests/js-tests.yml down
         if: always()
 
@@ -60,5 +67,12 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Start test-server
+        run: docker compose -f docker-tests/js-tests.yml up -d test-server
+
       - name: Run tests in plugin module
         run: ./gradlew :grpc-mp-test:iosSimulatorArm64Test
+
+      - name: Stop docker services
+        run: docker compose -f docker-tests/js-tests.yml down
+        if: always()
