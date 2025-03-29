@@ -9,7 +9,7 @@ class DSLBuilderTest {
 
     @Test
     fun testBuildProtoObj() {
-        val simpleMessage = kmSimpleMessage {
+        val simpleMessage = simpleMessage {
             field1 = "Test"
         }
 
@@ -32,7 +32,7 @@ class DSLBuilderTest {
     fun testCreateSimpleRepeated() {
         val list = listOf("Foo", "Bar", "Baz")
 
-        val msg = kmSimpleRepeatedMessage {
+        val msg = simpleRepeatedMessage {
             field1List += list
         }
 
@@ -48,7 +48,7 @@ class DSLBuilderTest {
         val list5 = listOf(12f, 1.2f, 27f, 33f)
         val list6 = listOf(0.0, 1.0, 24.0, 1.5)
 
-        val msg = kmComplexRepeatedMessage {
+        val msg = complexRepeatedMessage {
             field1List += list1
             field2List += list2
             field3List += list3
@@ -67,9 +67,9 @@ class DSLBuilderTest {
 
     @Test
     fun testCreateMessageWithSubMessage() {
-        val subMessage = kmSimpleMessage { field1 = "Foo" }
+        val subMessage = simpleMessage { field1 = "Foo" }
 
-        val msg = kmMessageWithSubMessage {
+        val msg = messageWithSubMessage {
             field1 = subMessage
         }
 
@@ -83,12 +83,12 @@ class DSLBuilderTest {
     @Test
     fun testCreateMessageWithRepeatedSubMessages() {
         val messages = listOf(
-            kmSimpleMessage { field1 = "Foo" },
-            kmSimpleMessage { field1 = "Bar" },
-            kmSimpleMessage { field1 = "Baz" },
+            simpleMessage { field1 = "Foo" },
+            simpleMessage { field1 = "Bar" },
+            simpleMessage { field1 = "Baz" },
         )
 
-        val msg = kmMessageWithRepeatedSubMessage {
+        val msg = messageWithRepeatedSubMessage {
             field1List += messages
         }
 
@@ -100,9 +100,9 @@ class DSLBuilderTest {
 
     @Test
     fun testCreateEnumMessage() {
-        val enum = KMSimpleEnum.ONE
+        val enum = SimpleEnum.ONE
 
-        val msg = kmMessageWithEnum {
+        val msg = messageWithEnum {
             field1 = enum
         }
 
@@ -111,9 +111,9 @@ class DSLBuilderTest {
 
     @Test
     fun testCreateRepeatedEnumMessage() {
-        val list = listOf(KMSimpleEnum.ONE, KMSimpleEnum.TWO, KMSimpleEnum.ZERO, KMSimpleEnum.ONE)
+        val list = listOf(SimpleEnum.ONE, SimpleEnum.TWO, SimpleEnum.ZERO, SimpleEnum.ONE)
 
-        val msg = kmMessageWithRepeatedEnum {
+        val msg = messageWithRepeatedEnum {
             field1List += list
         }
 
@@ -122,9 +122,9 @@ class DSLBuilderTest {
 
     @Test
     fun testCreateMessageWithNestedMessage() {
-        val nested = kmNestedMessage { field1 = 12 }
+        val nested = nestedMessage { field1 = 12 }
 
-        val msg = kmMessageWithNestedMessage {
+        val msg = messageWithNestedMessage {
             field1 = nested
         }
 
@@ -140,7 +140,7 @@ class DSLBuilderTest {
             "Baz" to -13
         )
 
-        val msg = kmMessageWithMap {
+        val msg = messageWithMap {
             field1Map += map
         }
 
@@ -155,11 +155,11 @@ class DSLBuilderTest {
     @Test
     fun testCreateMessageWithMessageMap() {
         val map = mapOf(
-            12 to kmSimpleMessage { field1 = "Foo" },
-            22 to kmSimpleMessage { field1 = "Baz" }
+            12 to simpleMessage { field1 = "Foo" },
+            22 to simpleMessage { field1 = "Baz" }
         )
 
-        val msg = kmMessageWithMessageMap {
+        val msg = messageWithMessageMap {
             field1Map += map
         }
 
@@ -174,14 +174,14 @@ class DSLBuilderTest {
     @Test
     fun testCreateMessageWithEnumMap() {
         val map = mapOf(
-            33 to KMSimpleEnum.ONE,
-            12 to KMSimpleEnum.TWO,
-            13 to KMSimpleEnum.TWO,
-            -12 to KMSimpleEnum.ONE,
-            5 to KMSimpleEnum.ZERO
+            33 to SimpleEnum.ONE,
+            12 to SimpleEnum.TWO,
+            13 to SimpleEnum.TWO,
+            -12 to SimpleEnum.ONE,
+            5 to SimpleEnum.ZERO
         )
 
-        val msg = kmMessageWithEnumMap {
+        val msg = messageWithEnumMap {
             field1Map += map
         }
 
@@ -190,9 +190,9 @@ class DSLBuilderTest {
 
     @Test
     fun testOneOfMessageBasic() {
-        val value = KMOneOfMessage.OneOf1.Field1(13)
+        val value = OneOfMessage.OneOf1.Field1(13)
 
-        val msg = kmOneOfMessage {
+        val msg = oneOfMessage {
             oneOf1 = value
         }
 
@@ -201,24 +201,24 @@ class DSLBuilderTest {
 
     @Test
     fun testOneOfMessageMessage() {
-        val longMessage = kmLongMessage { field1 = 2521L }
-        val value = KMOneOfMessage.OneOf1.Field3(longMessage)
+        val longMessage = longMessage { field1 = 2521L }
+        val value = OneOfMessage.OneOf1.Field3(longMessage)
 
-        val msg = kmOneOfMessage {
+        val msg = oneOfMessage {
             oneOf1 = value
         }
 
         assertEquals(value, msg.oneOf1)
-        val oneOf = msg.oneOf1 as KMOneOfMessage.OneOf1.Field3
+        val oneOf = msg.oneOf1 as OneOfMessage.OneOf1.Field3
         assertEquals(longMessage, oneOf.field3)
     }
 
     @Test
     fun testOneOfMessageOverride() {
-        val value = KMOneOfMessage.OneOf1.Field2("Test")
+        val value = OneOfMessage.OneOf1.Field2("Test")
 
-        val msg = kmOneOfMessage {
-            oneOf1 = KMOneOfMessage.OneOf1.Field1(13)
+        val msg = oneOfMessage {
+            oneOf1 = OneOfMessage.OneOf1.Field1(13)
             oneOf1 = value
         }
 

@@ -3,6 +3,7 @@ package io.github.timortel.kotlin_multiplatform_grpc_lib.io
 import com.google.protobuf.ByteString
 import com.google.protobuf.CodedOutputStream
 import io.github.timortel.kotlin_multiplatform_grpc_lib.message.KMMessage
+import io.github.timortel.kotlin_multiplatform_grpc_lib.message.KmEnum
 import io.github.timortel.kotlin_multiplatform_grpc_lib.message.requiredSizeMessage
 import io.github.timortel.kotlin_multiplatform_grpc_lib.message.serializeMessage
 
@@ -45,12 +46,8 @@ actual class CodedOutputStream(private val impl: CodedOutputStream) {
         impl.writeBytes(fieldNumber, ByteString.copyFrom(value))
     }
 
-    actual fun writeBytesArray(fieldNumber: Int, value: List<ByteArray>, tag: UInt) {
-        val computeBytesSizeNoTag = { bytes: ByteArray ->
-            CodedOutputStream.computeUInt32SizeNoTag(bytes.size) + bytes.size
-        }
-
-        writeArray(this, fieldNumber, value, tag, computeBytesSizeNoTag, ::writeBytesNoTag, ::writeBytes)
+    actual fun writeBytesArray(fieldNumber: Int, values: List<ByteArray>) {
+        values.forEach { writeBytes(fieldNumber, it) }
     }
 
     actual fun writeBytesNoTag(value: ByteArray) {
@@ -79,17 +76,18 @@ actual class CodedOutputStream(private val impl: CodedOutputStream) {
 
     actual fun writeEnum(fieldNumber: Int, value: Int) = impl.writeEnum(fieldNumber, value)
 
-    actual fun writeEnumArray(fieldNumber: Int, values: List<Int>, tag: UInt) {
+    actual fun writeEnum(fieldNumber: Int, value: KmEnum) = writeEnum(fieldNumber, value.number)
+
+    actual fun writeEnumArray(fieldNumber: Int, values: List<KmEnum>, tag: UInt) =
         writeArray(
             this,
             fieldNumber,
-            values,
+            values.map { it.number },
             tag,
             CodedOutputStream::computeEnumSizeNoTag,
             ::writeEnumNoTag,
             ::writeEnum
         )
-    }
 
     actual fun writeEnumNoTag(value: Int) = impl.writeEnumNoTag(value)
 

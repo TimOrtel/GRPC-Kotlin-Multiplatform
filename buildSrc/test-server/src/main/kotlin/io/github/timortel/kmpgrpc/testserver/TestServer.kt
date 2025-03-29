@@ -5,6 +5,7 @@ import io.grpc.Server
 import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import io.grpc.protobuf.services.ProtoReflectionServiceV1;
 
 
 object TestServer {
@@ -17,6 +18,7 @@ object TestServer {
 
         val createdServer = NettyServerBuilder
             .forPort(17888)
+            .addService(ProtoReflectionServiceV1.newInstance())
             .addService(object : TestServiceGrpcKt.TestServiceCoroutineImplBase() {
                 override suspend fun emptyRpc(request: EmptyMessage): EmptyMessage {
                     return request

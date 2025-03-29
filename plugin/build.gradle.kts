@@ -51,6 +51,12 @@ dependencies {
 
     implementation(libs.squareup.kotlinpoet)
     compileOnly(libs.kotlin.gradle.plugin)
+
+    testImplementation(platform(libs.junit.bom))
+    testImplementation(libs.junit.jupiter)
+    testRuntimeOnly(libs.junit.platform.launcher)
+
+    testImplementation(libs.mockk)
 }
 
 buildConfig {
@@ -86,6 +92,10 @@ publishing {
     }
 }
 
+tasks.test.configure {
+    useJUnitPlatform()
+}
+
 tasks.generateGrammarSource {
     arguments = arguments + listOf("-visitor")
 }
@@ -96,4 +106,8 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().all {
 
 tasks.withType<Jar>().all {
     dependsOn("generateGrammarSource")
+}
+
+tasks.javadoc {
+    excludes.add("**/generated-src/**")
 }

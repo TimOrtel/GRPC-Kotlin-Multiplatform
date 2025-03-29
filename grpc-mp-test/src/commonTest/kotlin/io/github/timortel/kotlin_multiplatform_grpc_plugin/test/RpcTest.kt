@@ -19,12 +19,12 @@ abstract class RpcTest {
         .usePlaintext()
         .build()
 
-    private val stub: KMTestServiceStub get() = KMTestServiceStub(channel)
+    private val stub: TestServiceStub get() = TestServiceStub(channel)
 
     @Test
     fun testEmpty() = runTest {
         try {
-            val message = kmEmptyMessage { }
+            val message = emptyMessage { }
             val response = stub
                 .emptyRpc(message)
 
@@ -39,12 +39,10 @@ abstract class RpcTest {
 
     @Test
     fun testSimple() = runTest {
-        val message = kmSimpleMessage { field1 = "Test" }
+        val message = simpleMessage { field1 = "Test" }
 
         val response = async {
-            val x = stub.simpleRpc(message)
-            println(x.field1)
-            x
+            stub.simpleRpc(message)
         }
 
         assertEquals(message, response.await())
@@ -70,8 +68,8 @@ abstract class RpcTest {
 
     @Test
     fun testStreamEmpty() = runTest {
-        val message = kmEmptyMessage { }
-        val flow: Flow<KMEmptyMessage> = stub
+        val message = emptyMessage { }
+        val flow: Flow<EmptyMessage> = stub
             .emptyStream(message)
 
         assertEquals(listOf(message, message, message), flow.toList())
@@ -79,8 +77,8 @@ abstract class RpcTest {
 
     @Test
     fun testStreamSimple() = runTest {
-        val message = kmSimpleMessage { field1 = "Streaming test" }
-        val flow: Flow<KMSimpleMessage> = stub
+        val message = simpleMessage { field1 = "Streaming test" }
+        val flow: Flow<SimpleMessage> = stub
             .simpleStreamingRpc(message)
 
         assertEquals(listOf(message, message, message), flow.toList())
@@ -89,7 +87,7 @@ abstract class RpcTest {
     @Test
     fun testStreamEverything() =  runTest {
         val message = createMessageWithAllTypes()
-        val flow: Flow<KMMessageWithEverything> = stub
+        val flow: Flow<MessageWithEverything> = stub
             .everythingStreamingRpc(message)
 
         assertEquals(listOf(message, message, message), flow.toList())

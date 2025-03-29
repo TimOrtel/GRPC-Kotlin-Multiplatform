@@ -51,10 +51,10 @@ external object JSPB {
         fun writeFloat(field: Int, value: Float)
         fun writeInt64(field: Int, value: Long)
         fun writeSint64(field: Int, value: Long)
-        fun writeUInt64(field: Int, value: dynamic)
+        fun writeUint64(field: Int, value: dynamic)
         fun writeInt32(field: Int, value: Int)
         fun writeSint32(field: Int, value: Int)
-        fun writeUInt32(field: Int, value: dynamic)
+        fun writeUint32(field: Int, value: dynamic)
         fun writeFixed64(field: Int, value: dynamic)
         fun writeFixed32(field: Int, value: dynamic)
         fun writeSfixed64(field: Int, value: dynamic)
@@ -139,11 +139,11 @@ external object JSPB {
         fun readDouble(): Double
         fun readFloat(): Float
         fun readInt64(): dynamic
-        fun readSInt32(): dynamic
-        fun readSInt64(): dynamic
-        fun readUInt64(): dynamic
+        fun readSint32(): dynamic
+        fun readSint64(): dynamic
+        fun readUint64(): dynamic
         fun readInt32(): Int
-        fun readUInt32(): dynamic
+        fun readUint32(): dynamic
         fun readFixed64(): dynamic
         fun readFixed32(): dynamic
         fun readSfixed32(): dynamic
@@ -162,6 +162,8 @@ external object JSPB {
         fun readPackedInt64(): Array<Long>
         fun readPackedBool(): Array<Boolean>
         fun readPackedEnum(): Array<Int>
+
+        fun readUnsignedVarint32(): dynamic
 
         fun skipField()
         fun isDelimited(): Boolean
@@ -188,7 +190,7 @@ external object JSPB {
         fun readUint64(): Number
 
         fun readUnsignedVarint32(): Int
-        fun readUnsignedVarint64(): Int
+        fun readUnsignedVarint64(): Number
 
         fun readSignedVarint32(): Int
         fun readSignedVarint64(): Number
@@ -205,8 +207,6 @@ external object JSPB {
         fun writeBool(value: dynamic)
         fun writeFloat(value: dynamic)
         fun writeDouble(value: dynamic)
-        fun writeSplitFixed32(value: dynamic)
-        fun writeSplitFixed64(value: dynamic)
         fun writeUint32(value: dynamic)
         fun writeUint64(value: dynamic)
         fun writeInt8(value: dynamic)

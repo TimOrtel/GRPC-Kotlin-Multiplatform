@@ -36,7 +36,9 @@ expect class CodedInputStream {
 
     fun readInt32(): Int
 
-    fun readFixed32(): Int
+    fun readFixed32(): UInt
+
+    fun readFixed64(): ULong
 
     fun readBool(): Boolean
 

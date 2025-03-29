@@ -1,6 +1,7 @@
 package io.github.timortel.kotlin_multiplatform_grpc_lib.io
 
 import io.github.timortel.kotlin_multiplatform_grpc_lib.message.KMMessage
+import io.github.timortel.kotlin_multiplatform_grpc_lib.message.KmEnum
 
 /**
  * Base class that encodes messages to send them over the network connection. Counterpart to [CodedInputStream].
@@ -15,7 +16,7 @@ expect class CodedOutputStream {
 
     fun writeBytes(fieldNumber: Int, value: ByteArray)
 
-    fun writeBytesArray(fieldNumber: Int, value: List<ByteArray>, tag: UInt)
+    fun writeBytesArray(fieldNumber: Int, values: List<ByteArray>,)
 
     fun writeBytesNoTag(value: ByteArray)
 
@@ -27,7 +28,9 @@ expect class CodedOutputStream {
 
     fun writeEnum(fieldNumber: Int, value: Int)
 
-    fun writeEnumArray(fieldNumber: Int, values: List<Int>, tag: UInt)
+    fun writeEnum(fieldNumber: Int, value: KmEnum)
+
+    fun writeEnumArray(fieldNumber: Int, values: List<KmEnum>, tag: UInt)
 
     fun writeEnumNoTag(value: Int)
 

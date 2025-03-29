@@ -68,7 +68,9 @@ actual class CodedInputStream(
 
     actual fun readInt32(): Int = impl.decoder.readSignedVarint32()
 
-    actual fun readFixed32(): Int = impl.decoder.readUint32().toInt()
+    actual fun readFixed32(): UInt = impl.decoder.readUint32().toInt().toUInt()
+
+    actual fun readFixed64(): ULong = impl.decoder.readUint64().toLong().toULong()
 
     actual fun readBool(): Boolean = impl.decoder.readBool()
 
@@ -103,8 +105,10 @@ actual class CodedInputStream(
         readValue
     )
 
-    actual fun readBytes(): ByteArray =
-        Int8Array((impl.readBytes() as Uint8Array).buffer).unsafeCast<ByteArray>()
+    actual fun readBytes(): ByteArray {
+        val bytes = impl.readBytes() as Uint8Array
+        return Int8Array(bytes.buffer, bytes.byteOffset, bytes.length).unsafeCast<ByteArray>()
+    }
 
     actual fun readByteArray(): ByteArray = throw NotImplementedError()
 
@@ -118,7 +122,7 @@ actual class CodedInputStream(
 
     actual fun readSInt32(): Int = impl.decoder.readZigzagVarint32().toInt()
 
-    actual fun readSInt64(): Long = impl.decoder.readZigzagVarint32().toLong()
+    actual fun readSInt64(): Long = impl.decoder.readZigzagVarint64().toLong()
 
     actual fun readRawVarint32(): Int = impl.decoder.readSignedVarint32()
 

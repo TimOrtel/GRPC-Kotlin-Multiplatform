@@ -2,7 +2,9 @@ package io.github.timortel.kotlin_multiplatform_grpc_lib.io
 
 import io.github.timortel.kotlin_multiplatform_grpc_lib.JSPB
 import io.github.timortel.kotlin_multiplatform_grpc_lib.message.KMMessage
+import io.github.timortel.kotlin_multiplatform_grpc_lib.message.KmEnum
 import io.github.timortel.kotlin_multiplatform_grpc_lib.message.serializeMessage
+import org.khronos.webgl.Uint8Array
 
 actual class CodedOutputStream(internal val impl: JSPB.BinaryWriter) {
 
@@ -19,21 +21,16 @@ actual class CodedOutputStream(internal val impl: JSPB.BinaryWriter) {
     }
 
     actual fun writeBytes(fieldNumber: Int, value: ByteArray) {
-        impl.writeBytes(fieldNumber, value)
+        impl.writeBytes(fieldNumber, Uint8Array(value.toTypedArray()))
     }
 
-    actual fun writeBytesArray(
-        fieldNumber: Int,
-        value: List<ByteArray>,
-        tag: UInt
-    ) = writeArray(tag, writeRepeated = {
+    actual fun writeBytesArray(fieldNumber: Int, values: List<ByteArray>) {
+        val value = values.map { Uint8Array(it.toTypedArray()) }.toTypedArray()
         impl.writeRepeatedBytes(fieldNumber, value)
-    }, writePacked = {
-        impl.writeBytes(fieldNumber, value)
-    })
+    }
 
     actual fun writeBytesNoTag(value: ByteArray) {
-        impl.appendUint8Array(value)
+        impl.appendUint8Array(Uint8Array(value.toTypedArray()))
     }
 
     actual fun writeDouble(fieldNumber: Int, value: Double) {
@@ -54,11 +51,17 @@ actual class CodedOutputStream(internal val impl: JSPB.BinaryWriter) {
         impl.writeEnum(fieldNumber, value)
     }
 
-    actual fun writeEnumArray(
-        fieldNumber: Int,
-        values: List<Int>,
-        tag: UInt
-    ) = writeArray(this, fieldNumber, values, tag, writeNoTag = ::writeEnumNoTag, writeWithTag = ::writeEnum)
+    actual fun writeEnum(fieldNumber: Int, value: KmEnum) = writeEnum(fieldNumber, value.number)
+
+    actual fun writeEnumArray(fieldNumber: Int, values: List<KmEnum>, tag: UInt) =
+        writeArray(
+            this,
+            fieldNumber,
+            values.map { it.number },
+            tag,
+            writeNoTag = ::writeEnumNoTag,
+            writeWithTag = ::writeEnum
+        )
 
     actual fun writeEnumNoTag(value: Int) {
         impl.encoder.writeEnum(value)
@@ -109,17 +112,17 @@ actual class CodedOutputStream(internal val impl: JSPB.BinaryWriter) {
     actual fun writeGroup(
         fieldNumber: Int,
         value: KMMessage
-    ): Unit = TODO()
+    ): Unit = throw NotImplementedError()
 
     actual fun writeGroupArray(
         fieldNumber: Int,
         values: List<KMMessage>
-    ): Unit = TODO()
+    ): Unit = throw NotImplementedError()
 
     actual fun writeGroupNoTag(
         fieldNumber: Int,
         value: KMMessage
-    ): Unit = TODO()
+    ): Unit = throw NotImplementedError()
 
     actual fun writeInt32(fieldNumber: Int, value: Int) {
         impl.writeInt32(fieldNumber, value)
@@ -174,7 +177,7 @@ actual class CodedOutputStream(internal val impl: JSPB.BinaryWriter) {
     actual fun writeMessageSetExtension(
         fieldNumber: Int,
         value: KMMessage
-    ): Unit = TODO()
+    ): Unit = throw NotImplementedError()
 
     actual fun writeRawByte(value: UByte) {
         impl.encoder.writeInt8(value)
@@ -192,7 +195,7 @@ actual class CodedOutputStream(internal val impl: JSPB.BinaryWriter) {
         writeFixed64NoTag(value.toULong())
     }
 
-    actual fun writeRawMessageSetExtension(fieldNumber: Int, value: ByteArray): Unit = TODO()
+    actual fun writeRawMessageSetExtension(fieldNumber: Int, value: ByteArray): Unit = throw NotImplementedError()
 
     actual fun writeRawVarint32(value: Int) {
         impl.encoder.writeUint32(value)
@@ -216,7 +219,7 @@ actual class CodedOutputStream(internal val impl: JSPB.BinaryWriter) {
     ) = writeArray(this, fieldNumber, values, tag, writeNoTag = ::writeSFixed32NoTag, writeWithTag = ::writeSFixed32)
 
     actual fun writeSFixed32NoTag(value: Int) {
-        impl.encoder.writeSplitFixed32(value)
+        impl.encoder.writeInt32(value)
     }
 
     actual fun writeSFixed64(fieldNumber: Int, value: Long) {
@@ -230,7 +233,7 @@ actual class CodedOutputStream(internal val impl: JSPB.BinaryWriter) {
     ) = writeArray(this, fieldNumber, values, tag, writeNoTag = ::writeSFixed64NoTag, writeWithTag = ::writeSFixed64)
 
     actual fun writeSFixed64NoTag(value: Long) {
-        impl.encoder.writeSplitFixed64(value)
+        impl.encoder.writeInt64(value)
     }
 
     actual fun writeSInt32(fieldNumber: Int, value: Int) {
@@ -284,7 +287,7 @@ actual class CodedOutputStream(internal val impl: JSPB.BinaryWriter) {
     }
 
     actual fun writeUInt32(fieldNumber: Int, value: UInt) {
-        impl.writeUInt32(fieldNumber, value)
+        impl.writeUint32(fieldNumber, value)
     }
 
     actual fun writeUInt32Array(
@@ -298,7 +301,7 @@ actual class CodedOutputStream(internal val impl: JSPB.BinaryWriter) {
     }
 
     actual fun writeUInt64(fieldNumber: Int, value: ULong) {
-        impl.writeUInt64(fieldNumber, value)
+        impl.writeUint64(fieldNumber, value)
     }
 
     actual fun writeUInt64Array(

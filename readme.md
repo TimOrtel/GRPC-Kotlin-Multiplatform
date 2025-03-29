@@ -8,9 +8,7 @@
 ![badge][badge-ios]
 
 # gRPC Kotlin Multiplatform
-This projects implements client-side gRPC for Android, JVM, iOS and the web.
-
-**⚠️ Warning: This project is still under development and does not support all gRPC features!**
+This projects implements client-side gRPC for Android, JVM, iOS and the JS for browser.
 
 ## Table of contents
 - [Features](#features)
@@ -23,77 +21,114 @@ This projects implements client-side gRPC for Android, JVM, iOS and the web.
 - [License](#license)
 
 ## Features
-- Parses proto3 files and generates Kotlin files for these proto3 files.
-- DSL Syntax for creating proto objects.
-- Suspending rpc calls like in Kotlin/GRPC.
-- Heavily influenced by the Java/Kotlin gRPC and Proto API.
-
-### Supported features:
-- suspending unary-rpc and server side streaming.
-- nested messages
+### Supported rpc types:
+| RPC Type              | Support Status |
+|-----------------------|---------------|
+| Unary                | ✅ Supported  |
+| Server-side Streaming | ✅ Supported  |
+| Client-side Streaming | ⏳ Planned    |
 
 ### Supported proto types:
-- int32
-- int64
-- double
-- float
-- bool
-- string
-- enums
-- map
-- all messages built of these types
+| Proto Type   | Kotlin Type  |
+|-------------|-------------|
+| `double`    | `Double`    |
+| `float`     | `Float`     |
+| `int32`     | `Int`       |
+| `int64`     | `Long`      |
+| `uint32`    | `UInt`      |
+| `uint64`    | `ULong`     |
+| `sint32`    | `Int`       |
+| `sint64`    | `Long`      |
+| `fixed32`   | `UInt`      |
+| `fixed64`   | `ULong`     |
+| `sfixed32`  | `Int`       |
+| `sfixed64`  | `Long`      |
+| `bool`      | `Boolean`   |
+| `string`    | `String`    |
+| `bytes`     | `ByteArray` |
 
-_Feel free to add support for more types, I just implemented those I needed for now._
+### Supported proto options:
+| Proto Option          | Support Status |
+|----------------------|---------------|
+| `java_package`       | ✅ Supported  |
+| `java_outer_classname` | ✅ Supported  |
+| `java_multiple_files` | ✅ Supported  |
+| `deprecated`        | ⏳ Planned    |
+| `packed`           | ⏳ Planned    |
+| `optimize_for`       | ❌ Not Supported |
+
+### Code generation:
+| Proto Struct | Support Status |
+|--------------|---------------|
+| Messages     | ✅ Supported  |
+| Enums        | ✅ Supported  |
+| Services     | ✅ Supported  |
+
+### Additional Features
+- ✅ Generates DSL syntax to create messages
 
 ## Usage
-This plugin generates a kotlin class for each message/enum defined in the proto files.
-They all start with KM and then have the name of the message/enum.
+This plugin generates a kotlin class for each message/enum defined in the proto files. Assume you have the following proto file:
+```protobuf
+syntax = "proto3";
 
-First, run common:generateMPProtos to generate the multiplatform proto files.
+package com.example;
+
+option java_multiple_files = true;
+
+message HelloRequest {
+  string greeting = 1;
+}
+
+message HelloResponse {
+  string response = 1;
+}
+
+service HelloService {
+  rpc sayHello (HelloRequest) returns (HelloResponse);
+
+  rpc sayHelloMultipleTimes (HelloRequest) returns (stream HelloResponse);
+}
+```
 
 ### Creating proto objects
 In your common module, you can create proto objects like this:
 ```kotlin
-val myMessage = kmMyMessage {
-    myStringField = "foo"
-    
-    myNumberField = 23
-    
-    myOtherMessageField = kmOtherMessage { 
-        //...
-    }
+import com.example.*
+
+val request = helloRequest {
+    greeting = "My greeting"
 }
 ```
 
 ### Making rpc calls
+The request syntax is very similar to the one provided by gRPC Java. Add this code to your common module:
 ```kotlin
- suspend fun makeCall() {
+ suspend fun makeCall(): String {
     val channel = KMChannel.Builder()
         .forAddress("localhost", 8082) // replace with your address and your port
         .usePlaintext() // To force grpc to allow plaintext traffic, if you don't call this https is used.
         .build()
     
-    // For each service a unique class is generated. KM(serviceName)Stub
-    val stub = KMMyServiceStub(channel)
-    
-    val request = kmRequest {
-        //...
+    // For each service a unique class is generated.
+    val stub = HelloServiceStub(channel)
+
+    val request = helloRequest {
+        greeting = "My greeting"
     }
      
-     try {
-         val response = stub
+     return try {
+         val response: HelloResponse = stub
              .withDeadlineAfter(10, TimeUnit.SECONDS) // Specify a deadline if you need to
              .myRpc(request)
 
          //Handle response
+         response.response
      } catch (e: KMStatusException) {
-         
-     } catch (e: Exception) {
-         
+         "An exception occurred: $e"
      }
 }
 ```
-You can call this common code from JVM/Android, iOS and JS modules.
 
 ## Setup
 In your top-level build.gradle.kts, add the following:
@@ -176,7 +211,7 @@ grpcKotlinMultiplatform {
 ```
 
 ### iOS setup
-This library is using Cocoapods, so please refer to the [Kotlin Multiplatform Documentation](https://kotlinlang.org/docs/native-cocoapods.html) on how to setup your iOS app with a Kotlin Multiplatform project, or refer to the example iOS app in the `example` folder.
+This library is using Cocoapods, so please refer to the [Kotlin Multiplatform Documentation](https://kotlinlang.org/docs/native-cocoapods.html) on how to set up your iOS app with a Kotlin Multiplatform project, or refer to the example iOS app in the `example` folder.
 When you build your app, you might encounter compilation errors of multiple Pods. This is because the gRPC Pod required C++17 to be enabled:
 1. In Xcode, double-click on the `Pods` project and for project `Pods` go to `Build Settings`. Search for `C++ Language Dialect` and set it to `C++17`. 
 2. You can now build the app.
@@ -199,9 +234,8 @@ Please send all pull requests to the develop branch, as the master always holds 
 ## Implementation details
 
 ### How does it work internally?
-- The JVM implementation generates the message files and serialization logic. It then uses the grpc/jvm implementation for network communication.
-- The JS implementation fully replaces the javascript protoc files and implements the logic in Kotlin. It then utilizes the google-protobuf and grpc-web the same way the javascript files would do.
-- The iOS implementation uses the objective-c implementation of gRPC. The necessary message implementations are generated by the gradle plugin.
+The plugin generates kotlin code for all provided proto files. No `protoc` is needed. The networking code is handled
+by the native gRPC implementations for each platform.
 
 ## License
 Copyright 2025 Tim Ortel

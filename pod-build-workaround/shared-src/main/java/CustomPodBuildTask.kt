@@ -79,7 +79,8 @@ abstract class CustomPodBuildTask @Inject constructor(
             "-scheme", pod.get().schemeName,
             "-destination", "generic/platform=${appleTarget.get()}",
             "-configuration", configuration,
-            "CLANG_CXX_LANGUAGE_STANDARD=c++17"
+            "CLANG_CXX_LANGUAGE_STANDARD=c++17",
+            "LLVM_TARGET_TRIPLE_OS_VERSION=ios15.6"
         )
 
         val cl = Thread.currentThread().contextClassLoader.loadClass("org.jetbrains.kotlin.gradle.utils.ProcessUtilsKt")

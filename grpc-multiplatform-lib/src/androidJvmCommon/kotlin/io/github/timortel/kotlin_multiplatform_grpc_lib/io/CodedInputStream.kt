@@ -32,7 +32,9 @@ actual class CodedInputStream(private val impl: CodedInputStream, actual var rec
 
     actual fun readInt32(): Int = impl.readInt32()
 
-    actual fun readFixed32(): Int = impl.readFixed32()
+    actual fun readFixed32(): UInt = impl.readFixed32().toUInt()
+
+    actual fun readFixed64(): ULong = impl.readFixed64().toULong()
 
     actual fun readBool(): Boolean = impl.readBool()
 
@@ -50,7 +52,7 @@ actual class CodedInputStream(private val impl: CodedInputStream, actual var rec
 
     actual fun readSFixed64(): Long = impl.readSFixed64()
 
-    actual fun readSInt32(): Int = impl.readSFixed32()
+    actual fun readSInt32(): Int = impl.readSInt32()
 
     actual fun readSInt64(): Long = impl.readSInt64()
 

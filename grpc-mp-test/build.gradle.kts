@@ -32,7 +32,8 @@ kotlin {
         browser {
             testTask {
                 useKarma {
-                    useFirefox()
+                    useFirefoxHeadless()
+                    useChromeHeadless()
                 }
             }
         }
@@ -73,10 +74,6 @@ kotlin {
             dependencies {
                 implementation(kotlin("test"))
             }
-        }
-
-        iosMain {
-
         }
 
         jsTest {
@@ -127,26 +124,6 @@ grpcKotlinMultiplatform {
     ios()
 
     protoSourceFolders = project.files("src/commonMain/proto")
-}
-
-tasks.findByName("jvmTest")?.let {
-    it.doFirst {
-        TestServer.start()
-    }
-
-    it.doLast {
-        TestServer.stop()
-    }
-}
-
-tasks.named("iosSimulatorArm64Test", KotlinNativeSimulatorTest::class).configure {
-    doFirst {
-        //TestServer.start()
-    }
-
-    doLast {
-        //TestServer.stop()
-    }
 }
 
 tasks.withType(Test::class) {

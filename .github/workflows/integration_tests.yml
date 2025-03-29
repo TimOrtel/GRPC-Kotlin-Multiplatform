@@ -1,0 +1,98 @@
+name: Serialization and RPC tests.
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  test-jvm:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Start test-server
+        run: docker compose -f docker-tests/js-tests.yml up -d test-server
+
+      - name: Run tests in plugin module
+        run: ./gradlew :grpc-mp-test:jvmTest
+
+      - name: Stop docker services
+        run: docker compose -f docker-tests/js-tests.yml down
+        if: always()
+
+  test-js:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Start envoy And test-server
+        run: docker compose -f docker-tests/js-tests.yml up -d envoy test-server
+
+      - name: Run tests in plugin module
+        run: ./gradlew :grpc-mp-test:jsTest
+
+      - name: Stop docker services
+        run: docker compose -f docker-tests/js-tests.yml down
+        if: always()
+
+  test-ios:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install grpcurl
+        run: brew install grpcurl
+
+      - name: Start test-server
+        run: |
+          nohup ./gradlew :buildSrc:test-server:run &
+          echo $! > gradle_pid.txt
+
+      - name: Cache Lib Cocoapods Synthetic Build
+        uses: actions/cache@v4
+        with:
+          path: grpc-multiplatform-lib/build/cocoapods/synthetic
+          key: lib-cocoapods-synthetic-${{ runner.os }}-${{ hashFiles('grpc-multiplatform-lib/gradle.properties') }}
+
+      - name: Wait for test-server to be healthy
+        run: |
+          echo "Waiting for service..."
+          while ! grpcurl -plaintext localhost:17888 io.github.timortel.kotlin_multiplatform_grpc_plugin.test.basic_messages.TestService/emptyRpc | grep -q "{}"; do
+            sleep 5
+          done
+          echo "Service is healthy!"
+
+      - name: Run tests in plugin module
+        run: ./gradlew :grpc-mp-test:iosSimulatorArm64Test --info
+
+      - name: Kill test-server
+        run: |
+          PID=$(cat gradle_pid.txt)
+          kill $PID
