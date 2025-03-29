@@ -33,6 +33,24 @@ sealed interface ProtoType {
 
     fun inequalityCode(attributeName: String, otherParamName: String, isRepeated: Boolean): CodeBlock
 
+    /**
+     * @return code block with boolean condition evaluating to true of the given variable contains the default value of this type
+     */
+    fun isDefaultValueCode(
+        attributeName: String,
+        isRepeated: Boolean,
+        messageDefaultValue: MessageDefaultValue = MessageDefaultValue.NULL
+    ): CodeBlock
+
+    /**
+     * @return code block with boolean condition evaluating to true of the given variable does not contain the default value of this type
+     */
+    fun isNotDefaultValueCode(
+        attributeName: String,
+        isRepeated: Boolean,
+        messageDefaultValue: MessageDefaultValue = MessageDefaultValue.NULL
+    ): CodeBlock
+
     enum class MessageDefaultValue {
         NULL,
         EMPTY
@@ -66,8 +84,33 @@ sealed interface ProtoType {
     data object Fixed64Type : MapKeyType(U_LONG, CodeBlock.of("0uL")), DefaultInequalityProvider
     data object SFixed32Type : MapKeyType(INT, CodeBlock.of("0")), DefaultInequalityProvider
     data object SFixed64Type : MapKeyType(LONG, CodeBlock.of("0L")), DefaultInequalityProvider
-    data object BoolType : MapKeyType(BOOLEAN, CodeBlock.of("false")), DefaultInequalityProvider
     data object StringType : MapKeyType(STRING, CodeBlock.of("\"\"")), DefaultInequalityProvider
+
+    data object BoolType : MapKeyType(BOOLEAN, CodeBlock.of("false")), DefaultInequalityProvider {
+        override fun isDefaultValueCode(
+            attributeName: String,
+            isRepeated: Boolean,
+            messageDefaultValue: MessageDefaultValue
+        ): CodeBlock {
+            return if (isRepeated) {
+                super.isDefaultValueCode(attributeName, true, messageDefaultValue)
+            } else {
+                CodeBlock.of("!%N", attributeName)
+            }
+        }
+
+        override fun isNotDefaultValueCode(
+            attributeName: String,
+            isRepeated: Boolean,
+            messageDefaultValue: MessageDefaultValue
+        ): CodeBlock {
+            return if (isRepeated) {
+                super.isNotDefaultValueCode(attributeName, true, messageDefaultValue)
+            } else {
+                CodeBlock.of("%N", attributeName)
+            }
+        }
+    }
 
     data object BytesType : NonDeclType(BYTE_ARRAY, CodeBlock.of("byteArrayOf()")) {
         override fun inequalityCode(attributeName: String, otherParamName: String, isRepeated: Boolean): CodeBlock {
@@ -76,6 +119,24 @@ sealed interface ProtoType {
             } else {
                 CodeBlock.of("!%N.contentEquals(%N.%N)", attributeName, otherParamName, attributeName)
             }
+        }
+
+        override fun isDefaultValueCode(
+            attributeName: String,
+            isRepeated: Boolean,
+            messageDefaultValue: MessageDefaultValue
+        ): CodeBlock {
+            // IsEmpty both applicable for repeated case (List#isEmpty) and single (ByteArray#isEmpty)
+            return CodeBlock.of("%N.isEmpty()", attributeName)
+        }
+
+        override fun isNotDefaultValueCode(
+            attributeName: String,
+            isRepeated: Boolean,
+            messageDefaultValue: MessageDefaultValue
+        ): CodeBlock {
+            // IsEmpty both applicable for repeated case (List#isNotEmpty) and single (ByteArray#isNotEmpty)
+            return CodeBlock.of("%N.isNotEmpty()", attributeName)
         }
     }
 
@@ -143,6 +204,40 @@ sealed interface ProtoType {
             return new
         }
 
+        override fun isDefaultValueCode(
+            attributeName: String,
+            isRepeated: Boolean,
+            messageDefaultValue: MessageDefaultValue
+        ): CodeBlock {
+            return when (val decl = resolveDeclaration()) {
+                is ProtoMessage -> {
+                    when (messageDefaultValue) {
+                        MessageDefaultValue.NULL -> CodeBlock.of("%N == null", attributeName)
+                        MessageDefaultValue.EMPTY -> CodeBlock.of("%N == %T()", attributeName, decl.className)
+                    }
+                }
+
+                is ProtoEnum -> super.isDefaultValueCode(attributeName, isRepeated, messageDefaultValue)
+            }
+        }
+
+        override fun isNotDefaultValueCode(
+            attributeName: String,
+            isRepeated: Boolean,
+            messageDefaultValue: MessageDefaultValue
+        ): CodeBlock {
+            return when (val decl = resolveDeclaration()) {
+                is ProtoMessage -> {
+                    when (messageDefaultValue) {
+                        MessageDefaultValue.NULL -> CodeBlock.of("%N != null", attributeName)
+                        MessageDefaultValue.EMPTY -> CodeBlock.of("%N != %T()", attributeName, decl.className)
+                    }
+                }
+
+                is ProtoEnum -> super.isNotDefaultValueCode(attributeName, isRepeated, messageDefaultValue)
+            }
+        }
+
         enum class DeclarationType(val isPackable: Boolean) {
             MESSAGE(false),
             ENUM(true)
@@ -178,6 +273,36 @@ sealed interface ProtoType {
     sealed interface DefaultInequalityProvider : ProtoType {
         override fun inequalityCode(attributeName: String, otherParamName: String, isRepeated: Boolean): CodeBlock {
             return CodeBlock.of("%N != %N.%N", attributeName, otherParamName, attributeName)
+        }
+
+        override fun isDefaultValueCode(
+            attributeName: String,
+            isRepeated: Boolean,
+            messageDefaultValue: MessageDefaultValue
+        ): CodeBlock {
+            return if (isRepeated) {
+                CodeBlock.of("%N.isEmpty()", attributeName)
+            } else {
+                CodeBlock.builder()
+                    .add("%N == ", attributeName)
+                    .add(defaultValue(messageDefaultValue))
+                    .build()
+            }
+        }
+
+        override fun isNotDefaultValueCode(
+            attributeName: String,
+            isRepeated: Boolean,
+            messageDefaultValue: MessageDefaultValue
+        ): CodeBlock {
+            return if (isRepeated) {
+                CodeBlock.of("%N.isNotEmpty()", attributeName)
+            } else {
+                CodeBlock.builder()
+                    .add("%N != ", attributeName)
+                    .add(defaultValue(messageDefaultValue))
+                    .build()
+            }
         }
     }
 }

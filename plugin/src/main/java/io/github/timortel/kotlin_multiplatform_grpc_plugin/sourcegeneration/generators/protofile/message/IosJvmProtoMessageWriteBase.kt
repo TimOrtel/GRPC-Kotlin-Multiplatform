@@ -46,19 +46,20 @@ abstract class IosJvmProtoMessageWriteBase : ActualProtoMessageWriter() {
                         }
 
                         field.cardinality == ProtoFieldCardinality.Implicit -> {
-                            add("if·(%N·==·", field.attributeName)
-                            add(field.type.defaultValue())
+                            add("if·(")
+                            add(field.type.isDefaultValueCode(field.attributeName, false))
                             add(")·0·else·{ ")
                             add(getCodeForRequiredSizeForScalarAttributeC(field))
                             add(" }")
                         }
 
                         field.cardinality == ProtoFieldCardinality.Repeated -> {
-                            add(
-                                "if (%N.isEmpty())·0·else·{\n%N.let·{·e·->\n",
-                                field.attributeName,
-                                field.attributeName
-                            )
+                            add("if·(")
+                            add(field.type.isDefaultValueCode(field.attributeName, true))
+                            beginControlFlow(")·0·else·{")
+
+                            beginControlFlow("%N.let·{·e·->", field.attributeName)
+
                             beginControlFlow("val·dataSize·=·e.sumOf·{")
                             when (field.type) {
                                 is ProtoType.NonDeclType -> {
@@ -103,8 +104,9 @@ abstract class IosJvmProtoMessageWriteBase : ActualProtoMessageWriter() {
                                 addStatement("dataSize + %N.size * tagSize", field.attributeName)
                             }
 
-                            add("\n}")
-                            add("\n}")
+                            endControlFlow()
+                            unindent()
+                            add("}")
                         }
                     }
                 }

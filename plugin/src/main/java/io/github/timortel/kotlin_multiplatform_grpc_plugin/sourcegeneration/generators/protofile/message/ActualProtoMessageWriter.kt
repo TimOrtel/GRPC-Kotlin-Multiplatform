@@ -171,9 +171,10 @@ abstract class ActualProtoMessageWriter : ProtoMessageWriter(true) {
                     }
 
                     field.cardinality == ProtoFieldCardinality.Implicit -> {
-                        addCode("if·(%N·!=·", field.attributeName)
-                        addCode(field.type.defaultValue())
+                        addCode("if·(")
+                        addCode(field.type.isNotDefaultValueCode(field.attributeName, false))
                         beginControlFlow(")·{ ")
+
                         addCode(
                             getWriteScalarFieldCode(
                                 field = field,
