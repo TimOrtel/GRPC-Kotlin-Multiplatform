@@ -75,6 +75,12 @@ jobs:
           nohup ./gradlew :buildSrc:test-server:run &
           echo $! > gradle_pid.txt
 
+      - name: Cache Lib Cocoapods Synthetic Build
+        uses: actions/cache@v4
+        with:
+          path: grpc-multiplatform-lib/build/cocoapods/synthetic
+          key: lib-cocoapods-synthetic-${{ runner.os }}-${{ hashFiles('grpc-multiplatform-lib/gradle.properties')
+
       - name: Wait for test-server to be healthy
         run: |
           echo "Waiting for service..."

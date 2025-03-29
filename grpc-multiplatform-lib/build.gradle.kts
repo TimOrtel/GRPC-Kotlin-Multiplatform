@@ -43,8 +43,11 @@ kotlin {
 
         ios.deploymentTarget = "18.2"
 
-        pod("gRPC-ProtoRPC", version = "~> 1.69.0", moduleName = "GRPCClient")
-        pod("Protobuf", version = "~> 3.29.3", moduleName = "Protobuf")
+        val grpcVersion: String by project
+        val protobufVersion: String by project
+
+        pod("gRPC-ProtoRPC", version = grpcVersion, moduleName = "GRPCClient")
+        pod("Protobuf", version = protobufVersion, moduleName = "Protobuf")
     }
 
     sourceSets {
