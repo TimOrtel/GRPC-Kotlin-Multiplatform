@@ -58,12 +58,12 @@ jobs:
 
       - name: Publish revision to maven local
         run:
-          ./gradlew :plugin:publishToMavenLocal :grpc-multiplatform-lib:publishToMavenLocal --info
+          ./gradlew :plugin:publishToMavenLocal :grpc-multiplatform-lib:publishToMavenLocal
 
       - name: Build common module
         run: |
           cd example
-          ./gradlew common:build common:podspec
+          ./gradlew common:build common:podspec common:generateDummyFramework
 
       - name: Install CocoaPods dependencies
         run: |
