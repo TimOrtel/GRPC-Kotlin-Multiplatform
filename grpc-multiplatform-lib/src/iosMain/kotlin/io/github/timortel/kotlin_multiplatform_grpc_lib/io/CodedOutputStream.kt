@@ -36,12 +36,8 @@ actual class CodedOutputStream(private val impl: GPBCodedOutputStream) {
         impl.writeBytes(fieldNumber, value.native)
     }
 
-    actual fun writeBytesArray(fieldNumber: Int, value: List<ByteArray>, tag: UInt) {
-        val computeBytesSizeNoTag = { bytes: ByteArray ->
-            GPBComputeRawVarint32Size(bytes.size) + bytes.size.toULong()
-        }
-
-        writeArray(this, fieldNumber, value, tag, computeBytesSizeNoTag, ::writeBytesNoTag, ::writeBytes)
+    actual fun writeBytesArray(fieldNumber: Int, values: List<ByteArray>) {
+        values.forEach { writeBytes(fieldNumber, it) }
     }
 
     actual fun writeBytesNoTag(value: ByteArray) {

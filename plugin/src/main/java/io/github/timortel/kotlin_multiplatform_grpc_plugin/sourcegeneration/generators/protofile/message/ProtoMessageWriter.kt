@@ -11,6 +11,7 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.mode
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.declaration.ProtoMessage
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.declaration.message.ProtoMessageProperty
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.declaration.message.field.ProtoFieldCardinality
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.util.joinToCodeBlock
 
 /**
  * Generates the kotlin code for the .proto files.
@@ -115,28 +116,22 @@ abstract class ProtoMessageWriter(private val isActual: Boolean) {
                 addStatement("if (%N === this) return true", otherParamName)
                 addStatement("if (%N !is %T) return false", otherParamName, message.className)
 
-                message.fields.forEach { field ->
-                    when (field.cardinality) {
-                        ProtoFieldCardinality.Implicit, ProtoFieldCardinality.Optional -> {
-                            addStatement(
-                                "if (%1N != %2N.%1N) return false",
-                                field.name,
-                                otherParamName
-                            )
-                        }
+                val separator = "\n"
 
-                        ProtoFieldCardinality.Repeated -> {
-                            addStatement(
-                                "if (%1N != %2N.%1N) return false",
-                                field.attributeName,
-                                otherParamName
-                            )
-                        }
-                    }
+                val fieldsCodeBlock = message.fields.joinToCodeBlock(separator) { field ->
+                    add("if (")
+                    add(
+                        field.type.inequalityCode(
+                            attributeName = field.attributeName,
+                            otherParamName = otherParamName,
+                            isRepeated = field.cardinality == ProtoFieldCardinality.Repeated
+                        )
+                    )
+                    add(") return false")
                 }
 
-                message.mapFields.forEach { mapField ->
-                    addStatement(
+                val mapFieldCodeBlock = message.mapFields.joinToCodeBlock(separator) { mapField ->
+                    add(
                         "if (%1N != %2N.%1N) return false",
                         mapField.attributeName,
                         otherParamName
@@ -144,13 +139,21 @@ abstract class ProtoMessageWriter(private val isActual: Boolean) {
                 }
 
                 // Assume that each one of sealed class has their equals method set properly
-                message.oneOfs.forEach { oneOf ->
-                    addStatement(
+                val oneOfCodeBlock = message.oneOfs.joinToCodeBlock(separator) { oneOf ->
+                    add(
                         "if (%1N != %2N.%1N) return false",
                         oneOf.attributeName,
                         otherParamName
                     )
                 }
+
+                addCode(
+                    listOf(fieldsCodeBlock, mapFieldCodeBlock, oneOfCodeBlock)
+                        .filter { it.isNotEmpty() }
+                        .joinToCodeBlock(separator) { add(it) }
+                )
+
+                addCode("\n")
 
                 addStatement("return true")
             }

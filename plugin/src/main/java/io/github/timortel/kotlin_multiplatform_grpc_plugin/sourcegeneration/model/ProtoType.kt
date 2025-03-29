@@ -2,6 +2,7 @@ package io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.mod
 
 import com.squareup.kotlinpoet.*
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.CompilationException
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.constants.byteArrayListEquals
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.declaration.ProtoDeclaration
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.declaration.ProtoEnum
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.model.declaration.ProtoMessage
@@ -30,6 +31,8 @@ sealed interface ProtoType {
      */
     fun defaultValue(messageDefaultValue: MessageDefaultValue = MessageDefaultValue.NULL): CodeBlock
 
+    fun inequalityCode(attributeName: String, otherParamName: String, isRepeated: Boolean): CodeBlock
+
     enum class MessageDefaultValue {
         NULL,
         EMPTY
@@ -39,7 +42,7 @@ sealed interface ProtoType {
 
         override lateinit var parent: Parent
 
-        override val isPackable: Boolean get() = this != StringType
+        override val isPackable: Boolean get() = this != StringType && this != BytesType
 
         override val isMessage: Boolean = false
         override val isEnum: Boolean = false
@@ -51,27 +54,36 @@ sealed interface ProtoType {
 
     sealed class MapKeyType(type: ClassName, defaultValue: CodeBlock) : NonDeclType(type, defaultValue)
 
-    data object DoubleType : NonDeclType(DOUBLE, CodeBlock.of("0.0"))
-    data object FloatType : NonDeclType(FLOAT, CodeBlock.of("0.0f"))
-    data object Int32Type : MapKeyType(INT, CodeBlock.of("0"))
-    data object Int64Type : MapKeyType(LONG, CodeBlock.of("0L"))
-    data object UInt32Type : MapKeyType(U_INT, CodeBlock.of("0"))
-    data object UInt64Type : MapKeyType(U_LONG, CodeBlock.of("0L"))
-    data object SInt32Type : MapKeyType(INT, CodeBlock.of("0"))
-    data object SInt64Type : MapKeyType(LONG, CodeBlock.of("0L"))
-    data object Fixed32Type : MapKeyType(U_INT, CodeBlock.of("0"))
-    data object Fixed64Type : MapKeyType(U_LONG, CodeBlock.of("0L"))
-    data object SFixed32Type : MapKeyType(INT, CodeBlock.of("0"))
-    data object SFixed64Type : MapKeyType(LONG, CodeBlock.of("0L"))
-    data object BoolType : MapKeyType(BOOLEAN, CodeBlock.of("false"))
-    data object StringType : MapKeyType(STRING, CodeBlock.of("\"\""))
-    data object BytesType : NonDeclType(BYTE_ARRAY, CodeBlock.of("emptyArray<Byte>()"))
+    data object DoubleType : NonDeclType(DOUBLE, CodeBlock.of("0.0")), DefaultInequalityProvider
+    data object FloatType : NonDeclType(FLOAT, CodeBlock.of("0.0f")), DefaultInequalityProvider
+    data object Int32Type : MapKeyType(INT, CodeBlock.of("0")), DefaultInequalityProvider
+    data object Int64Type : MapKeyType(LONG, CodeBlock.of("0L")), DefaultInequalityProvider
+    data object UInt32Type : MapKeyType(U_INT, CodeBlock.of("0u")), DefaultInequalityProvider
+    data object UInt64Type : MapKeyType(U_LONG, CodeBlock.of("0uL")), DefaultInequalityProvider
+    data object SInt32Type : MapKeyType(INT, CodeBlock.of("0")), DefaultInequalityProvider
+    data object SInt64Type : MapKeyType(LONG, CodeBlock.of("0L")), DefaultInequalityProvider
+    data object Fixed32Type : MapKeyType(U_INT, CodeBlock.of("0u")), DefaultInequalityProvider
+    data object Fixed64Type : MapKeyType(U_LONG, CodeBlock.of("0uL")), DefaultInequalityProvider
+    data object SFixed32Type : MapKeyType(INT, CodeBlock.of("0")), DefaultInequalityProvider
+    data object SFixed64Type : MapKeyType(LONG, CodeBlock.of("0L")), DefaultInequalityProvider
+    data object BoolType : MapKeyType(BOOLEAN, CodeBlock.of("false")), DefaultInequalityProvider
+    data object StringType : MapKeyType(STRING, CodeBlock.of("\"\"")), DefaultInequalityProvider
+
+    data object BytesType : NonDeclType(BYTE_ARRAY, CodeBlock.of("byteArrayOf()")) {
+        override fun inequalityCode(attributeName: String, otherParamName: String, isRepeated: Boolean): CodeBlock {
+            return if (isRepeated) {
+                CodeBlock.of("!%1M(%2N, %3N.%2N)", byteArrayListEquals, attributeName, otherParamName)
+            } else {
+                CodeBlock.of("!%N.contentEquals(%N.%N)", attributeName, otherParamName, attributeName)
+            }
+        }
+    }
 
 
     /**
      * Message or Enum Types
      */
-    data class DefType(val declaration: String, val ctx: ParserRuleContext) : ProtoType {
+    data class DefType(val declaration: String, val ctx: ParserRuleContext) : ProtoType, DefaultInequalityProvider {
         override lateinit var parent: Parent
 
         val declType: DeclarationType
@@ -160,6 +172,12 @@ sealed interface ProtoType {
         data class Rpc(val rpc: ProtoRpc) : Parent {
             override val file: ProtoFile
                 get() = rpc.file
+        }
+    }
+
+    sealed interface DefaultInequalityProvider : ProtoType {
+        override fun inequalityCode(attributeName: String, otherParamName: String, isRepeated: Boolean): CodeBlock {
+            return CodeBlock.of("%N != %N.%N", attributeName, otherParamName, attributeName)
         }
     }
 }

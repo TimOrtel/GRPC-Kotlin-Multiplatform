@@ -46,12 +46,8 @@ actual class CodedOutputStream(private val impl: CodedOutputStream) {
         impl.writeBytes(fieldNumber, ByteString.copyFrom(value))
     }
 
-    actual fun writeBytesArray(fieldNumber: Int, value: List<ByteArray>, tag: UInt) {
-        val computeBytesSizeNoTag = { bytes: ByteArray ->
-            CodedOutputStream.computeUInt32SizeNoTag(bytes.size) + bytes.size
-        }
-
-        writeArray(this, fieldNumber, value, tag, computeBytesSizeNoTag, ::writeBytesNoTag, ::writeBytes)
+    actual fun writeBytesArray(fieldNumber: Int, values: List<ByteArray>) {
+        values.forEach { writeBytes(fieldNumber, it) }
     }
 
     actual fun writeBytesNoTag(value: ByteArray) {

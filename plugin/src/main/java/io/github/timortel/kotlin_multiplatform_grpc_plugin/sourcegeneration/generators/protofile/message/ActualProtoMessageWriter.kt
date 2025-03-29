@@ -369,7 +369,7 @@ abstract class ActualProtoMessageWriter : ProtoMessageWriter(true) {
                 val dataType = getDataTypeForProtoType(type)
 
                 CodeBlock.of(
-                    "%M(%L, %M(%T.%N, %L)).toInt()",
+                    "%M(%L, %M(%T.%N, %L))",
                     WireFormatMakeTag,
                     fieldNumber,
                     WireFormatForType,
@@ -514,6 +514,14 @@ abstract class ActualProtoMessageWriter : ProtoMessageWriter(true) {
                             field.type == ProtoType.StringType -> {
                                 addCode(
                                     "%N·+=·%N.readString()",
+                                    field.attributeName,
+                                    wrapperParamName
+                                )
+                            }
+
+                            field.type == ProtoType.BytesType -> {
+                                addCode(
+                                    "%N·+=·%N.readBytes()",
                                     field.attributeName,
                                     wrapperParamName
                                 )

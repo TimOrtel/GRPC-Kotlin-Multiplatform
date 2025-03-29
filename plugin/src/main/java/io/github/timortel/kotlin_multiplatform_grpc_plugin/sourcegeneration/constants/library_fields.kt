@@ -29,6 +29,8 @@ val readMapEntry = MemberName(PACKAGE_IO, "readMapEntry")
 val iosUnaryCallImplementation = MemberName("io.github.timortel.kotlin_multiplatform_grpc_lib.rpc", "unaryCallImplementation")
 val iosServerSideStreamingCallImplementation = MemberName("io.github.timortel.kotlin_multiplatform_grpc_lib.rpc", "serverSideStreamingCallImplementation")
 
+val byteArrayListEquals = MemberName("io.github.timortel.kotlin_multiplatform_grpc_lib.util", "byteArrayListsEqual")
+
 private val JSPB = ClassName("io.github.timortel.kotlin_multiplatform_grpc_lib", "JSPB")
 val JSPB_BINARY_WRITER = JSPB.nestedClass("BinaryWriter")
 val JSPB_BINARY_READER = JSPB.nestedClass("BinaryReader")

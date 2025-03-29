@@ -51,7 +51,9 @@ actual class CodedInputStream(private val impl: GPBCodedInputStream, actual var 
 
     actual fun readInt32(): Int = impl.readInt32()
 
-    actual fun readFixed32(): Int = impl.readFixed32().toInt()
+    actual fun readFixed32(): UInt = impl.readFixed32()
+
+    actual fun readFixed64(): ULong = impl.readFixed64()
 
     actual fun readBool(): Boolean = impl.readBool()
 

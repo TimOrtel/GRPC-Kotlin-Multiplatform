@@ -34,8 +34,37 @@ expect fun computeStringSizeNoTag(value: String): Int
 expect fun computeEnumSize(fieldNumber: Int, value: Int): Int
 expect fun computeEnumSizeNoTag(value: Int): Int
 
+expect fun computeUInt32Size(fieldNumber: Int, value: UInt): Int
+expect fun computeUInt32SizeNoTag(value: UInt): Int
+
+expect fun computeUInt64Size(fieldNumber: Int, value: ULong): Int
+expect fun computeUInt64SizeNoTag(value: ULong): Int
+
+expect fun computeSInt32Size(fieldNumber: Int, value: Int): Int
+expect fun computeSInt32SizeNoTag(value: Int): Int
+
+expect fun computeSInt64Size(fieldNumber: Int, value: Long): Int
+expect fun computeSInt64SizeNoTag(value: Long): Int
+
+expect fun computeFixed32Size(fieldNumber: Int, value: UInt): Int
+expect fun computeFixed32SizeNoTag(value: UInt): Int
+
+expect fun computeFixed64Size(fieldNumber: Int, value: ULong): Int
+expect fun computeFixed64SizeNoTag(value: ULong): Int
+
+expect fun computeSFixed32Size(fieldNumber: Int, value: Int): Int
+expect fun computeSFixed32SizeNoTag(value: Int): Int
+
+expect fun computeSFixed64Size(fieldNumber: Int, value: Long): Int
+expect fun computeSFixed64SizeNoTag(value: Long): Int
+
+expect fun computeBytesSize(fieldNumber: Int, value: ByteArray): Int
+expect fun computeBytesSizeNoTag(value: ByteArray): Int
+
 expect fun computeMessageSize(fieldNumber: Int, value: KMMessage?): Int
 expect fun computeMessageSizeNoTag(value: KMMessage?): Int
+
+
 
 fun <K, V> computeMapSize(
     fieldNumber: Int,

@@ -8,9 +8,7 @@
 ![badge][badge-ios]
 
 # gRPC Kotlin Multiplatform
-This projects implements client-side gRPC for Android, JVM, iOS and the web.
-
-**⚠️ Warning: This project is still under development and does not support all gRPC features!**
+This projects implements client-side gRPC for Android, JVM, iOS and the JS for browser.
 
 ## Table of contents
 - [Features](#features)
@@ -23,33 +21,44 @@ This projects implements client-side gRPC for Android, JVM, iOS and the web.
 - [License](#license)
 
 ## Features
-- Parses proto3 files and generates Kotlin files for these proto3 files.
-- DSL Syntax for creating proto objects.
-- Suspending rpc calls like in Kotlin/GRPC.
-- Heavily influenced by the Java/Kotlin gRPC and Proto API.
-
-### Supported features:
-- suspending unary-rpc and server side streaming.
-- nested messages
+### Supported rpc types:
+| RPC Type              | Support Status |
+|-----------------------|---------------|
+| Unary                | ✅ Supported  |
+| Server-side Streaming | ✅ Supported  |
+| Client-side Streaming | ⏳ Planned    |
 
 ### Supported proto types:
-- int32
-- int64
-- double
-- float
-- bool
-- string
-- enums
-- map
-- all messages built of these types
+| Proto Type   | Kotlin Type  |
+|-------------|-------------|
+| `double`    | `Double`    |
+| `float`     | `Float`     |
+| `int32`     | `Int`       |
+| `int64`     | `Long`      |
+| `uint32`    | `UInt`      |
+| `uint64`    | `ULong`     |
+| `sint32`    | `Int`       |
+| `sint64`    | `Long`      |
+| `fixed32`   | `UInt`      |
+| `fixed64`   | `ULong`     |
+| `sfixed32`  | `Int`       |
+| `sfixed64`  | `Long`      |
+| `bool`      | `Boolean`   |
+| `string`    | `String`    |
+| `bytes`     | `ByteArray` |
 
-_Feel free to add support for more types, I just implemented those I needed for now._
+### Supported proto options:
+| Proto Option          | Support Status |
+|----------------------|---------------|
+| `java_package`       | ✅ Supported  |
+| `java_outer_classname` | ✅ Supported  |
+| `java_multiple_files` | ✅ Supported  |
+| `deprecated`        | ⏳ Planned    |
+| `packed`           | ⏳ Planned    |
+| `optimize_for`       | ❌ Not Supported |
 
 ## Usage
 This plugin generates a kotlin class for each message/enum defined in the proto files.
-They all start with KM and then have the name of the message/enum.
-
-First, run common:generateMPProtos to generate the multiplatform proto files.
 
 ### Creating proto objects
 In your common module, you can create proto objects like this:

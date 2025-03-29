@@ -23,7 +23,11 @@ fun <T> List<T>.joinToCodeBlock(separator: String, append: CodeBlock.Builder.(T)
     return CodeBlock.builder().apply {
         forEachIndexed { index, value ->
             if (index != 0) add(separator)
-            append(this@apply, value)
+            add(
+                CodeBlock.builder()
+                    .apply { append(value) }
+                    .build()
+            )
         }
     }.build()
 }

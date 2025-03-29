@@ -16,7 +16,7 @@ expect class CodedOutputStream {
 
     fun writeBytes(fieldNumber: Int, value: ByteArray)
 
-    fun writeBytesArray(fieldNumber: Int, value: List<ByteArray>, tag: UInt)
+    fun writeBytesArray(fieldNumber: Int, values: List<ByteArray>,)
 
     fun writeBytesNoTag(value: ByteArray)
 
