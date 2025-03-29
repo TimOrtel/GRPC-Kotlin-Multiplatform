@@ -48,13 +48,13 @@ jobs:
         uses: actions/cache@v4
         with:
           path: grpc-multiplatform-lib/build/cocoapods/synthetic
-          key: lib-cocoapods-synthetic-${{ runner.os }}-${{ hashFiles('grpc-multiplatform-lib/gradle.properties')
+          key: lib-cocoapods-synthetic-${{ runner.os }}-${{ hashFiles('grpc-multiplatform-lib/gradle.properties') }}
 
       - name: Cache Example Common Cocoapods Synthetic Build
         uses: actions/cache@v4
         with:
           path: example/common/build/cocoapods/synthetic
-          key: example-common-cocoapods-synthetic-${{ runner.os }}-${{ hashFiles('grpc-multiplatform-lib/gradle.properties')
+          key: example-common-cocoapods-synthetic-${{ runner.os }}-${{ hashFiles('grpc-multiplatform-lib/gradle.properties') }}
 
       - name: Publish revision to maven local
         run:
