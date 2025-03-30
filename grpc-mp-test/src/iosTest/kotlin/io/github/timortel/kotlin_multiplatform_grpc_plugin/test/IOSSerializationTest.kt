@@ -1,7 +1,7 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.test
 
-import io.github.timortel.kotlin_multiplatform_grpc_lib.message.KMMessage
-import io.github.timortel.kotlin_multiplatform_grpc_lib.message.MessageDeserializer
+import io.github.timortel.kmpgrpc.core.message.KMMessage
+import io.github.timortel.kmpgrpc.core.message.MessageDeserializer
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.basic_messages.*
 import platform.Foundation.NSData
 

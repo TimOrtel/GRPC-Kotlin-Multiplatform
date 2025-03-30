@@ -6,7 +6,7 @@ plugins {
     id("com.google.protobuf")
 }
 
-group = "de.ortel.grpc_multiplatform.jvm"
+group = "io.github.timortel.kmpgrpc.example.jvm"
 version = "1.0-SNAPSHOT"
 
 repositories {

@@ -6,7 +6,7 @@ plugins {
 
 android {
     compileSdk = 35
-    namespace = "io.github.timortel.grpc_multiplaform.example.android"
+    namespace = "io.github.timortel.kmpgrpc.example.android"
 
     defaultConfig {
         minSdk = 23
@@ -15,12 +15,6 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
-    }
-
-    sourceSets {
-        named("main") {
-
-        }
     }
 
     buildFeatures {

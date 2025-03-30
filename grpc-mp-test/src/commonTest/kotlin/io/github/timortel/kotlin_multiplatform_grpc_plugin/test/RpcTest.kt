@@ -1,6 +1,6 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.test
 
-import io.github.timortel.kotlin_multiplatform_grpc_lib.KMChannel
+import io.github.timortel.kmpgrpc.core.KMChannel
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.basic_messages.*
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
@@ -14,7 +14,8 @@ abstract class RpcTest {
     abstract val address: String
     abstract val port: Int
 
-    private val channel: KMChannel get() = KMChannel.Builder
+    private val channel: KMChannel
+        get() = KMChannel.Builder
         .forAddress(address, port)
         .usePlaintext()
         .build()

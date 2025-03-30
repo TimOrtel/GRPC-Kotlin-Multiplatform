@@ -1,6 +1,6 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin
 
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.InputFile
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.InputFile
 import java.io.InputStream
 
 class FakeInputFile(override val name: String, private val content: String) : InputFile {

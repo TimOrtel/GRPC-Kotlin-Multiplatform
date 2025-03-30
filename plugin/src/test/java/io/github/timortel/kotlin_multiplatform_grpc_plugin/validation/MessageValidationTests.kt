@@ -1,6 +1,6 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.validation
 
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.CompilationException
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.CompilationException
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 

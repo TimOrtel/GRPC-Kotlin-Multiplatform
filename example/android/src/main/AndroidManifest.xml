@@ -4,7 +4,7 @@
     <application android:label="Example App"
                  android:usesCleartextTraffic="true">
 
-        <activity android:name="io.github.timortel.grpc_multiplaform.example.android.MainActivity"
+        <activity android:name="io.github.timortel.kmpgrpc.example.android.MainActivity"
                   android:exported="true"
                   android:theme="@style/Theme.AppCompat.NoActionBar">
             <intent-filter>

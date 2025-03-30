@@ -21,11 +21,11 @@ gradlePlugin {
 
     plugins {
         create("kotlin-multiplatform-grpc-plugin") {
-            id = "io.github.timortel.kotlin-multiplatform-grpc-plugin"
+            id = "io.github.timortel.kmpgrpc.plugin"
             displayName = "GRPC Kotlin Multiplatform Plugin"
             description = "Plugin that generates Kotlin multiplatform wrapper classes for GRPC"
 
-            implementationClass = "io.github.timortel.kotlin_multiplatform_grpc_plugin.GrpcMultiplatformPlugin"
+            implementationClass = "io.github.timortel.kmpgrpc.plugin.GrpcMultiplatformPlugin"
             tags = listOf("grpc", "kotlin", "kotlin-multiplatform")
         }
     }
@@ -87,7 +87,7 @@ publishing {
             groupId = project.group as String
             version = project.version as String
 
-            artifactId = "kotlin-multiplatform-grpc-plugin"
+            artifactId = "kmp-grpc-plugin"
         }
     }
 }

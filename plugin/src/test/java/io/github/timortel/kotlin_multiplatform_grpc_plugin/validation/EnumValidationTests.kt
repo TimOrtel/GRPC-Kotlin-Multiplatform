@@ -1,8 +1,8 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.validation
 
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.matchWarning
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.CompilationException
-import io.github.timortel.kotlin_multiplatform_grpc_plugin.sourcegeneration.Warnings
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.CompilationException
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.Warnings
 import io.mockk.verify
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
