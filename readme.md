@@ -205,6 +205,10 @@ kmpGrpc {
     js()
     ios()
 
+    // Optional: if the protobuf well known types should be included
+    // https://protobuf.dev/reference/protobuf/google.protobuf/
+    includeWellKnownTypes = true
+    
     // Specify the folders where your proto files are located, you can list multiple.
     protoSourceFolders = project.files("<source to your protos>")
 }

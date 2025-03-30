@@ -22,12 +22,6 @@ data class ProtoMessage(
 
     override lateinit var parent: ProtoDeclParent
 
-    override val isNested: Boolean
-        get() = when (parent) {
-            is ProtoDeclParent.Message -> true
-            is ProtoDeclParent.File -> super.isNested
-        }
-
     override val file: ProtoFile
         get() {
             return when (val p = parent) {

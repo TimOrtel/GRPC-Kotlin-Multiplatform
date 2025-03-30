@@ -23,4 +23,10 @@ sealed interface ProtoDeclaration : ProtoBaseDeclaration {
                 is ProtoDeclParent.File -> super.className
             }
         }
+
+    override val isNested: Boolean
+        get() = when (parent) {
+            is ProtoDeclParent.Message -> true
+            is ProtoDeclParent.File -> super.isNested
+        }
 }

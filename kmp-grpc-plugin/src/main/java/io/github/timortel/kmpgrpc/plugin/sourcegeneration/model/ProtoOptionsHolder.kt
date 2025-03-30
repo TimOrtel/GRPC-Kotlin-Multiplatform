@@ -14,11 +14,11 @@ interface ProtoOptionsHolder : ProtoNode {
 
     override fun validate() {
         options
-            .filter { option -> option.name !in supportedOptions.map { it.name } }
+            .filter { option -> option.name !in supportedOptions.map { it.name } && option.name !in Options.ignoredOptions }
             .forEach { unsupportedOption ->
                 file.project.logger.warn(
                     Warnings.unsupportedOptionUsed.withMessage(
-                        "${unsupportedOption.ctx.text} at ${
+                        "${unsupportedOption.name} at ${
                             unsupportedOption.ctx.toFilePositionString(file.path)
                         }"
                     )
