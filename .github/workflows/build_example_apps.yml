@@ -25,7 +25,7 @@ jobs:
 
       - name: Publish revision to maven local
         run:
-          ./gradlew :plugin:publishToMavenLocal :kmp-grpc-core:publishToMavenLocal
+          ./gradlew :kmp-grpc-plugin:publishToMavenLocal :kmp-grpc-core:publishToMavenLocal
 
       - name: Build Android app
         run: |
@@ -58,7 +58,7 @@ jobs:
 
       - name: Publish revision to maven local
         run:
-          ./gradlew :plugin:publishToMavenLocal :kmp-grpc-core:publishToMavenLocal
+          ./gradlew :kmp-grpc-plugin:publishToMavenLocal :kmp-grpc-core:publishToMavenLocal
 
       - name: Build common module
         run: |
