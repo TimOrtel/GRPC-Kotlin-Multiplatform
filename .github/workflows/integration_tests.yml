@@ -28,6 +28,9 @@ jobs:
           nohup ./gradlew :kmp-grpc-internal-test:test-server:run &
           echo $! > gradle_pid.txt
 
+      - name: Install grpcurl
+        run: sudo apt update && sudo apt install -y grpcurl
+
       - name: Wait for test-server to be healthy
         run: |
           echo "Waiting for service..."
@@ -64,6 +67,9 @@ jobs:
 
       - name: Start envoy service
         run: docker run -d --rm --name envoy --network host -v $(pwd)/kmp-grpc-internal-test/envoy.yml:/etc/envoy/envoy.yaml -p 8082:8082 envoyproxy/envoy-dev:latest
+
+      - name: Install grpcurl
+        run: sudo apt update && sudo apt install -y grpcurl
 
       - name: Wait for test-server to be healthy
         run: |

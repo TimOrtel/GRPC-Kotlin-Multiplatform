@@ -1,6 +1,7 @@
 package io.github.timortel.kmpgrpc.testserver
 
 import io.github.timortel.kmpgrpc.test.*
+import io.grpc.Server
 import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -9,8 +10,8 @@ import io.grpc.protobuf.services.ProtoReflectionServiceV1
 
 object TestServer {
 
-    fun start() {
-        NettyServerBuilder
+    fun start(): Server {
+        return NettyServerBuilder
             .forPort(17888)
             .addService(ProtoReflectionServiceV1.newInstance())
             .addService(object : TestServiceGrpcKt.TestServiceCoroutineImplBase() {
