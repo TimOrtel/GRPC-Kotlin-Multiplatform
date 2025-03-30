@@ -1,7 +1,7 @@
 rootProject.name = "grpc-kmp"
 
 pluginManagement {
-    includeBuild("plugin")
+    includeBuild("kmp-grpc-plugin")
     includeBuild("pod-build-workaround")
 
     repositories {

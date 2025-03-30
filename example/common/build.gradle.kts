@@ -59,7 +59,7 @@ kotlin {
     }
 }
 
-grpcKotlinMultiplatform {
+kmpGrpc {
     common()
     jvm()
     android()

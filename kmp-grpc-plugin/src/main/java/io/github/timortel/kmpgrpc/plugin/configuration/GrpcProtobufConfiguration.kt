@@ -1,0 +1,76 @@
+package io.github.timortel.kmpgrpc.plugin.configuration
+
+import io.github.timortel.kmpgrpc.plugin.KmpGrpcExtension
+import io.github.timortel.kmpgrpc.plugin.GenerateKmpGrpcSourcesTask
+import org.gradle.api.Project
+import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
+import org.jetbrains.kotlin.gradle.plugin.KotlinMultiplatformPluginWrapper
+import org.jetbrains.kotlin.gradle.tasks.Kotlin2JsCompile
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompileCommon
+import org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile
+
+object GrpcProtobufConfiguration {
+    fun configure(project: Project) {
+        val kmpGrpcExtension =
+            project.extensions.create("kmpGrpc", KmpGrpcExtension::class.java)
+
+        val kotlinExtension = project.extensions.getByType(KotlinMultiplatformExtension::class.java)
+
+        project.tasks.register("generateKmpGrpcSources", GenerateKmpGrpcSourcesTask::class.java) {
+            it.sourceFolders.setFrom(kmpGrpcExtension.protoSourceFolders.from)
+            it.targetSourcesMap.set(kmpGrpcExtension.targetSourcesMap.get().toMap())
+        }
+
+        project.plugins.withType(KotlinMultiplatformPluginWrapper::class.java) {
+            project.afterEvaluate {
+                val generateKmpGrpcSourcesTasks = project.tasks.withType(GenerateKmpGrpcSourcesTask::class.java)
+
+                val targetSourceMap = kmpGrpcExtension.targetSourcesMap.getOrElse(emptyMap())
+
+                targetSourceMap[KmpGrpcExtension.COMMON].orEmpty().forEach {
+                    kotlinExtension.sourceSets.findByName(it)?.kotlin?.srcDir(GenerateKmpGrpcSourcesTask.getCommonOutputFolder(project))
+                }
+
+                targetSourceMap[KmpGrpcExtension.JVM].orEmpty().forEach {
+                    kotlinExtension.sourceSets.findByName(it)?.kotlin?.srcDir(GenerateKmpGrpcSourcesTask.getJVMOutputFolder(project))
+                }
+
+                targetSourceMap[KmpGrpcExtension.JS].orEmpty().forEach {
+                    kotlinExtension.sourceSets.findByName(it)?.kotlin?.srcDir(GenerateKmpGrpcSourcesTask.getJSOutputFolder(project))
+                }
+
+                targetSourceMap[KmpGrpcExtension.IOS].orEmpty().forEach {
+                    kotlinExtension.sourceSets.findByName(it)?.kotlin?.srcDir(GenerateKmpGrpcSourcesTask.getIOSOutputFolder(project))
+                }
+
+                project.tasks.withType(KotlinCompileCommon::class.java).all { kotlinCompile ->
+                    generateKmpGrpcSourcesTasks.forEach { generateProtoTask ->
+                        kotlinCompile.dependsOn(generateProtoTask)
+                    }
+                }
+
+                //JVM
+                project.tasks.withType(KotlinCompile::class.java).all { kotlinCompile ->
+                    generateKmpGrpcSourcesTasks.forEach { generateProtoTask ->
+                        kotlinCompile.dependsOn(generateProtoTask)
+                    }
+                }
+
+                //JS
+                project.tasks.withType(Kotlin2JsCompile::class.java).all { kotlinCompile ->
+                    generateKmpGrpcSourcesTasks.forEach { generateProtoTask ->
+                        kotlinCompile.dependsOn(generateProtoTask)
+                    }
+                }
+
+                //IOS
+                project.tasks.withType(KotlinNativeCompile::class.java).all { kotlinCompile ->
+                    generateKmpGrpcSourcesTasks.forEach { generateProtoTask ->
+                        kotlinCompile.dependsOn(generateProtoTask)
+                    }
+                }
+            }
+        }
+    }
+}

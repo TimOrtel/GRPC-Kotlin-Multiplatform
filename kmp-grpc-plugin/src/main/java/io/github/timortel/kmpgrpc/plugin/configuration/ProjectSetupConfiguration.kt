@@ -1,6 +1,6 @@
 package io.github.timortel.kmpgrpc.plugin.configuration
 
-import io.github.timortel.plugin.VERSION
+import io.github.timortel.kmpgrpc.plugin.VERSION
 import org.gradle.api.Project
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.cocoapods.CocoapodsExtension
@@ -13,7 +13,7 @@ object ProjectSetupConfiguration {
             val kotlinExtension = project.extensions.getByType(KotlinMultiplatformExtension::class.java)
 
             kotlinExtension.sourceSets.findByName("commonMain")?.dependencies {
-                if (project.providers.gradleProperty("io.github.timortel.grpc-kt-mp.internal").orNull != "true") {
+                if (project.providers.gradleProperty("io.github.timortel.kmp-grpc.internal").orNull != "true") {
                     api("io.github.timortel:kmp-grpc-core:$VERSION")
                 }
             }

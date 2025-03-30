@@ -12,7 +12,7 @@ import org.gradle.api.tasks.OutputDirectories
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 
-abstract class GenerateMultiplatformSourcesTask : DefaultTask() {
+abstract class GenerateKmpGrpcSourcesTask : DefaultTask() {
 
     companion object {
         fun getOutputFolder(project: Project): File =
@@ -48,7 +48,7 @@ abstract class GenerateMultiplatformSourcesTask : DefaultTask() {
     fun generateSources() {
         val tsm = targetSourcesMap.get()
 
-        val shouldGenerateTargetMap = GrpcMultiplatformExtension.targets.associateWith { target ->
+        val shouldGenerateTargetMap = KmpGrpcExtension.targets.associateWith { target ->
             tsm[target].orEmpty().isNotEmpty()
         }
 

@@ -2,7 +2,7 @@ package io.github.timortel.kmpgrpc.plugin.sourcegeneration
 
 import io.github.timortel.kmpgrpc.anltr.Protobuf3Lexer
 import io.github.timortel.kmpgrpc.anltr.Protobuf3Parser
-import io.github.timortel.kmpgrpc.plugin.GrpcMultiplatformExtension
+import io.github.timortel.kmpgrpc.plugin.KmpGrpcExtension
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.project.CommonProtoProjectWriter
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.project.IosProtoProjectWriter
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.project.JsProtoProjectWriter
@@ -42,19 +42,19 @@ object ProtoSourceGenerator {
         // Before generating code, validate and print warnings / throw errors
         project.validate()
 
-        if (shouldGenerateTargetMap[GrpcMultiplatformExtension.COMMON] == true) {
+        if (shouldGenerateTargetMap[KmpGrpcExtension.COMMON] == true) {
             CommonProtoProjectWriter.writeProject(project, commonOutputFolder)
         }
 
-        if (shouldGenerateTargetMap[GrpcMultiplatformExtension.JVM] == true) {
+        if (shouldGenerateTargetMap[KmpGrpcExtension.JVM] == true) {
             JvmProtoProjectWriter.writeProject(project, jvmOutputFolder)
         }
 
-        if (shouldGenerateTargetMap[GrpcMultiplatformExtension.JS] == true) {
+        if (shouldGenerateTargetMap[KmpGrpcExtension.JS] == true) {
             JsProtoProjectWriter.writeProject(project, jsOutputFolder)
         }
 
-        if (shouldGenerateTargetMap[GrpcMultiplatformExtension.IOS] == true) {
+        if (shouldGenerateTargetMap[KmpGrpcExtension.IOS] == true) {
             IosProtoProjectWriter.writeProject(project, iosOutputDir)
         }
     }

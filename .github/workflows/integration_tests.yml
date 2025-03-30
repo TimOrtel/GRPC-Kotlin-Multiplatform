@@ -37,7 +37,7 @@ jobs:
           echo "Service is healthy!"
 
       - name: Run tests in plugin module
-        run: ./gradlew :grpc-mp-test:jvmTest
+        run: ./gradlew :kmp-grpc-internal-test:jvmTest
 
       - name: Kill test-server
         run: |
@@ -74,7 +74,7 @@ jobs:
           echo "Service is healthy!"
 
       - name: Run tests in plugin module
-        run: ./gradlew :grpc-mp-test:jsTest --info
+        run: ./gradlew :kmp-grpc-internal-test:jsTest --info
 
       - name: Stop docker services
         run: docker stop envoy
@@ -115,7 +115,7 @@ jobs:
           echo "Service is healthy!"
 
       - name: Run tests in plugin module
-        run: ./gradlew :grpc-mp-test:iosSimulatorArm64Test --info
+        run: ./gradlew :kmp-grpc-internal-test:iosSimulatorArm64Test --info
 
       - name: Kill test-server
         run: |

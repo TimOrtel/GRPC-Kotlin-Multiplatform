@@ -3,7 +3,7 @@ package io.github.timortel.kmpgrpc.plugin
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.provider.MapProperty
 
-abstract class GrpcMultiplatformExtension {
+abstract class KmpGrpcExtension {
 
     companion object {
         internal const val COMMON = "common"

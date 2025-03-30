@@ -5,7 +5,7 @@ import io.github.timortel.kmpgrpc.plugin.configuration.ProjectSetupConfiguration
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 
-class GrpcMultiplatformPlugin : Plugin<Project> {
+class KmpGrpcPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         // Configure project
         ProjectSetupConfiguration.configure(project)

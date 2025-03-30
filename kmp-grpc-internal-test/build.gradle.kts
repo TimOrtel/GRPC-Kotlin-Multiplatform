@@ -114,7 +114,7 @@ android {
     }
 }
 
-grpcKotlinMultiplatform {
+kmpGrpc {
     common()
     jvm()
     android()

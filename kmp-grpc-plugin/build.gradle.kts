@@ -20,12 +20,12 @@ gradlePlugin {
     vcsUrl = "https://github.com/TimOrtel/GRPC-Kotlin-Multiplatform.git"
 
     plugins {
-        create("kotlin-multiplatform-grpc-plugin") {
+        create("kmp-grpc-plugin") {
             id = "io.github.timortel.kmpgrpc.plugin"
-            displayName = "GRPC Kotlin Multiplatform Plugin"
-            description = "Plugin that generates Kotlin multiplatform wrapper classes for GRPC"
+            displayName = "gRPC Kotlin Multiplatform Plugin"
+            description = "Plugin that generates Kotlin multiplatform wrapper classes for gRPC"
 
-            implementationClass = "io.github.timortel.kmpgrpc.plugin.GrpcMultiplatformPlugin"
+            implementationClass = "io.github.timortel.kmpgrpc.plugin.KmpGrpcPlugin"
             tags = listOf("grpc", "kotlin", "kotlin-multiplatform")
         }
     }
@@ -60,6 +60,8 @@ dependencies {
 }
 
 buildConfig {
+    packageName("io.github.timortel.kmpgrpc.plugin")
+
     useKotlinOutput {
         internalVisibility = true
         topLevelConstants = true

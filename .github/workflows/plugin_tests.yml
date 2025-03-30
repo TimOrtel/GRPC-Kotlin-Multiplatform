@@ -24,4 +24,4 @@ jobs:
           java-version: '17'
 
       - name: Run tests in plugin module
-        run: ./gradlew :plugin:test
+        run: ./gradlew :kmp-grpc-plugin:test

@@ -1,5 +1,5 @@
 [![GitHub license](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg?style=flat)](http://www.apache.org/licenses/LICENSE-2.0)
-[![Download](https://img.shields.io/maven-central/v/io.github.timortel/kmp-grpc-core) ](https://central.sonatype.com/artifact/io.github.timortel/grpc-multiplatform-core)
+[![Download](https://img.shields.io/maven-central/v/io.github.timortel/kmp-grpc-core) ](https://central.sonatype.com/artifact/io.github.timortel/kmp-grpc-core)
 ![version](https://img.shields.io/badge/version-0.5.0-blue)
 
 ![badge][badge-android]
@@ -150,7 +150,7 @@ plugins {
     kotlin("multiplatform")
 
     //...
-    id("io.github.timortel.kotlin-multiplatform-grpc-plugin") version "<latest version>"
+    id("io.github.timortel.kmp-grpc-plugin") version "<latest version>"
 
     // Required when targeting iOS
     kotlin("native.cocoapods")
@@ -197,7 +197,7 @@ kotlin {
     // ...
 }
 
-grpcKotlinMultiplatform {
+kmpGrpc {
     // declare the targets you need.
     common() // required
     jvm()
@@ -225,7 +225,7 @@ See an example implementation of an Android app and an iOS app in the `example` 
 ## Building locally
 Run the following Gradle commands:
 1. To build the library `gradle kmp-grpc-core:publishToMavenLocal`
-2. To build the plugin `gradle plugin:publishToMavenLocal`
+2. To build the plugin `gradle kmp-grpc-plugin:publishToMavenLocal`
 
 ## Contributing
 Feel free to implement improvements, bug fixes and features and create a pull request.
