@@ -14,7 +14,7 @@ object ProjectSetupConfiguration {
 
             kotlinExtension.sourceSets.findByName("commonMain")?.dependencies {
                 if (project.providers.gradleProperty("io.github.timortel.grpc-kt-mp.internal").orNull != "true") {
-                    api("io.github.timortel:grpc-multiplatform-lib:$VERSION")
+                    api("io.github.timortel:kmp-grpc-core:$VERSION")
                 }
             }
 

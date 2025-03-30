@@ -5,5 +5,3 @@ dependencyResolutionManagement {
         }
     }
 }
-
-include(":test-server")

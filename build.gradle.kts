@@ -21,5 +21,5 @@ plugins {
 //Called by jitpack
 tasks.register("publishToMavenLocal") {
     //No need to publish the plugin itself
-    dependsOn(":grpc-multiplatform-lib:publishToMavenLocal")
+    dependsOn(":kmp-grpc-core:publishToMavenLocal")
 }
