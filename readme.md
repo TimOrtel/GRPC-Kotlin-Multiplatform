@@ -64,6 +64,22 @@ This projects implements client-side gRPC for Android, JVM, iOS and the JS for b
 | Enums        | ✅ Supported  |
 | Services     | ✅ Supported  |
 
+### Well-known types:
+For reference, see [the official documentation](https://protobuf.dev/reference/protobuf/google.protobuf/).
+
+| Protobuf Type        | Supported     |
+|----------------------|---------------|
+| `any.proto`         | ✅ Supported   |
+| `api.proto`         | ✅ Supported   |
+| `duration.proto`    | ✅ Supported   |
+| `empty.proto`       | ✅ Supported   |
+| `field_mask.proto`  | ✅ Supported   |
+| `source_context.proto` | ✅ Supported   |
+| `struct.proto`      | ✅ Supported   |
+| `timestamp.proto`   | ✅ Supported   |
+| `type.proto`        | ✅ Supported   |
+| `wrappers.proto`    | ✅ Supported   |
+
 ### Additional Features
 - ✅ Generates DSL syntax to create messages
 
@@ -128,6 +144,71 @@ The request syntax is very similar to the one provided by gRPC Java. Add this co
          "An exception occurred: $e"
      }
 }
+```
+
+### Working with well known types
+
+#### `Any` Message Extensions
+
+##### Example: `wrap`
+Wraps a message inside an `Any` message.
+```kotlin
+val myMessage = myMessage {} // Some message
+val wrapped = Any.wrap(myMessage)
+```
+
+##### Example: `unwrap`
+Extracts a message from an `Any` object.
+```kotlin
+val extractedMessage: MyMessage = wrapped.unwrap(MyMessage.Companion)
+```
+
+##### Example: `isType`
+Checks if an `Any` object holds a specific message type.
+```kotlin
+if (wrapped.isType(MyMessage.Companion)) {
+    println("The message is of type MyMessage")
+}
+```
+
+#### `Duration` Extensions
+
+##### Example: `ofSeconds`
+Creates a `Duration` from seconds.
+```kotlin
+val duration = Duration.ofSeconds(120)
+```
+
+##### Example: `ofMillis`
+Creates a `Duration` from milliseconds.
+```kotlin
+val duration = Duration.ofMillis(500)
+```
+
+##### Example: `fromDuration`
+Creates a `Duration` from `kotlin.time.Duration`.
+```kotlin
+val duration = Duration.fromDuration(1.5.seconds)
+```
+
+##### Example: `toDuration`
+Converts a `Duration` to `kotlin.time.Duration`.
+```kotlin
+val kotlinDuration: kotlin.time.Duration = duration.toDuration()
+```
+
+#### `Timestamp` Extensions
+
+##### Example: `fromInstant`
+Creates a `Timestamp` from `Instant`.
+```kotlin
+val timestamp = Timestamp.fromInstant(Instant.now())
+```
+
+##### Example: `toInstant`
+Converts a `Timestamp` to `Instant`.
+```kotlin
+val instant: Instant = timestamp.toInstant()
 ```
 
 ## Setup
