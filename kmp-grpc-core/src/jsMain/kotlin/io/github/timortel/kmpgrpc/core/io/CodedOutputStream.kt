@@ -4,7 +4,7 @@ import io.github.timortel.kmpgrpc.core.JSPB
 import io.github.timortel.kmpgrpc.core.message.KMMessage
 import io.github.timortel.kmpgrpc.core.message.KmEnum
 import io.github.timortel.kmpgrpc.core.message.serializeMessage
-import org.khronos.webgl.Uint8Array
+import io.github.timortel.kmpgrpc.core.util.native
 
 actual class CodedOutputStream(internal val impl: JSPB.BinaryWriter) {
 
@@ -21,16 +21,16 @@ actual class CodedOutputStream(internal val impl: JSPB.BinaryWriter) {
     }
 
     actual fun writeBytes(fieldNumber: Int, value: ByteArray) {
-        impl.writeBytes(fieldNumber, Uint8Array(value.toTypedArray()))
+        impl.writeBytes(fieldNumber, value.native)
     }
 
     actual fun writeBytesArray(fieldNumber: Int, values: List<ByteArray>) {
-        val value = values.map { Uint8Array(it.toTypedArray()) }.toTypedArray()
+        val value = values.map { it.native }.toTypedArray()
         impl.writeRepeatedBytes(fieldNumber, value)
     }
 
     actual fun writeBytesNoTag(value: ByteArray) {
-        impl.appendUint8Array(Uint8Array(value.toTypedArray()))
+        impl.appendUint8Array(value.native)
     }
 
     actual fun writeDouble(fieldNumber: Int, value: Double) {

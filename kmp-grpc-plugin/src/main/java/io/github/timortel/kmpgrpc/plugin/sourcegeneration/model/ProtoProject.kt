@@ -4,6 +4,7 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.Prot
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.structure.ProtoFolder
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.structure.ProtoPackage
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
 import org.slf4j.Logger
 
 data class ProtoProject(val rootFolder: ProtoFolder, val logger: Logger) : ProtoNode {

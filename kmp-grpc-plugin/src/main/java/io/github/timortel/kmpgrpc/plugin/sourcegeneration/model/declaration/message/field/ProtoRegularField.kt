@@ -1,6 +1,6 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field
 
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoType
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.capitalize
 
 sealed class ProtoRegularField : ProtoBaseField() {

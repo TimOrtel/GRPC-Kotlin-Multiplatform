@@ -4,6 +4,7 @@ import io.github.timortel.kmpgrpc.plugin.DownloadWellKnownTypesTask
 import io.github.timortel.kmpgrpc.plugin.KmpGrpcExtension
 import io.github.timortel.kmpgrpc.plugin.GenerateKmpGrpcSourcesTask
 import org.gradle.api.Project
+import org.gradle.jvm.tasks.Jar
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinMultiplatformPluginWrapper
 import org.jetbrains.kotlin.gradle.tasks.Kotlin2JsCompile
@@ -27,7 +28,7 @@ object GrpcProtobufConfiguration {
     private fun configureSourceGeneration(project: Project, kmpGrpcExtension: KmpGrpcExtension) {
         val kotlinExtension = project.extensions.getByType(KotlinMultiplatformExtension::class.java)
 
-        project.tasks.register("generateKmpGrpcSources", GenerateKmpGrpcSourcesTask::class.java) {
+        val generateSourcesTask = project.tasks.register("generateKmpGrpcSources", GenerateKmpGrpcSourcesTask::class.java) {
             it.sourceFolders.setFrom(kmpGrpcExtension.protoSourceFolders.from)
             it.targetSourcesMap.set(kmpGrpcExtension.targetSourcesMap.get().toMap())
             it.includeWellKnownTypes.set(kmpGrpcExtension.includeWellKnownTypes.get())
@@ -99,6 +100,12 @@ object GrpcProtobufConfiguration {
                 }
             }
         }
+
+        project.afterEvaluate {
+            project.tasks.withType(Jar::class.java).forEach { jarTask ->
+                jarTask.dependsOn(generateSourcesTask)
+            }
+        }
     }
 
     private fun configureDownloadWellKnownTypes(project: Project, kmpGrpcExtension: KmpGrpcExtension) {
@@ -114,6 +121,5 @@ object GrpcProtobufConfiguration {
                 }
             }
         }
-
     }
 }

@@ -2,6 +2,8 @@
 
 package io.github.timortel.kmpgrpc.core.rpc
 
+import org.khronos.webgl.Uint8Array
+
 external class GrpcWebClientBase(options: ClientOptions) {
     fun rpcCall(
         method: String,
@@ -37,5 +39,5 @@ external class MethodDescriptor(
     requestType: dynamic,
     responseType: dynamic,
     requestSerializeFn: dynamic,
-    responseDeserializeFn: dynamic
+    responseDeserializeFn: (Uint8Array) -> Any
 )

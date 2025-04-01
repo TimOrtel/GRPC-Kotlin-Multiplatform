@@ -2,7 +2,7 @@ package io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.
 
 import com.squareup.kotlinpoet.*
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.Const
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.IosJvmProtoMessageWriteBase
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.serialization.RequiredSizePropertyExtension
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.ProtoOneOf
 
 object JvmIosProtoOneOfWriter : ActualProtoOneOfWriter() {
@@ -25,7 +25,7 @@ object JvmIosProtoOneOfWriter : ActualProtoOneOfWriter() {
                 )
                 .initializer(
                     when (childClassType) {
-                        is ChildClassType.Normal -> IosJvmProtoMessageWriteBase.getCodeForRequiredSizeForScalarAttributeC(
+                        is ChildClassType.Normal -> RequiredSizePropertyExtension.getCodeForRequiredSizeForScalarAttributeC(
                             childClassType.field
                         )
 

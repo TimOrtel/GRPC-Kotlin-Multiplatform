@@ -6,7 +6,7 @@ import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.CodedOutputStream
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.Const
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.ActualProtoMessageWriter
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.serialization.SerializationFunctionExtension
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.ProtoOneOf
 
 abstract class ActualProtoOneOfWriter : ProtoOneOfWriter(true) {
@@ -25,7 +25,7 @@ abstract class ActualProtoOneOfWriter : ProtoOneOfWriter(true) {
         addSerializeFunction(builder, listOf(KModifier.OVERRIDE)) {
             when (childClassType) {
                 is ChildClassType.Normal -> addCode(
-                    ActualProtoMessageWriter.getWriteScalarFieldCode(
+                    SerializationFunctionExtension.getWriteScalarFieldCode(
                         childClassType.field,
                         Const.Message.OneOf.SERIALIZE_FUNCTION_STREAM_PARAM_NAME,
                         performIsFieldSetCheck = false

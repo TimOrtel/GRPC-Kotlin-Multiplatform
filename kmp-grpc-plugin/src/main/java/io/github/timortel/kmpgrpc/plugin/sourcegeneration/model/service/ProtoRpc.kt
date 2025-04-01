@@ -6,7 +6,7 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.decapitalize
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOption
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOptionsHolder
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoType
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
 
 data class ProtoRpc(
     val name: String,

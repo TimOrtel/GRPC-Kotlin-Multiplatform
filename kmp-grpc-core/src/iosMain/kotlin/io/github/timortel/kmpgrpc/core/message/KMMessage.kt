@@ -2,6 +2,7 @@ package io.github.timortel.kmpgrpc.core.message
 
 import cocoapods.Protobuf.GPBCodedOutputStream
 import io.github.timortel.kmpgrpc.core.io.CodedOutputStream
+import io.github.timortel.kmpgrpc.core.util.common
 import platform.Foundation.NSData
 import platform.Foundation.NSMutableData
 
@@ -15,15 +16,21 @@ actual interface KMMessage {
      */
     val requiredSize: Int
 
+    actual val fullName: String
+
     /**
      * Serializes this message and returns it as [NSData].
      */
-    fun serialize(): NSData {
+    fun serializeNative(): NSData {
         val data = NSMutableData().apply { setLength(requiredSize.toULong()) }
         val stream = GPBCodedOutputStream(data)
         serialize(CodedOutputStream(stream))
 
         return data
+    }
+
+    actual fun serialize(): ByteArray {
+        return serializeNative().common
     }
 
     /**

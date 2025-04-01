@@ -3,7 +3,7 @@ package io.github.timortel.kmpgrpc.core.io
 import io.github.timortel.kmpgrpc.core.JSPB
 import io.github.timortel.kmpgrpc.core.message.DataType
 import io.github.timortel.kmpgrpc.core.message.KMMessage
-import org.khronos.webgl.Int8Array
+import io.github.timortel.kmpgrpc.core.util.common
 import org.khronos.webgl.Uint8Array
 
 actual class CodedInputStream(
@@ -107,7 +107,7 @@ actual class CodedInputStream(
 
     actual fun readBytes(): ByteArray {
         val bytes = impl.readBytes() as Uint8Array
-        return Int8Array(bytes.buffer, bytes.byteOffset, bytes.length).unsafeCast<ByteArray>()
+        return bytes.common
     }
 
     actual fun readByteArray(): ByteArray = throw NotImplementedError()

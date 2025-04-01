@@ -62,7 +62,7 @@ abstract class GenerateKmpGrpcSourcesTask : DefaultTask() {
         val outputFolder = getOutputFolder(project)
         outputFolder.mkdirs()
 
-        val wellKnownTypeFolders = if(includeWellKnownTypes.get()) {
+        val wellKnownTypeFolders = if (includeWellKnownTypes.get()) {
             listOf(SystemInputFile(getWellKnownTypesFolder(project)))
         } else emptyList()
 
@@ -77,5 +77,25 @@ abstract class GenerateKmpGrpcSourcesTask : DefaultTask() {
             jsOutputFolder = getJSOutputFolder(project),
             iosOutputDir = getIOSOutputFolder(project)
         )
+
+        if (includeWellKnownTypes.get()) {
+            copyWellKnownExtensions()
+        }
+    }
+
+    private fun copyWellKnownExtensions() {
+        val path = "io/github/timortel/kmpgrpc/wkt/ext"
+        val files = listOf("Any.kt", "Duration.kt", "Timestamp.kt", "Wrappers.kt")
+
+        val outputDir = getCommonOutputFolder(project).resolve(path)
+        outputDir.mkdirs()
+
+        files.forEach { file ->
+            GenerateKmpGrpcSourcesTask::class.java.classLoader.getResourceAsStream("$path/$file")?.use { input ->
+                outputDir.resolve(file).outputStream().use { output ->
+                    input.copyTo(output)
+                }
+            }
+        }
     }
 }

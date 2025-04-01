@@ -11,6 +11,7 @@ val kmTimeUnit = ClassName(PACKAGE_UTIL, "TimeUnit")
 
 val JSImpl = ClassName(PACKAGE_MESSAGE, "JSImpl")
 val MessageDeserializer = ClassName(PACKAGE_MESSAGE, "MessageDeserializer")
+val MessageCompanion = ClassName(PACKAGE_MESSAGE, "KMMessageCompanion")
 
 val kmMessage = ClassName(PACKAGE_MESSAGE, "KMMessage")
 val kmEnum = ClassName(PACKAGE_MESSAGE, "KmEnum")

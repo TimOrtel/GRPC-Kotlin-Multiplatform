@@ -1,8 +1,8 @@
 package io.github.timortel.kmpgrpc.core.message
 
 /**
- * Construct a the message of type [T] based on the data of type [T].
+ * Construct a message of type [T].
  */
-interface MessageDeserializer<T : KMMessage, K> {
-    fun deserialize(`data`: K): T
+expect interface MessageDeserializer<T : KMMessage> {
+    open fun deserialize(`data`: ByteArray): T
 }

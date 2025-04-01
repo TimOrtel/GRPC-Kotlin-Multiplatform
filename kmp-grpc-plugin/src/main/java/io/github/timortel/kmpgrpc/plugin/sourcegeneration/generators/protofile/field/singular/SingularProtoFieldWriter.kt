@@ -1,7 +1,7 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.field.singular
 
 import com.squareup.kotlinpoet.*
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoType
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoFieldCardinality
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoMessageField
 
