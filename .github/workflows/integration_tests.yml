@@ -29,7 +29,7 @@ jobs:
           echo $! > gradle_pid.txt
 
       - name: Install grpcurl
-        run: sudo apt update && sudo apt install -y grpcurl
+        run: go install github.com/fullstorydev/grpcurl/cmd/grpcurl@latest
 
       - name: Wait for test-server to be healthy
         run: |
@@ -69,7 +69,7 @@ jobs:
         run: docker run -d --rm --name envoy --network host -v $(pwd)/kmp-grpc-internal-test/envoy.yml:/etc/envoy/envoy.yaml -p 8082:8082 envoyproxy/envoy-dev:latest
 
       - name: Install grpcurl
-        run: sudo apt update && sudo apt install -y grpcurl
+        run: go install github.com/fullstorydev/grpcurl/cmd/grpcurl@latest
 
       - name: Wait for test-server to be healthy
         run: |
