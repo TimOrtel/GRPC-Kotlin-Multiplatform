@@ -78,7 +78,8 @@ abstract class GenerateKmpGrpcSourcesTask : DefaultTask() {
             iosOutputDir = getIOSOutputFolder(project)
         )
 
-        if (includeWellKnownTypes.get()) {
+        val skipExtensionLibPropName = "io.github.timortel.kmp-grpc.internal.${project.name}.skip-wkt-ext"
+        if (includeWellKnownTypes.get() && project.providers.gradleProperty(skipExtensionLibPropName).orNull != "true") {
             copyWellKnownExtensions()
         }
     }

@@ -1,0 +1,33 @@
+name: Well known Extensions Tests
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Cache Lib Cocoapods Synthetic Build
+        uses: actions/cache@v4
+        with:
+          path: kmp-grpc-wellknown-ext/build/cocoapods/synthetic
+          key: lib-cocoapods-synthetic-${{ runner.os }}-${{ hashFiles('kmp-grpc-core/gradle.properties') }}
+
+      - name: Run tests in plugin module
+        run: ./gradlew :kmp-grpc-wellknown-ext:test
