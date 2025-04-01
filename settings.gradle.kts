@@ -1,7 +1,7 @@
-rootProject.name = "kotlin-multiplatform-grpc-plugin"
+rootProject.name = "grpc-kmp"
 
 pluginManagement {
-    includeBuild("plugin")
+    includeBuild("kmp-grpc-plugin")
     includeBuild("pod-build-workaround")
 
     repositories {
@@ -18,5 +18,6 @@ pluginManagement {
     }
 }
 
-include("grpc-multiplatform-lib")
-include("grpc-mp-test")
+include("kmp-grpc-core")
+include("kmp-grpc-internal-test")
+include("kmp-grpc-internal-test:test-server")

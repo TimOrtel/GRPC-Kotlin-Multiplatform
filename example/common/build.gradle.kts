@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.plugin.mpp.NativeBuildType
-
 val libVersion = "0.5.0"
 
 plugins {
@@ -7,10 +5,10 @@ plugins {
     id("com.android.library")
     kotlin("native.cocoapods")
 
-    id("io.github.timortel.kotlin-multiplatform-grpc-plugin") version "0.5.0"
+    id("io.github.timortel.kmpgrpc.plugin") version "0.5.0"
 }
 
-group = "io.github.timortel.grpc_multiplaform.example.common"
+group = "io.github.timortel.kmpgrpc.example.common"
 version = "1.0-SNAPSHOT"
 
 repositories {
@@ -61,7 +59,7 @@ kotlin {
     }
 }
 
-grpcKotlinMultiplatform {
+kmpGrpc {
     common()
     jvm()
     android()

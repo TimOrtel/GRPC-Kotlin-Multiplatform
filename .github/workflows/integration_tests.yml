@@ -24,13 +24,27 @@ jobs:
           java-version: '17'
 
       - name: Start test-server
-        run: docker compose -f docker-tests/js-tests.yml up -d test-server
+        run: |
+          nohup ./gradlew :kmp-grpc-internal-test:test-server:run &
+          echo $! > gradle_pid.txt
+
+      - name: Wait for test-server to be healthy
+        timeout-minutes: 10
+        run: |
+          docker pull fullstorydev/grpcurl:latest
+          echo "Waiting for service..."
+          while ! docker run --network host fullstorydev/grpcurl -plaintext localhost:17888 io.github.timortel.kmpgrpc.test.TestService/emptyRpc | grep -q "{}"; do
+            sleep 5
+          done
+          echo "Service is healthy!"
 
       - name: Run tests in plugin module
-        run: ./gradlew :grpc-mp-test:jvmTest
+        run: ./gradlew :kmp-grpc-internal-test:jvmTest
 
-      - name: Stop docker services
-        run: docker compose -f docker-tests/js-tests.yml down
+      - name: Kill test-server
+        run: |
+          PID=$(cat gradle_pid.txt)
+          kill $PID
         if: always()
 
   test-js:
@@ -45,14 +59,29 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Start envoy And test-server
-        run: docker compose -f docker-tests/js-tests.yml up -d envoy test-server
+      - name: Start test-server
+        run: |
+          nohup ./gradlew :kmp-grpc-internal-test:test-server:run &
+          echo $! > gradle_pid.txt
+
+      - name: Start envoy service
+        run: docker run -d --rm --name envoy --network host -v $(pwd)/kmp-grpc-internal-test/envoy.yml:/etc/envoy/envoy.yaml -p 8082:8082 envoyproxy/envoy-dev:latest
+
+      - name: Wait for test-server to be healthy
+        timeout-minutes: 10
+        run: |
+          docker pull fullstorydev/grpcurl:latest
+          echo "Waiting for service..."
+          while ! docker run --network host fullstorydev/grpcurl -plaintext localhost:17888 io.github.timortel.kmpgrpc.test.TestService/emptyRpc | grep -q "{}"; do
+            sleep 5
+          done
+          echo "Service is healthy!"
 
       - name: Run tests in plugin module
-        run: ./gradlew :grpc-mp-test:jsTest
+        run: ./gradlew :kmp-grpc-internal-test:jsTest --info
 
       - name: Stop docker services
-        run: docker compose -f docker-tests/js-tests.yml down
+        run: docker stop envoy
         if: always()
 
   test-ios:
@@ -72,27 +101,28 @@ jobs:
 
       - name: Start test-server
         run: |
-          nohup ./gradlew :buildSrc:test-server:run &
+          nohup ./gradlew :kmp-grpc-internal-test:test-server:run &
           echo $! > gradle_pid.txt
 
       - name: Cache Lib Cocoapods Synthetic Build
         uses: actions/cache@v4
         with:
-          path: grpc-multiplatform-lib/build/cocoapods/synthetic
-          key: lib-cocoapods-synthetic-${{ runner.os }}-${{ hashFiles('grpc-multiplatform-lib/gradle.properties') }}
+          path: kmp-grpc-core/build/cocoapods/synthetic
+          key: lib-cocoapods-synthetic-${{ runner.os }}-${{ hashFiles('kmp-grpc-core/gradle.properties') }}
 
       - name: Wait for test-server to be healthy
         run: |
           echo "Waiting for service..."
-          while ! grpcurl -plaintext localhost:17888 io.github.timortel.kotlin_multiplatform_grpc_plugin.test.basic_messages.TestService/emptyRpc | grep -q "{}"; do
+          while ! grpcurl -plaintext localhost:17888 io.github.timortel.kmpgrpc.test.TestService/emptyRpc | grep -q "{}"; do
             sleep 5
           done
           echo "Service is healthy!"
 
       - name: Run tests in plugin module
-        run: ./gradlew :grpc-mp-test:iosSimulatorArm64Test --info
+        run: ./gradlew :kmp-grpc-internal-test:iosSimulatorArm64Test --info
 
       - name: Kill test-server
         run: |
           PID=$(cat gradle_pid.txt)
           kill $PID
+        if: always()
