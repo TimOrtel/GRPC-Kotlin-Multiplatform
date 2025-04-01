@@ -1,13 +1,20 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message
 
 import com.squareup.kotlinpoet.*
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.SourceTarget
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.Const
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.MessageCompanion
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.MessageDeserializer
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.kmMessage
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.enumeration.ProtoEnumerationWriter
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.field.ProtoFieldWriter
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.MessageWriterExtension
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.serialization.DeserializationFunctionExtension
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.serialization.NativeDeserializationFunctionExtension
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.serialization.RequiredSizePropertyExtension
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.serialization.SerializationFunctionExtension
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.oneof.ProtoOneOfWriter
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.service.ProtoServiceWriter
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.kmMessage
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoMessage
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.ProtoMessageProperty
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoFieldCardinality
@@ -24,11 +31,16 @@ abstract class ProtoMessageWriter(private val isActual: Boolean) {
 
     abstract val protoEnumerationWriter: ProtoEnumerationWriter
 
-    abstract val protoServiceWriter: ProtoServiceWriter
+    abstract val target: SourceTarget
 
     open val additionalSuperinterfaces: List<TypeName> = emptyList()
 
-    open fun modifyTopLevelFile(builder: FileSpec.Builder, file: ProtoFile) = Unit
+    private val extensions: List<MessageWriterExtension> = listOf(
+        SerializationFunctionExtension(),
+        RequiredSizePropertyExtension(),
+        NativeDeserializationFunctionExtension(),
+        DeserializationFunctionExtension()
+    )
 
     /**
      * Recursive function that adds a proto message class.
@@ -102,6 +114,20 @@ abstract class ProtoMessageWriter(private val isActual: Boolean) {
                         }
                         .build()
                 )
+
+                addType(
+                    TypeSpec.companionObjectBuilder()
+                        .addSuperinterface(MessageDeserializer.parameterizedBy(message.className))
+                        .addSuperinterface(MessageCompanion.parameterizedBy(message.className))
+                        .apply {
+                            applyToCompanionObject(this, message)
+
+                            callMessageWriterExtensions(message) { it.applyToCompanionObject(this, message, target) }
+                        }
+                        .build()
+                )
+
+                callMessageWriterExtensions(message) { it.applyToClass(this, message, target) }
             }
             .build()
     }
@@ -189,5 +215,11 @@ abstract class ProtoMessageWriter(private val isActual: Boolean) {
                 addStatement("return result")
             }
         }
+    }
+
+    abstract fun applyToCompanionObject(builder: TypeSpec.Builder, message: ProtoMessage)
+
+    protected fun callMessageWriterExtensions(message: ProtoMessage, call: (MessageWriterExtension) -> Unit) {
+        extensions.filter { it.appliesTo(message, target) }.forEach { call(it) }
     }
 }

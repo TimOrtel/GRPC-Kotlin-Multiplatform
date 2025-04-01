@@ -30,9 +30,9 @@ suspend fun <REQ : KMMessage, RES : KMMessage> unaryCallImplementation(
     callOptions: GRPCCallOptions,
     path: String,
     request: REQ,
-    responseDeserializer: MessageDeserializer<RES, NSData>
+    responseDeserializer: MessageDeserializer<RES>
 ): RES {
-    val data = request.serialize()
+    val data = request.serializeNative()
 
     return suspendCancellableCoroutine { continuation ->
         val handler = UnaryCallHandler(
@@ -81,7 +81,7 @@ fun <REQ : KMMessage, RES : KMMessage> serverSideStreamingCallImplementation(
     callOptions: GRPCCallOptions,
     path: String,
     request: REQ,
-    responseDeserializer: MessageDeserializer<RES, NSData>
+    responseDeserializer: MessageDeserializer<RES>
 ): Flow<RES> {
     return callbackFlow {
         val handler = StreamingCallHandler(
@@ -107,7 +107,7 @@ fun <REQ : KMMessage, RES : KMMessage> serverSideStreamingCallImplementation(
         val call = GRPCCall2(channel.buildRequestOptions(path), handler, channel.applyToCallOptions(callOptions))
 
         call.start()
-        call.writeData(request.serialize())
+        call.writeData(request.serializeNative())
         call.finish()
 
         awaitClose {

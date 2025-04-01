@@ -6,7 +6,7 @@ import io.github.timortel.kmpgrpc.test.*
 
 class JSSerializationTest : SerializationTest() {
 
-    private fun <T : KMMessage> serializeImpl(msg: T, deserializer: MessageDeserializer<T, dynamic>): T {
+    private fun <T : KMMessage> serializeImpl(msg: T, deserializer: MessageDeserializer<T>): T {
         val buffer = msg.serialize()
         return deserializer.deserialize(buffer)
     }

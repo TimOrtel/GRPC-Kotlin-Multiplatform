@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package io.github.timortel.test;
+
+message A {
+  string someString = 1;
+  bool someBool = 2;
+  B someB = 3;
+}
+
+message B {
+  int32 someInt = 1;
+}

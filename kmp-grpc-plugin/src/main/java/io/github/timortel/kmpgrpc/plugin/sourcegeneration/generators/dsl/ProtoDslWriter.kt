@@ -2,12 +2,11 @@ package io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.dsl
 
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.capitalize
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.decapitalize
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.Const
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoMessage
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoFieldCardinality
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.capitalize
 import java.io.File
 
 abstract class ProtoDslWriter(private val isActual: Boolean) {
@@ -49,7 +48,7 @@ abstract class ProtoDslWriter(private val isActual: Boolean) {
 
         val dslBuilderClassName = "${message.name.capitalize()}DSL"
         val dslBuilderClassType =
-            currentClass?.nestedClass(dslBuilderClassName) ?: ClassName(message.file.`package`.orEmpty(), dslBuilderClassName)
+            currentClass?.nestedClass(dslBuilderClassName) ?: ClassName(message.file.javaPackage, dslBuilderClassName)
 
         addType(
             TypeSpec
@@ -164,7 +163,7 @@ abstract class ProtoDslWriter(private val isActual: Boolean) {
         if (!isActual) {
             addTopLevelFunction(
                 FunSpec
-                    .builder(message.name.decapitalize())
+                    .builder(message.dslBuildFunction)
                     .addModifiers(KModifier.INLINE)
                     .addParameter(
                         "builderDsl",

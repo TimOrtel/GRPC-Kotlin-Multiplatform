@@ -6,7 +6,7 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.CompilationException
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoImport
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOption
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoType
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoEnum
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoMessage
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.enumeration.ProtoEnumField
@@ -65,7 +65,12 @@ class Protobuf3ModelBuilderVisitor(
     }
 
     override fun visitOptionStatement(ctx: Protobuf3Parser.OptionStatementContext): ProtoOption {
-        return ProtoOption(ctx.optionName().text, ctx.constant().text, ctx)
+        val constant = ctx.constant().text
+        val value = if (constant.startsWith("\"") && constant.endsWith("\"")) {
+            constant.substring(1, constant.length - 1)
+        } else constant
+
+        return ProtoOption(ctx.optionName().text, value, ctx)
     }
 
     // Message parsing
@@ -336,65 +341,65 @@ class Protobuf3ModelBuilderVisitor(
 
     override fun visit(tree: ParseTree): Any = Unit
 
-    override fun visitChildren(node: RuleNode?): Any= Unit
+    override fun visitChildren(node: RuleNode?): Any = Unit
 
-    override fun visitTerminal(node: TerminalNode?): Any= Unit
+    override fun visitTerminal(node: TerminalNode?): Any = Unit
 
-    override fun visitErrorNode(node: ErrorNode?): Any= Unit
+    override fun visitErrorNode(node: ErrorNode?): Any = Unit
 
-    override fun visitSyntax(ctx: Protobuf3Parser.SyntaxContext?): Any= Unit
+    override fun visitSyntax(ctx: Protobuf3Parser.SyntaxContext?): Any = Unit
 
-    override fun visitPackageStatement(ctx: Protobuf3Parser.PackageStatementContext?): Any= Unit
+    override fun visitPackageStatement(ctx: Protobuf3Parser.PackageStatementContext?): Any = Unit
 
-    override fun visitOptionName(ctx: Protobuf3Parser.OptionNameContext?): Any= Unit
+    override fun visitOptionName(ctx: Protobuf3Parser.OptionNameContext?): Any = Unit
 
-    override fun visitFieldLabel(ctx: Protobuf3Parser.FieldLabelContext?): Any= Unit
+    override fun visitFieldLabel(ctx: Protobuf3Parser.FieldLabelContext?): Any = Unit
 
-    override fun visitFieldNumber(ctx: Protobuf3Parser.FieldNumberContext?): Any= Unit
+    override fun visitFieldNumber(ctx: Protobuf3Parser.FieldNumberContext?): Any = Unit
 
-    override fun visitTopLevelDef(ctx: Protobuf3Parser.TopLevelDefContext?): Any= Unit
+    override fun visitTopLevelDef(ctx: Protobuf3Parser.TopLevelDefContext?): Any = Unit
 
-    override fun visitEnumBody(ctx: Protobuf3Parser.EnumBodyContext?): Any= Unit
+    override fun visitEnumBody(ctx: Protobuf3Parser.EnumBodyContext?): Any = Unit
 
-    override fun visitEnumElement(ctx: Protobuf3Parser.EnumElementContext?): Any= Unit
+    override fun visitEnumElement(ctx: Protobuf3Parser.EnumElementContext?): Any = Unit
 
-    override fun visitExtendDef(ctx: Protobuf3Parser.ExtendDefContext?): Any= Unit
+    override fun visitExtendDef(ctx: Protobuf3Parser.ExtendDefContext?): Any = Unit
 
-    override fun visitConstant(ctx: Protobuf3Parser.ConstantContext?): Any= Unit
+    override fun visitConstant(ctx: Protobuf3Parser.ConstantContext?): Any = Unit
 
-    override fun visitBlockLit(ctx: Protobuf3Parser.BlockLitContext?): Any= Unit
+    override fun visitBlockLit(ctx: Protobuf3Parser.BlockLitContext?): Any = Unit
 
-    override fun visitEmptyStatement_(ctx: Protobuf3Parser.EmptyStatement_Context?): Any= Unit
+    override fun visitEmptyStatement_(ctx: Protobuf3Parser.EmptyStatement_Context?): Any = Unit
 
-    override fun visitIdent(ctx: Protobuf3Parser.IdentContext?): Any= Unit
+    override fun visitIdent(ctx: Protobuf3Parser.IdentContext?): Any = Unit
 
-    override fun visitFullIdent(ctx: Protobuf3Parser.FullIdentContext?): Any= Unit
+    override fun visitFullIdent(ctx: Protobuf3Parser.FullIdentContext?): Any = Unit
 
-    override fun visitMessageName(ctx: Protobuf3Parser.MessageNameContext?): Any= Unit
+    override fun visitMessageName(ctx: Protobuf3Parser.MessageNameContext?): Any = Unit
 
-    override fun visitEnumName(ctx: Protobuf3Parser.EnumNameContext?): Any= Unit
+    override fun visitEnumName(ctx: Protobuf3Parser.EnumNameContext?): Any = Unit
 
-    override fun visitFieldName(ctx: Protobuf3Parser.FieldNameContext?): Any= Unit
+    override fun visitFieldName(ctx: Protobuf3Parser.FieldNameContext?): Any = Unit
 
-    override fun visitOneofName(ctx: Protobuf3Parser.OneofNameContext?): Any= Unit
+    override fun visitOneofName(ctx: Protobuf3Parser.OneofNameContext?): Any = Unit
 
-    override fun visitMapName(ctx: Protobuf3Parser.MapNameContext?): Any= Unit
+    override fun visitMapName(ctx: Protobuf3Parser.MapNameContext?): Any = Unit
 
-    override fun visitServiceName(ctx: Protobuf3Parser.ServiceNameContext?): Any= Unit
+    override fun visitServiceName(ctx: Protobuf3Parser.ServiceNameContext?): Any = Unit
 
-    override fun visitRpcName(ctx: Protobuf3Parser.RpcNameContext?): Any= Unit
+    override fun visitRpcName(ctx: Protobuf3Parser.RpcNameContext?): Any = Unit
 
-    override fun visitEnumType(ctx: Protobuf3Parser.EnumTypeContext?): Any= Unit
+    override fun visitEnumType(ctx: Protobuf3Parser.EnumTypeContext?): Any = Unit
 
-    override fun visitIntLit(ctx: Protobuf3Parser.IntLitContext?): Any= Unit
+    override fun visitIntLit(ctx: Protobuf3Parser.IntLitContext?): Any = Unit
 
-    override fun visitStrLit(ctx: Protobuf3Parser.StrLitContext?): Any= Unit
+    override fun visitStrLit(ctx: Protobuf3Parser.StrLitContext?): Any = Unit
 
-    override fun visitBoolLit(ctx: Protobuf3Parser.BoolLitContext?): Any= Unit
+    override fun visitBoolLit(ctx: Protobuf3Parser.BoolLitContext?): Any = Unit
 
-    override fun visitFloatLit(ctx: Protobuf3Parser.FloatLitContext?): Any= Unit
+    override fun visitFloatLit(ctx: Protobuf3Parser.FloatLitContext?): Any = Unit
 
-    override fun visitKeywords(ctx: Protobuf3Parser.KeywordsContext?): Any= Unit
+    override fun visitKeywords(ctx: Protobuf3Parser.KeywordsContext?): Any = Unit
 
     private fun ParserRuleContext.parseInt(): Int {
         return text.toIntOrNull() ?: throw ParseException("Could not parse integer", this)

@@ -2,13 +2,11 @@ package io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.
 
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.SourceTarget
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.CodedInputStream
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.CodedOutputStream
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.Const
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.service.JvmProtoServiceWriter
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.service.ProtoServiceWriter
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoMessage
-import java.nio.ByteBuffer
 
 object JvmProtoMessageWriter : IosJvmProtoMessageWriteBase() {
 
@@ -16,42 +14,13 @@ object JvmProtoMessageWriter : IosJvmProtoMessageWriteBase() {
 
     private val MESSAGE_LITE = ClassName(PACKAGE_PROTOBUF, "MessageLite")
     private val PROTO_CODED_OUTPUT_STREAM = ClassName(PACKAGE_PROTOBUF, "CodedOutputStream")
-    private val PROTO_CODED_INPUT_STREAM = ClassName(PACKAGE_PROTOBUF, "CodedInputStream")
+    val PROTO_CODED_INPUT_STREAM = ClassName(PACKAGE_PROTOBUF, "CodedInputStream")
 
     private val BYTE_STRING = ClassName(PACKAGE_PROTOBUF, "ByteString")
 
-    override val protoServiceWriter: ProtoServiceWriter = JvmProtoServiceWriter
-
-    override val serializeFunctionCode: CodeBlock
-        get() = CodeBlock.builder()
-            .addStatement("val data = ByteArray(requiredSize)")
-            .addStatement(
-                "val stream = %T(%T.newInstance(%T.wrap(data)))",
-                CodedOutputStream,
-                PROTO_CODED_OUTPUT_STREAM,
-                ByteBuffer::class.asClassName()
-            )
-            .addStatement("serialize(stream)")
-            .addStatement("return data")
-            .build()
-
-    override val serializedDataType: ClassName = ByteArray::class.asClassName()
-
-    override val deserializeFunctionCode: CodeBlock
-        get() = CodeBlock
-            .builder()
-            .addStatement(
-                "val stream = %T(%T.newInstance(data))",
-                CodedInputStream,
-                PROTO_CODED_INPUT_STREAM,
-            )
-            .addStatement(
-                "return %N(stream)",
-                Const.Message.Companion.WrapperDeserializationFunction.NAME
-            )
-            .build()
-
     override val additionalSuperinterfaces: List<TypeName> = listOf(MESSAGE_LITE)
+
+    override val target: SourceTarget = SourceTarget.Jvm
 
     override fun applyToClass(
         builder: TypeSpec.Builder,

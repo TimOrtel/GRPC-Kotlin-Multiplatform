@@ -1,9 +1,12 @@
 package io.github.timortel.kmpgrpc.plugin
 
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.MapProperty
+import org.gradle.api.provider.Property
+import javax.inject.Inject
 
-abstract class KmpGrpcExtension {
+open class KmpGrpcExtension @Inject constructor(objects: ObjectFactory) {
 
     companion object {
         internal const val COMMON = "common"
@@ -17,9 +20,20 @@ abstract class KmpGrpcExtension {
     /**
      * Maps the output target to the source sets that require it.
      */
-    abstract val targetSourcesMap: MapProperty<String, List<String>>
+    @Suppress("UNCHECKED_CAST")
+    internal val targetSourcesMap: MapProperty<String, List<String>> =
+        (objects
+            .mapProperty(String::class.java, List::class.java) as MapProperty<String, List<String>>)
+            .convention(mutableMapOf<String, List<String>>())
 
-    abstract val protoSourceFolders: ConfigurableFileCollection
+    val protoSourceFolders: ConfigurableFileCollection = objects.fileCollection()
+
+    /**
+     * Instructs the plugin to download and include the well known proto-types: https://protobuf.dev/reference/protobuf/google.protobuf/
+     */
+    val includeWellKnownTypes: Property<Boolean> = objects
+        .property(Boolean::class.java)
+        .convention(false)
 
     fun common(targets: List<String> = listOf("commonMain")) {
         targetSourcesMap.put(COMMON, targets)
@@ -40,9 +54,4 @@ abstract class KmpGrpcExtension {
     fun ios(targets: List<String> = listOf("iosMain")) {
         targetSourcesMap.put(IOS, targets)
     }
-
-    init {
-        targetSourcesMap.convention(emptyMap())
-    }
 }
-

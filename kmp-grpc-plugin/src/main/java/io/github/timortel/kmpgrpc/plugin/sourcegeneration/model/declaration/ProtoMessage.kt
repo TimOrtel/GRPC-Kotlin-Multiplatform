@@ -1,11 +1,14 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration
 
+import com.squareup.kotlinpoet.MemberName
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.*
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.ProtoOneOf
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.ProtoReservation
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoMapField
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoMessageField
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.decapitalize
 import org.antlr.v4.runtime.ParserRuleContext
 
 data class ProtoMessage(
@@ -21,12 +24,6 @@ data class ProtoMessage(
 ) : ProtoDeclaration, FileBasedDeclarationResolver, ProtoFieldHolder {
 
     override lateinit var parent: ProtoDeclParent
-
-    override val isNested: Boolean
-        get() = when (parent) {
-            is ProtoDeclParent.Message -> true
-            is ProtoDeclParent.File -> super.isNested
-        }
 
     override val file: ProtoFile
         get() {
@@ -49,6 +46,21 @@ data class ProtoMessage(
         fields.isEmpty() && mapFields.isEmpty() && oneOfs.isEmpty()
 
     override val supportedOptions: List<Options.Option<*>> = emptyList()
+
+    /**
+     * The full proto name of this message
+     */
+    val fullName: String
+        get() {
+            val protoPackage = file.`package`
+
+            return if (!protoPackage.isNullOrEmpty()) {
+                "$protoPackage.$name"
+            } else name
+        }
+
+    val dslBuildFunction: MemberName
+        get() = MemberName(file.javaPackage, name.decapitalize())
 
     init {
         val parent = ProtoDeclParent.Message(this)

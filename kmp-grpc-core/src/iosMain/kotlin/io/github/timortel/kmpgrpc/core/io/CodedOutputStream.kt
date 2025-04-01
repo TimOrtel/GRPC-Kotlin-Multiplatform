@@ -5,25 +5,12 @@ import io.github.timortel.kmpgrpc.core.message.KMMessage
 import io.github.timortel.kmpgrpc.core.message.KmEnum
 import io.github.timortel.kmpgrpc.core.message.requiredSizeMessage
 import io.github.timortel.kmpgrpc.core.message.serializeMessage
-import kotlinx.cinterop.BetaInteropApi
-import kotlinx.cinterop.allocArrayOf
-import kotlinx.cinterop.memScoped
-import platform.Foundation.NSData
-import platform.Foundation.create
+import io.github.timortel.kmpgrpc.core.util.native
 
 /**
  * Implements the functionality by wrapping [GPBCodedOutputStream].
  */
 actual class CodedOutputStream(private val impl: GPBCodedOutputStream) {
-
-    companion object {
-        private val ByteArray.native: NSData get() {
-            return memScoped {
-                @OptIn(BetaInteropApi::class)
-                NSData.create(bytes = allocArrayOf(this@native), length = this@native.size.toULong())
-            }
-        }
-    }
 
     actual fun writeBool(fieldNumber: Int, value: Boolean) = impl.writeBool(fieldNumber, value)
 

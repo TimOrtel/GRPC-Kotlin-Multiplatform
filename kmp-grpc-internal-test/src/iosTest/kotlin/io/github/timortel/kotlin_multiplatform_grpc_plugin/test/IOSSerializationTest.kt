@@ -3,12 +3,11 @@ package io.github.timortel.kotlin_multiplatform_grpc_plugin.test
 import io.github.timortel.kmpgrpc.core.message.KMMessage
 import io.github.timortel.kmpgrpc.core.message.MessageDeserializer
 import io.github.timortel.kmpgrpc.test.*
-import platform.Foundation.NSData
 
 class IOSSerializationTest : SerializationTest() {
 
-    private fun <T : KMMessage> serializeImpl(msg: T, deserializer: MessageDeserializer<T, NSData>): T {
-        return deserializer.deserialize(msg.serialize())
+    private fun <T : KMMessage> serializeImpl(msg: T, deserializer: MessageDeserializer<T>): T {
+        return deserializer.deserialize(msg.serializeNative())
     }
 
     override fun serialize(message: LongMessage): LongMessage =

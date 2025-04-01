@@ -6,6 +6,7 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.*
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.enumeration.ProtoEnumField
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.ProtoReservation
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.toFilePositionString
 import org.antlr.v4.runtime.ParserRuleContext
 

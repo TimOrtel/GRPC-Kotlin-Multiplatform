@@ -9,6 +9,7 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.Prot
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.service.ProtoService
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.structure.ProtoFolder
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.structure.ProtoPackage
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.snakeCaseToCamelCase
 
 data class ProtoFile(

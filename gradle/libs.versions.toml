@@ -5,7 +5,7 @@ androidGradlePlugin = "8.7.0"
 androidCompileSdk = "35"
 androidMinSdk = "21"
 
-kotlin = "2.1.10"
+kotlin = "2.1.20"
 
 grpcJvm = "1.71.0"
 grpcKotlin = "1.4.1"

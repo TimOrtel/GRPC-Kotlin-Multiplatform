@@ -27,6 +27,16 @@ object Options {
         default = false
     )
 
+    /**
+     * Options that do not apply to Java/Kotlin
+     */
+    val ignoredOptions = listOf(
+        "go_package",
+        "objc_class_prefix",
+        "csharp_namespace",
+        "cc_enable_arenas"
+    )
+
     class Option<T>(val name: String, val parse: (String) -> T?, val default: T) {
         fun get(optionsHolder: ProtoOptionsHolder): T {
             val match = optionsHolder.options.firstOrNull { it.name == name } ?: return default

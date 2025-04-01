@@ -1,6 +1,7 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants
 
 import com.squareup.kotlinpoet.LONG
+import com.squareup.kotlinpoet.STRING
 
 object Const {
     object Service {
@@ -28,6 +29,8 @@ object Const {
     }
 
     object Message {
+        val fullNameProperty = Property("fullName", STRING)
+
         object SerializeFunction {
             const val NAME = "serialize"
             const val STREAM_PARAM = "stream"
@@ -52,6 +55,8 @@ object Const {
         }
 
         object Companion {
+            val fullNameProperty = Property("fullName", STRING)
+
             object DataDeserializationFunction {
                 const val NAME = "deserialize"
                 const val DATA_PARAM = "data"

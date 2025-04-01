@@ -13,10 +13,12 @@ actual interface KMMessage {
      */
     val requiredSize: Int
 
+    actual val fullName: String
+
     /**
      * Serializes this message and returns it as a [ByteArray].
      */
-    fun serialize(): ByteArray {
+    actual fun serialize(): ByteArray {
         val data = ByteArray(requiredSize)
         val stream = com.google.protobuf.CodedOutputStream.newInstance(ByteBuffer.wrap(data))
         serialize(CodedOutputStream(stream))

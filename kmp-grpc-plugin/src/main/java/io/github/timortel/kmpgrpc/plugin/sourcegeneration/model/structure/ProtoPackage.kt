@@ -4,7 +4,7 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.DeclarationResol
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoNode
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoProject
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoType
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoDeclaration
 
 data class ProtoPackage(val name: String, val packages: List<ProtoPackage>, val files: List<ProtoFile>) :

@@ -121,6 +121,8 @@ kmpGrpc {
     js()
     ios()
 
+    includeWellKnownTypes = true
+
     protoSourceFolders = project.files("src/commonMain/proto")
 }
 

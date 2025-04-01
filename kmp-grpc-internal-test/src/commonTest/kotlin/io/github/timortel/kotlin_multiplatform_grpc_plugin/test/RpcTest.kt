@@ -29,7 +29,6 @@ abstract class RpcTest {
             val response = stub
                 .emptyRpc(message)
 
-            println(response)
             assertEquals(message, response)
         } catch (e: Exception) {
             e.printStackTrace()
