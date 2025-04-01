@@ -29,10 +29,11 @@ jobs:
           echo $! > gradle_pid.txt
 
       - name: Wait for test-server to be healthy
+        timeout-minutes: 10
         run: |
           docker pull fullstorydev/grpcurl:latest
           echo "Waiting for service..."
-          while ! docker run fullstorydev/grpcurl -plaintext localhost:17888 io.github.timortel.kmpgrpc.test.TestService/emptyRpc | grep -q "{}"; do
+          while ! docker run --network host fullstorydev/grpcurl -plaintext localhost:17888 io.github.timortel.kmpgrpc.test.TestService/emptyRpc | grep -q "{}"; do
             sleep 5
           done
           echo "Service is healthy!"
@@ -67,10 +68,11 @@ jobs:
         run: docker run -d --rm --name envoy --network host -v $(pwd)/kmp-grpc-internal-test/envoy.yml:/etc/envoy/envoy.yaml -p 8082:8082 envoyproxy/envoy-dev:latest
 
       - name: Wait for test-server to be healthy
+        timeout-minutes: 10
         run: |
           docker pull fullstorydev/grpcurl:latest
           echo "Waiting for service..."
-          while ! docker run fullstorydev/grpcurl -plaintext localhost:17888 io.github.timortel.kmpgrpc.test.TestService/emptyRpc | grep -q "{}"; do
+          while ! docker run --network host fullstorydev/grpcurl -plaintext localhost:17888 io.github.timortel.kmpgrpc.test.TestService/emptyRpc | grep -q "{}"; do
             sleep 5
           done
           echo "Service is healthy!"
