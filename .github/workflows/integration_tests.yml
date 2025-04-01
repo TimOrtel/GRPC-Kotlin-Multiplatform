@@ -28,13 +28,11 @@ jobs:
           nohup ./gradlew :kmp-grpc-internal-test:test-server:run &
           echo $! > gradle_pid.txt
 
-      - name: Install grpcurl
-        run: go install github.com/fullstorydev/grpcurl/cmd/grpcurl@latest
-
       - name: Wait for test-server to be healthy
         run: |
+          docker pull fullstorydev/grpcurl:latest
           echo "Waiting for service..."
-          while ! grpcurl -plaintext localhost:17888 io.github.timortel.kmpgrpc.test.TestService/emptyRpc | grep -q "{}"; do
+          while ! docker run fullstorydev/grpcurl -plaintext localhost:17888 io.github.timortel.kmpgrpc.test.TestService/emptyRpc | grep -q "{}"; do
             sleep 5
           done
           echo "Service is healthy!"
@@ -68,13 +66,11 @@ jobs:
       - name: Start envoy service
         run: docker run -d --rm --name envoy --network host -v $(pwd)/kmp-grpc-internal-test/envoy.yml:/etc/envoy/envoy.yaml -p 8082:8082 envoyproxy/envoy-dev:latest
 
-      - name: Install grpcurl
-        run: go install github.com/fullstorydev/grpcurl/cmd/grpcurl@latest
-
       - name: Wait for test-server to be healthy
         run: |
+          docker pull fullstorydev/grpcurl:latest
           echo "Waiting for service..."
-          while ! grpcurl -plaintext localhost:17888 io.github.timortel.kmpgrpc.test.TestService/emptyRpc | grep -q "{}"; do
+          while ! docker run fullstorydev/grpcurl -plaintext localhost:17888 io.github.timortel.kmpgrpc.test.TestService/emptyRpc | grep -q "{}"; do
             sleep 5
           done
           echo "Service is healthy!"
