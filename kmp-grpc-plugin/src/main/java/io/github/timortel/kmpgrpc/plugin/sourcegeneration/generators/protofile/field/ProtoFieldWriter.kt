@@ -17,7 +17,7 @@ abstract class ProtoFieldWriter {
 
     fun addMessageField(builder: TypeSpec.Builder, field: ProtoMessageField) {
         when (field.cardinality) {
-            is ProtoFieldCardinality.Singular -> singularProtoFieldWriter.addField(builder, field, field.cardinality)
+            is ProtoFieldCardinality.Singular -> singularProtoFieldWriter.addField(builder, field)
             ProtoFieldCardinality.Repeated -> repeatedProtoFieldWriter.addField(builder, field)
         }
     }

@@ -10,13 +10,13 @@ object ActualSingularProtoFieldWriter : SingularProtoFieldWriter() {
 
     override fun PropertySpec.Builder.modifyProperty(field: ProtoMessageField) {
         if (field.type is ProtoType.DefType && field.type.isMessage) {
-            initializer("%N ?: %T()", field.name, field.type.resolve())
+            initializer("%N ?: %T()", field.attributeName, field.type.resolve())
         } else {
-            initializer(field.name)
+            initializer(field.attributeName)
         }
     }
 
     override fun PropertySpec.Builder.modifyIsSetProperty(field: ProtoMessageField) {
-        initializer("%N != null", field.name)
+        initializer("%N != null", field.attributeName)
     }
 }

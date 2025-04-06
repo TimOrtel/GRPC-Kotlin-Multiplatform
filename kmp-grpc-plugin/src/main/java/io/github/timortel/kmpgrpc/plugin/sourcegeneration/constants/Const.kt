@@ -29,6 +29,8 @@ object Const {
     }
 
     object Message {
+        val reservedAttributeNames = setOf("fullName", "requiredSize")
+
         val fullNameProperty = Property("fullName", STRING)
 
         object SerializeFunction {
@@ -37,6 +39,8 @@ object Const {
         }
 
         object OneOf {
+            val reservedAttributeNames = setOf("requiredSize")
+
             const val REQUIRED_SIZE_PROPERTY_NAME = "requiredSize"
 
             const val SERIALIZE_FUNCTION_NAME = "serialize"

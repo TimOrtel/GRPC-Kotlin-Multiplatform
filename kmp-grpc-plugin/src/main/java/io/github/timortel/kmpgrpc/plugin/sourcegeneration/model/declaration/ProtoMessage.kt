@@ -1,6 +1,7 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration
 
 import com.squareup.kotlinpoet.MemberName
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.Const
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.*
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.ProtoOneOf
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.ProtoReservation
@@ -11,6 +12,9 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.decapitalize
 import org.antlr.v4.runtime.ParserRuleContext
 
+/**
+ * Representation of a proto message.
+ */
 data class ProtoMessage(
     override val name: String,
     val messages: List<ProtoMessage>,
@@ -21,7 +25,7 @@ data class ProtoMessage(
     override val reservation: ProtoReservation,
     override val options: List<ProtoOption>,
     override val ctx: ParserRuleContext
-) : ProtoDeclaration, FileBasedDeclarationResolver, ProtoFieldHolder {
+) : ProtoDeclaration, FileBasedDeclarationResolver, ProtoFieldHolder, ProtoChildPropertyNameResolver {
 
     override lateinit var parent: ProtoDeclParent
 
@@ -61,6 +65,12 @@ data class ProtoMessage(
 
     val dslBuildFunction: MemberName
         get() = MemberName(file.javaPackage, name.decapitalize())
+
+    override val childProperties: List<ProtoChildProperty>
+        get() = fields + mapFields + oneOfs + fields.flatMap { it.childProperties }
+
+    override val reservedAttributeNames: Set<String>
+        get() = Const.Message.reservedAttributeNames
 
     init {
         val parent = ProtoDeclParent.Message(this)

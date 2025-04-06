@@ -4,6 +4,7 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOption
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoMessage
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.ProtoMessageProperty
 import org.antlr.v4.runtime.ParserRuleContext
 
 data class ProtoMapField(
@@ -13,12 +14,12 @@ data class ProtoMapField(
     val keyType: ProtoType.MapKeyType,
     val valuesType: ProtoType,
     override val ctx: ParserRuleContext
-) : ProtoBaseField() {
-    lateinit var message: ProtoMessage
+) : ProtoBaseField(), ProtoMessageProperty {
+    override lateinit var message: ProtoMessage
 
     override val file: ProtoFile get() = message.file
 
-    override val attributeName: String = "${name}Map"
+    override val desiredAttributeName: String = "${name}Map"
 
     init {
         keyType.parent = ProtoType.Parent.MapField(this)

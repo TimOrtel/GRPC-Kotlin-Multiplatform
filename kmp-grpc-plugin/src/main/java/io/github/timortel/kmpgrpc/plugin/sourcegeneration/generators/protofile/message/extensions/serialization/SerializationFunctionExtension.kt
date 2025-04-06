@@ -9,6 +9,7 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.*
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoMessage
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoFieldCardinality
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoMapField
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoMessageField
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoRegularField
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
 
@@ -258,10 +259,10 @@ class SerializationFunctionExtension : BaseSerializationExtension() {
                     when (type.declType) {
                         ProtoType.DefType.DeclarationType.MESSAGE -> {
                             CodeBlock.builder().apply {
-                                if (performIsFieldSetCheck) {
+                                if (performIsFieldSetCheck && field is ProtoMessageField) {
                                     beginControlFlow(
                                         "if (%N)",
-                                        field.isSetPropertyName
+                                        field.isSetProperty.attributeName
                                     )
                                 }
 
