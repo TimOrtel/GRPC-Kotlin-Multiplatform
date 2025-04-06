@@ -13,11 +13,6 @@ message MessageWithReservedFields {
   string fullName = 2;
 }
 
-message MessageWithMapClash {
-  map<string, string> a = 1;
-  string aMap = 2;
-}
-
 message MessageWithListClash {
   repeated string a = 1;
   string aList = 2;
