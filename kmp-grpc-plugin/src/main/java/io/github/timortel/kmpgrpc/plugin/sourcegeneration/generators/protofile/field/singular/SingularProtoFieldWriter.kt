@@ -1,19 +1,18 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.field.singular
 
 import com.squareup.kotlinpoet.*
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoFieldCardinality
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoMessageField
 
 abstract class SingularProtoFieldWriter {
 
     protected abstract val attrs: List<KModifier>
 
-    fun addField(builder: TypeSpec.Builder, field: ProtoMessageField, cardinality: ProtoFieldCardinality.Singular) {
+    fun addField(builder: TypeSpec.Builder, field: ProtoMessageField) {
         with(builder) {
             addProperty(
                 PropertySpec
-                    .builder(field.name, field.type.resolve())
+                    .builder(field.attributeName, field.type.resolve())
+                    .addKdoc(field.infoText)
                     .addModifiers(attrs)
                     .apply {
                         modifyProperty(field)
@@ -21,12 +20,12 @@ abstract class SingularProtoFieldWriter {
                     .build()
             )
 
-            // See https://protobuf.dev/programming-guides/field_presence/#presence-in-proto3-apis
-            // The "isSet" method is added for optional fields and message types.
-            if (cardinality is ProtoFieldCardinality.Optional || field.type is ProtoType.DefType && field.type.isMessage) {
+
+            if (field.needsIsSetProperty) {
                 addProperty(
                     PropertySpec
-                        .builder(field.isSetPropertyName, BOOLEAN)
+                        .builder(field.isSetProperty.attributeName, BOOLEAN)
+                        .addKdoc(field.infoText)
                         .addModifiers(attrs)
                         .apply { modifyIsSetProperty(field) }
                         .build()

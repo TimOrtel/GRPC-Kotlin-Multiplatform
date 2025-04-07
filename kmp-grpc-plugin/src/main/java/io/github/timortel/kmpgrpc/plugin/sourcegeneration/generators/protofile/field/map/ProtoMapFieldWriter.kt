@@ -15,6 +15,7 @@ abstract class ProtoMapFieldWriter {
                     field.attributeName,
                     MAP.parameterizedBy(field.keyType.resolve(), field.valuesType.resolve())
                 )
+                .addKdoc(field.infoText)
                 .apply {
                     modifyMapProperty(this, field)
                 }

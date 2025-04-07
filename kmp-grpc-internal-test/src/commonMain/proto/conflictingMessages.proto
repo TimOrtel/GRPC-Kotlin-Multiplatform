@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package io.github.timortel.kmpgrpc.test;
+
+option java_multiple_files = true;
+
+message MessageWithMessage {
+  string message = 1;
+}
+
+message MessageWithReservedFields {
+  int32 requiredSize = 1;
+  string fullName = 2;
+}
+
+message MessageWithListClash {
+  repeated string a = 1;
+  string aList = 2;
+}
+
+message MessageWithIsFieldSetClash {
+  optional string a = 1;
+  bool isASet = 2;
+}

@@ -111,6 +111,7 @@ jobs:
           key: lib-cocoapods-synthetic-${{ runner.os }}-${{ hashFiles('kmp-grpc-core/gradle.properties') }}
 
       - name: Wait for test-server to be healthy
+        timeout-minutes: 10
         run: |
           echo "Waiting for service..."
           while ! grpcurl -plaintext localhost:17888 io.github.timortel.kmpgrpc.test.TestService/emptyRpc | grep -q "{}"; do

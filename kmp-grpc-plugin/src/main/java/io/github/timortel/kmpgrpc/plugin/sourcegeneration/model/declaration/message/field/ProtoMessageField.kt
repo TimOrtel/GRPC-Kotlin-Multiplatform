@@ -3,8 +3,12 @@ package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.mes
 import com.squareup.kotlinpoet.CodeBlock
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOption
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoChildProperty
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoChildPropertyNameResolver
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoMessage
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.ProtoMessageProperty
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.capitalize
 import org.antlr.v4.runtime.ParserRuleContext
 
 data class ProtoMessageField(
@@ -14,16 +18,34 @@ data class ProtoMessageField(
     override val options: List<ProtoOption>,
     val cardinality: ProtoFieldCardinality,
     override val ctx: ParserRuleContext
-) : ProtoRegularField() {
+) : ProtoRegularField(), ProtoMessageProperty {
 
     lateinit var parent: ProtoMessage
 
+    override val message: ProtoMessage
+        get() = parent
+
     override val file: ProtoFile get() = parent.file
 
-    override val attributeName: String = when(cardinality) {
+    override val desiredAttributeName: String = when (cardinality) {
         ProtoFieldCardinality.Implicit, ProtoFieldCardinality.Optional -> name
         ProtoFieldCardinality.Repeated -> "${name}List"
     }
+
+    // See https://protobuf.dev/programming-guides/field_presence/#presence-in-proto3-apis
+    // The "isSet" method is added for optional fields and message types.
+    val needsIsSetProperty: Boolean
+        get() = cardinality is ProtoFieldCardinality.Optional || (type is ProtoType.DefType && type.isMessage)
+
+    val isSetProperty: ExtraProperty
+        get() = ExtraProperty(
+            desiredAttributeName = "is${name.capitalize()}Set",
+            resolvingParent = message,
+            priority = number
+        )
+
+    val childProperties: List<ProtoChildProperty>
+        get() = if (needsIsSetProperty) listOf(isSetProperty) else emptyList()
 
     init {
         type.parent = ProtoType.Parent.MessageField(this)
@@ -34,5 +56,14 @@ data class ProtoMessageField(
             ProtoFieldCardinality.Implicit, ProtoFieldCardinality.Optional -> type.defaultValue()
             ProtoFieldCardinality.Repeated -> CodeBlock.of("emptyList()")
         }
+    }
+
+    data class ExtraProperty(
+        override val desiredAttributeName: String,
+        override val resolvingParent: ProtoChildPropertyNameResolver,
+        override val priority: Int
+    ) : ProtoChildProperty {
+        override val name: String
+            get() = desiredAttributeName
     }
 }

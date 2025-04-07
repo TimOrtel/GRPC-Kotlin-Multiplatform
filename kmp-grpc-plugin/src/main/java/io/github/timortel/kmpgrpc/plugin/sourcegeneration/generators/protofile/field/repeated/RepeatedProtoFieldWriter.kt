@@ -14,6 +14,7 @@ abstract class RepeatedProtoFieldWriter {
                 field.attributeName,
                 LIST.parameterizedBy(field.type.resolve())
             )
+            .addKdoc(field.infoText)
             .addModifiers(attrs)
             .apply { modifyListProperty(this, field) }
             .build()

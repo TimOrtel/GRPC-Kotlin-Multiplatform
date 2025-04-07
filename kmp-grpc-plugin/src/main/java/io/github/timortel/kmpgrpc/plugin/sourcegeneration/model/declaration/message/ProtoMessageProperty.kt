@@ -1,13 +1,16 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message
 
-interface ProtoMessageProperty {
-    /**
-     * The name of the property as defined in the proto source code
-     */
-    val name: String
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoChildProperty
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoChildPropertyNameResolver
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoMessage
+
+interface ProtoMessageProperty : ProtoChildProperty {
 
     /**
-     * The name of the field in the generated message class
+     * The parent of this property
      */
-    val attributeName: String
+    val message: ProtoMessage
+
+    override val resolvingParent: ProtoChildPropertyNameResolver
+        get() = message
 }
