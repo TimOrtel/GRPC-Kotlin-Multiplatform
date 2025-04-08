@@ -20,6 +20,10 @@ fun String.decapitalize(): String {
 }
 
 fun List<CodeBlock>.joinCodeBlocks(separator: String): CodeBlock {
+    return joinCodeBlocks(CodeBlock.of(separator))
+}
+
+fun List<CodeBlock>.joinCodeBlocks(separator: CodeBlock): CodeBlock {
     return filter { it.isNotEmpty() }.joinToCodeBlock(separator) { add(it) }
 }
 

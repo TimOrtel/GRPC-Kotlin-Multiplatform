@@ -2,7 +2,9 @@ package io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.
 
 import com.squareup.kotlinpoet.*
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.SourceTarget
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.Const
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoMessage
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.joinCodeBlocks
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.joinToCodeBlock
 
 object ToStringFunctionExtension : MessageWriterExtension {
@@ -28,7 +30,15 @@ object ToStringFunctionExtension : MessageWriterExtension {
                             addStatement("append(%N.toString())", field.attributeName)
                         }
 
-                        addCode(propertiesCodeBlock)
+                        val unknownFieldsCodeBlock = CodeBlock.builder()
+                            .apply {
+                                addStatement("append(%S)", Const.Message.Constructor.UnknownFields.name)
+                                addStatement("append(%S)", "=")
+                                addStatement("append(%N.toString())", Const.Message.Constructor.UnknownFields.name)
+                            }
+                            .build()
+
+                        addCode(listOf(propertiesCodeBlock, unknownFieldsCodeBlock).joinCodeBlocks(separator))
 
                         addStatement("append(%S)", "}")
 
