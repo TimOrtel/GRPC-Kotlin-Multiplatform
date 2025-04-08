@@ -1,8 +1,8 @@
 package io.github.timortel.kmpgrpc.example.jvm
 
-import io.github.timortel.grpc_multiplatform.example.HelloRequest
-import io.github.timortel.grpc_multiplatform.example.HelloServiceGrpcKt
-import io.github.timortel.grpc_multiplatform.example.Response
+import io.github.timortel.kmpgrpc.example.HelloRequest
+import io.github.timortel.kmpgrpc.example.HelloServiceGrpcKt
+import io.github.timortel.kmpgrpc.example.Response
 import io.grpc.ServerBuilder
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
