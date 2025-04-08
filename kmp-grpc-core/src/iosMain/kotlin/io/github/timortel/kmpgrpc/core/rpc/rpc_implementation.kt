@@ -21,6 +21,11 @@ import platform.darwin.dispatch_queue_t
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
+private const val GRPC_ERROR_DOMAIN = "io.grpc"
+
+private const val INVALID_UNKNOWN_DESCRIPTION_1 = "UNKNOWN {grpc_status:0, grpc_message:\"\"}"
+private const val INVALID_UNKNOWN_DESCRIPTION_2 = "UNKNOWN {grpc_message:\"\", grpc_status:0}"
+
 /**
  * Perform a unary rpc call as a suspending function. Uses [GRPCCall2] for the actual call.
  */
@@ -37,19 +42,29 @@ suspend fun <REQ : KMMessage, RES : KMMessage> unaryCallImplementation(
     return suspendCancellableCoroutine { continuation ->
         val handler = UnaryCallHandler(
             onDone = { data, error ->
+                // https://github.com/grpc/grpc/issues/39178
+                val isInvalidGrpcError = error != null && error.domain == GRPC_ERROR_DOMAIN && error.code == 2L
+                        && (error.description.orEmpty().contains(INVALID_UNKNOWN_DESCRIPTION_1) ||
+                        error.description.orEmpty().contains(INVALID_UNKNOWN_DESCRIPTION_2))
+
                 when {
-                    error != null -> {
+                    error != null && !isInvalidGrpcError -> {
                         val exception =
                             KMStatusException(
-                                KMStatus(KMCode.getCodeForValue(error.code.toInt()), error.description ?: "No description"),
+                                KMStatus(
+                                    KMCode.getCodeForValue(error.code.toInt()),
+                                    error.description ?: "No description"
+                                ),
                                 null
                             )
 
                         continuation.resumeWithException(exception)
                     }
+
                     data != null -> {
                         continuation.resume(responseDeserializer.deserialize(data as NSData))
                     }
+
                     else -> {
                         val status = KMStatus(KMCode.UNKNOWN, "Call closed without error and without a response")
                         continuation.resumeWithException(KMStatusException(status, null))
@@ -65,6 +80,7 @@ suspend fun <REQ : KMMessage, RES : KMMessage> unaryCallImplementation(
         )
 
         call.start()
+        call.receiveNextMessages(1u)
         call.writeData(data)
         call.finish()
 
