@@ -1,6 +1,8 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants
 
+import com.squareup.kotlinpoet.LIST
 import com.squareup.kotlinpoet.LONG
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.STRING
 
 object Const {
@@ -32,6 +34,10 @@ object Const {
         val reservedAttributeNames = setOf("fullName", "requiredSize")
 
         val fullNameProperty = Property("fullName", STRING)
+
+        object Constructor {
+            val UnknownFields = Property("unknownFields", LIST.parameterizedBy(unknownField))
+        }
 
         object SerializeFunction {
             const val NAME = "serialize"

@@ -56,6 +56,20 @@ object TestServer {
                 }
             }
             )
+            .addService(object : UnknownFieldServiceGrpcKt.UnknownFieldServiceCoroutineImplBase() {
+                override suspend fun fillWithUnknownFields(request: Unknownfield.MessageWithUnknownField): Unknownfield.MessageWithUnknownField {
+                    return request.copy {
+                        unknownVarInt = 13
+                        unknownFixed32 = -4f
+                        unknownFixed64 = 64.0
+                        unknownLengthDelimited = "Test Message"
+                    }
+                }
+
+                override suspend fun returnIdentically(request: Unknownfield.MessageWithUnknownField): Unknownfield.MessageWithUnknownField {
+                    return request
+                }
+            })
             .build()
             .start()
     }

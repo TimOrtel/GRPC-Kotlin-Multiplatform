@@ -88,21 +88,6 @@ actual class CodedOutputStream(private val impl: GPBCodedOutputStream) {
 
     actual fun writeFloatNoTag(value: Float) = impl.writeFloatNoTag(value)
 
-    actual fun writeGroup(
-        fieldNumber: Int,
-        value: KMMessage
-    ): Unit = TODO()
-
-    actual fun writeGroupArray(
-        fieldNumber: Int,
-        values: List<KMMessage>
-    ): Unit = TODO()
-
-    actual fun writeGroupNoTag(
-        fieldNumber: Int,
-        value: KMMessage
-    ): Unit = TODO()
-
     actual fun writeInt32(fieldNumber: Int, value: Int) = impl.writeInt32(fieldNumber, value)
 
     actual fun writeInt32Array(fieldNumber: Int, values: List<Int>, tag: UInt) {
@@ -230,11 +215,11 @@ actual class CodedOutputStream(private val impl: GPBCodedOutputStream) {
     actual fun writeStringNoTag(value: String) = impl.writeStringNoTag(value)
 
     actual fun writeTag(
-        fieldNumber: UInt,
+        fieldNumber: Int,
         format: WireFormat
     ) {
         //https://github.com/protocolbuffers/protobuf/blob/main/objectivec/GPBCodedOutputStream.m#L120
-        impl.writeRawVarint32(wireFormatMakeTag(fieldNumber.toInt(), format))
+        impl.writeRawVarint32(wireFormatMakeTag(fieldNumber, format))
     }
 
     actual fun writeUInt32(fieldNumber: Int, value: UInt) = impl.writeUInt32(fieldNumber, value)

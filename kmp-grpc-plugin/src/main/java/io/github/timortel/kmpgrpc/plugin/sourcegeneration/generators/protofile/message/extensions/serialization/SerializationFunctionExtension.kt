@@ -37,7 +37,11 @@ class SerializationFunctionExtension : BaseSerializationExtension() {
     /**
      * Generate the serialize function, adds a write call for each attribute
      */
-    private fun buildSerializeFunction(builder: FunSpec.Builder, message: ProtoMessage, sourceTarget: SourceTarget.Actual) {
+    private fun buildSerializeFunction(
+        builder: FunSpec.Builder,
+        message: ProtoMessage,
+        sourceTarget: SourceTarget.Actual
+    ) {
         builder.apply {
             message.fields.forEach { field ->
                 when {
@@ -114,6 +118,13 @@ class SerializationFunctionExtension : BaseSerializationExtension() {
                     Const.Message.SerializeFunction.STREAM_PARAM
                 )
             }
+
+            addStatement(
+                "%M(%N, %N)",
+                writeUnknownFields,
+                Const.Message.SerializeFunction.STREAM_PARAM,
+                Const.Message.Constructor.UnknownFields.name
+            )
         }
     }
 
@@ -144,6 +155,7 @@ class SerializationFunctionExtension : BaseSerializationExtension() {
                     addMapValueTypeSerializationCode(field.valuesType)
                     addCode(")\n")
                 }
+
                 SourceTarget.Js -> {
                     addCode(
                         "%M(%N, %L, %N, ",

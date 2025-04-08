@@ -8,6 +8,7 @@ import io.github.timortel.kmpgrpc.core.message.KmEnum
  * See [the java CodedOutputStream implementation](https://github.com/protocolbuffers/protobuf/blob/main/java/core/src/main/java/com/google/protobuf/CodedOutputStream.java) for further details.
  */
 expect class CodedOutputStream {
+
     fun writeBool(fieldNumber: Int, value: Boolean)
 
     fun writeBoolArray(fieldNumber: Int, value: List<Boolean>, tag: UInt)
@@ -124,7 +125,7 @@ expect class CodedOutputStream {
 
     fun writeStringNoTag(value: String)
 
-    fun writeTag(fieldNumber: UInt, format: WireFormat)
+    fun writeTag(fieldNumber: Int, format: WireFormat)
 
     fun writeUInt32(fieldNumber: Int, value: UInt)
 
@@ -137,10 +138,4 @@ expect class CodedOutputStream {
     fun writeUInt64Array(fieldNumber: Int, values: List<ULong>, tag: UInt)
 
     fun writeUInt64NoTag(value: ULong)
-
-//      fun writeUnknownGroup(fieldNumber: Int, value: cocoapods.Protobuf.GPBUnknownFieldSet)
-//
-//      fun writeUnknownGroupArray(fieldNumber: Int, values: List<*>)
-//
-//      fun writeUnknownGroupNoTag(fieldNumber: Int, value: cocoapods.Protobuf.GPBUnknownFieldSet)
 }

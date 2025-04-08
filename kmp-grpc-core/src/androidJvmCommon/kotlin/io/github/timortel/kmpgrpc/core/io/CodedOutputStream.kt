@@ -350,11 +350,11 @@ actual class CodedOutputStream(private val impl: com.google.protobuf.CodedOutput
     actual fun writeStringNoTag(value: String) = impl.writeStringNoTag(value)
 
     actual fun writeTag(
-        fieldNumber: UInt,
+        fieldNumber: Int,
         format: WireFormat
     ) {
         //https://github.com/protocolbuffers/protobuf/blob/main/objectivec/GPBCodedOutputStream.m#L120
-        impl.writeRawVarint32(wireFormatMakeTag(fieldNumber.toInt(), format))
+        impl.writeRawVarint32(wireFormatMakeTag(fieldNumber, format))
     }
 
     actual fun writeUInt32(fieldNumber: Int, value: UInt) = impl.writeUInt32(fieldNumber, value.toInt())

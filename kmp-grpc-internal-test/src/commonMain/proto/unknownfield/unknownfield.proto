@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package io.github.timortel.kmpgrpc.test;
+
+message MessageWithUnknownField {
+  string a = 1;
+}
+
+service UnknownFieldService {
+  rpc fillWithUnknownFields (MessageWithUnknownField) returns (MessageWithUnknownField);
+  rpc returnIdentically (MessageWithUnknownField) returns (MessageWithUnknownField);
+}

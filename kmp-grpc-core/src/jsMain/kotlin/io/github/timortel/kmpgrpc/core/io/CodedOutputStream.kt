@@ -109,21 +109,6 @@ actual class CodedOutputStream(internal val impl: JSPB.BinaryWriter) {
         impl.encoder.writeFloat(value)
     }
 
-    actual fun writeGroup(
-        fieldNumber: Int,
-        value: KMMessage
-    ): Unit = throw NotImplementedError()
-
-    actual fun writeGroupArray(
-        fieldNumber: Int,
-        values: List<KMMessage>
-    ): Unit = throw NotImplementedError()
-
-    actual fun writeGroupNoTag(
-        fieldNumber: Int,
-        value: KMMessage
-    ): Unit = throw NotImplementedError()
-
     actual fun writeInt32(fieldNumber: Int, value: Int) {
         impl.writeInt32(fieldNumber, value)
     }
@@ -280,10 +265,10 @@ actual class CodedOutputStream(internal val impl: JSPB.BinaryWriter) {
     }
 
     actual fun writeTag(
-        fieldNumber: UInt,
+        fieldNumber: Int,
         format: WireFormat
     ) {
-        impl.encoder.writeUnsignedVarint32(wireFormatMakeTag(fieldNumber.toInt(), format))
+        impl.encoder.writeUnsignedVarint32(wireFormatMakeTag(fieldNumber, format))
     }
 
     actual fun writeUInt32(fieldNumber: Int, value: UInt) {

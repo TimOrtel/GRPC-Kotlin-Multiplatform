@@ -1,5 +1,6 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.test
 
+import io.github.timortel.kmpgrpc.core.message.UnknownField
 import io.github.timortel.kmpgrpc.test.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -90,6 +91,26 @@ abstract class SerializationTest {
     @Test
     fun testSerialization() {
         val msg: MessageWithEverything = createMessageWithAllTypes()
+
+        val reconstructed = serialize(msg)
+
+        assertEquals(msg, reconstructed)
+    }
+
+    abstract fun createMessageWithUnknownField(fields: List<UnknownField>): Unknownfield.MessageWithUnknownField
+    abstract fun serialize(message: Unknownfield.MessageWithUnknownField): Unknownfield.MessageWithUnknownField
+
+    @Test
+    fun testUnknownFieldsSerialization() {
+        val fields = listOf(
+            UnknownField.Varint(2, 13413L),
+            UnknownField.Fixed32(3, 16531u),
+            UnknownField.Fixed64(4, 165311414uL),
+            UnknownField.LengthDelimited(5, byteArrayOf(12, -54, 5)),
+            UnknownField.Group(6, listOf(UnknownField.Varint(7, 13L)))
+        )
+
+        val msg = createMessageWithUnknownField(fields)
 
         val reconstructed = serialize(msg)
 
