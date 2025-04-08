@@ -19,8 +19,6 @@ expect class CodedOutputStream {
 
     fun writeBytesArray(fieldNumber: Int, values: List<ByteArray>,)
 
-    fun writeBytesNoTag(value: ByteArray)
-
     fun writeDouble(fieldNumber: Int, value: Double)
 
     fun writeDoubleArray(fieldNumber: Int, values: List<Double>, tag: UInt)
@@ -53,12 +51,6 @@ expect class CodedOutputStream {
 
     fun writeFloatNoTag(value: Float)
 
-    fun writeGroup(fieldNumber: Int, value: KMMessage)
-
-    fun writeGroupArray(fieldNumber: Int, values: List<KMMessage>)
-
-    fun writeGroupNoTag(fieldNumber: Int, value: KMMessage)
-
     fun writeInt32(fieldNumber: Int, value: Int)
 
     fun writeInt32Array(fieldNumber: Int, values: List<Int>, tag: UInt)
@@ -75,25 +67,7 @@ expect class CodedOutputStream {
 
     fun writeMessageArray(fieldNumber: Int, values: List<KMMessage>)
 
-    fun writeMessageNoTag(value: KMMessage)
-
-    fun writeMessageSetExtension(fieldNumber: Int, value: KMMessage)
-
-    fun writeRawByte(value: UByte)
-
-    fun writeRawData(data: ByteArray)
-
-    fun writeRawLittleEndian32(value: Int)
-
-    fun writeRawLittleEndian64(value: Long)
-
-    fun writeRawMessageSetExtension(fieldNumber: Int, value: ByteArray)
-
     fun writeRawVarint32(value: Int)
-
-    fun writeRawVarint64(value: Long)
-
-    fun writeRawVarintSizeTAs32(value: ULong)
 
     fun writeSFixed32(fieldNumber: Int, value: Int)
 

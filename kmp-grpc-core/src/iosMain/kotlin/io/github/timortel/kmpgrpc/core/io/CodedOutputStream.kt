@@ -27,10 +27,6 @@ actual class CodedOutputStream(private val impl: GPBCodedOutputStream) {
         values.forEach { writeBytes(fieldNumber, it) }
     }
 
-    actual fun writeBytesNoTag(value: ByteArray) {
-        impl.writeBytesNoTag(value.native)
-    }
-
     actual fun writeDouble(fieldNumber: Int, value: Double) = impl.writeDouble(fieldNumber, value)
 
     actual fun writeDoubleArray(
@@ -134,30 +130,7 @@ actual class CodedOutputStream(private val impl: GPBCodedOutputStream) {
         )
     }
 
-    actual fun writeMessageNoTag(value: KMMessage) {
-        serializeMessage(value, this)
-    }
-
-    actual fun writeMessageSetExtension(
-        fieldNumber: Int,
-        value: KMMessage
-    ): Unit = TODO()
-
-    actual fun writeRawByte(value: UByte) = impl.writeRawByte(value)
-
-    actual fun writeRawData(data: ByteArray) = impl.writeRawData(data.native)
-
-    actual fun writeRawLittleEndian32(value: Int) = impl.writeRawLittleEndian32(value)
-
-    actual fun writeRawLittleEndian64(value: Long) = impl.writeRawLittleEndian64(value)
-
-    actual fun writeRawMessageSetExtension(fieldNumber: Int, value: ByteArray): Unit = TODO()
-
     actual fun writeRawVarint32(value: Int) = impl.writeRawVarint32(value)
-
-    actual fun writeRawVarint64(value: Long) = impl.writeRawVarint64(value)
-
-    actual fun writeRawVarintSizeTAs32(value: ULong) = impl.writeRawVarintSizeTAs32(value)
 
     actual fun writeSFixed32(fieldNumber: Int, value: Int) = impl.writeSFixed32(fieldNumber, value)
 

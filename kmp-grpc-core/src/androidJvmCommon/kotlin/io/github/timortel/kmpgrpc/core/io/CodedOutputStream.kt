@@ -50,10 +50,6 @@ actual class CodedOutputStream(private val impl: com.google.protobuf.CodedOutput
         values.forEach { writeBytes(fieldNumber, it) }
     }
 
-    actual fun writeBytesNoTag(value: ByteArray) {
-        impl.writeBytesNoTag(ByteString.copyFrom(value))
-    }
-
     actual fun writeDouble(fieldNumber: Int, value: Double) = impl.writeDouble(fieldNumber, value)
 
     actual fun writeDoubleArray(
@@ -152,21 +148,6 @@ actual class CodedOutputStream(private val impl: com.google.protobuf.CodedOutput
 
     actual fun writeFloatNoTag(value: Float) = impl.writeFloatNoTag(value)
 
-    actual fun writeGroup(
-        fieldNumber: Int,
-        value: KMMessage
-    ): Unit = TODO()
-
-    actual fun writeGroupArray(
-        fieldNumber: Int,
-        values: List<KMMessage>
-    ): Unit = TODO()
-
-    actual fun writeGroupNoTag(
-        fieldNumber: Int,
-        value: KMMessage
-    ): Unit = TODO()
-
     actual fun writeInt32(fieldNumber: Int, value: Int) = impl.writeInt32(fieldNumber, value)
 
     actual fun writeInt32Array(fieldNumber: Int, values: List<Int>, tag: UInt) {
@@ -229,30 +210,7 @@ actual class CodedOutputStream(private val impl: com.google.protobuf.CodedOutput
         )
     }
 
-    actual fun writeMessageNoTag(value: KMMessage) {
-        serializeMessage(value, this)
-    }
-
-    actual fun writeMessageSetExtension(
-        fieldNumber: Int,
-        value: KMMessage
-    ): Unit = TODO()
-
-    actual fun writeRawByte(value: UByte) = impl.writeRawByte(value.toByte())
-
-    actual fun writeRawData(data: ByteArray) = impl.writeRawBytes(ByteString.copyFrom(data))
-
-    actual fun writeRawLittleEndian32(value: Int) = impl.writeFixed32NoTag(value)
-
-    actual fun writeRawLittleEndian64(value: Long) = impl.writeFixed64NoTag(value)
-
-    actual fun writeRawMessageSetExtension(fieldNumber: Int, value: ByteArray): Unit = TODO()
-
     actual fun writeRawVarint32(value: Int) = impl.writeUInt32NoTag(value)
-
-    actual fun writeRawVarint64(value: Long) = impl.writeUInt64NoTag(value)
-
-    actual fun writeRawVarintSizeTAs32(value: ULong): Unit = throw NotImplementedError("Not supported on JVM")
 
     actual fun writeSFixed32(fieldNumber: Int, value: Int) = impl.writeSFixed32(fieldNumber, value)
 

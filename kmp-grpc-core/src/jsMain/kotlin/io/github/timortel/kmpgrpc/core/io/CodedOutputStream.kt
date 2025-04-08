@@ -3,7 +3,6 @@ package io.github.timortel.kmpgrpc.core.io
 import io.github.timortel.kmpgrpc.core.JSPB
 import io.github.timortel.kmpgrpc.core.message.KMMessage
 import io.github.timortel.kmpgrpc.core.message.KmEnum
-import io.github.timortel.kmpgrpc.core.message.serializeMessage
 import io.github.timortel.kmpgrpc.core.util.native
 
 actual class CodedOutputStream(internal val impl: JSPB.BinaryWriter) {
@@ -27,10 +26,6 @@ actual class CodedOutputStream(internal val impl: JSPB.BinaryWriter) {
     actual fun writeBytesArray(fieldNumber: Int, values: List<ByteArray>) {
         val value = values.map { it.native }.toTypedArray()
         impl.writeRepeatedBytes(fieldNumber, value)
-    }
-
-    actual fun writeBytesNoTag(value: ByteArray) {
-        impl.appendUint8Array(value.native)
     }
 
     actual fun writeDouble(fieldNumber: Int, value: Double) {
@@ -155,43 +150,9 @@ actual class CodedOutputStream(internal val impl: JSPB.BinaryWriter) {
         }
     }
 
-    actual fun writeMessageNoTag(value: KMMessage) {
-        serializeMessage(value, this)
-    }
-
-    actual fun writeMessageSetExtension(
-        fieldNumber: Int,
-        value: KMMessage
-    ): Unit = throw NotImplementedError()
-
-    actual fun writeRawByte(value: UByte) {
-        impl.encoder.writeInt8(value)
-    }
-
-    actual fun writeRawData(data: ByteArray) {
-        impl.appendUint8Array(data)
-    }
-
-    actual fun writeRawLittleEndian32(value: Int) {
-        writeFixed32NoTag(value.toUInt())
-    }
-
-    actual fun writeRawLittleEndian64(value: Long) {
-        writeFixed64NoTag(value.toULong())
-    }
-
-    actual fun writeRawMessageSetExtension(fieldNumber: Int, value: ByteArray): Unit = throw NotImplementedError()
-
     actual fun writeRawVarint32(value: Int) {
         impl.encoder.writeUint32(value)
     }
-
-    actual fun writeRawVarint64(value: Long) {
-        impl.encoder.writeUint64(value)
-    }
-
-    actual fun writeRawVarintSizeTAs32(value: ULong): Unit =
-        throw NotImplementedError("Not supported on js")
 
     actual fun writeSFixed32(fieldNumber: Int, value: Int) {
         impl.writeSfixed32(fieldNumber, value)
