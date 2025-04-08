@@ -24,6 +24,10 @@ fun List<CodeBlock>.joinCodeBlocks(separator: String): CodeBlock {
 }
 
 fun <T> List<T>.joinToCodeBlock(separator: String, append: CodeBlock.Builder.(T) -> Unit): CodeBlock {
+    return joinToCodeBlock(CodeBlock.of(separator), append)
+}
+
+fun <T> List<T>.joinToCodeBlock(separator: CodeBlock, append: CodeBlock.Builder.(T) -> Unit): CodeBlock {
     return CodeBlock.builder().apply {
         forEachIndexed { index, value ->
             if (index != 0) add(separator)

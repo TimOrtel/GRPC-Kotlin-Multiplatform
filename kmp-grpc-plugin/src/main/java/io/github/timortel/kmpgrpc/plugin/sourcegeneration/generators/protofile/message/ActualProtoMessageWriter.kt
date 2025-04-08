@@ -1,6 +1,5 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message
 
-import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeSpec
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.Const
@@ -18,15 +17,6 @@ abstract class ActualProtoMessageWriter : ProtoMessageWriter(true) {
 
     override fun applyToClass(builder: TypeSpec.Builder, message: ProtoMessage) {
         builder.apply {
-            primaryConstructor(
-                FunSpec
-                    .constructorBuilder()
-                    .apply {
-                        callMessageWriterExtensions(message) { it.applyToConstructor(this, message, target) }
-                    }
-                    .build()
-            )
-
             addSuperinterface(kmMessage)
 
             addProperty(

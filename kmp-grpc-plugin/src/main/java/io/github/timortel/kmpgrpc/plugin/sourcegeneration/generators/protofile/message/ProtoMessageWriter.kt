@@ -1,5 +1,6 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message
 
+import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.TypeName
@@ -40,6 +41,7 @@ abstract class ProtoMessageWriter(private val isActual: Boolean) {
         DeserializationFunctionExtension(),
         EqualsFunctionExtension,
         HashCodeFunctionExtension,
+        ToStringFunctionExtension,
         FieldPropertyConstructorExtension,
         UnknownFieldsExtension
     )
@@ -58,6 +60,19 @@ abstract class ProtoMessageWriter(private val isActual: Boolean) {
                     !isNested -> addModifiers(KModifier.EXPECT)
                     else -> {}
                 }
+
+                primaryConstructor(
+                    FunSpec
+                        .constructorBuilder()
+                        .apply {
+                            if (isActual) {
+                                addModifiers(KModifier.ACTUAL)
+                            }
+
+                            callMessageWriterExtensions(message) { it.applyToConstructor(this, message, target) }
+                        }
+                        .build()
+                )
 
                 addSuperinterface(kmMessage)
                 addSuperinterfaces(additionalSuperinterfaces)

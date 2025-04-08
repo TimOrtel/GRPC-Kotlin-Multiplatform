@@ -9,13 +9,15 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.Prot
 
 object UnknownFieldsExtension : MessageWriterExtension {
     override fun applyToConstructor(builder: FunSpec.Builder, message: ProtoMessage, sourceTarget: SourceTarget) {
-        if (sourceTarget is SourceTarget.Actual) {
-            builder.addParameter(
-                Const.Message.Constructor.UnknownFields.toParamSpecBuilder()
-                    .defaultValue("emptyList()")
-                    .build()
-            )
-        }
+        builder.addParameter(
+            Const.Message.Constructor.UnknownFields.toParamSpecBuilder()
+                .apply {
+                    if (sourceTarget !is SourceTarget.Actual) {
+                        defaultValue("emptyList()")
+                    }
+                }
+                .build()
+        )
     }
 
     override fun applyToClass(builder: TypeSpec.Builder, message: ProtoMessage, sourceTarget: SourceTarget) {

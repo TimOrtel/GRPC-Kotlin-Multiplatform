@@ -12,59 +12,67 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.mess
 object FieldPropertyConstructorExtension : MessageWriterExtension {
 
     override fun applyToConstructor(builder: FunSpec.Builder, message: ProtoMessage, sourceTarget: SourceTarget) {
-        if (sourceTarget is SourceTarget.Actual) {
-            //one of attributes do not get a parameter, as they get the one of parameter
-            message.fields.forEach { field ->
-                when (field.cardinality) {
-                    is ProtoFieldCardinality.Singular -> {
-                        val type = if (field.type.isMessage) field.type.resolve().copy(nullable = true)
-                        else field.type.resolve()
+        val isActual = sourceTarget is SourceTarget.Actual
 
-                        builder.addParameter(
-                            ParameterSpec
-                                .builder(field.attributeName, type)
-                                .defaultValue(field.type.defaultValue())
-                                .build()
-                        )
-                    }
+        //one of attributes do not get a parameter, as they get the one of parameter
+        message.fields.forEach { field ->
+            when (field.cardinality) {
+                is ProtoFieldCardinality.Singular -> {
+                    val type = if (field.type.isMessage) field.type.resolve().copy(nullable = true)
+                    else field.type.resolve()
 
-                    ProtoFieldCardinality.Repeated -> {
-                        builder.addParameter(
-                            ParameterSpec
-                                .builder(field.attributeName, LIST.parameterizedBy(field.type.resolve()))
-                                .defaultValue("emptyList()")
-                                .build()
-                        )
-                    }
+                    builder.addParameter(
+                        ParameterSpec
+                            .builder(field.attributeName, type)
+                            .apply {
+                                if (!isActual) defaultValue(field.type.defaultValue())
+                            }
+                            .build()
+                    )
+                }
+
+                ProtoFieldCardinality.Repeated -> {
+                    builder.addParameter(
+                        ParameterSpec
+                            .builder(field.attributeName, LIST.parameterizedBy(field.type.resolve()))
+                            .apply {
+                                if (!isActual) defaultValue("emptyList()")
+                            }
+                            .build()
+                    )
                 }
             }
+        }
 
-            message.mapFields.forEach { mapField ->
-                builder.addParameter(
-                    ParameterSpec
-                        .builder(
-                            mapField.attributeName,
-                            MAP.parameterizedBy(
-                                mapField.keyType.resolve(),
-                                mapField.valuesType.resolve(),
-                            )
+        message.mapFields.forEach { mapField ->
+            builder.addParameter(
+                ParameterSpec
+                    .builder(
+                        mapField.attributeName,
+                        MAP.parameterizedBy(
+                            mapField.keyType.resolve(),
+                            mapField.valuesType.resolve(),
                         )
-                        .defaultValue("emptyMap()")
-                        .build()
-                )
-            }
+                    )
+                    .apply {
+                        if (!isActual) defaultValue("emptyMap()")
+                    }
+                    .build()
+            )
+        }
 
-            message.oneOfs.forEach { oneOf ->
-                builder.addParameter(
-                    ParameterSpec
-                        .builder(
-                            oneOf.attributeName,
-                            oneOf.sealedClassName
-                        )
-                        .defaultValue("%T", oneOf.sealedClassNameNotSet)
-                        .build()
-                )
-            }
+        message.oneOfs.forEach { oneOf ->
+            builder.addParameter(
+                ParameterSpec
+                    .builder(
+                        oneOf.attributeName,
+                        oneOf.sealedClassName
+                    )
+                    .apply {
+                        if (!isActual) defaultValue("%T", oneOf.sealedClassNameNotSet)
+                    }
+                    .build()
+            )
         }
     }
 }
