@@ -2,7 +2,6 @@ package io.github.timortel.kotlin_multiplatform_grpc_plugin.test
 
 import io.github.timortel.kmpgrpc.core.message.KMMessage
 import io.github.timortel.kmpgrpc.core.message.MessageDeserializer
-import io.github.timortel.kmpgrpc.core.message.UnknownField
 import io.github.timortel.kmpgrpc.test.*
 
 class IOSSerializationTest : SerializationTest() {
@@ -28,9 +27,6 @@ class IOSSerializationTest : SerializationTest() {
     override fun serialize(message: OneOfMessage): OneOfMessage = serializeImpl(message, OneOfMessage.Companion)
 
     override fun serialize(message: ComplexRepeatedMessage): ComplexRepeatedMessage = serializeImpl(message, ComplexRepeatedMessage.Companion)
-
-    override fun createMessageWithUnknownField(fields: List<UnknownField>): Unknownfield.MessageWithUnknownField =
-        Unknownfield.MessageWithUnknownField(unknownFields = fields)
 
     override fun serialize(message: Unknownfield.MessageWithUnknownField): Unknownfield.MessageWithUnknownField =
         serializeImpl(message, Unknownfield.MessageWithUnknownField.Companion)

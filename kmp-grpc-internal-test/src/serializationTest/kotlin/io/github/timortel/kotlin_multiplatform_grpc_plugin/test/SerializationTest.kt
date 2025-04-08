@@ -97,7 +97,6 @@ abstract class SerializationTest {
         assertEquals(msg, reconstructed)
     }
 
-    abstract fun createMessageWithUnknownField(fields: List<UnknownField>): Unknownfield.MessageWithUnknownField
     abstract fun serialize(message: Unknownfield.MessageWithUnknownField): Unknownfield.MessageWithUnknownField
 
     @Test
@@ -110,7 +109,7 @@ abstract class SerializationTest {
             UnknownField.Group(6, listOf(UnknownField.Varint(7, 13L)))
         )
 
-        val msg = createMessageWithUnknownField(fields)
+        val msg = Unknownfield.MessageWithUnknownField(unknownFields = fields)
 
         val reconstructed = serialize(msg)
 
