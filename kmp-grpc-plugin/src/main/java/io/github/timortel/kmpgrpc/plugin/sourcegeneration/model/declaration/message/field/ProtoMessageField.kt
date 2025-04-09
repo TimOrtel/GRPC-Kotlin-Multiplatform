@@ -1,6 +1,10 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field
 
+import com.squareup.kotlinpoet.BOOLEAN
 import com.squareup.kotlinpoet.CodeBlock
+import com.squareup.kotlinpoet.LIST
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import com.squareup.kotlinpoet.TypeName
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOption
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoChildProperty
@@ -32,6 +36,16 @@ data class ProtoMessageField(
         ProtoFieldCardinality.Repeated -> "${name}List"
     }
 
+    override val propertyType: TypeName
+        get() = when (cardinality) {
+            is ProtoFieldCardinality.Singular -> {
+                type.resolve()
+            }
+            is ProtoFieldCardinality.Repeated -> {
+                LIST.parameterizedBy(type.resolve())
+            }
+        }
+
     // See https://protobuf.dev/programming-guides/field_presence/#presence-in-proto3-apis
     // The "isSet" method is added for optional fields and message types.
     val needsIsSetProperty: Boolean
@@ -41,7 +55,8 @@ data class ProtoMessageField(
         get() = ExtraProperty(
             desiredAttributeName = "is${name.capitalize()}Set",
             resolvingParent = message,
-            priority = number
+            priority = number,
+            propertyType = BOOLEAN
         )
 
     val childProperties: List<ProtoChildProperty>
@@ -61,7 +76,8 @@ data class ProtoMessageField(
     data class ExtraProperty(
         override val desiredAttributeName: String,
         override val resolvingParent: ProtoChildPropertyNameResolver,
-        override val priority: Int
+        override val priority: Int,
+        override val propertyType: TypeName
     ) : ProtoChildProperty {
         override val name: String
             get() = desiredAttributeName

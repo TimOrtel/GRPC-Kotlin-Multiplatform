@@ -1,8 +1,9 @@
-package io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions
+package io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.functions
 
 import com.squareup.kotlinpoet.*
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.SourceTarget
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.Const
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.MessageWriterExtension
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoMessage
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.joinCodeBlocks
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.joinToCodeBlock
