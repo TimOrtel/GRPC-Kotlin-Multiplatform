@@ -8,8 +8,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
+import kotlin.test.assertContains
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 abstract class RpcTest {
 
@@ -104,16 +104,16 @@ abstract class RpcTest {
         val response = Unknownfield.UnknownFieldServiceStub(channel)
             .fillWithUnknownFields(message)
 
-        assertTrue { response.unknownFields.isNotEmpty() }
-        assertTrue { response.unknownFields.count { it is UnknownField.Varint } == 1 }
-        assertTrue { response.unknownFields.count { it is UnknownField.Fixed32 } == 1 }
-        assertTrue { response.unknownFields.count { it is UnknownField.Fixed64 } == 1 }
-        assertTrue { response.unknownFields.count { it is UnknownField.LengthDelimited } == 1 }
+        val varint = UnknownField.Varint(2, 13L)
+        val fixed32 = UnknownField.Fixed32(3, (-4f).toBits().toUInt())
+        val fixed64 = UnknownField.Fixed64(4, (64.0).toBits().toULong())
+        val ld = UnknownField.LengthDelimited(5, "Test Message".encodeToByteArray())
 
-        assertEquals(13L, getUF<UnknownField.Varint>(response).value)
-        assertEquals(-4f, Float.fromBits(getUF<UnknownField.Fixed32>(response).value.toInt()))
-        assertEquals(64.0, Double.fromBits(getUF<UnknownField.Fixed64>(response).value.toLong()))
-        assertEquals("Test Message", getUF<UnknownField.LengthDelimited>(response).value.decodeToString())
+        assertEquals(4, response.unknownFields.size)
+        assertContains(response.unknownFields, varint)
+        assertContains(response.unknownFields, fixed32)
+        assertContains(response.unknownFields, fixed64)
+        assertContains(response.unknownFields, ld)
     }
 
     @Test
@@ -128,9 +128,5 @@ abstract class RpcTest {
         val returnedMessage = stub.returnIdentically(baseMessage)
 
         assertEquals(baseMessage, returnedMessage)
-    }
-
-    private inline fun <reified T> getUF(m: Unknownfield.MessageWithUnknownField): T {
-        return m.unknownFields.filterIsInstance<T>().first()
     }
 }
