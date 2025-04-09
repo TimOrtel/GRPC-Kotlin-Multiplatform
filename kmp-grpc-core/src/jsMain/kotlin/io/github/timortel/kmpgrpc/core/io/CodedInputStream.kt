@@ -68,7 +68,7 @@ actual class CodedInputStream(
 
     actual fun readInt32(): Int = impl.decoder.readSignedVarint32()
 
-    actual fun readFixed32(): UInt = impl.decoder.readUint32().toInt().toUInt()
+    actual fun readFixed32(): UInt = impl.decoder.readUint32().toLong().toUInt()
 
     actual fun readFixed64(): ULong = impl.decoder.readUint64().toLong().toULong()
 
