@@ -31,7 +31,7 @@ object Const {
     }
 
     object Message {
-        val reservedAttributeNames = setOf("fullName", "requiredSize")
+        val reservedAttributeNames = setOf("fullName", "requiredSize", Constructor.UnknownFields.name)
 
         val fullNameProperty = Property("fullName", STRING)
 
