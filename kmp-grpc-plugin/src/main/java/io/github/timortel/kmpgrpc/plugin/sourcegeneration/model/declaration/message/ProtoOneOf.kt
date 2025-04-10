@@ -1,6 +1,7 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message
 
 import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.TypeName
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.Const
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoNode
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.capitalize
@@ -31,6 +32,9 @@ data class ProtoOneOf(
     val sealedClassNameUnknown: ClassName get() = sealedClassName.nestedClass(UNKNOWN_CLASS_NAME)
 
     override val desiredAttributeName: String = name
+
+    override val propertyType: TypeName
+        get() = sealedClassName
 
     override val childProperties: List<ProtoChildProperty>
         get() = fields
