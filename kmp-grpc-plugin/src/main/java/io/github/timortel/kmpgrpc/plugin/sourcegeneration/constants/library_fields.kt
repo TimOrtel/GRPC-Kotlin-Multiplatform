@@ -16,8 +16,15 @@ val MessageCompanion = ClassName(PACKAGE_MESSAGE, "KMMessageCompanion")
 val kmMessage = ClassName(PACKAGE_MESSAGE, "KMMessage")
 val kmEnum = ClassName(PACKAGE_MESSAGE, "KmEnum")
 
+val unknownField = ClassName(PACKAGE_MESSAGE, "UnknownField")
+
 val writeKMMessage = MemberName(PACKAGE_IO, "writeKMMessage")
 val readKMMessage = MemberName(PACKAGE_IO, "readKMMessage")
+
+val readUnknownField = MemberName(PACKAGE_IO, "readUnknownField")
+val writeUnknownFields = MemberName(PACKAGE_IO, "writeUnknownFields")
+val computeUnknownFieldsRequiredSize = MemberName(PACKAGE_IO, "computeUnknownFieldsRequiredSize")
+
 val computeMapSize = MemberName(PACKAGE_IO, "computeMapSize")
 val computeMessageSize = MemberName(PACKAGE_IO, "computeMessageSize")
 

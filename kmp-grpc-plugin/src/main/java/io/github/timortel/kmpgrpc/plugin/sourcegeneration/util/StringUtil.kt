@@ -19,7 +19,19 @@ fun String.decapitalize(): String {
     }
 }
 
+fun List<CodeBlock>.joinCodeBlocks(separator: String): CodeBlock {
+    return joinCodeBlocks(CodeBlock.of(separator))
+}
+
+fun List<CodeBlock>.joinCodeBlocks(separator: CodeBlock): CodeBlock {
+    return filter { it.isNotEmpty() }.joinToCodeBlock(separator) { add(it) }
+}
+
 fun <T> List<T>.joinToCodeBlock(separator: String, append: CodeBlock.Builder.(T) -> Unit): CodeBlock {
+    return joinToCodeBlock(CodeBlock.of(separator), append)
+}
+
+fun <T> List<T>.joinToCodeBlock(separator: CodeBlock, append: CodeBlock.Builder.(T) -> Unit): CodeBlock {
     return CodeBlock.builder().apply {
         forEachIndexed { index, value ->
             if (index != 0) add(separator)

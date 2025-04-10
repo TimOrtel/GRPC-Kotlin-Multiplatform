@@ -123,7 +123,7 @@ kmpGrpc {
 
     includeWellKnownTypes = true
 
-    protoSourceFolders = project.files("src/commonMain/proto")
+    protoSourceFolders = project.files("src/commonMain/proto/general", "src/commonMain/proto/unknownfield")
 }
 
 tasks.withType(Test::class) {

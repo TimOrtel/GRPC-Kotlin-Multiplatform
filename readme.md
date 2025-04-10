@@ -211,6 +211,15 @@ Converts a `Timestamp` to `Instant`.
 val instant: Instant = timestamp.toInstant()
 ```
 
+### Unknown Fields Support
+Unknown fields are automatically captured when parsing messages and also serialized back to the wire. 
+You can access them using the generated property:
+```kotlin
+public class ExampleMessage {
+    val unknownFields: List<UnknownField>
+}
+```
+
 ## Setup
 In your top-level build.gradle.kts, add the following:
 ```kotlin

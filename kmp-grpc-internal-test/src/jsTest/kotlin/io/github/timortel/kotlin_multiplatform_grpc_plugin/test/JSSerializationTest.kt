@@ -28,4 +28,7 @@ class JSSerializationTest : SerializationTest() {
     override fun serialize(message: OneOfMessage): OneOfMessage = serializeImpl(message, OneOfMessage.Companion)
 
     override fun serialize(message: ComplexRepeatedMessage): ComplexRepeatedMessage = serializeImpl(message, ComplexRepeatedMessage.Companion)
+
+    override fun serialize(message: Unknownfield.MessageWithUnknownField): Unknownfield.MessageWithUnknownField =
+        serializeImpl(message, Unknownfield.MessageWithUnknownField.Companion)
 }

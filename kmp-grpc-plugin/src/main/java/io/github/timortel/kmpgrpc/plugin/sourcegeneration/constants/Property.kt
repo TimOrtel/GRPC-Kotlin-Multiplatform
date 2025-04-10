@@ -7,7 +7,8 @@ import com.squareup.kotlinpoet.TypeName
 
 data class Property(val name: String, val type: TypeName) {
     fun toPropertySpecBuilder(vararg modifiers: KModifier): PropertySpec.Builder = PropertySpec.builder(name, type, *modifiers)
-    fun toPropertySpec(vararg modifiers: KModifier): PropertySpec = PropertySpec.builder(name, type, *modifiers).build()
+    fun toPropertySpec(vararg modifiers: KModifier): PropertySpec = toPropertySpecBuilder(*modifiers).build()
 
-    fun toParamSpec(vararg modifiers: KModifier): ParameterSpec = ParameterSpec.builder(name, type, *modifiers).build()
+    fun toParamSpecBuilder(vararg modifiers: KModifier): ParameterSpec.Builder = ParameterSpec.builder(name, type, *modifiers)
+    fun toParamSpec(vararg modifiers: KModifier): ParameterSpec = toParamSpecBuilder(*modifiers).build()
 }

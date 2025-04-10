@@ -3,6 +3,8 @@ package io.github.timortel.kmpgrpc.core.io
 import io.github.timortel.kmpgrpc.core.message.DataType
 import io.github.timortel.kmpgrpc.core.message.KMMessage
 
+private const val DEFAULT_RECURSION_LIMIT = 100
+
 /**
  * Read a [KMMessage] from the [wrapper] using the provided [messageFactory].
  */
@@ -66,20 +68,10 @@ private fun <T> recursiveRead(stream: CodedInputStream, block: () -> T): T {
     stream.recursionDepth--
     stream.popLimit(oldLimit)
     return r
-
-    //checkRecursionLimit(wrapper)
-    //val length: int32_t = wrapper.stream.readInt32()
-    //val oldLimit = wrapper.stream.pushLimit(length.toULong())
-    //wrapper.recursionDepth++
-    //val r = block()
-    //wrapper.stream.checkLastTagWas(0)
-    //wrapper.recursionDepth--
-    //wrapper.stream.popLimit(oldLimit)
-    //return r
 }
 
-private fun checkRecursionLimit(wrapper: CodedInputStream) {
-    if (wrapper.recursionDepth >= 100) {
+fun checkRecursionLimit(wrapper: CodedInputStream) {
+    if (wrapper.recursionDepth >= DEFAULT_RECURSION_LIMIT) {
         throw RuntimeException("Recursion depth exceeded.")
     }
 }

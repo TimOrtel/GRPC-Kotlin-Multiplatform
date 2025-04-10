@@ -1,12 +1,14 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.test
 
 import io.github.timortel.kmpgrpc.core.KMChannel
+import io.github.timortel.kmpgrpc.core.message.UnknownField
 import io.github.timortel.kmpgrpc.test.*
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
+import kotlin.test.assertContains
 import kotlin.test.assertEquals
 
 abstract class RpcTest {
@@ -16,9 +18,9 @@ abstract class RpcTest {
 
     private val channel: KMChannel
         get() = KMChannel.Builder
-        .forAddress(address, port)
-        .usePlaintext()
-        .build()
+            .forAddress(address, port)
+            .usePlaintext()
+            .build()
 
     private val stub: TestServiceStub get() = TestServiceStub(channel)
 
@@ -85,11 +87,46 @@ abstract class RpcTest {
     }
 
     @Test
-    fun testStreamEverything() =  runTest {
+    fun testStreamEverything() = runTest {
         val message = createMessageWithAllTypes()
         val flow: Flow<MessageWithEverything> = stub
             .everythingStreamingRpc(message)
 
         assertEquals(listOf(message, message, message), flow.toList())
+    }
+
+    @Test
+    fun testReceiveUnknownFields() = runTest {
+        val message = messageWithUnknownField {
+            a = "WWW"
+        }
+
+        val response = Unknownfield.UnknownFieldServiceStub(channel)
+            .fillWithUnknownFields(message)
+
+        val varint = UnknownField.Varint(2, 13L)
+        val fixed32 = UnknownField.Fixed32(3, (-4f).toBits().toUInt())
+        val fixed64 = UnknownField.Fixed64(4, (64.0).toBits().toULong())
+        val ld = UnknownField.LengthDelimited(5, "Test Message".encodeToByteArray())
+
+        assertEquals(4, response.unknownFields.size)
+        assertContains(response.unknownFields, varint)
+        assertContains(response.unknownFields, fixed32)
+        assertContains(response.unknownFields, fixed64)
+        assertContains(response.unknownFields, ld)
+    }
+
+    @Test
+    fun testSendUnknownFields() = runTest {
+        val message = messageWithUnknownField {
+            a = "WWW"
+        }
+
+        val stub = Unknownfield.UnknownFieldServiceStub(channel)
+        val baseMessage = stub.fillWithUnknownFields(message)
+
+        val returnedMessage = stub.returnIdentically(baseMessage)
+
+        assertEquals(baseMessage, returnedMessage)
     }
 }

@@ -7,6 +7,7 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.Prot
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoFieldCardinality
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoRegularField
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.joinCodeBlocks
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.joinToCodeBlock
 
 /**
@@ -127,16 +128,16 @@ class RequiredSizePropertyExtension : BaseSerializationExtension() {
                     )
                 }
 
-                add(
-                    listOf(fieldsCodeBlock, mapFieldsCodeBlock, oneOfsBlock)
-                        .filter { it.isNotEmpty() }
-                        .joinToCodeBlock(separator) { add(it) }
+                val unknownFieldsBlock = CodeBlock.of(
+                    "%M(%N)",
+                    computeUnknownFieldsRequiredSize,
+                    Const.Message.Constructor.UnknownFields.name
                 )
 
-                // Fallback for messages without any fields.
-                if (message.isEmpty) {
-                    add("0")
-                }
+                add(
+                    listOf(fieldsCodeBlock, mapFieldsCodeBlock, oneOfsBlock, unknownFieldsBlock)
+                        .joinCodeBlocks(separator)
+                )
             }
             .build()
     }

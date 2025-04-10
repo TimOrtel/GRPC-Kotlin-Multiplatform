@@ -2,6 +2,22 @@ package io.github.timortel.kmpgrpc.core.io
 
 import io.github.timortel.kmpgrpc.core.message.DataType
 import io.github.timortel.kmpgrpc.core.message.KMMessage
+import io.github.timortel.kmpgrpc.core.message.UnknownField
+
+fun computeUnknownFieldsRequiredSize(fields: List<UnknownField>): Int {
+    return fields.sumOf { field ->
+        val contentSize = when (field) {
+            is UnknownField.Varint -> computeInt64SizeNoTag(field.value)
+            is UnknownField.LengthDelimited -> computeBytesSizeNoTag(field.value)
+            is UnknownField.Fixed32 -> computeFixed32SizeNoTag(field.value)
+            is UnknownField.Fixed64 -> computeFixed64SizeNoTag(field.value)
+            // A group has an additional end tag
+            is UnknownField.Group -> computeUnknownFieldsRequiredSize(field.values) + computeTagSize(field.number)
+        }
+
+        computeTagSize(field.number) + contentSize
+    }
+}
 
 expect fun computeTagSize(fieldNumber: Int): Int
 
