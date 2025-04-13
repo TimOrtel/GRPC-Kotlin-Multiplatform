@@ -12,6 +12,10 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.kmMessage
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.enumeration.ProtoEnumerationWriter
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.field.ProtoFieldWriter
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.*
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.functions.CopyFunctionExtension
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.functions.EqualsFunctionExtension
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.functions.HashCodeFunctionExtension
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.functions.ToStringFunctionExtension
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.serialization.DeserializationFunctionExtension
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.serialization.NativeDeserializationFunctionExtension
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.serialization.RequiredSizePropertyExtension
@@ -42,6 +46,7 @@ abstract class ProtoMessageWriter(private val isActual: Boolean) {
         EqualsFunctionExtension,
         HashCodeFunctionExtension,
         ToStringFunctionExtension,
+        CopyFunctionExtension,
         FieldPropertyConstructorExtension,
         UnknownFieldsExtension
     )
@@ -122,7 +127,7 @@ abstract class ProtoMessageWriter(private val isActual: Boolean) {
 
     abstract fun applyToCompanionObject(builder: TypeSpec.Builder, message: ProtoMessage)
 
-    protected fun callMessageWriterExtensions(message: ProtoMessage, call: (MessageWriterExtension) -> Unit) {
+    private fun callMessageWriterExtensions(message: ProtoMessage, call: (MessageWriterExtension) -> Unit) {
         extensions.filter { it.appliesTo(message, target) }.forEach { call(it) }
     }
 }

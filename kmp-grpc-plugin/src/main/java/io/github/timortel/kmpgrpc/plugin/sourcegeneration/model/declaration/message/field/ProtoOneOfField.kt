@@ -1,6 +1,7 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field
 
 import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.TypeName
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.capitalize
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOption
@@ -27,7 +28,11 @@ data class ProtoOneOfField(
     override val resolvingParent: ProtoChildPropertyNameResolver
         get() = parent
 
-    val sealedClassChildName: ClassName get() = parent.sealedClassName.nestedClass(name.capitalize())
+    val sealedClassChildName: ClassName
+        get() = parent.sealedClassName.nestedClass(name.capitalize())
+
+    override val propertyType: TypeName
+        get() = sealedClassChildName
 
     init {
         type.parent = ProtoType.Parent.OneOfField(this)
