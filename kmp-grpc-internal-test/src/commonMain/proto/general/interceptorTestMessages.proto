@@ -8,6 +8,12 @@ message InterceptorMessage {
   int32 a = 1;
 }
 
+message MetadataMessage {
+  map<string, string> metadata = 1;
+}
+
 service InterceptorService {
   rpc send(InterceptorMessage) returns (InterceptorMessage);
+  rpc testMetadata(InterceptorMessage) returns (MetadataMessage);
+  rpc receiveStream(InterceptorMessage) returns (stream InterceptorMessage);
 }

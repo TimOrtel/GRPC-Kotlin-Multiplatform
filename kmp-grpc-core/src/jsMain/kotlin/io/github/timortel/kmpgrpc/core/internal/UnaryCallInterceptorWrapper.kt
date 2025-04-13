@@ -14,7 +14,7 @@ internal class UnaryCallInterceptorWrapper(override val impl: CallInterceptor) :
 
             val newHeaders = impl.onReceiveHeaders(
                 methodDescriptor = getMethodDescriptor(response),
-                metadata = KMMetadata(response.getMetadata())
+                metadata = getKmMetadata(response)
             )
 
             val status = KMStatus(

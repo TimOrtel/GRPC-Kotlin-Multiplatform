@@ -143,8 +143,7 @@ fun <REQ : KMMessage, RES : KMMessage> serverSideStreamingCallImplementation(
 
         call.start()
 
-        val newRequest = channel.interceptor?.onSendMessage(methodDescriptor, request) ?: request
-        call.writeData(newRequest.serializeNative())
+        call.writeData(request.serializeNative())
 
         call.finish()
 
@@ -162,23 +161,39 @@ private fun <REQ : KMMessage, RESP : KMMessage> injectCallInterceptor(
     responseDeserializer: MessageDeserializer<RESP>
 ): GRPCCallOptions {
     return if (interceptor != null) {
-        val factory = object : GRPCInterceptorFactoryProtocol, NSObject() {
-            override fun createInterceptorWithManager(interceptorManager: GRPCInterceptorManager): GRPCInterceptor {
-                return CallInterceptorWrapper(
+
+        val newCallOptions = callOptions.mutableCopy() as GRPCMutableCallOptions
+        newCallOptions.setInterceptorFactories(
+            listOf<GRPCInterceptorFactoryProtocol>(
+                InterceptorFactory(
                     methodDescriptor = methodDescriptor,
                     interceptor = interceptor,
-                    interceptorManager = interceptorManager,
                     requestDeserializer = requestDeserializer,
                     responseDeserializer = responseDeserializer
                 )
-            }
-        }
-
-        val newCallOptions = callOptions.mutableCopy() as GRPCMutableCallOptions
-        newCallOptions.setInterceptorFactories(newCallOptions.interceptorFactories + factory)
+            )
+        )
 
         newCallOptions
     } else callOptions
+}
+
+private class InterceptorFactory<REQ : KMMessage, RES : KMMessage>(
+    private val methodDescriptor: KMMethodDescriptor,
+    private val interceptor: CallInterceptor,
+    private val requestDeserializer: MessageDeserializer<REQ>,
+    private val responseDeserializer: MessageDeserializer<RES>
+) : GRPCInterceptorFactoryProtocol, NSObject() {
+    override fun createInterceptorWithManager(interceptorManager: GRPCInterceptorManager): GRPCInterceptor {
+        return CallInterceptorWrapper(
+            methodDescriptor = methodDescriptor,
+            interceptor = interceptor,
+            requestDeserializer = requestDeserializer,
+            responseDeserializer = responseDeserializer,
+            interceptorManager = interceptorManager,
+            dispatchQueue = interceptorManager.dispatchQueue
+        )
+    }
 }
 
 private class StreamingCallHandler(

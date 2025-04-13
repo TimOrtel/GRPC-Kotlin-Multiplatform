@@ -8,7 +8,7 @@ import io.github.timortel.kmpgrpc.core.message.KMMessage
 
 /**
  * Implementation of a [CallInterceptor] that calls all given [callInterceptors].
- * The first element in [callInterceptors] is the outermost interceptor.
+ * Runs from right to left on sending events, and from left to right on receiving events to match behavior on JVM and JS.
  */
 internal class CallInterceptorChain(
     private val callInterceptors: List<CallInterceptor>
@@ -33,7 +33,7 @@ internal class CallInterceptorChain(
     }
 
     override fun onReceiveHeaders(methodDescriptor: KMMethodDescriptor, metadata: KMMetadata): KMMetadata {
-        return callInterceptors.foldRight(metadata) { interceptor, currentMetadata ->
+        return callInterceptors.fold(metadata) { currentMetadata, interceptor ->
             interceptor.onReceiveHeaders(
                 methodDescriptor,
                 currentMetadata
@@ -42,7 +42,7 @@ internal class CallInterceptorChain(
     }
 
     override fun <T : KMMessage> onReceiveMessage(methodDescriptor: KMMethodDescriptor, message: T): T {
-        return callInterceptors.foldRight(message) { interceptor, currentMessage ->
+        return callInterceptors.fold(message) { currentMessage, interceptor ->
             interceptor.onReceiveMessage(
                 methodDescriptor,
                 currentMessage
@@ -55,7 +55,7 @@ internal class CallInterceptorChain(
         status: KMStatus,
         metadata: KMMetadata
     ): Pair<KMStatus, KMMetadata> {
-        return callInterceptors.foldRight(status to metadata) { interceptor, (currentStatus, currentMetadata) ->
+        return callInterceptors.fold(status to metadata) { (currentStatus, currentMetadata), interceptor ->
             interceptor.onClose(
                 methodDescriptor = methodDescriptor,
                 status = currentStatus,

@@ -73,8 +73,8 @@ object JsProtoServiceWriter : ActualProtoServiceWriter() {
             addCode("return ")
 
             addCode(
-                "%M {\n",
-                if(rpc.isReceivingStream){
+                "%M·{\n",
+                if (rpc.isReceivingStream) {
                     MemberName(
                         PACKAGE_RPC, "serverSideStreamingCallImplementation"
                     )
@@ -141,17 +141,21 @@ object JsProtoServiceWriter : ActualProtoServiceWriter() {
                         PropertySpec
                             .builder(rpc.jsMethodDescriptorName, methodDescriptor, KModifier.PRIVATE)
                             .initializer(CodeBlock.builder().apply {
-                                addStatement(
+                                add(
                                     "%T(%S, %S, ::%T, ::%T, {·request:·%T -> request.serialize() }, %T.Companion::deserialize)",
                                     methodDescriptor,
                                     "/${service.file.`package`}.${service.name}/${rpc.name}",
-                                    if(rpc.isReceivingStream) {
+                                    if (rpc.isReceivingStream) {
                                         "server_streaming"
                                     } else "unary",
                                     rpc.sendType.resolve(),
                                     rpc.returnType.resolve(),
                                     rpc.sendType.resolve(),
                                     rpc.returnType.resolve()
+                                )
+                                add(
+                                    ".apply{·methodType·=·%S·}",
+                                    if (rpc.isReceivingStream) "server_streaming" else "unary"
                                 )
                             }.build())
                             .build()
@@ -165,7 +169,7 @@ object JsProtoServiceWriter : ActualProtoServiceWriter() {
                             .apply {
                                 addCode(
                                     "return client.%N(\"\$hostname/%L/%L\", request, metadata ?: js(%S), %N",
-                                    if(rpc.isReceivingStream) {
+                                    if (rpc.isReceivingStream) {
                                         "serverStreaming"
                                     } else "rpcCall",
                                     "${service.file.`package`}.${service.name}",
@@ -174,7 +178,7 @@ object JsProtoServiceWriter : ActualProtoServiceWriter() {
                                     rpc.jsMethodDescriptorName
                                 )
 
-                                if(rpc.isReceivingStream) {
+                                if (rpc.isReceivingStream) {
                                     returns(Dynamic)
                                     addCode(")")
                                 } else {

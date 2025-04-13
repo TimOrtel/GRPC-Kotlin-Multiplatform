@@ -43,15 +43,13 @@ actual class KMChannel private constructor(
             val streamInterceptors =
                 interceptors.map { StreamCallInterceptorWrapper(it) }.toTypedArray<StreamInterceptor>()
 
-            val clientOptions = ClientOptions(
-                suppressCorsPreflight = null,
-                withCredentials = null,
-                format = "text",
-                workerScope = null,
-                useFetchDownloadStreams = null,
-                unaryInterceptors = unaryInterceptors,
-                streamInterceptors = streamInterceptors
-            )
+            val clientOptions: ClientOptions = js("{}")
+                .unsafeCast<ClientOptions>()
+                .apply {
+                    format = "text"
+                    this.unaryInterceptors = unaryInterceptors
+                    this.streamInterceptors = streamInterceptors
+                }
 
             return KMChannel(
                 name = name,

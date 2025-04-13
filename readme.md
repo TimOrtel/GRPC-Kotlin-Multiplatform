@@ -220,6 +220,31 @@ public class ExampleMessage {
 }
 ```
 
+### Intercepting Calls
+You can intercept calls to modify what is sent to the server and received from the server. Example:
+```kotlin
+val loggingInterceptor = object : CallInterceptor {
+    override fun onStart(methodDescriptor: KMMethodDescriptor, metadata: KMMetadata): KMMetadata {
+        println("Call started ${methodDescriptor.fullMethodName}")
+        return super.onStart(methodDescriptor, metadata)
+    }
+
+    override fun onClose(
+        methodDescriptor: KMMethodDescriptor,
+        status: KMStatus,
+        metadata: KMMetadata
+    ): Pair<KMStatus, KMMetadata> {
+        println("Call closed ${methodDescriptor.fullMethodName}")
+        return super.onClose(methodDescriptor, status, metadata)
+    }
+}
+
+val channel = KMChannel.Builder
+    .forAddress("localhost", 8080)
+    .withInterceptors(loggingInterceptor)
+    .build()
+```
+
 ## Setup
 In your top-level build.gradle.kts, add the following:
 ```kotlin

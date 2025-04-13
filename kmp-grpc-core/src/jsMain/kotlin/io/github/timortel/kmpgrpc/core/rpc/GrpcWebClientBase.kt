@@ -1,4 +1,5 @@
 @file:JsModule("grpc-web")
+@file:JsNonModule
 
 package io.github.timortel.kmpgrpc.core.rpc
 
@@ -22,25 +23,36 @@ external class GrpcWebClientBase(options: ClientOptions) {
     ): dynamic
 }
 
-external class ClientOptions(
-    val suppressCorsPreflight: Boolean?,
-    val withCredentials: Boolean?,
-    val unaryInterceptors: Array<UnaryInterceptor>,
-    val streamInterceptors: Array<StreamInterceptor>,
-    val format: String?,
-    val workerScope: dynamic,
-    val useFetchDownloadStreams: Boolean?
-)
+external interface ClientOptions {
+    var suppressCorsPreflight: Boolean?
+    var withCredentials: Boolean?
+    var unaryInterceptors: Array<UnaryInterceptor>?
+    var streamInterceptors: Array<StreamInterceptor>?
+    var format: String?
+    var workerScope: dynamic
+    var useFetchDownloadStreams: Boolean?
+}
 
 external class MethodDescriptor(
-    name: String,
-    methodType: String,
-    requestType: dynamic,
-    responseType: dynamic,
-    requestSerializeFn: dynamic,
-    responseDeserializeFn: (Uint8Array) -> Any
-) {
+    var name: String,
+    var methodType: String,
+    var requestType: dynamic,
+    var responseType: dynamic,
+    var requestSerializeFn: dynamic,
+    var responseDeserializeFn: (Uint8Array) -> Any
+) : MethodDescriptorInterface {
+    override fun getName(): String {
+        definedExternally
+    }
+
+    override fun getMethodType(): String {
+        definedExternally
+    }
+}
+
+external interface MethodDescriptorInterface {
     fun getName(): String
+
     fun getMethodType(): String
 }
 
@@ -57,17 +69,10 @@ external interface Request {
 
     fun getMethodDescriptor(): MethodDescriptor
 
-    fun getMetadata(): Map<String, String>
+    fun getMetadata(): dynamic
 
     fun getCallOptions(): CallOptions
 }
-
-external class RequestInternal(
-    requestMessage: dynamic,
-    methodDescriptor: MethodDescriptor,
-    metadata: Map<String, String>,
-    callOptions: CallOptions
-)
 
 external object MethodType {
     val UNARY: String
@@ -86,7 +91,7 @@ external class CallOptions {
 open external class UnaryResponse {
     fun getResponseMessage(): dynamic
 
-    fun getMetadata(): Map<String, String>
+    fun getMetadata(): dynamic
 
     fun getStatus(): Status
 
@@ -107,7 +112,7 @@ external class Status(
 )
 
 external interface ClientReadableStream {
-    fun on(eventType: String, callback: (UnaryResponse) -> Unit): ClientReadableStream
+    fun on(eventType: String, callback: (dynamic) -> Unit): ClientReadableStream
 
     fun cancel(): ClientReadableStream
 }

@@ -8,26 +8,23 @@ import io.github.timortel.kmpgrpc.core.rpc.asGrpcStatus
 import platform.Foundation.NSData
 import platform.Foundation.NSError
 import platform.Foundation.NSLocalizedDescriptionKey
+import platform.darwin.dispatch_queue_t
+
+private const val ERROR_DOMAIN = "io.grpc"
 
 class CallInterceptorWrapper<REQ : KMMessage, RESP : KMMessage>(
     private val interceptor: CallInterceptor,
     private val methodDescriptor: KMMethodDescriptor,
     private val requestDeserializer: MessageDeserializer<REQ>,
     private val responseDeserializer: MessageDeserializer<RESP>,
-    private val interceptorManager: GRPCInterceptorManager,
-) : GRPCInterceptor(interceptorManager, null) {
-
-    companion object {
-        private const val ERROR_DOMAIN = "io.grpc"
-    }
+    val interceptorManager: GRPCInterceptorManager,
+    dispatchQueue: dispatch_queue_t,
+) : GRPCInterceptor(interceptorManager, dispatchQueue) {
 
     override fun startWithRequestOptions(requestOptions: GRPCRequestOptions, callOptions: GRPCCallOptions) {
         val newMetadata = interceptor.onStart(methodDescriptor, callOptions.initialMetadata.extractMetadata())
 
-        interceptorManager.startWithRequestOptions(
-            requestOptions = requestOptions,
-            callOptions = callOptions.edit { setInitialMetadata(newMetadata.metadataMap.toMap()) }
-        )
+        super.startWithRequestOptions(requestOptions, callOptions.edit { setInitialMetadata(newMetadata.metadataMap.toMap()) })
     }
 
     override fun writeData(data: Any) {
@@ -37,13 +34,13 @@ class CallInterceptorWrapper<REQ : KMMessage, RESP : KMMessage>(
                 .serializeNative()
         } else data
 
-        interceptorManager.writeData(newData)
+        super.writeData(newData)
     }
 
     override fun didReceiveInitialMetadata(initialMetadata: Map<Any?, *>?) {
         val newMetadata = interceptor.onReceiveHeaders(methodDescriptor, initialMetadata.extractMetadata())
 
-        interceptorManager.didReceiveInitialMetadata(newMetadata.metadataMap.toMap())
+        super.didReceiveInitialMetadata(newMetadata.metadataMap.toMap())
     }
 
     override fun didReceiveData(data: Any) {
@@ -53,7 +50,7 @@ class CallInterceptorWrapper<REQ : KMMessage, RESP : KMMessage>(
                 .serializeNative()
         } else data
 
-        interceptorManager.didReceiveData(newData)
+        super.didReceiveData(newData)
     }
 
     override fun didCloseWithTrailingMetadata(trailingMetadata: Map<Any?, *>?, error: NSError?) {
@@ -63,7 +60,7 @@ class CallInterceptorWrapper<REQ : KMMessage, RESP : KMMessage>(
             metadata = trailingMetadata.extractMetadata()
         )
 
-        interceptorManager.didCloseWithTrailingMetadata(
+        super.didCloseWithTrailingMetadata(
             trailingMetadata = newTrailingMetadata.metadataMap.toMap(),
             error = if (newStatus.code != KMCode.OK) {
                 if (error != null) {
@@ -86,7 +83,7 @@ class CallInterceptorWrapper<REQ : KMMessage, RESP : KMMessage>(
     }
 
     private fun Map<Any?, *>?.extractMetadata(): KMMetadata {
-        return KMMetadata(orEmpty().map { (key, value) -> key.toString() to value.toString() }.toMap())
+        return KMMetadata(orEmpty().map { (key, value) -> key.toString() to value.toString() }.toMap().toMutableMap())
     }
 
     private fun GRPCCallOptions.edit(edit: GRPCMutableCallOptions.() -> Unit): GRPCCallOptions {

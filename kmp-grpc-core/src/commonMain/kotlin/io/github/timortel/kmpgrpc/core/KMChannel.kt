@@ -22,7 +22,7 @@ expect class KMChannel {
 
         /**
          * Inject the given [interceptors] into all calls started using this channel.
-         * The [interceptors] are called in reverse order.
+         * Interceptors run in reverse order for sending events and in normal order on receiving events.
          */
         fun withInterceptors(vararg interceptors: CallInterceptor): Builder
 

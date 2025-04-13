@@ -3,11 +3,9 @@ package io.github.timortel.kmpgrpc.core.internal
 import io.github.timortel.kmpgrpc.core.CallInterceptor
 import io.github.timortel.kmpgrpc.core.KMMetadata
 import io.github.timortel.kmpgrpc.core.KMMethodDescriptor
+import io.github.timortel.kmpgrpc.core.jsMetadata
 import io.github.timortel.kmpgrpc.core.message.KMMessage
-import io.github.timortel.kmpgrpc.core.rpc.MethodDescriptor
-import io.github.timortel.kmpgrpc.core.rpc.Request
-import io.github.timortel.kmpgrpc.core.rpc.RequestInternal
-import io.github.timortel.kmpgrpc.core.rpc.UnaryResponse
+import io.github.timortel.kmpgrpc.core.rpc.*
 
 internal interface InterceptorBase {
 
@@ -21,7 +19,7 @@ internal interface InterceptorBase {
 
         val newMetadata = impl.onStart(
             methodDescriptor = methodDescriptor,
-            metadata = KMMetadata(request.getMetadata())
+            metadata = getMetadata(request)
         )
 
         val requestMessage = request.getRequestMessage()
@@ -29,17 +27,16 @@ internal interface InterceptorBase {
             impl.onSendMessage(methodDescriptor, requestMessage)
         } else requestMessage
 
-        return RequestInternal(
+        return RequestImpl(
             requestMessage = newRequestMessage,
             methodDescriptor = request.getMethodDescriptor(),
-            metadata = newMetadata.metadataMap,
+            metadata = newMetadata.jsMetadata,
             callOptions = request.getCallOptions()
         )
     }
 
     fun interceptMessage(response: UnaryResponse): dynamic {
         val responseMessage = response.getResponseMessage()
-        response.getMethodDescriptor()
 
         return if (responseMessage is KMMessage) {
             impl.onReceiveMessage(getMethodDescriptor(response), responseMessage)
@@ -57,7 +54,27 @@ internal interface InterceptorBase {
     private fun getMethodDescriptor(methodDescriptor: MethodDescriptor): KMMethodDescriptor {
         return KMMethodDescriptor(
             fullMethodName = methodDescriptor.getName(),
-            methodType = methodDescriptor.getMethodType().kmMethodType
+            methodType = methodDescriptor.methodType.kmMethodType
+        )
+    }
+
+    fun getKmMetadata(response: UnaryResponse): KMMetadata {
+        return getMetadataFromJs(response.getMetadata())
+    }
+
+    private fun getMetadata(request: Request): KMMetadata {
+        return getMetadataFromJs(request.getMetadata())
+    }
+
+    fun getMetadataFromJs(jsObj: dynamic): KMMetadata {
+        val keys = js("Object.keys(jsObj)").unsafeCast<Array<dynamic>>()
+
+        return KMMetadata(
+            buildMap {
+                keys.forEach { key ->
+                    put(key.toString(), jsObj.get(key).toString())
+                }
+            }.toMutableMap()
         )
     }
 }

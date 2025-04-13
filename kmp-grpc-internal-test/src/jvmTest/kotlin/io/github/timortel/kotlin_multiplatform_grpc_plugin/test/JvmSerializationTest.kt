@@ -4,10 +4,10 @@ import io.github.timortel.kmpgrpc.core.message.KMMessage
 import io.github.timortel.kmpgrpc.core.message.MessageDeserializer
 import io.github.timortel.kmpgrpc.test.*
 
-class IOSSerializationTest : SerializationTest() {
+class JvmSerializationTest : SerializationTest() {
 
     private fun <T : KMMessage> serializeImpl(msg: T, deserializer: MessageDeserializer<T>): T {
-        return deserializer.deserialize(msg.serializeNative())
+        return deserializer.deserialize(msg.serialize())
     }
 
     override fun serialize(message: LongMessage): LongMessage =
@@ -26,7 +26,8 @@ class IOSSerializationTest : SerializationTest() {
 
     override fun serialize(message: OneOfMessage): OneOfMessage = serializeImpl(message, OneOfMessage.Companion)
 
-    override fun serialize(message: ComplexRepeatedMessage): ComplexRepeatedMessage = serializeImpl(message, ComplexRepeatedMessage.Companion)
+    override fun serialize(message: ComplexRepeatedMessage): ComplexRepeatedMessage =
+        serializeImpl(message, ComplexRepeatedMessage.Companion)
 
     override fun serialize(message: Unknownfield.MessageWithUnknownField): Unknownfield.MessageWithUnknownField =
         serializeImpl(message, Unknownfield.MessageWithUnknownField.Companion)

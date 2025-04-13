@@ -1,48 +1,62 @@
 package io.github.timortel.kmpgrpc.core.internal
 
-import io.github.timortel.kmpgrpc.core.CallInterceptor
-import io.github.timortel.kmpgrpc.core.KMMetadata
+import io.github.timortel.kmpgrpc.core.*
+import io.github.timortel.kmpgrpc.core.message.KMMessage
 import io.github.timortel.kmpgrpc.core.rpc.*
+import kotlin.js.json
 
 internal class StreamCallInterceptorWrapper(override val impl: CallInterceptor) : StreamInterceptor, InterceptorBase {
 
     override fun intercept(request: Request, invoker: (dynamic) -> ClientReadableStream): ClientReadableStream {
-        return Interceptor(invoker(interceptRequest(request)))
+        val methodDescriptor = getMethodDescriptor(request)
+
+        return Interceptor(invoker(interceptRequest(request)), methodDescriptor)
     }
 
-    private inner class Interceptor(private val streamImpl: ClientReadableStream) : ClientReadableStream {
+    private inner class Interceptor(
+        private val streamImpl: ClientReadableStream,
+        private val methodDescriptor: KMMethodDescriptor,
+    ) : ClientReadableStream {
         override fun on(eventType: String, callback: (dynamic) -> Unit): ClientReadableStream {
             when (eventType) {
                 "data" -> streamImpl.on("data") { response ->
-                    val newMessage = interceptMessage(response)
-
-                    callback(response.copy(responseMessage = newMessage))
+                    if (response is KMMessage) {
+                        callback(impl.onReceiveMessage(methodDescriptor, response))
+                    } else {
+                        callback(response)
+                    }
                 }
 
                 "metadata" -> streamImpl.on("metadata") { response ->
                     val newMetadata =
-                        impl.onReceiveHeaders(getMethodDescriptor(response), KMMetadata(response.getMetadata()))
+                        impl.onReceiveHeaders(
+                            methodDescriptor = methodDescriptor,
+                            metadata = getKmMetadata(response)
+                        )
 
                     callback(response.copy(metadata = newMetadata.metadataMap))
                 }
 
                 "status" -> streamImpl.on("status") { response ->
+                    val code = response.code.unsafeCast<Int>()
+                    val details = response.details.unsafeCast<String?>()
+                    val metadata = response.metadata
+
                     val (newStatus, newTrailing) = impl.onClose(
-                        methodDescriptor = getMethodDescriptor(response),
-                        status = response.getStatus().toKmStatus,
-                        metadata = KMMetadata(response.getStatus().metadata.orEmpty())
+                        methodDescriptor = methodDescriptor,
+                        status = KMStatus(KMCode.getCodeForValue(code), details.orEmpty()),
+                        metadata = getMetadataFromJs(metadata)
                     )
 
                     callback(
-                        response.copy(
-                            status = Status(
-                                code = newStatus.code.value,
-                                details = newStatus.statusMessage,
-                                metadata = newTrailing.metadataMap
-                            )
+                        json(
+                            "code" to newStatus.code.value,
+                            "details" to newStatus.statusMessage,
+                            "metadata" to newTrailing.jsMetadata
                         )
                     )
                 }
+                else -> streamImpl.on(eventType, callback)
             }
 
             return this
@@ -52,17 +66,5 @@ internal class StreamCallInterceptorWrapper(override val impl: CallInterceptor) 
             streamImpl.cancel()
             return this
         }
-
-        private fun UnaryResponse.copy(
-            responseMessage: dynamic = this.getResponseMessage(),
-            methodDescriptor: MethodDescriptor = this.getMethodDescriptor(),
-            metadata: Map<String, String> = this.getMetadata(),
-            status: Status = this.getStatus()
-        ) = UnaryResponseInternal(
-            responseMessage = responseMessage,
-            methodDescriptor = methodDescriptor,
-            metadata = metadata,
-            status = status
-        )
     }
 }
