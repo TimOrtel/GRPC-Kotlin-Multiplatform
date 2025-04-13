@@ -46,11 +46,12 @@ object IosProtoServiceWriter : ActualProtoServiceWriter() {
         }
 
         builder.addStatement(
-            "return %M(%N, callOptions, %S, %N, %T.Companion)",
+            "return %M(%N, callOptions, %S, %N, %T.Companion, %T.Companion)",
             impl,
             Const.Service.CHANNEL_PROPERTY_NAME,
             "/${rpc.file.`package`.orEmpty()}.${rpc.service.name}/${rpc.name}",
             Const.Service.RpcCall.PARAM_REQUEST,
+            rpc.sendType.resolve(),
             rpc.returnType.resolve()
         )
     }

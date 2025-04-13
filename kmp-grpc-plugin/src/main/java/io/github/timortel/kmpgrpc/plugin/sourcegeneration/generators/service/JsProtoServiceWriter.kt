@@ -16,8 +16,6 @@ object JsProtoServiceWriter : ActualProtoServiceWriter() {
 
     private val grpcWebClientBase =
         ClassName(PACKAGE_RPC, "GrpcWebClientBase")
-    private val clientOptions =
-        ClassName(PACKAGE_RPC, "ClientOptions")
     private val methodDescriptor =
         ClassName(PACKAGE_RPC, "MethodDescriptor")
 
@@ -37,7 +35,7 @@ object JsProtoServiceWriter : ActualProtoServiceWriter() {
                     )
                     .initializer(
                         CodeBlock.of(
-                            "%T(%N.connectionString)",
+                            "%1T(%2N.connectionString, %2N)",
                             service.jsServiceClassName,
                             Const.Service.CHANNEL_PROPERTY_NAME
                         )
@@ -120,8 +118,7 @@ object JsProtoServiceWriter : ActualProtoServiceWriter() {
                     .addParameter("hostname", String::class)
                     .addParameter(
                         ParameterSpec
-                            .builder("options", clientOptions)
-                            .defaultValue("js(%S)", "{}")
+                            .builder("channel", kmChannel)
                             .build()
                     )
                     .build()
@@ -129,7 +126,7 @@ object JsProtoServiceWriter : ActualProtoServiceWriter() {
             .addProperty(
                 PropertySpec
                     .builder("client", grpcWebClientBase, KModifier.PRIVATE)
-                    .initializer("%T(options)", grpcWebClientBase)
+                    .initializer("%T(channel.clientOptions)", grpcWebClientBase)
                     .build()
             )
             .addProperty(
@@ -138,9 +135,6 @@ object JsProtoServiceWriter : ActualProtoServiceWriter() {
                     .initializer("hostname")
                     .build()
             )
-            .addInitializerBlock(CodeBlock.builder().apply {
-                addStatement("options.format = %S", "text")
-            }.build())
             .apply {
                 service.rpcs.forEach { rpc ->
                     addProperty(

@@ -8,6 +8,8 @@ package io.github.timortel.kmpgrpc.core
  */
 data class KMMetadata(val metadataMap: MutableMap<String, String> = mutableMapOf()) {
 
+    constructor(metadataMap: Map<String, String>) : this(metadataMap.toMutableMap())
+
     /**
      * Add a new entry to the key-value pairs. Replaces the current entry if the key already exists.
      */

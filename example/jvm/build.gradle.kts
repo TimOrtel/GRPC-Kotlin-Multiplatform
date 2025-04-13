@@ -21,7 +21,7 @@ dependencies {
     implementation("io.grpc:grpc-protobuf:1.71.0")
     implementation("io.grpc:grpc-stub:1.71.0")
     implementation("io.grpc:grpc-netty-shaded:1.71.0")
-    implementation("io.grpc:grpc-services:1.61.1")
+    implementation("io.grpc:grpc-services:1.71.0")
     implementation("com.google.protobuf:protobuf-kotlin:3.25.6")
 }
 

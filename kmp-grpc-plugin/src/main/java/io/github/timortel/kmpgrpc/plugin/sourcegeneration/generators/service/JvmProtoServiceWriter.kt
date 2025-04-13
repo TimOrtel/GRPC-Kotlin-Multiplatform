@@ -105,7 +105,7 @@ object JvmProtoServiceWriter : ActualProtoServiceWriter() {
             }
 
             addCode("return %T.%N(", CLIENT_CALLS, funName)
-            addCode("channel = %N.managedChannel,", Const.Service.CHANNEL_PROPERTY_NAME)
+            addCode("channel = %N.channel,", Const.Service.CHANNEL_PROPERTY_NAME)
             addCode("callOptions = %N,", Const.Service.CALL_OPTIONS_PROPERTY_NAME)
             addCode("method = %N,", rpc.jvmMethodDescriptorName)
             addCode("headers = metadata.%M,", jvmMetadataMember)

@@ -1,11 +1,20 @@
 package io.github.timortel.kmpgrpc.core
 
 import cocoapods.GRPCClient.*
+import io.github.timortel.kmpgrpc.core.internal.CallInterceptorChain
 
 /**
  * On ios the channel equivalent are the [GRPCCallOptions].
  */
-actual class KMChannel(private val name: String, private val port: Int, private val usePlaintext: Boolean) {
+actual class KMChannel private constructor(
+    private val name: String,
+    private val port: Int,
+    private val usePlaintext: Boolean,
+    /**
+     * The interceptor associated with this channel, or null.
+     */
+    val interceptor: CallInterceptor? = null
+) {
 
     fun buildRequestOptions(path: String) = GRPCRequestOptions("$name:$port", path, safety = GRPCCallSafetyDefault)
 
@@ -26,6 +35,8 @@ actual class KMChannel(private val name: String, private val port: Int, private 
 
         private var usePlaintext = false
 
+        private var interceptor: CallInterceptor? = null
+
         actual companion object {
             actual fun forAddress(
                 name: String,
@@ -38,6 +49,18 @@ actual class KMChannel(private val name: String, private val port: Int, private 
             return this
         }
 
-        actual fun build(): KMChannel = KMChannel(name, port, usePlaintext)
+        actual fun withInterceptors(vararg interceptors: CallInterceptor): Builder = apply {
+            val newInterceptorsInterceptor =
+                if (interceptors.size == 1) interceptors.first()
+                else CallInterceptorChain(interceptors.toList())
+
+            interceptor = when (val interceptor = interceptor) {
+                null -> newInterceptorsInterceptor
+                is CallInterceptorChain -> interceptor + newInterceptorsInterceptor
+                else -> CallInterceptorChain(listOf(interceptor) + interceptors.toList())
+            }
+        }
+
+        actual fun build(): KMChannel = KMChannel(name, port, usePlaintext, interceptor)
     }
 }

@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package io.github.timortel.kmpgrpc.test;
+
+option java_multiple_files = true;
+
+message InterceptorMessage {
+  int32 a = 1;
+}
+
+service InterceptorService {
+  rpc send(InterceptorMessage) returns (InterceptorMessage);
+}
