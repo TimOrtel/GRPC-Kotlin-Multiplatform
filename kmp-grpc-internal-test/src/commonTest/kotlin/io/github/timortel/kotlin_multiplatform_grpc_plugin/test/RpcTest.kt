@@ -1,6 +1,8 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.test
 
 import io.github.timortel.kmpgrpc.core.KMChannel
+import io.github.timortel.kmpgrpc.core.KMMetadata
+import io.github.timortel.kmpgrpc.core.KMStatusException
 import io.github.timortel.kmpgrpc.core.message.UnknownField
 import io.github.timortel.kmpgrpc.test.*
 import kotlinx.coroutines.async
@@ -10,6 +12,7 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 abstract class RpcTest {
 
@@ -128,5 +131,40 @@ abstract class RpcTest {
         val returnedMessage = stub.returnIdentically(baseMessage)
 
         assertEquals(baseMessage, returnedMessage)
+    }
+
+    @Test
+    fun testCanSendMetadata() = runTest {
+        val message = interceptorMessage { }
+
+        val key = "custom-header-1"
+        val value = "custom-value"
+
+        val response = InterceptorServiceStub(channel)
+            .testMetadata(message, KMMetadata(mutableMapOf(key to value)))
+
+        assertContains(response.metadataMap, key, "Metadata does not contain key $key")
+        assertEquals(value, response.metadataMap[key], "Metadata value != $value")
+    }
+
+    @Test
+    fun testFailedRpcThrowsKmStatusException() = runTest {
+        val message = simpleMessage { }
+
+        assertFailsWith<KMStatusException> {
+            TestServiceStub(KMChannel.Builder.forAddress("localhost", 1800).usePlaintext().build())
+                .simpleRpc(message)
+        }
+    }
+
+    @Test
+    fun testFailedStreamingRpcThrowsKmStatusException() = runTest {
+        val message = simpleMessage { }
+
+        assertFailsWith<KMStatusException> {
+            TestServiceStub(KMChannel.Builder.forAddress("localhost", 1800).usePlaintext().build())
+                .simpleStreamingRpc(message)
+                .toList()
+        }
     }
 }

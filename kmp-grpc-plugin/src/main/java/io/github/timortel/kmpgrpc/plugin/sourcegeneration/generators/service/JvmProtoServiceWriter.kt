@@ -2,10 +2,7 @@ package io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.service
 
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.PACKAGE_STUB
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.Const
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.PACKAGE_BASE
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.kmStub
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.*
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.service.ProtoRpc
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.service.ProtoService
 
@@ -18,7 +15,8 @@ object JvmProtoServiceWriter : ActualProtoServiceWriter() {
     private val METHOD_TYPE = METHOD_DESCRIPTOR.nestedClass("MethodType")
     private val PROTO_LITE_UTILS = ClassName("io.grpc.protobuf.lite", "ProtoLiteUtils")
 
-    private val CLIENT_CALLS = ClassName("io.grpc.kotlin", "ClientCalls")
+    private val unaryRpc = MemberName(PACKAGE_RPC, "unaryRpc")
+    private val serverStreamingRpc = MemberName(PACKAGE_RPC, "serverStreamingRpc")
 
     override val callOptionsType: TypeName = ClassName("io.grpc", "CallOptions")
     override val createEmptyCallOptionsCode: CodeBlock = CodeBlock.of("%T.DEFAULT", callOptionsType)
@@ -95,20 +93,18 @@ object JvmProtoServiceWriter : ActualProtoServiceWriter() {
         builder: FunSpec.Builder,
         rpc: ProtoRpc
     ) {
-        val jvmMetadataMember = MemberName(PACKAGE_BASE, "jvmMetadata")
-
         builder.apply {
-            val funName = if (rpc.isReceivingStream) {
-                "serverStreamingRpc"
+            val memberName = if(rpc.isReceivingStream) {
+                serverStreamingRpc
             } else {
-               "unaryRpc"
+                unaryRpc
             }
 
-            addCode("return %T.%N(", CLIENT_CALLS, funName)
-            addCode("channel = %N.managedChannel,", Const.Service.CHANNEL_PROPERTY_NAME)
+            addCode("return %M(", memberName)
+            addCode("channel = %N,", Const.Service.CHANNEL_PROPERTY_NAME)
             addCode("callOptions = %N,", Const.Service.CALL_OPTIONS_PROPERTY_NAME)
             addCode("method = %N,", rpc.jvmMethodDescriptorName)
-            addCode("headers = metadata.%M,", jvmMetadataMember)
+            addCode("headers = metadata,")
             addCode("request = %N", Const.Service.RpcCall.PARAM_REQUEST)
             addCode(")")
         }

@@ -29,7 +29,7 @@ kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-cor
 google-protobuf-kotlin = { group = "com.google.protobuf", name = "protobuf-kotlin", version.ref = "protobufJvm" }
 google-protobuf-java-util = { group = "com.google.protobuf", name = "protobuf-java-util", version.ref = "protobufJvm" }
 
-google-guava = { group = "com.google.guava", name = "guava", version = "33.0.0-jre" }
+google-guava = { group = "com.google.guava", name = "guava", version = "33.3.1-jre" }
 
 grpc-core = { group = "io.grpc", name = "grpc-core", version.ref = "grpcJvm" }
 grpc-api = { group = "io.grpc", name = "grpc-api", version.ref = "grpcJvm" }

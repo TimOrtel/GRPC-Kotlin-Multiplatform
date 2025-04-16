@@ -77,26 +77,25 @@ kotlin {
 
         val androidJvmCommon by creating {
             dependsOn(iosJvmCommon)
+
+            dependencies {
+                api(libs.grpc.stub)
+                api(libs.grpc.protobuf.lite)
+                api(libs.grpc.kotlin.stub)
+            }
         }
 
         jvmMain {
             dependsOn(androidJvmCommon)
+
             dependencies {
-                api(libs.grpc.stub)
                 api(libs.grpc.api)
-                api(libs.grpc.protobuf.lite)
-                api(libs.grpc.kotlin.stub)
             }
         }
 
         androidMain {
             dependsOn(androidJvmCommon)
 
-            dependencies {
-                api(libs.grpc.stub)
-                api(libs.grpc.protobuf.lite)
-                api(libs.grpc.kotlin.stub)
-            }
         }
 
         jsMain {

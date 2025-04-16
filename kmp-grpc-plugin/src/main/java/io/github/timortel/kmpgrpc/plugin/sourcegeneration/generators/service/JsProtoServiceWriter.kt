@@ -15,11 +15,11 @@ object JsProtoServiceWriter : ActualProtoServiceWriter() {
     override val createEmptyCallOptionsCode: CodeBlock = CodeBlock.of("%T()", kmMetadata)
 
     private val grpcWebClientBase =
-        ClassName(PACKAGE_RPC, "GrpcWebClientBase")
-    private val clientOptions =
-        ClassName(PACKAGE_RPC, "ClientOptions")
+        ClassName(PACKAGE_BASE, "GrpcWebClientBase")
     private val methodDescriptor =
-        ClassName(PACKAGE_RPC, "MethodDescriptor")
+        ClassName(PACKAGE_BASE, "MethodDescriptor")
+
+    private val promise: ClassName = ClassName("kotlin.js", "Promise")
 
     override fun applyToClass(
         builder: TypeSpec.Builder,
@@ -37,7 +37,7 @@ object JsProtoServiceWriter : ActualProtoServiceWriter() {
                     )
                     .initializer(
                         CodeBlock.of(
-                            "%T(%N.connectionString)",
+                            "%1T(%2N.connectionString, %2N)",
                             service.jsServiceClassName,
                             Const.Service.CHANNEL_PROPERTY_NAME
                         )
@@ -63,20 +63,14 @@ object JsProtoServiceWriter : ActualProtoServiceWriter() {
                 .add("client.${rpc.name}(")
                 .add("request, ")
                 .add("actMetadata.%M", MemberName(PACKAGE_BASE, "jsMetadata"))
-                .apply {
-                    if (rpc.isReceivingStream) {
-                        add(")")
-                    } else {
-                        add(", callback)")
-                    }
-                }
+                .add(")")
                 .build()
 
             addCode("return ")
 
             addCode(
-                "%M {\n",
-                if(rpc.isReceivingStream){
+                "%M·{\n",
+                if (rpc.isReceivingStream) {
                     MemberName(
                         PACKAGE_RPC, "serverSideStreamingCallImplementation"
                     )
@@ -87,8 +81,6 @@ object JsProtoServiceWriter : ActualProtoServiceWriter() {
                     )
                 }
             )
-
-            if (!rpc.isReceivingStream) addCode(" callback -> ")
 
             addCode(clientCallCode)
             addCode("\n}")
@@ -120,8 +112,7 @@ object JsProtoServiceWriter : ActualProtoServiceWriter() {
                     .addParameter("hostname", String::class)
                     .addParameter(
                         ParameterSpec
-                            .builder("options", clientOptions)
-                            .defaultValue("js(%S)", "{}")
+                            .builder("channel", kmChannel)
                             .build()
                     )
                     .build()
@@ -129,7 +120,7 @@ object JsProtoServiceWriter : ActualProtoServiceWriter() {
             .addProperty(
                 PropertySpec
                     .builder("client", grpcWebClientBase, KModifier.PRIVATE)
-                    .initializer("%T(options)", grpcWebClientBase)
+                    .initializer("%T(channel.clientOptions)", grpcWebClientBase)
                     .build()
             )
             .addProperty(
@@ -138,26 +129,27 @@ object JsProtoServiceWriter : ActualProtoServiceWriter() {
                     .initializer("hostname")
                     .build()
             )
-            .addInitializerBlock(CodeBlock.builder().apply {
-                addStatement("options.format = %S", "text")
-            }.build())
             .apply {
                 service.rpcs.forEach { rpc ->
                     addProperty(
                         PropertySpec
                             .builder(rpc.jsMethodDescriptorName, methodDescriptor, KModifier.PRIVATE)
                             .initializer(CodeBlock.builder().apply {
-                                addStatement(
+                                add(
                                     "%T(%S, %S, ::%T, ::%T, {·request:·%T -> request.serialize() }, %T.Companion::deserialize)",
                                     methodDescriptor,
                                     "/${service.file.`package`}.${service.name}/${rpc.name}",
-                                    if(rpc.isReceivingStream) {
+                                    if (rpc.isReceivingStream) {
                                         "server_streaming"
                                     } else "unary",
                                     rpc.sendType.resolve(),
                                     rpc.returnType.resolve(),
                                     rpc.sendType.resolve(),
                                     rpc.returnType.resolve()
+                                )
+                                add(
+                                    ".apply{·methodType·=·%S·}",
+                                    if (rpc.isReceivingStream) "server_streaming" else "unary"
                                 )
                             }.build())
                             .build()
@@ -171,33 +163,22 @@ object JsProtoServiceWriter : ActualProtoServiceWriter() {
                             .apply {
                                 addCode(
                                     "return client.%N(\"\$hostname/%L/%L\", request, metadata ?: js(%S), %N",
-                                    if(rpc.isReceivingStream) {
+                                    if (rpc.isReceivingStream) {
                                         "serverStreaming"
-                                    } else "rpcCall",
+                                    } else "unaryCall",
                                     "${service.file.`package`}.${service.name}",
                                     rpc.name,
                                     "{}",
                                     rpc.jsMethodDescriptorName
                                 )
 
-                                if(rpc.isReceivingStream) {
+                                if (rpc.isReceivingStream) {
                                     returns(Dynamic)
-                                    addCode(")")
                                 } else {
-                                    addParameter(
-                                        "callback",
-                                        LambdaTypeName.get(
-                                            parameters =
-                                                arrayOf(
-                                                    Dynamic,
-                                                    rpc.returnType.resolve()
-                                                ),
-                                            returnType = UNIT
-                                        )
-                                    )
-
-                                    addCode(", callback)")
+                                    returns(promise.parameterizedBy(rpc.returnType.resolve()))
                                 }
+
+                                addCode(")")
                             }
                             .build()
                     )
