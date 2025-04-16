@@ -15,9 +15,9 @@ object JsProtoServiceWriter : ActualProtoServiceWriter() {
     override val createEmptyCallOptionsCode: CodeBlock = CodeBlock.of("%T()", kmMetadata)
 
     private val grpcWebClientBase =
-        ClassName(PACKAGE_RPC, "GrpcWebClientBase")
+        ClassName(PACKAGE_BASE, "GrpcWebClientBase")
     private val methodDescriptor =
-        ClassName(PACKAGE_RPC, "MethodDescriptor")
+        ClassName(PACKAGE_BASE, "MethodDescriptor")
 
     private val promise: ClassName = ClassName("kotlin.js", "Promise")
 
