@@ -1,8 +1,8 @@
 package io.github.timortel.kmpgrpc.core.internal
 
-import io.github.timortel.kmpgrpc.core.rpc.CallOptions
-import io.github.timortel.kmpgrpc.core.rpc.MethodDescriptor
-import io.github.timortel.kmpgrpc.core.rpc.Request
+import io.github.timortel.kmpgrpc.core.CallOptions
+import io.github.timortel.kmpgrpc.core.MethodDescriptor
+import io.github.timortel.kmpgrpc.core.Request
 
 internal data class RequestImpl(
     val requestMessage: dynamic,

@@ -2,9 +2,6 @@ package io.github.timortel.kmpgrpc.core
 
 import io.github.timortel.kmpgrpc.core.internal.StreamCallInterceptorWrapper
 import io.github.timortel.kmpgrpc.core.internal.UnaryCallInterceptorWrapper
-import io.github.timortel.kmpgrpc.core.rpc.ClientOptions
-import io.github.timortel.kmpgrpc.core.rpc.StreamInterceptor
-import io.github.timortel.kmpgrpc.core.rpc.UnaryInterceptor
 
 actual class KMChannel private constructor(
     private val name: String,

@@ -1,19 +1,18 @@
 @file:JsModule("grpc-web")
 @file:JsNonModule
 
-package io.github.timortel.kmpgrpc.core.rpc
+package io.github.timortel.kmpgrpc.core
 
 import org.khronos.webgl.Uint8Array
 import kotlin.js.Promise
 
 external class GrpcWebClientBase(options: ClientOptions) {
-    fun rpcCall(
+    fun <REQ, RESP> unaryCall(
         method: String,
-        requestMessage: dynamic,
+        requestMessage: REQ,
         metadata: dynamic,
-        methodDescriptor: dynamic,
-        callback: dynamic
-    )
+        methodDescriptor: dynamic
+    ): Promise<RESP>
 
     fun serverStreaming(
         method: String,
@@ -57,7 +56,10 @@ external interface MethodDescriptorInterface {
 }
 
 external interface UnaryInterceptor {
-    fun intercept(request: Request, invoker: (dynamic) -> Promise<UnaryResponse>)
+    fun <RESP> intercept(
+        request: Request,
+        invoker: (dynamic) -> Promise<UnaryResponse<RESP>>
+    ): Promise<UnaryResponse<RESP>>
 }
 
 external interface StreamInterceptor {
@@ -88,31 +90,31 @@ external class CallOptions {
     fun setOption(name: String, value: dynamic)
 }
 
-open external class UnaryResponse {
-    fun getResponseMessage(): dynamic
+external interface UnaryResponse<RESP> {
+    fun getResponseMessage(): RESP
 
-    fun getMetadata(): dynamic
+    fun getMetadata(): Metadata
 
     fun getStatus(): Status
 
     fun getMethodDescriptor(): MethodDescriptor
 }
 
-external class UnaryResponseInternal(
-    responseMessage: dynamic,
-    methodDescriptor: MethodDescriptor,
-    metadata: Map<String, String>,
-    status: Status
-) : UnaryResponse
-
-external class Status(
-    val code: Number,
-    val details: String,
-    val metadata: Map<String, String>?
-)
+external class Status {
+    var code: Number
+    var details: String
+    var metadata: Map<String, String>?
+}
 
 external interface ClientReadableStream {
     fun on(eventType: String, callback: (dynamic) -> Unit): ClientReadableStream
 
     fun cancel(): ClientReadableStream
+}
+
+external interface Metadata
+
+external class RpcError : Throwable {
+    var code: Number
+    override var message: String
 }

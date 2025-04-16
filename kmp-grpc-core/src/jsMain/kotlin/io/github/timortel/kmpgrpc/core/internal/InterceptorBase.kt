@@ -3,9 +3,11 @@ package io.github.timortel.kmpgrpc.core.internal
 import io.github.timortel.kmpgrpc.core.CallInterceptor
 import io.github.timortel.kmpgrpc.core.KMMetadata
 import io.github.timortel.kmpgrpc.core.KMMethodDescriptor
+import io.github.timortel.kmpgrpc.core.MethodDescriptor
+import io.github.timortel.kmpgrpc.core.Request
+import io.github.timortel.kmpgrpc.core.UnaryResponse
 import io.github.timortel.kmpgrpc.core.jsMetadata
 import io.github.timortel.kmpgrpc.core.message.KMMessage
-import io.github.timortel.kmpgrpc.core.rpc.*
 
 internal interface InterceptorBase {
 
@@ -35,7 +37,7 @@ internal interface InterceptorBase {
         )
     }
 
-    fun interceptMessage(response: UnaryResponse): dynamic {
+    fun <RESP> interceptMessage(response: UnaryResponse<RESP>): dynamic {
         val responseMessage = response.getResponseMessage()
 
         return if (responseMessage is KMMessage) {
@@ -47,7 +49,7 @@ internal interface InterceptorBase {
         return getMethodDescriptor(request.getMethodDescriptor())
     }
 
-    fun getMethodDescriptor(response: UnaryResponse): KMMethodDescriptor {
+    fun <RESP> getMethodDescriptor(response: UnaryResponse<RESP>): KMMethodDescriptor {
         return getMethodDescriptor(response.getMethodDescriptor())
     }
 
@@ -58,7 +60,7 @@ internal interface InterceptorBase {
         )
     }
 
-    fun getKmMetadata(response: UnaryResponse): KMMetadata {
+    fun <RESP> getKmMetadata(response: UnaryResponse<RESP>): KMMetadata {
         return getMetadataFromJs(response.getMetadata())
     }
 

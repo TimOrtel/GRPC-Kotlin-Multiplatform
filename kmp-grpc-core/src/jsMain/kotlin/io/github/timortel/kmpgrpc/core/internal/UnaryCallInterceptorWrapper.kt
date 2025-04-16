@@ -1,21 +1,23 @@
 package io.github.timortel.kmpgrpc.core.internal
 
 import io.github.timortel.kmpgrpc.core.*
-import io.github.timortel.kmpgrpc.core.rpc.*
 import kotlin.js.Promise
 
 internal class UnaryCallInterceptorWrapper(override val impl: CallInterceptor) : UnaryInterceptor, InterceptorBase {
 
-    override fun intercept(request: Request, invoker: (dynamic) -> Promise<UnaryResponse>) {
+    override fun <RESP> intercept(
+        request: Request,
+        invoker: (dynamic) -> Promise<UnaryResponse<RESP>>
+    ): Promise<UnaryResponse<RESP>> {
         val newRequest = interceptRequest(request)
 
-        invoker(newRequest).then { response ->
-            val newResponseMessage = interceptMessage(response)
-
+        return invoker(newRequest).asDynamic().then { response: UnaryResponse<RESP> ->
             val newHeaders = impl.onReceiveHeaders(
                 methodDescriptor = getMethodDescriptor(response),
                 metadata = getKmMetadata(response)
             )
+
+            val newResponseMessage = interceptMessage(response)
 
             val status = KMStatus(
                 code = KMCode.getCodeForValue(response.getStatus().code.toInt()),
@@ -28,12 +30,18 @@ internal class UnaryCallInterceptorWrapper(override val impl: CallInterceptor) :
                 metadata = newHeaders
             )
 
-            UnaryResponseInternal(
-                responseMessage = newResponseMessage,
-                methodDescriptor = request.getMethodDescriptor(),
-                metadata = newTrailers.metadataMap,
-                status = newStatus.toJsStatus(newTrailers)
-            )
+            if (newStatus.code != KMCode.OK) {
+                Promise.reject(KMStatusException(newStatus, null))
+            } else {
+                Promise.resolve(
+                    UnaryResponseImpl(
+                        resp = newResponseMessage,
+                        methodDescriptor = request.getMethodDescriptor(),
+                        metadata = newTrailers.jsMetadata,
+                        status = newStatus.toJsStatus(newTrailers)
+                    )
+                )
+            }
         }
     }
 }

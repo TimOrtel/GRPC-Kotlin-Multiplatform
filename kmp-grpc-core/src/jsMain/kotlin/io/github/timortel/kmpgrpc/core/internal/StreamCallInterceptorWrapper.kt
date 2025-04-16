@@ -2,7 +2,9 @@ package io.github.timortel.kmpgrpc.core.internal
 
 import io.github.timortel.kmpgrpc.core.*
 import io.github.timortel.kmpgrpc.core.message.KMMessage
-import io.github.timortel.kmpgrpc.core.rpc.*
+import io.github.timortel.kmpgrpc.core.ClientReadableStream
+import io.github.timortel.kmpgrpc.core.Request
+import io.github.timortel.kmpgrpc.core.StreamInterceptor
 import kotlin.js.json
 
 internal class StreamCallInterceptorWrapper(override val impl: CallInterceptor) : StreamInterceptor, InterceptorBase {
@@ -17,6 +19,7 @@ internal class StreamCallInterceptorWrapper(override val impl: CallInterceptor) 
         private val streamImpl: ClientReadableStream,
         private val methodDescriptor: KMMethodDescriptor,
     ) : ClientReadableStream {
+
         override fun on(eventType: String, callback: (dynamic) -> Unit): ClientReadableStream {
             when (eventType) {
                 "data" -> streamImpl.on("data") { response ->
@@ -25,16 +28,6 @@ internal class StreamCallInterceptorWrapper(override val impl: CallInterceptor) 
                     } else {
                         callback(response)
                     }
-                }
-
-                "metadata" -> streamImpl.on("metadata") { response ->
-                    val newMetadata =
-                        impl.onReceiveHeaders(
-                            methodDescriptor = methodDescriptor,
-                            metadata = getKmMetadata(response)
-                        )
-
-                    callback(response.copy(metadata = newMetadata.metadataMap))
                 }
 
                 "status" -> streamImpl.on("status") { response ->

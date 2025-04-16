@@ -3,30 +3,29 @@ package io.github.timortel.kmpgrpc.core.rpc
 import io.github.timortel.kmpgrpc.core.KMCode
 import io.github.timortel.kmpgrpc.core.KMStatus
 import io.github.timortel.kmpgrpc.core.KMStatusException
+import io.github.timortel.kmpgrpc.core.RpcError
+import kotlinx.coroutines.await
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.*
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.catch
+import kotlin.js.Promise
 
 suspend fun <JS_RESPONSE> simpleCallImplementation(
-    performCall: (callback: (error: dynamic, response: JS_RESPONSE) -> Unit) -> Unit
+    performCall: () -> Promise<JS_RESPONSE>
 ): JS_RESPONSE {
-    return suspendCoroutine { continuation ->
-        performCall { error, response ->
-            if (error == null) {
-                continuation.resume(response)
-            } else {
-                continuation.resumeWithException(
-                    KMStatusException(
-                        KMStatus(
-                            KMCode.getCodeForValue(error.code as Int),
-                            (error.message as String?).orEmpty()
-                        ), null
-                    )
-                )
-            }
-        }
+    return try {
+        performCall().await()
+    } catch (e: RpcError) {
+        throw KMStatusException(
+            status = KMStatus(
+                code = KMCode.getCodeForValue(e.code.toInt()),
+                statusMessage = e.message
+            ),
+            cause = e
+        )
+    } catch (e: Exception) {
+        throw e
     }
 }
 
@@ -62,6 +61,6 @@ fun <JS_RESPONSE> serverSideStreamingCallImplementation(performCall: () -> dynam
             stream.cancel() as Unit
         }
     }
-        // Catch a very weird bug that occurs when calling close()
+        // Catch a weird bug that occurs when calling close()
         .catch { if (it !is ClassCastException) throw it }
 }

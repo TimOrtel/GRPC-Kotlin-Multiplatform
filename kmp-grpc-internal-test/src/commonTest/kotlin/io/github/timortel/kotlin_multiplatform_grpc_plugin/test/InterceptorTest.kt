@@ -15,6 +15,8 @@ abstract class InterceptorTest {
     abstract val address: String
     abstract val port: Int
 
+    abstract val isJavaScript: Boolean
+
     private val basicInterceptor = object : CallInterceptor {
         override fun <T : KMMessage> onReceiveMessage(methodDescriptor: KMMethodDescriptor, message: T): T {
             assertIs<InterceptorMessage>(message)
@@ -113,7 +115,7 @@ abstract class InterceptorTest {
      */
     @Test
     fun testInterceptorInternalCallOrderUnary() = runTest {
-        val interceptor = CheckCallOrderInterceptor(isStream = false)
+        val interceptor = CheckCallOrderInterceptor(isStream = false, isJs = isJavaScript)
 
         val channel = KMChannel.Builder
             .forAddress(address, port)
@@ -132,7 +134,7 @@ abstract class InterceptorTest {
      */
     @Test
     fun testInterceptorInternalCallOrderServerStreaming() = runTest {
-        val interceptor = CheckCallOrderInterceptor(isStream = true)
+        val interceptor = CheckCallOrderInterceptor(isStream = true, isJs = isJavaScript)
 
         val channel = KMChannel.Builder
             .forAddress(address, port)
@@ -149,7 +151,7 @@ abstract class InterceptorTest {
 
     @Test
     fun testCanManipulateSendingMetadata(): TestResult = runTest {
-        val key = "test"
+        val key = "custom-header-1"
         val value = "test-value"
 
         val interceptor = object : CallInterceptor {
@@ -210,7 +212,7 @@ abstract class InterceptorTest {
         CLOSED
     }
 
-    private class CheckCallOrderInterceptor(val isStream: Boolean) : CallInterceptor {
+    private class CheckCallOrderInterceptor(val isStream: Boolean, val isJs: Boolean) : CallInterceptor {
 
         var lifecycleStatus: InterceptorLifecycleStatus = InterceptorLifecycleStatus.INIT
 
@@ -238,10 +240,19 @@ abstract class InterceptorTest {
         }
 
         override fun <T : KMMessage> onReceiveMessage(methodDescriptor: KMMethodDescriptor, message: T): T {
-            if (lifecycleStatus == InterceptorLifecycleStatus.RECEIVED_HEADERS) lifecycleStatus =
-                InterceptorLifecycleStatus.RECEIVED_MESSAGE
-            else if (!isStream || lifecycleStatus != InterceptorLifecycleStatus.RECEIVED_MESSAGE)
-                throw IllegalStateException()
+            when {
+                isJs && isStream && lifecycleStatus == InterceptorLifecycleStatus.SENT_MESSAGE -> {
+                    lifecycleStatus = InterceptorLifecycleStatus.RECEIVED_MESSAGE
+                }
+
+                lifecycleStatus == InterceptorLifecycleStatus.RECEIVED_HEADERS -> {
+                    lifecycleStatus = InterceptorLifecycleStatus.RECEIVED_MESSAGE
+                }
+
+                isStream && lifecycleStatus == InterceptorLifecycleStatus.RECEIVED_MESSAGE -> {}
+
+                else -> throw IllegalStateException()
+            }
 
             return super.onReceiveMessage(methodDescriptor, message)
         }
@@ -253,7 +264,7 @@ abstract class InterceptorTest {
         ): Pair<KMStatus, KMMetadata> {
             if (lifecycleStatus == InterceptorLifecycleStatus.RECEIVED_MESSAGE) lifecycleStatus =
                 InterceptorLifecycleStatus.CLOSED
-            else throw IllegalStateException()
+            else throw IllegalStateException(lifecycleStatus.toString())
 
             return super.onClose(methodDescriptor, status, metadata)
         }

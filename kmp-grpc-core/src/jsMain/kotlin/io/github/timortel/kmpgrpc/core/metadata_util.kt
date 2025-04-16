@@ -1,12 +1,8 @@
 package io.github.timortel.kmpgrpc.core
 
-val KMMetadata.jsMetadata: dynamic
-    get() = {
-        val json = js("{}")
-        metadataMap.forEach { (key, value) ->
-            json[key] = value
-        }
+import kotlin.js.json
 
-        val jsoner = js("JSON")
-        jsoner.stringify(json).toString()
-    }
+val KMMetadata.jsMetadata: Metadata
+    get() = json(
+        *metadataMap.entries.map { (key, value) -> key to value }.toTypedArray()
+    ).unsafeCast<Metadata>()

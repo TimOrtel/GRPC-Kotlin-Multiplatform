@@ -1,11 +1,10 @@
 package io.github.timortel.kmpgrpc.core.internal
 
-import io.github.timortel.kmpgrpc.core.KMCode
 import io.github.timortel.kmpgrpc.core.KMMetadata
 import io.github.timortel.kmpgrpc.core.KMMethodDescriptor
 import io.github.timortel.kmpgrpc.core.KMStatus
-import io.github.timortel.kmpgrpc.core.rpc.Status
-import io.github.timortel.kmpgrpc.core.rpc.MethodType as JsMethodType
+import io.github.timortel.kmpgrpc.core.Status
+import io.github.timortel.kmpgrpc.core.MethodType as JsMethodType
 
 internal val String.kmMethodType: KMMethodDescriptor.MethodType
     get() = when (this) {
@@ -15,15 +14,9 @@ internal val String.kmMethodType: KMMethodDescriptor.MethodType
         else -> throw IllegalArgumentException("Unknown method type $this")
     }
 
-internal val Status.toKmStatus: KMStatus
-    get() = KMStatus(
-        code = KMCode.getCodeForValue(code.toInt()),
-        statusMessage = details
-    )
 
-
-internal fun KMStatus.toJsStatus(metadata: KMMetadata): Status = Status(
-    code = code.value,
-    details = statusMessage,
-    metadata = metadata.metadataMap
-)
+internal fun KMStatus.toJsStatus(metadata: KMMetadata): Status = js("{}").unsafeCast<Status>().apply {
+    code = this@toJsStatus.code.value
+    details = this@toJsStatus.statusMessage
+    this.metadata = metadata.metadataMap
+}

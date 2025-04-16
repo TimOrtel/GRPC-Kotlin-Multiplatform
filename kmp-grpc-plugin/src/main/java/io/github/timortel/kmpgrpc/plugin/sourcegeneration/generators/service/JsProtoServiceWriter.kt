@@ -19,6 +19,8 @@ object JsProtoServiceWriter : ActualProtoServiceWriter() {
     private val methodDescriptor =
         ClassName(PACKAGE_RPC, "MethodDescriptor")
 
+    private val promise: ClassName = ClassName("kotlin.js", "Promise")
+
     override fun applyToClass(
         builder: TypeSpec.Builder,
         service: ProtoService
@@ -61,13 +63,7 @@ object JsProtoServiceWriter : ActualProtoServiceWriter() {
                 .add("client.${rpc.name}(")
                 .add("request, ")
                 .add("actMetadata.%M", MemberName(PACKAGE_BASE, "jsMetadata"))
-                .apply {
-                    if (rpc.isReceivingStream) {
-                        add(")")
-                    } else {
-                        add(", callback)")
-                    }
-                }
+                .add(")")
                 .build()
 
             addCode("return ")
@@ -85,8 +81,6 @@ object JsProtoServiceWriter : ActualProtoServiceWriter() {
                     )
                 }
             )
-
-            if (!rpc.isReceivingStream) addCode(" callback -> ")
 
             addCode(clientCallCode)
             addCode("\n}")
@@ -171,7 +165,7 @@ object JsProtoServiceWriter : ActualProtoServiceWriter() {
                                     "return client.%N(\"\$hostname/%L/%L\", request, metadata ?: js(%S), %N",
                                     if (rpc.isReceivingStream) {
                                         "serverStreaming"
-                                    } else "rpcCall",
+                                    } else "unaryCall",
                                     "${service.file.`package`}.${service.name}",
                                     rpc.name,
                                     "{}",
@@ -180,22 +174,11 @@ object JsProtoServiceWriter : ActualProtoServiceWriter() {
 
                                 if (rpc.isReceivingStream) {
                                     returns(Dynamic)
-                                    addCode(")")
                                 } else {
-                                    addParameter(
-                                        "callback",
-                                        LambdaTypeName.get(
-                                            parameters =
-                                                arrayOf(
-                                                    Dynamic,
-                                                    rpc.returnType.resolve()
-                                                ),
-                                            returnType = UNIT
-                                        )
-                                    )
-
-                                    addCode(", callback)")
+                                    returns(promise.parameterizedBy(rpc.returnType.resolve()))
                                 }
+
+                                addCode(")")
                             }
                             .build()
                     )

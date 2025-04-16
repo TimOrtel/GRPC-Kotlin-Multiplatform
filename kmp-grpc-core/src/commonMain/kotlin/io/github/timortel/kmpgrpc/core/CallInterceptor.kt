@@ -22,7 +22,10 @@ interface CallInterceptor {
     fun <T : KMMessage> onSendMessage(methodDescriptor: KMMethodDescriptor, message: T): T = message
 
     /**
-     * Intercept receiving headers from the server.
+     * Intercept receiving the initial headers from the server. Always called before [onReceiveMessage].
+     *
+     * Note: due to a limitation of the gRPC implementation on JavaScript, this function is not called for server streaming calls.
+     *
      * @param metadata the metadata received from the server. Potentially modified by previous [CallInterceptor]s.
      * @return the metadata that should be forwarded.
      */
