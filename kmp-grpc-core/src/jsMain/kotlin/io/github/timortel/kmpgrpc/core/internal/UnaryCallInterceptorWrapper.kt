@@ -1,6 +1,9 @@
 package io.github.timortel.kmpgrpc.core.internal
 
 import io.github.timortel.kmpgrpc.core.*
+import io.github.timortel.kmpgrpc.core.external.Request
+import io.github.timortel.kmpgrpc.core.external.UnaryInterceptor
+import io.github.timortel.kmpgrpc.core.external.UnaryResponse
 import kotlin.js.Promise
 
 internal class UnaryCallInterceptorWrapper(override val impl: CallInterceptor) : UnaryInterceptor, InterceptorBase {

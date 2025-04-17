@@ -1,5 +1,8 @@
 package io.github.timortel.kmpgrpc.core
 
+import io.github.timortel.kmpgrpc.core.external.ClientOptions
+import io.github.timortel.kmpgrpc.core.external.StreamInterceptor
+import io.github.timortel.kmpgrpc.core.external.UnaryInterceptor
 import io.github.timortel.kmpgrpc.core.internal.StreamCallInterceptorWrapper
 import io.github.timortel.kmpgrpc.core.internal.UnaryCallInterceptorWrapper
 

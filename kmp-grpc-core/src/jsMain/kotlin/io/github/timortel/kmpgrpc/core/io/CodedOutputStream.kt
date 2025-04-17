@@ -1,9 +1,9 @@
 package io.github.timortel.kmpgrpc.core.io
 
-import io.github.timortel.kmpgrpc.core.JSPB
+import io.github.timortel.kmpgrpc.core.external.JSPB
 import io.github.timortel.kmpgrpc.core.message.KMMessage
 import io.github.timortel.kmpgrpc.core.message.KmEnum
-import io.github.timortel.kmpgrpc.core.util.native
+import io.github.timortel.kmpgrpc.core.native
 
 actual class CodedOutputStream(internal val impl: JSPB.BinaryWriter) {
 

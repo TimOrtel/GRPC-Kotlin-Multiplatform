@@ -155,9 +155,8 @@ abstract class InterceptorTest {
         val value = "test-value"
 
         val interceptor = object : CallInterceptor {
-            override fun onStart(methodDescriptor: KMMethodDescriptor, metadata: KMMetadata): KMMetadata {
-                metadata[key] = value
-                return super.onStart(methodDescriptor, metadata)
+            override fun onStart(methodDescriptor: KMMethodDescriptor, metadata: Metadata): Metadata {
+                return super.onStart(methodDescriptor, metadata.withEntry(key, value))
             }
         }
 
@@ -182,8 +181,8 @@ abstract class InterceptorTest {
             override fun onClose(
                 methodDescriptor: KMMethodDescriptor,
                 status: KMStatus,
-                metadata: KMMetadata
-            ): Pair<KMStatus, KMMetadata> {
+                metadata: Metadata
+            ): Pair<KMStatus, Metadata> {
                 return super.onClose(methodDescriptor, KMStatus(KMCode.UNKNOWN, message), metadata)
             }
         }
@@ -216,7 +215,7 @@ abstract class InterceptorTest {
 
         var lifecycleStatus: InterceptorLifecycleStatus = InterceptorLifecycleStatus.INIT
 
-        override fun onStart(methodDescriptor: KMMethodDescriptor, metadata: KMMetadata): KMMetadata {
+        override fun onStart(methodDescriptor: KMMethodDescriptor, metadata: Metadata): Metadata {
             if (lifecycleStatus == InterceptorLifecycleStatus.INIT) lifecycleStatus = InterceptorLifecycleStatus.STARTED
             else throw IllegalStateException()
 
@@ -231,7 +230,7 @@ abstract class InterceptorTest {
             return super.onSendMessage(methodDescriptor, message)
         }
 
-        override fun onReceiveHeaders(methodDescriptor: KMMethodDescriptor, metadata: KMMetadata): KMMetadata {
+        override fun onReceiveHeaders(methodDescriptor: KMMethodDescriptor, metadata: Metadata): Metadata {
             if (lifecycleStatus == InterceptorLifecycleStatus.SENT_MESSAGE) lifecycleStatus =
                 InterceptorLifecycleStatus.RECEIVED_HEADERS
             else throw IllegalStateException()
@@ -260,8 +259,8 @@ abstract class InterceptorTest {
         override fun onClose(
             methodDescriptor: KMMethodDescriptor,
             status: KMStatus,
-            metadata: KMMetadata
-        ): Pair<KMStatus, KMMetadata> {
+            metadata: Metadata
+        ): Pair<KMStatus, Metadata> {
             if (lifecycleStatus == InterceptorLifecycleStatus.RECEIVED_MESSAGE) lifecycleStatus =
                 InterceptorLifecycleStatus.CLOSED
             else throw IllegalStateException(lifecycleStatus.toString())

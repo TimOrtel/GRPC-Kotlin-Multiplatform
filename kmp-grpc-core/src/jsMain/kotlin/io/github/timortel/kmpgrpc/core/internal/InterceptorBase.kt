@@ -1,12 +1,13 @@
 package io.github.timortel.kmpgrpc.core.internal
 
 import io.github.timortel.kmpgrpc.core.CallInterceptor
-import io.github.timortel.kmpgrpc.core.KMMetadata
 import io.github.timortel.kmpgrpc.core.KMMethodDescriptor
-import io.github.timortel.kmpgrpc.core.MethodDescriptor
-import io.github.timortel.kmpgrpc.core.Request
-import io.github.timortel.kmpgrpc.core.UnaryResponse
+import io.github.timortel.kmpgrpc.core.Metadata
+import io.github.timortel.kmpgrpc.core.external.MethodDescriptor
+import io.github.timortel.kmpgrpc.core.external.Request
+import io.github.timortel.kmpgrpc.core.external.UnaryResponse
 import io.github.timortel.kmpgrpc.core.jsMetadata
+import io.github.timortel.kmpgrpc.core.kmMethodType
 import io.github.timortel.kmpgrpc.core.message.KMMessage
 
 internal interface InterceptorBase {
@@ -60,18 +61,18 @@ internal interface InterceptorBase {
         )
     }
 
-    fun <RESP> getKmMetadata(response: UnaryResponse<RESP>): KMMetadata {
+    fun <RESP> getKmMetadata(response: UnaryResponse<RESP>): Metadata {
         return getMetadataFromJs(response.getMetadata())
     }
 
-    private fun getMetadata(request: Request): KMMetadata {
+    private fun getMetadata(request: Request): Metadata {
         return getMetadataFromJs(request.getMetadata())
     }
 
-    fun getMetadataFromJs(jsObj: dynamic): KMMetadata {
+    fun getMetadataFromJs(jsObj: dynamic): Metadata {
         val keys = js("Object.keys(jsObj)").unsafeCast<Array<dynamic>>()
 
-        return KMMetadata(
+        return Metadata.of(
             buildMap {
                 keys.forEach { key ->
                     put(key.toString(), jsObj.get(key).toString())

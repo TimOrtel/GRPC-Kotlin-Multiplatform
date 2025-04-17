@@ -24,7 +24,7 @@ class CallInterceptorWrapper<REQ : KMMessage, RESP : KMMessage>(
     override fun startWithRequestOptions(requestOptions: GRPCRequestOptions, callOptions: GRPCCallOptions) {
         val newMetadata = interceptor.onStart(methodDescriptor, callOptions.initialMetadata.extractMetadata())
 
-        super.startWithRequestOptions(requestOptions, callOptions.edit { setInitialMetadata(newMetadata.metadataMap.toMap()) })
+        super.startWithRequestOptions(requestOptions, callOptions.edit { setInitialMetadata(newMetadata.entries.toMap()) })
     }
 
     override fun writeData(data: Any) {
@@ -40,7 +40,7 @@ class CallInterceptorWrapper<REQ : KMMessage, RESP : KMMessage>(
     override fun didReceiveInitialMetadata(initialMetadata: Map<Any?, *>?) {
         val newMetadata = interceptor.onReceiveHeaders(methodDescriptor, initialMetadata.extractMetadata())
 
-        super.didReceiveInitialMetadata(newMetadata.metadataMap.toMap())
+        super.didReceiveInitialMetadata(newMetadata.entries.toMap())
     }
 
     override fun didReceiveData(data: Any) {
@@ -61,7 +61,7 @@ class CallInterceptorWrapper<REQ : KMMessage, RESP : KMMessage>(
         )
 
         super.didCloseWithTrailingMetadata(
-            trailingMetadata = newTrailingMetadata.metadataMap.toMap(),
+            trailingMetadata = newTrailingMetadata.entries.toMap(),
             error = if (newStatus.code != KMCode.OK) {
                 if (error != null) {
                     NSError.errorWithDomain(
@@ -82,8 +82,8 @@ class CallInterceptorWrapper<REQ : KMMessage, RESP : KMMessage>(
         )
     }
 
-    private fun Map<Any?, *>?.extractMetadata(): KMMetadata {
-        return KMMetadata(orEmpty().map { (key, value) -> key.toString() to value.toString() }.toMap().toMutableMap())
+    private fun Map<Any?, *>?.extractMetadata(): Metadata {
+        return Metadata.of(orEmpty().map { (key, value) -> key.toString() to value.toString() }.toMap())
     }
 
     private fun GRPCCallOptions.edit(edit: GRPCMutableCallOptions.() -> Unit): GRPCCallOptions {

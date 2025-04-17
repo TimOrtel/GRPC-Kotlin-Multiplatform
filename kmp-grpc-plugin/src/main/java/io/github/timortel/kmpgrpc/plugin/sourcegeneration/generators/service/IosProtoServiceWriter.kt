@@ -42,7 +42,7 @@ object IosProtoServiceWriter : ActualProtoServiceWriter() {
                 Const.Service.CALL_OPTIONS_PROPERTY_NAME,
                 GRPC_MUTABLE_CALL_OPTIONS
             )
-            addStatement("callOptions.setInitialMetadata(%N.metadataMap.toMap())", Const.Service.RpcCall.PARAM_METADATA)
+            addStatement("callOptions.setInitialMetadata(%N.entries.toMap())", Const.Service.RpcCall.PARAM_METADATA)
         }
 
         builder.addStatement(

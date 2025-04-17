@@ -1,11 +1,11 @@
-package io.github.timortel.kmpgrpc.core.util
+package io.github.timortel.kmpgrpc.core
 
 import kotlinx.cinterop.*
 import platform.Foundation.NSData
 import platform.Foundation.create
 import platform.posix.memcpy
 
-val ByteArray.native: NSData
+internal val ByteArray.native: NSData
     get() {
         return memScoped {
             @OptIn(BetaInteropApi::class)
@@ -13,7 +13,7 @@ val ByteArray.native: NSData
         }
     }
 
-val NSData.common: ByteArray
+internal val NSData.common: ByteArray
     get() {
         if (length == 0uL) return byteArrayOf()
 

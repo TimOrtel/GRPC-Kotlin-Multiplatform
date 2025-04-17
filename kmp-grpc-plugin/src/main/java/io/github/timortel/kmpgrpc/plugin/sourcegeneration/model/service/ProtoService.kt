@@ -6,6 +6,7 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoNode
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOption
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoBaseDeclaration
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.capitalize
 import org.antlr.v4.runtime.ParserRuleContext
 
 data class ProtoService(
@@ -19,7 +20,7 @@ data class ProtoService(
 
     override val kotlinClassName: String = "${name}Stub"
 
-    val jsServiceClassName: ClassName get() = className.nestedClass("JS_$name")
+    val jsServiceClassName: ClassName get() = className.nestedClass("${name.capitalize()}Bridge")
 
     init {
         rpcs.forEach { it.service = this }

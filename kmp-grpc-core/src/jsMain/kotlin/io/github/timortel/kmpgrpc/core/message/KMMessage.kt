@@ -1,8 +1,8 @@
 package io.github.timortel.kmpgrpc.core.message
 
-import io.github.timortel.kmpgrpc.core.JSPB
+import io.github.timortel.kmpgrpc.core.common
+import io.github.timortel.kmpgrpc.core.external.JSPB
 import io.github.timortel.kmpgrpc.core.io.CodedOutputStream
-import io.github.timortel.kmpgrpc.core.util.common
 import org.khronos.webgl.Uint8Array
 
 actual interface KMMessage {
@@ -30,5 +30,3 @@ actual interface KMMessage {
      */
     fun serialize(stream: CodedOutputStream)
 }
-
-val serializeMessage: (KMMessage, CodedOutputStream) -> Unit = { message, stream -> message.serialize(stream) }

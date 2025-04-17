@@ -9,7 +9,7 @@ import io.grpc.ForwardingClientCallListener.SimpleForwardingClientCallListener
 /**
  * Implementation of the gRPC interceptor forwarding calls to [impl]
  */
-class ClientInterceptorImpl(private val impl: CallInterceptor) : ClientInterceptor {
+internal class ClientInterceptorImpl(private val impl: CallInterceptor) : ClientInterceptor {
 
     override fun <ReqT : Any?, RespT : Any?> interceptCall(
         method: MethodDescriptor<ReqT, RespT>,
@@ -27,7 +27,7 @@ class ClientInterceptorImpl(private val impl: CallInterceptor) : ClientIntercept
         )
 
         return object : SimpleForwardingClientCall<ReqT, RespT>(next.newCall(method, callOptions)) {
-            override fun start(responseListener: Listener<RespT>, headers: Metadata) {
+            override fun start(responseListener: Listener<RespT>, headers: JvmMetadata) {
                 val newMetadata = impl.onStart(
                     methodDescriptor = kmMethodDescriptor,
                     metadata = headers.kmMetadata
@@ -35,7 +35,7 @@ class ClientInterceptorImpl(private val impl: CallInterceptor) : ClientIntercept
 
                 super.start(
                     object : SimpleForwardingClientCallListener<RespT>(responseListener) {
-                        override fun onHeaders(headers: Metadata) {
+                        override fun onHeaders(headers: JvmMetadata) {
                             super.onHeaders(impl.onReceiveHeaders(kmMethodDescriptor, headers.kmMetadata).jvmMetadata)
                         }
 
@@ -47,7 +47,7 @@ class ClientInterceptorImpl(private val impl: CallInterceptor) : ClientIntercept
                             }
                         }
 
-                        override fun onClose(status: Status, trailers: Metadata) {
+                        override fun onClose(status: Status, trailers: JvmMetadata) {
                             val (newStatus, newTrailers) = impl.onClose(
                                 kmMethodDescriptor,
                                 KMStatus(

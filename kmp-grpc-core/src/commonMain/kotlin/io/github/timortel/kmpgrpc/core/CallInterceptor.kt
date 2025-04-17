@@ -12,7 +12,7 @@ interface CallInterceptor {
      * @param metadata the metadata that is intended to be sent to the server.
      * @return the metadata that should be sent to the server.
      */
-    fun onStart(methodDescriptor: KMMethodDescriptor, metadata: KMMetadata): KMMetadata = metadata
+    fun onStart(methodDescriptor: KMMethodDescriptor, metadata: Metadata): Metadata = metadata
 
     /**
      * Intercept sending a message.
@@ -29,7 +29,7 @@ interface CallInterceptor {
      * @param metadata the metadata received from the server. Potentially modified by previous [CallInterceptor]s.
      * @return the metadata that should be forwarded.
      */
-    fun onReceiveHeaders(methodDescriptor: KMMethodDescriptor, metadata: KMMetadata): KMMetadata = metadata
+    fun onReceiveHeaders(methodDescriptor: KMMethodDescriptor, metadata: Metadata): Metadata = metadata
 
     /**
      * Intercept receiving a message from the server.
@@ -47,6 +47,6 @@ interface CallInterceptor {
     fun onClose(
         methodDescriptor: KMMethodDescriptor,
         status: KMStatus,
-        metadata: KMMetadata
-    ): Pair<KMStatus, KMMetadata> = status to metadata
+        metadata: Metadata
+    ): Pair<KMStatus, Metadata> = status to metadata
 }

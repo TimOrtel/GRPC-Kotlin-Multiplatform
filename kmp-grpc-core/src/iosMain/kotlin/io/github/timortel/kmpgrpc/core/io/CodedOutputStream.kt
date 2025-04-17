@@ -5,7 +5,7 @@ import io.github.timortel.kmpgrpc.core.message.KMMessage
 import io.github.timortel.kmpgrpc.core.message.KmEnum
 import io.github.timortel.kmpgrpc.core.message.requiredSizeMessage
 import io.github.timortel.kmpgrpc.core.message.serializeMessage
-import io.github.timortel.kmpgrpc.core.util.native
+import io.github.timortel.kmpgrpc.core.native
 
 /**
  * Implements the functionality by wrapping [GPBCodedOutputStream].

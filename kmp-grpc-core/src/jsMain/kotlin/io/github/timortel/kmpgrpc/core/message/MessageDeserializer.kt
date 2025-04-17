@@ -1,6 +1,6 @@
 package io.github.timortel.kmpgrpc.core.message
 
-import io.github.timortel.kmpgrpc.core.util.native
+import io.github.timortel.kmpgrpc.core.native
 import org.khronos.webgl.Uint8Array
 
 actual interface MessageDeserializer<T : KMMessage> {

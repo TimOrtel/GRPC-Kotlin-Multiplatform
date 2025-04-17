@@ -15,7 +15,7 @@ suspend fun <REQ, RESP> unaryRpc(
     method: MethodDescriptor<REQ, RESP>,
     request: REQ,
     callOptions: CallOptions,
-    headers: KMMetadata
+    headers: Metadata
 ): RESP {
     return try {
         ClientCalls.unaryRpc(
@@ -35,7 +35,7 @@ fun <REQ, RESP> serverStreamingRpc(
     method: MethodDescriptor<REQ, RESP>,
     request: REQ,
     callOptions: CallOptions,
-    headers: KMMetadata
+    headers: Metadata
 ): Flow<RESP> {
     return ClientCalls.serverStreamingRpc(
         channel = channel.channel,

@@ -1,9 +1,12 @@
 package io.github.timortel.kmpgrpc.core.rpc
 
+import io.github.timortel.kmpgrpc.core.JsMetadata
 import io.github.timortel.kmpgrpc.core.KMCode
 import io.github.timortel.kmpgrpc.core.KMStatus
 import io.github.timortel.kmpgrpc.core.KMStatusException
-import io.github.timortel.kmpgrpc.core.RpcError
+import io.github.timortel.kmpgrpc.core.Metadata
+import io.github.timortel.kmpgrpc.core.external.RpcError
+import io.github.timortel.kmpgrpc.core.jsMetadata
 import kotlinx.coroutines.await
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -11,11 +14,21 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.catch
 import kotlin.js.Promise
 
-suspend fun <JS_RESPONSE> simpleCallImplementation(
-    performCall: () -> Promise<JS_RESPONSE>
+/**
+ * Executes the unary given call and maps [RpcError]s to [KMStatusException]s.
+ *
+ * @param performCall A suspendable lambda function that returns a Promise of the generic type JS_RESPONSE.
+ * @param metadata The metadata that should be sent with this call.
+ * @return The result of the call
+ * @throws KMStatusException if an RpcError is caught, wrapping the error details into a KMStatusException.
+ * @throws Exception if any other exception is caught during execution.
+ */
+suspend fun <JS_RESPONSE> unaryCallImplementation(
+    metadata: Metadata,
+    performCall: (metadata: JsMetadata) -> Promise<JS_RESPONSE>
 ): JS_RESPONSE {
     return try {
-        performCall().await()
+        performCall(metadata.jsMetadata).await()
     } catch (e: RpcError) {
         throw KMStatusException(
             status = KMStatus(
@@ -29,9 +42,17 @@ suspend fun <JS_RESPONSE> simpleCallImplementation(
     }
 }
 
-fun <JS_RESPONSE> serverSideStreamingCallImplementation(performCall: () -> dynamic): Flow<JS_RESPONSE> {
+/**
+ * Handles server-side streaming calls by converting a dynamic call response into a Flow of type JS_RESPONSE.
+ *
+ * @param JS_RESPONSE The type of data expected in the streaming response.
+ * @param metadata The metadata that should be sent with this call.
+ * @param performCall A lambda function that performs the backend call and returns a dynamic streaming object.
+ * @return A [Flow] instance emitting responses of type JS_RESPONSE, or errors if the streaming call fails.
+ */
+fun <JS_RESPONSE> serverSideStreamingCallImplementation(metadata: Metadata, performCall: (metadata: JsMetadata) -> dynamic): Flow<JS_RESPONSE> {
     return callbackFlow {
-        val stream = performCall()
+        val stream = performCall(metadata.jsMetadata)
         stream.on("data") { data ->
             trySend(data as JS_RESPONSE)
         }

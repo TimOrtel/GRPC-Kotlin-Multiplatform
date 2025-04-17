@@ -1,9 +1,9 @@
 package io.github.timortel.kmpgrpc.core.io
 
-import io.github.timortel.kmpgrpc.core.JSPB
+import io.github.timortel.kmpgrpc.core.common
+import io.github.timortel.kmpgrpc.core.external.JSPB
 import io.github.timortel.kmpgrpc.core.message.DataType
 import io.github.timortel.kmpgrpc.core.message.KMMessage
-import io.github.timortel.kmpgrpc.core.util.common
 import org.khronos.webgl.Uint8Array
 
 actual class CodedInputStream(

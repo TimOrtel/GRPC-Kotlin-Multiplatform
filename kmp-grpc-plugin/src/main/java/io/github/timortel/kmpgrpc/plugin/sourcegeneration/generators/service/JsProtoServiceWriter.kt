@@ -12,12 +12,15 @@ object JsProtoServiceWriter : ActualProtoServiceWriter() {
     override val primaryConstructorModifiers: List<KModifier> = listOf(KModifier.PRIVATE, KModifier.ACTUAL)
 
     override val callOptionsType: TypeName = kmMetadata
-    override val createEmptyCallOptionsCode: CodeBlock = CodeBlock.of("%T()", kmMetadata)
+    override val createEmptyCallOptionsCode: CodeBlock = CodeBlock.of("%T.empty()", kmMetadata)
 
     private val grpcWebClientBase =
-        ClassName(PACKAGE_BASE, "GrpcWebClientBase")
+        ClassName(PACKAGE_EXTERNAL, "GrpcWebClientBase")
     private val methodDescriptor =
-        ClassName(PACKAGE_BASE, "MethodDescriptor")
+        ClassName(PACKAGE_EXTERNAL, "MethodDescriptor")
+
+    private val unaryCallImpl = MemberName(PACKAGE_RPC, "unaryCallImplementation")
+    private val serverStreamingCallImpl = MemberName(PACKAGE_RPC, "serverSideStreamingCallImplementation")
 
     private val promise: ClassName = ClassName("kotlin.js", "Promise")
 
@@ -55,36 +58,35 @@ object JsProtoServiceWriter : ActualProtoServiceWriter() {
         builder: FunSpec.Builder,
         rpc: ProtoRpc
     ) {
-        builder.apply {
-            addStatement("val actMetadata = this.%N + metadata", Const.Service.CALL_OPTIONS_PROPERTY_NAME)
+        builder.addCode(
+            CodeBlock.builder()
+                .apply {
+                    val clientCallCode = CodeBlock
+                        .builder()
+                        .add("client.${rpc.name}(")
+                        .add("request, ")
+                        .add("jsMetadata")
+                        .add(")")
+                        .build()
 
-            val clientCallCode = CodeBlock
-                .builder()
-                .add("client.${rpc.name}(")
-                .add("request, ")
-                .add("actMetadata.%M", MemberName(PACKAGE_BASE, "jsMetadata"))
-                .add(")")
-                .build()
+                    add("return·")
 
-            addCode("return ")
+                    val rpcImplMember = if (rpc.isReceivingStream) {
+                        serverStreamingCallImpl
+                    } else {
+                        unaryCallImpl
+                    }
 
-            addCode(
-                "%M·{\n",
-                if (rpc.isReceivingStream) {
-                    MemberName(
-                        PACKAGE_RPC, "serverSideStreamingCallImplementation"
-                    )
-                } else {
-                    MemberName(
-                        PACKAGE_RPC,
-                        "simpleCallImplementation"
-                    )
+                    add("%M(this.%N + metadata)·{·jsMetadata·->\n", rpcImplMember, Const.Service.CALL_OPTIONS_PROPERTY_NAME)
+
+                    indent()
+                    add(clientCallCode)
+                    unindent()
+
+                    add("\n}")
                 }
-            )
-
-            addCode(clientCallCode)
-            addCode("\n}")
-        }
+                .build()
+        )
     }
 
     override fun applyToMetadataParameter(builder: ParameterSpec.Builder, service: ProtoService) = Unit
@@ -106,6 +108,7 @@ object JsProtoServiceWriter : ActualProtoServiceWriter() {
     private fun generateJsServiceBridge(service: ProtoService): TypeSpec {
         return TypeSpec
             .classBuilder(service.jsServiceClassName)
+            .addModifiers(KModifier.PRIVATE)
             .primaryConstructor(
                 FunSpec
                     .constructorBuilder()

@@ -1,7 +1,7 @@
 package io.github.timortel.kmpgrpc.core.internal
 
 import io.github.timortel.kmpgrpc.core.CallInterceptor
-import io.github.timortel.kmpgrpc.core.KMMetadata
+import io.github.timortel.kmpgrpc.core.Metadata
 import io.github.timortel.kmpgrpc.core.KMMethodDescriptor
 import io.github.timortel.kmpgrpc.core.KMStatus
 import io.github.timortel.kmpgrpc.core.message.KMMessage
@@ -14,7 +14,7 @@ internal class CallInterceptorChain(
     private val callInterceptors: List<CallInterceptor>
 ) : CallInterceptor {
 
-    override fun onStart(methodDescriptor: KMMethodDescriptor, metadata: KMMetadata): KMMetadata {
+    override fun onStart(methodDescriptor: KMMethodDescriptor, metadata: Metadata): Metadata {
         return callInterceptors.foldRight(metadata) { interceptor, currentMetadata ->
             interceptor.onStart(
                 methodDescriptor,
@@ -32,7 +32,7 @@ internal class CallInterceptorChain(
         }
     }
 
-    override fun onReceiveHeaders(methodDescriptor: KMMethodDescriptor, metadata: KMMetadata): KMMetadata {
+    override fun onReceiveHeaders(methodDescriptor: KMMethodDescriptor, metadata: Metadata): Metadata {
         return callInterceptors.fold(metadata) { currentMetadata, interceptor ->
             interceptor.onReceiveHeaders(
                 methodDescriptor,
@@ -53,8 +53,8 @@ internal class CallInterceptorChain(
     override fun onClose(
         methodDescriptor: KMMethodDescriptor,
         status: KMStatus,
-        metadata: KMMetadata
-    ): Pair<KMStatus, KMMetadata> {
+        metadata: Metadata
+    ): Pair<KMStatus, Metadata> {
         return callInterceptors.fold(status to metadata) { (currentStatus, currentMetadata), interceptor ->
             interceptor.onClose(
                 methodDescriptor = methodDescriptor,

@@ -2,9 +2,9 @@ package io.github.timortel.kmpgrpc.core.internal
 
 import io.github.timortel.kmpgrpc.core.*
 import io.github.timortel.kmpgrpc.core.message.KMMessage
-import io.github.timortel.kmpgrpc.core.ClientReadableStream
-import io.github.timortel.kmpgrpc.core.Request
-import io.github.timortel.kmpgrpc.core.StreamInterceptor
+import io.github.timortel.kmpgrpc.core.external.ClientReadableStream
+import io.github.timortel.kmpgrpc.core.external.Request
+import io.github.timortel.kmpgrpc.core.external.StreamInterceptor
 import kotlin.js.json
 
 internal class StreamCallInterceptorWrapper(override val impl: CallInterceptor) : StreamInterceptor, InterceptorBase {

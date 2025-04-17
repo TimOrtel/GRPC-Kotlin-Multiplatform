@@ -2,7 +2,7 @@ package io.github.timortel.kmpgrpc.core.message
 
 import cocoapods.Protobuf.GPBCodedOutputStream
 import io.github.timortel.kmpgrpc.core.io.CodedOutputStream
-import io.github.timortel.kmpgrpc.core.util.common
+import io.github.timortel.kmpgrpc.core.common
 import platform.Foundation.NSData
 import platform.Foundation.NSMutableData
 

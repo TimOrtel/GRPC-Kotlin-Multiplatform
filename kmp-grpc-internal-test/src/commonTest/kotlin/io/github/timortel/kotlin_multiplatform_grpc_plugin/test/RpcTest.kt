@@ -1,7 +1,7 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.test
 
 import io.github.timortel.kmpgrpc.core.KMChannel
-import io.github.timortel.kmpgrpc.core.KMMetadata
+import io.github.timortel.kmpgrpc.core.Metadata
 import io.github.timortel.kmpgrpc.core.KMStatusException
 import io.github.timortel.kmpgrpc.core.message.UnknownField
 import io.github.timortel.kmpgrpc.test.*
@@ -141,7 +141,7 @@ abstract class RpcTest {
         val value = "custom-value"
 
         val response = InterceptorServiceStub(channel)
-            .testMetadata(message, KMMetadata(mutableMapOf(key to value)))
+            .testMetadata(message, Metadata.of(key, value))
 
         assertContains(response.metadataMap, key, "Metadata does not contain key $key")
         assertEquals(value, response.metadataMap[key], "Metadata value != $value")

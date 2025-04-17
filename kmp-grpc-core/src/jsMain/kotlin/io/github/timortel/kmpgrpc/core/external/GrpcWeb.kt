@@ -1,7 +1,7 @@
 @file:JsModule("grpc-web")
 @file:JsNonModule
 
-package io.github.timortel.kmpgrpc.core
+package io.github.timortel.kmpgrpc.core.external
 
 import org.khronos.webgl.Uint8Array
 import kotlin.js.Promise

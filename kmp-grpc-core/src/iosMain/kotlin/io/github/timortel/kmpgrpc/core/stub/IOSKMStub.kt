@@ -3,7 +3,7 @@ package io.github.timortel.kmpgrpc.core.stub
 import cocoapods.GRPCClient.GRPCCallOptions
 import cocoapods.GRPCClient.GRPCMutableCallOptions
 import io.github.timortel.kmpgrpc.core.KMChannel
-import io.github.timortel.kmpgrpc.core.KMMetadata
+import io.github.timortel.kmpgrpc.core.Metadata
 import io.github.timortel.kmpgrpc.core.util.TimeUnit
 
 /**
@@ -29,9 +29,9 @@ interface IOSKMStub<S : KMStub<S>> {
     /**
      * @return a new stub that sends the given [metadata] on each request.
      */
-    fun withMetadata(metadata: KMMetadata): S {
+    fun withMetadata(metadata: Metadata): S {
         val mutableOptions = callOptions.mutableCopy() as GRPCMutableCallOptions
-        mutableOptions.setInitialMetadata(metadata.metadataMap.toMap())
+        mutableOptions.setInitialMetadata(metadata.entries.toMap())
 
         return build(channel, mutableOptions)
     }

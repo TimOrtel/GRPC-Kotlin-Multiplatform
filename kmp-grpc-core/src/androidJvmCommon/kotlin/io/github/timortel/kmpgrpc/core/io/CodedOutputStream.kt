@@ -7,7 +7,7 @@ import io.github.timortel.kmpgrpc.core.message.requiredSizeMessage
 import io.github.timortel.kmpgrpc.core.message.serializeMessage
 import com.google.protobuf.CodedOutputStream
 
-actual class CodedOutputStream(private val impl: com.google.protobuf.CodedOutputStream) {
+actual class CodedOutputStream(private val impl: CodedOutputStream) {
 
     private fun <T> writeArray(
         stream: io.github.timortel.kmpgrpc.core.io.CodedOutputStream,
