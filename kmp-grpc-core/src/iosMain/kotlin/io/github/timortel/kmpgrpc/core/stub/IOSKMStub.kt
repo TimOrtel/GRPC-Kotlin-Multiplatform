@@ -2,7 +2,7 @@ package io.github.timortel.kmpgrpc.core.stub
 
 import cocoapods.GRPCClient.GRPCCallOptions
 import cocoapods.GRPCClient.GRPCMutableCallOptions
-import io.github.timortel.kmpgrpc.core.KMChannel
+import io.github.timortel.kmpgrpc.core.Channel
 import io.github.timortel.kmpgrpc.core.Metadata
 import io.github.timortel.kmpgrpc.core.util.TimeUnit
 
@@ -12,9 +12,9 @@ import io.github.timortel.kmpgrpc.core.util.TimeUnit
 interface IOSKMStub<S : KMStub<S>> {
 
     /**
-     * The [KMChannel] of this stub.
+     * The [Channel] of this stub.
      */
-    val channel: KMChannel
+    val channel: Channel
 
     /**
      * The current [GRPCCallOptions] of this stub.
@@ -22,9 +22,9 @@ interface IOSKMStub<S : KMStub<S>> {
     val callOptions: GRPCCallOptions
 
     /**
-     * Construct a new channel using both the associated [KMChannel] and [GRPCCallOptions].
+     * Construct a new channel using both the associated [Channel] and [GRPCCallOptions].
      */
-    fun build(channel: KMChannel, callOptions: GRPCCallOptions): S
+    fun build(channel: Channel, callOptions: GRPCCallOptions): S
 
     /**
      * @return a new stub that sends the given [metadata] on each request.

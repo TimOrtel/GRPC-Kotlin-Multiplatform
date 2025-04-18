@@ -110,8 +110,6 @@ service HelloService {
 ### Creating proto objects
 In your common module, you can create proto objects like this:
 ```kotlin
-import com.example.*
-
 val request = helloRequest {
     greeting = "My greeting"
 }
@@ -121,7 +119,7 @@ val request = helloRequest {
 The request syntax is very similar to the one provided by gRPC Java. Add this code to your common module:
 ```kotlin
  suspend fun makeCall(): String {
-    val channel = KMChannel.Builder()
+    val channel = Channel.Builder()
         .forAddress("localhost", 8082) // replace with your address and your port
         .usePlaintext() // To force grpc to allow plaintext traffic, if you don't call this https is used.
         .build()
@@ -215,7 +213,7 @@ val instant: Instant = timestamp.toInstant()
 Unknown fields are automatically captured when parsing messages and also serialized back to the wire. 
 You can access them using the generated property:
 ```kotlin
-public class ExampleMessage {
+class ExampleMessage {
     val unknownFields: List<UnknownField>
 }
 ```
@@ -224,7 +222,7 @@ public class ExampleMessage {
 You can intercept calls to modify what is sent to the server and received from the server. Example:
 ```kotlin
 val loggingInterceptor = object : CallInterceptor {
-    override fun onStart(methodDescriptor: KMMethodDescriptor, metadata: KMMetadata): KMMetadata {
+    override fun onStart(methodDescriptor: KMMethodDescriptor, metadata: Metadata): Metadata {
         println("Call started ${methodDescriptor.fullMethodName}")
         return super.onStart(methodDescriptor, metadata)
     }
@@ -232,14 +230,14 @@ val loggingInterceptor = object : CallInterceptor {
     override fun onClose(
         methodDescriptor: KMMethodDescriptor,
         status: KMStatus,
-        metadata: KMMetadata
-    ): Pair<KMStatus, KMMetadata> {
+        metadata: Metadata
+    ): Pair<KMStatus, Metadata> {
         println("Call closed ${methodDescriptor.fullMethodName}")
         return super.onClose(methodDescriptor, status, metadata)
     }
 }
 
-val channel = KMChannel.Builder
+val channel = Channel.Builder
     .forAddress("localhost", 8080)
     .withInterceptors(loggingInterceptor)
     .build()

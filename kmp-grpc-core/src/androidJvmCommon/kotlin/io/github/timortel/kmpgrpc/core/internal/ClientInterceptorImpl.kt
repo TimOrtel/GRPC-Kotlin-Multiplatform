@@ -3,6 +3,7 @@ package io.github.timortel.kmpgrpc.core.internal
 import io.github.timortel.kmpgrpc.core.*
 import io.github.timortel.kmpgrpc.core.message.Message
 import io.grpc.*
+import io.grpc.Channel
 import io.grpc.ForwardingClientCall.SimpleForwardingClientCall
 import io.grpc.ForwardingClientCallListener.SimpleForwardingClientCallListener
 

@@ -6,7 +6,7 @@ import io.github.timortel.kmpgrpc.core.internal.CallInterceptorChain
 /**
  * On ios the channel equivalent are the [GRPCCallOptions].
  */
-actual class KMChannel private constructor(
+actual class Channel private constructor(
     private val name: String,
     private val port: Int,
     private val usePlaintext: Boolean,
@@ -61,6 +61,6 @@ actual class KMChannel private constructor(
             }
         }
 
-        actual fun build(): KMChannel = KMChannel(name, port, usePlaintext, interceptor)
+        actual fun build(): Channel = Channel(name, port, usePlaintext, interceptor)
     }
 }

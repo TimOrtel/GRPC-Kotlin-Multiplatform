@@ -6,7 +6,7 @@ import io.github.timortel.kmpgrpc.core.external.UnaryInterceptor
 import io.github.timortel.kmpgrpc.core.internal.StreamCallInterceptorWrapper
 import io.github.timortel.kmpgrpc.core.internal.UnaryCallInterceptorWrapper
 
-actual class KMChannel private constructor(
+actual class Channel private constructor(
     private val name: String,
     private val port: Int,
     private val usePlainText: Boolean,
@@ -37,7 +37,7 @@ actual class KMChannel private constructor(
             this.interceptors += interceptors.toList()
         }
 
-        actual fun build(): KMChannel {
+        actual fun build(): Channel {
             val unaryInterceptors =
                 interceptors.map { UnaryCallInterceptorWrapper(it) }.toTypedArray<UnaryInterceptor>()
             val streamInterceptors =
@@ -51,7 +51,7 @@ actual class KMChannel private constructor(
                     this.streamInterceptors = streamInterceptors
                 }
 
-            return KMChannel(
+            return Channel(
                 name = name,
                 port = port,
                 usePlainText = usePlainText,

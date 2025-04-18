@@ -1,12 +1,10 @@
 package io.github.timortel.kmpgrpc.core
 
-import io.github.timortel.kmpgrpc.core.KMChannel.Builder
-
 /**
  * Wraps around the gRPC-Channel. Create a channel using [Builder.forAddress].
- * For more information about grpc channels please refer to [the official grpc channel documentation](https://grpc.io/docs/what-is-grpc/core-concepts/#channels).
+ * For more information about grpc channels, please refer to [the official grpc channel documentation](https://grpc.io/docs/what-is-grpc/core-concepts/#channels).
  */
-expect class KMChannel {
+expect class Channel {
     class Builder {
         companion object {
             /**
@@ -29,6 +27,6 @@ expect class KMChannel {
         /**
          * Construct the channel
          */
-        fun build(): KMChannel
+        fun build(): Channel
     }
 }

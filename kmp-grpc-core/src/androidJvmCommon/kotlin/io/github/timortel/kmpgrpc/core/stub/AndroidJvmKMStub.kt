@@ -1,6 +1,6 @@
 package io.github.timortel.kmpgrpc.core.stub
 
-import io.github.timortel.kmpgrpc.core.KMChannel
+import io.github.timortel.kmpgrpc.core.Channel
 import io.github.timortel.kmpgrpc.core.util.TimeUnit
 import io.grpc.CallOptions
 
@@ -10,10 +10,10 @@ import io.grpc.CallOptions
  */
 interface AndroidJvmKMStub<S : KMStub<S>> {
 
-    val channel: KMChannel
+    val channel: Channel
     val callOptions: CallOptions
 
-    fun build(channel: KMChannel, callOptions: CallOptions): S
+    fun build(channel: Channel, callOptions: CallOptions): S
 
     fun withDeadlineAfter(duration: Long, unit: TimeUnit): S {
         return build(channel, callOptions.withDeadlineAfter(duration, unit.javaTimeUnit))

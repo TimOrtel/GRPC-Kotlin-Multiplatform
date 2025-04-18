@@ -11,7 +11,7 @@ import kotlin.jvm.Throws
 
 @Throws(KMStatusException::class)
 suspend fun <REQ, RESP> unaryRpc(
-    channel: KMChannel,
+    channel: Channel,
     method: MethodDescriptor<REQ, RESP>,
     request: REQ,
     callOptions: CallOptions,
@@ -31,7 +31,7 @@ suspend fun <REQ, RESP> unaryRpc(
 }
 
 fun <REQ, RESP> serverStreamingRpc(
-    channel: KMChannel,
+    channel: Channel,
     method: MethodDescriptor<REQ, RESP>,
     request: REQ,
     callOptions: CallOptions,

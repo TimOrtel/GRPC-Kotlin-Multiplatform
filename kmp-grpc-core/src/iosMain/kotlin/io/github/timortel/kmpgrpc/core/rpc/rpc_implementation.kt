@@ -27,7 +27,7 @@ private const val INVALID_UNKNOWN_DESCRIPTION_2 = "UNKNOWN {grpc_message:\"\", g
  */
 @Throws(KMStatusException::class, CancellationException::class)
 suspend fun <REQ : Message, RES : Message> unaryCallImplementation(
-    channel: KMChannel,
+    channel: Channel,
     callOptions: GRPCCallOptions,
     path: String,
     request: REQ,
@@ -97,7 +97,7 @@ suspend fun <REQ : Message, RES : Message> unaryCallImplementation(
  * Uses [GRPCCall2] for the actual call.
  */
 fun <REQ : Message, RES : Message> serverSideStreamingCallImplementation(
-    channel: KMChannel,
+    channel: Channel,
     callOptions: GRPCCallOptions,
     path: String,
     request: REQ,

@@ -92,7 +92,7 @@ abstract class InterceptorTest {
     }
 
     private suspend fun testResponse(expectedValue: Int, interceptors: Array<CallInterceptor>) {
-        val channel = KMChannel.Builder
+        val channel = Channel.Builder
             .forAddress(address, port)
             .usePlaintext()
             .withInterceptors(*interceptors)
@@ -117,7 +117,7 @@ abstract class InterceptorTest {
     fun testInterceptorInternalCallOrderUnary() = runTest {
         val interceptor = CheckCallOrderInterceptor(isStream = false, isJs = isJavaScript)
 
-        val channel = KMChannel.Builder
+        val channel = Channel.Builder
             .forAddress(address, port)
             .usePlaintext()
             .withInterceptors(interceptor)
@@ -136,7 +136,7 @@ abstract class InterceptorTest {
     fun testInterceptorInternalCallOrderServerStreaming() = runTest {
         val interceptor = CheckCallOrderInterceptor(isStream = true, isJs = isJavaScript)
 
-        val channel = KMChannel.Builder
+        val channel = Channel.Builder
             .forAddress(address, port)
             .usePlaintext()
             .withInterceptors(interceptor)
@@ -160,7 +160,7 @@ abstract class InterceptorTest {
             }
         }
 
-        val channel = KMChannel.Builder
+        val channel = Channel.Builder
             .forAddress(address, port)
             .usePlaintext()
             .withInterceptors(interceptor)
@@ -187,7 +187,7 @@ abstract class InterceptorTest {
             }
         }
 
-        val channel = KMChannel.Builder
+        val channel = Channel.Builder
             .forAddress(address, port)
             .usePlaintext()
             .withInterceptors(interceptor)
