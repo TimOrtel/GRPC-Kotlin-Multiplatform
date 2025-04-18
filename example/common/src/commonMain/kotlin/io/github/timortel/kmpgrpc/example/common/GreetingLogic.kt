@@ -1,14 +1,14 @@
 package io.github.timortel.kmpgrpc.example.common
 
-import io.github.timortel.kmpgrpc.core.KMChannel
-import io.github.timortel.kmpgrpc.core.util.TimeUnit
 import io.github.timortel.kmpgrpc.example.HelloServiceStub
 import io.github.timortel.kmpgrpc.example.helloRequest
+import io.github.timortel.kmpgrpc.core.Channel
+import io.github.timortel.kmpgrpc.core.util.TimeUnit
 
 object GreetingLogic {
 
     suspend fun performGreeting(host: String, port: Int, message: String): String {
-        val channel = KMChannel.Builder
+        val channel = Channel.Builder
             .forAddress(host, port)
             .usePlaintext()
             .build()
@@ -29,7 +29,7 @@ object GreetingLogic {
     }
 
     suspend fun performMultipleGreetings(message: String, port: Int) {
-        val channel = KMChannel.Builder
+        val channel = Channel.Builder
             .forAddress("localhost", port)
             .usePlaintext()
             .build()

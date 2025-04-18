@@ -19,19 +19,22 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
 class SerializationFunctionExtension : BaseSerializationExtension() {
 
     override fun applyToClass(builder: TypeSpec.Builder, message: ProtoMessage, sourceTarget: SourceTarget) {
-        if (sourceTarget is SourceTarget.Actual) {
-            builder.addFunction(
-                FunSpec
-                    .builder(Const.Message.SerializeFunction.NAME)
-                    .addModifiers(KModifier.OVERRIDE)
-                    .addParameter(
-                        Const.Message.SerializeFunction.STREAM_PARAM,
-                        CodedOutputStream
-                    )
-                    .apply { buildSerializeFunction(this, message, sourceTarget) }
-                    .build()
-            )
-        }
+        builder.addFunction(
+            FunSpec
+                .builder(Const.Message.SerializeFunction.NAME)
+                .addModifiers(KModifier.OVERRIDE)
+                .addParameter(
+                    Const.Message.SerializeFunction.STREAM_PARAM,
+                    CodedOutputStream
+                )
+                .apply {
+                    if (sourceTarget is SourceTarget.Actual) {
+                        addModifiers(KModifier.ACTUAL)
+                        buildSerializeFunction(this, message, sourceTarget)
+                    }
+                }
+                .build()
+        )
     }
 
     /**
@@ -152,7 +155,7 @@ class SerializationFunctionExtension : BaseSerializationExtension() {
 
             addCode(", ")
 
-            if(isJs) {
+            if (isJs) {
                 addCode("{ _, _, -> 0 }")
             } else {
                 addCode(getComputeMapValueRequiredSizeCode(field.valuesType))
