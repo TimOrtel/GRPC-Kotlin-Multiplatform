@@ -222,13 +222,13 @@ class ExampleMessage {
 You can intercept calls to modify what is sent to the server and received from the server. Example:
 ```kotlin
 val loggingInterceptor = object : CallInterceptor {
-    override fun onStart(methodDescriptor: KMMethodDescriptor, metadata: Metadata): Metadata {
+    override fun onStart(methodDescriptor: MethodDescriptor, metadata: Metadata): Metadata {
         println("Call started ${methodDescriptor.fullMethodName}")
         return super.onStart(methodDescriptor, metadata)
     }
 
     override fun onClose(
-        methodDescriptor: KMMethodDescriptor,
+        methodDescriptor: MethodDescriptor,
         status: Status,
         metadata: Metadata
     ): Pair<Status, Metadata> {
