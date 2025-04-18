@@ -2,7 +2,7 @@ package io.github.timortel.kotlin_multiplatform_grpc_plugin.test
 
 import io.github.timortel.kmpgrpc.core.Channel
 import io.github.timortel.kmpgrpc.core.Metadata
-import io.github.timortel.kmpgrpc.core.KMStatusException
+import io.github.timortel.kmpgrpc.core.StatusException
 import io.github.timortel.kmpgrpc.core.message.UnknownField
 import io.github.timortel.kmpgrpc.test.*
 import kotlinx.coroutines.async
@@ -151,7 +151,7 @@ abstract class RpcTest {
     fun testFailedRpcThrowsKmStatusException() = runTest {
         val message = simpleMessage { }
 
-        assertFailsWith<KMStatusException> {
+        assertFailsWith<StatusException> {
             TestServiceStub(Channel.Builder.forAddress("localhost", 1800).usePlaintext().build())
                 .simpleRpc(message)
         }
@@ -161,7 +161,7 @@ abstract class RpcTest {
     fun testFailedStreamingRpcThrowsKmStatusException() = runTest {
         val message = simpleMessage { }
 
-        assertFailsWith<KMStatusException> {
+        assertFailsWith<StatusException> {
             TestServiceStub(Channel.Builder.forAddress("localhost", 1800).usePlaintext().build())
                 .simpleStreamingRpc(message)
                 .toList()

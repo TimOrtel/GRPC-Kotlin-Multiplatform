@@ -22,7 +22,7 @@ internal val String.kmMethodType: KMMethodDescriptor.MethodType
     }
 
 
-internal fun KMStatus.toJsStatus(metadata: Metadata): Status = js("{}").unsafeCast<Status>().apply {
+internal fun io.github.timortel.kmpgrpc.core.Status.toJsStatus(metadata: Metadata): Status = js("{}").unsafeCast<Status>().apply {
     code = this@toJsStatus.code.value
     details = this@toJsStatus.statusMessage
     this.metadata = metadata.entries

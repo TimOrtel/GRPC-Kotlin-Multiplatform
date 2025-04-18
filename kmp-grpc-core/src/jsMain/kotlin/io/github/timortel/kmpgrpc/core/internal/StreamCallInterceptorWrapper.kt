@@ -37,7 +37,7 @@ internal class StreamCallInterceptorWrapper(override val impl: CallInterceptor) 
 
                     val (newStatus, newTrailing) = impl.onClose(
                         methodDescriptor = methodDescriptor,
-                        status = KMStatus(KMCode.getCodeForValue(code), details.orEmpty()),
+                        status = Status(Code.getCodeForValue(code), details.orEmpty()),
                         metadata = getMetadataFromJs(metadata)
                     )
 

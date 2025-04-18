@@ -180,10 +180,10 @@ abstract class InterceptorTest {
         val interceptor = object : CallInterceptor {
             override fun onClose(
                 methodDescriptor: KMMethodDescriptor,
-                status: KMStatus,
+                status: Status,
                 metadata: Metadata
-            ): Pair<KMStatus, Metadata> {
-                return super.onClose(methodDescriptor, KMStatus(KMCode.UNKNOWN, message), metadata)
+            ): Pair<Status, Metadata> {
+                return super.onClose(methodDescriptor, Status(Code.UNKNOWN, message), metadata)
             }
         }
 
@@ -193,12 +193,12 @@ abstract class InterceptorTest {
             .withInterceptors(interceptor)
             .build()
 
-        val exception = assertFailsWith<KMStatusException> {
+        val exception = assertFailsWith<StatusException> {
             InterceptorServiceStub(channel)
                 .send(interceptorMessage { })
         }
 
-        assertEquals(KMCode.UNKNOWN, exception.status.code)
+        assertEquals(Code.UNKNOWN, exception.status.code)
         assertContains(exception.status.statusMessage, message)
     }
 
@@ -258,9 +258,9 @@ abstract class InterceptorTest {
 
         override fun onClose(
             methodDescriptor: KMMethodDescriptor,
-            status: KMStatus,
+            status: Status,
             metadata: Metadata
-        ): Pair<KMStatus, Metadata> {
+        ): Pair<Status, Metadata> {
             if (lifecycleStatus == InterceptorLifecycleStatus.RECEIVED_MESSAGE) lifecycleStatus =
                 InterceptorLifecycleStatus.CLOSED
             else throw IllegalStateException(lifecycleStatus.toString())

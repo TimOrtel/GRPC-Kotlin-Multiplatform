@@ -46,7 +46,7 @@ interface CallInterceptor {
      */
     fun onClose(
         methodDescriptor: KMMethodDescriptor,
-        status: KMStatus,
+        status: Status,
         metadata: Metadata
-    ): Pair<KMStatus, Metadata> = status to metadata
+    ): Pair<Status, Metadata> = status to metadata
 }

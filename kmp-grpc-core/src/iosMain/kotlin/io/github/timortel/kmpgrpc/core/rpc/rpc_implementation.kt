@@ -25,7 +25,7 @@ private const val INVALID_UNKNOWN_DESCRIPTION_2 = "UNKNOWN {grpc_message:\"\", g
 /**
  * Perform a unary rpc call as a suspending function. Uses [GRPCCall2] for the actual call.
  */
-@Throws(KMStatusException::class, CancellationException::class)
+@Throws(StatusException::class, CancellationException::class)
 suspend fun <REQ : Message, RES : Message> unaryCallImplementation(
     channel: Channel,
     callOptions: GRPCCallOptions,
@@ -50,7 +50,7 @@ suspend fun <REQ : Message, RES : Message> unaryCallImplementation(
                 when {
                     error != null && !isInvalidGrpcError -> {
                         val exception =
-                            KMStatusException(error.asGrpcStatus, null)
+                            StatusException(error.asGrpcStatus, null)
 
                         continuation.resumeWithException(exception)
                     }
@@ -60,8 +60,8 @@ suspend fun <REQ : Message, RES : Message> unaryCallImplementation(
                     }
 
                     else -> {
-                        val status = KMStatus(KMCode.UNKNOWN, "Call closed without error and without a response")
-                        continuation.resumeWithException(KMStatusException(status, null))
+                        val status = Status(Code.UNKNOWN, "Call closed without error and without a response")
+                        continuation.resumeWithException(StatusException(status, null))
                     }
                 }
             }
@@ -118,7 +118,7 @@ fun <REQ : Message, RES : Message> serverSideStreamingCallImplementation(
             },
             onDone = { error ->
                 if (error != null) {
-                    val exception = KMStatusException(error.asGrpcStatus, null)
+                    val exception = StatusException(error.asGrpcStatus, null)
 
                     close(exception)
                 } else {

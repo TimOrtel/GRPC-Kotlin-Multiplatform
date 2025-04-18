@@ -56,13 +56,13 @@ internal class CallInterceptorWrapper<REQ : Message, RESP : Message>(
     override fun didCloseWithTrailingMetadata(trailingMetadata: Map<Any?, *>?, error: NSError?) {
         val (newStatus, newTrailingMetadata) = interceptor.onClose(
             methodDescriptor = methodDescriptor,
-            status = error?.asGrpcStatus ?: KMStatus(KMCode.OK, ""),
+            status = error?.asGrpcStatus ?: Status(Code.OK, ""),
             metadata = trailingMetadata.extractMetadata()
         )
 
         super.didCloseWithTrailingMetadata(
             trailingMetadata = newTrailingMetadata.entries.toMap(),
-            error = if (newStatus.code != KMCode.OK) {
+            error = if (newStatus.code != Code.OK) {
                 if (error != null) {
                     NSError.errorWithDomain(
                         domain = error.domain,

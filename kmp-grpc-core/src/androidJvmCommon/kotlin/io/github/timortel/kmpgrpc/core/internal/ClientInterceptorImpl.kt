@@ -1,6 +1,12 @@
 package io.github.timortel.kmpgrpc.core.internal
 
-import io.github.timortel.kmpgrpc.core.*
+import io.github.timortel.kmpgrpc.core.CallInterceptor
+import io.github.timortel.kmpgrpc.core.Code
+import io.github.timortel.kmpgrpc.core.JvmMetadata
+import io.github.timortel.kmpgrpc.core.KMMethodDescriptor
+import io.github.timortel.kmpgrpc.core.jvmMetadata
+import io.github.timortel.kmpgrpc.core.jvmStatus
+import io.github.timortel.kmpgrpc.core.kmMetadata
 import io.github.timortel.kmpgrpc.core.message.Message
 import io.grpc.*
 import io.grpc.Channel
@@ -50,11 +56,12 @@ internal class ClientInterceptorImpl(private val impl: CallInterceptor) : Client
 
                         override fun onClose(status: Status, trailers: JvmMetadata) {
                             val (newStatus, newTrailers) = impl.onClose(
-                                kmMethodDescriptor,
-                                KMStatus(
-                                    KMCode.getCodeForValue(status.code.value()),
+                                methodDescriptor = kmMethodDescriptor,
+                                status = io.github.timortel.kmpgrpc.core.Status(
+                                    Code.getCodeForValue(status.code.value()),
                                     status.description.orEmpty()
-                                ), trailers.kmMetadata
+                                ),
+                                metadata = trailers.kmMetadata
                             )
 
                             super.onClose(newStatus.jvmStatus, newTrailers.jvmMetadata)

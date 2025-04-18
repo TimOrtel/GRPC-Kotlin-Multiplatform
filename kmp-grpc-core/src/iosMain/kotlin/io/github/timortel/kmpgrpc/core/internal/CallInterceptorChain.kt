@@ -3,7 +3,7 @@ package io.github.timortel.kmpgrpc.core.internal
 import io.github.timortel.kmpgrpc.core.CallInterceptor
 import io.github.timortel.kmpgrpc.core.Metadata
 import io.github.timortel.kmpgrpc.core.KMMethodDescriptor
-import io.github.timortel.kmpgrpc.core.KMStatus
+import io.github.timortel.kmpgrpc.core.Status
 import io.github.timortel.kmpgrpc.core.message.Message
 
 /**
@@ -52,9 +52,9 @@ internal class CallInterceptorChain(
 
     override fun onClose(
         methodDescriptor: KMMethodDescriptor,
-        status: KMStatus,
+        status: Status,
         metadata: Metadata
-    ): Pair<KMStatus, Metadata> {
+    ): Pair<Status, Metadata> {
         return callInterceptors.fold(status to metadata) { (currentStatus, currentMetadata), interceptor ->
             interceptor.onClose(
                 methodDescriptor = methodDescriptor,

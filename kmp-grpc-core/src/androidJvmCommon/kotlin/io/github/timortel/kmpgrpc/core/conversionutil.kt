@@ -28,5 +28,5 @@ internal val JvmMetadata.kmMetadata: Metadata
         )
     }
 
-internal val KMStatus.jvmStatus: Status
+internal val io.github.timortel.kmpgrpc.core.Status.jvmStatus: Status
     get() = Status.fromCodeValue(code.value).withDescription(statusMessage)

@@ -1,9 +1,9 @@
 package io.github.timortel.kmpgrpc.core.rpc
 
 import io.github.timortel.kmpgrpc.core.JsMetadata
-import io.github.timortel.kmpgrpc.core.KMCode
-import io.github.timortel.kmpgrpc.core.KMStatus
-import io.github.timortel.kmpgrpc.core.KMStatusException
+import io.github.timortel.kmpgrpc.core.Code
+import io.github.timortel.kmpgrpc.core.Status
+import io.github.timortel.kmpgrpc.core.StatusException
 import io.github.timortel.kmpgrpc.core.Metadata
 import io.github.timortel.kmpgrpc.core.external.RpcError
 import io.github.timortel.kmpgrpc.core.jsMetadata
@@ -15,12 +15,12 @@ import kotlinx.coroutines.flow.catch
 import kotlin.js.Promise
 
 /**
- * Executes the unary given call and maps [RpcError]s to [KMStatusException]s.
+ * Executes the unary given call and maps [RpcError]s to [StatusException]s.
  *
  * @param performCall A suspendable lambda function that returns a Promise of the generic type JS_RESPONSE.
  * @param metadata The metadata that should be sent with this call.
  * @return The result of the call
- * @throws KMStatusException if an RpcError is caught, wrapping the error details into a KMStatusException.
+ * @throws StatusException if an RpcError is caught, wrapping the error details into a KMStatusException.
  * @throws Exception if any other exception is caught during execution.
  */
 suspend fun <JS_RESPONSE> unaryCallImplementation(
@@ -30,9 +30,9 @@ suspend fun <JS_RESPONSE> unaryCallImplementation(
     return try {
         performCall(metadata.jsMetadata).await()
     } catch (e: RpcError) {
-        throw KMStatusException(
-            status = KMStatus(
-                code = KMCode.getCodeForValue(e.code.toInt()),
+        throw StatusException(
+            status = Status(
+                code = Code.getCodeForValue(e.code.toInt()),
                 statusMessage = e.message
             ),
             cause = e
@@ -66,8 +66,8 @@ fun <JS_RESPONSE> serverSideStreamingCallImplementation(metadata: Metadata, perf
             //If the status is not ok, we throw an error
             if (status.code as Int != 0) {
                 close(
-                    KMStatusException(
-                        KMStatus(KMCode.getCodeForValue(status.code as Int), status.details as String),
+                    StatusException(
+                        Status(Code.getCodeForValue(status.code as Int), status.details as String),
                         null
                     )
                 )
@@ -75,7 +75,7 @@ fun <JS_RESPONSE> serverSideStreamingCallImplementation(metadata: Metadata, perf
         }
 
         stream.on("error") {
-            close(KMStatusException(KMStatus(KMCode.UNKNOWN, "Unknown streaming error"), null))
+            close(StatusException(Status(Code.UNKNOWN, "Unknown streaming error"), null))
         }
 
         awaitClose {

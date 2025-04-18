@@ -138,7 +138,7 @@ The request syntax is very similar to the one provided by gRPC Java. Add this co
 
          //Handle response
          response.response
-     } catch (e: KMStatusException) {
+     } catch (e: StatusException) {
          "An exception occurred: $e"
      }
 }
@@ -229,9 +229,9 @@ val loggingInterceptor = object : CallInterceptor {
 
     override fun onClose(
         methodDescriptor: KMMethodDescriptor,
-        status: KMStatus,
+        status: Status,
         metadata: Metadata
-    ): Pair<KMStatus, Metadata> {
+    ): Pair<Status, Metadata> {
         println("Call closed ${methodDescriptor.fullMethodName}")
         return super.onClose(methodDescriptor, status, metadata)
     }

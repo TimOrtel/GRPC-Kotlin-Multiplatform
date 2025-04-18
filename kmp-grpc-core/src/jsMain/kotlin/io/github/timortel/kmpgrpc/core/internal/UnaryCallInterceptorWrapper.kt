@@ -22,8 +22,8 @@ internal class UnaryCallInterceptorWrapper(override val impl: CallInterceptor) :
 
             val newResponseMessage = interceptMessage(response)
 
-            val status = KMStatus(
-                code = KMCode.getCodeForValue(response.getStatus().code.toInt()),
+            val status = Status(
+                code = Code.getCodeForValue(response.getStatus().code.toInt()),
                 statusMessage = response.getStatus().details
             )
 
@@ -33,8 +33,8 @@ internal class UnaryCallInterceptorWrapper(override val impl: CallInterceptor) :
                 metadata = newHeaders
             )
 
-            if (newStatus.code != KMCode.OK) {
-                Promise.reject(KMStatusException(newStatus, null))
+            if (newStatus.code != Code.OK) {
+                Promise.reject(StatusException(newStatus, null))
             } else {
                 Promise.resolve(
                     UnaryResponseImpl(

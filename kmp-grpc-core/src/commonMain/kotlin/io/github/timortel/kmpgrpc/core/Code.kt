@@ -4,7 +4,7 @@ package io.github.timortel.kmpgrpc.core
  * Copied from [the Java GRPC Status implementation](https://github.com/grpc/grpc-java/blob/master/api/src/main/java/io/grpc/Status.java).
  * Also see this link if you want to know further details on what each code means.
  */
-enum class KMCode(val value: Int) {
+enum class Code(val value: Int) {
     OK(0),
     CANCELLED(1),
     UNKNOWN(2),
@@ -25,9 +25,9 @@ enum class KMCode(val value: Int) {
 
     companion object {
         /**
-         * Map the value back to the [KMCode].
+         * Map the value back to the [Code].
          */
-        fun getCodeForValue(value: Int): KMCode = when (value) {
+        fun getCodeForValue(value: Int): Code = when (value) {
             0 -> OK
             1 -> CANCELLED
             2 -> UNKNOWN
