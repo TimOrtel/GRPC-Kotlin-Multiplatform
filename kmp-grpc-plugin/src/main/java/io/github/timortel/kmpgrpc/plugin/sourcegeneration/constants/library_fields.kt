@@ -16,10 +16,6 @@ val kmEnum = ClassName(PACKAGE_MESSAGE, "KmEnum")
 
 val unknownField = ClassName(PACKAGE_MESSAGE, "UnknownField")
 
-val readKMMessage = MemberName(PACKAGE_IO, "readKMMessage")
-
-val readUnknownField = MemberName(PACKAGE_IO, "readUnknownField")
-val writeUnknownFields = MemberName(PACKAGE_IO, "writeUnknownFields")
 val computeUnknownFieldsRequiredSize = MemberName(PACKAGE_IO, "computeUnknownFieldsRequiredSize")
 
 val computeMapSize = MemberName(PACKAGE_IO, "computeMapSize")
@@ -28,13 +24,7 @@ val computeMessageSize = MemberName(PACKAGE_IO, "computeMessageSize")
 val CodedOutputStream = ClassName(PACKAGE_IO, "CodedOutputStream")
 val CodedInputStream = ClassName(PACKAGE_IO, "CodedInputStream")
 
-val writeMap = MemberName(PACKAGE_IO, "writeMap")
-val readMapEntry = MemberName(PACKAGE_IO, "readMapEntry")
-
 val iosUnaryCallImplementation = MemberName(PACKAGE_RPC, "unaryCallImplementation")
 val iosServerSideStreamingCallImplementation = MemberName(PACKAGE_RPC, "serverSideStreamingCallImplementation")
 
 val byteArrayListEquals = MemberName(PACKAGE_UTIL, "byteArrayListsEqual")
-
-private val JSPB = ClassName(PACKAGE_EXTERNAL, "JSPB")
-val JSPB_BINARY_READER = JSPB.nestedClass("BinaryReader")

@@ -5,50 +5,57 @@ import io.github.timortel.kmpgrpc.core.message.KMMessage
 import io.github.timortel.kmpgrpc.core.message.KmEnum
 import io.github.timortel.kmpgrpc.core.native
 
-actual class CodedOutputStream(internal val impl: JSPB.BinaryWriter) {
+/**
+ * A Kotlin implementation of `CodedOutputStream` that wraps a `JSPB.BinaryWriter` object to facilitate
+ * writing various types of data in a protocol buffer encoding.
+ *
+ * @constructor Initializes the class with an instance of `JSPB.BinaryWriter`.
+ * @param impl An instance of `JSPB.BinaryWriter` used to perform the actual encoding.
+ */
+internal class JsCodedOutputStream(private val impl: JSPB.BinaryWriter) : CodedOutputStream {
 
-    actual fun writeBool(fieldNumber: Int, value: Boolean) = impl.writeBool(fieldNumber, value)
+    override fun writeBool(fieldNumber: Int, value: Boolean) = impl.writeBool(fieldNumber, value)
 
-    actual fun writeBoolArray(
+    override fun writeBoolArray(
         fieldNumber: Int,
         value: List<Boolean>,
         tag: UInt
     ) = writeArray(this, fieldNumber, value, tag, writeNoTag = ::writeBoolNoTag, writeWithTag = ::writeBool)
 
-    actual fun writeBoolNoTag(value: Boolean) {
+    override fun writeBoolNoTag(value: Boolean) {
         impl.encoder.writeBool(value)
     }
 
-    actual fun writeBytes(fieldNumber: Int, value: ByteArray) {
+    override fun writeBytes(fieldNumber: Int, value: ByteArray) {
         impl.writeBytes(fieldNumber, value.native)
     }
 
-    actual fun writeBytesArray(fieldNumber: Int, values: List<ByteArray>) {
+    override fun writeBytesArray(fieldNumber: Int, values: List<ByteArray>) {
         val value = values.map { it.native }.toTypedArray()
         impl.writeRepeatedBytes(fieldNumber, value)
     }
 
-    actual fun writeDouble(fieldNumber: Int, value: Double) {
+    override fun writeDouble(fieldNumber: Int, value: Double) {
         impl.writeDouble(fieldNumber, value)
     }
 
-    actual fun writeDoubleArray(
+    override fun writeDoubleArray(
         fieldNumber: Int,
         values: List<Double>,
         tag: UInt
     ) = writeArray(this, fieldNumber, values, tag, writeNoTag = ::writeDoubleNoTag, writeWithTag = ::writeDouble)
 
-    actual fun writeDoubleNoTag(value: Double) {
+    override fun writeDoubleNoTag(value: Double) {
         impl.encoder.writeDouble(value)
     }
 
-    actual fun writeEnum(fieldNumber: Int, value: Int) {
+    override fun writeEnum(fieldNumber: Int, value: Int) {
         impl.writeEnum(fieldNumber, value)
     }
 
-    actual fun writeEnum(fieldNumber: Int, value: KmEnum) = writeEnum(fieldNumber, value.number)
+    override fun writeEnum(fieldNumber: Int, value: KmEnum) = writeEnum(fieldNumber, value.number)
 
-    actual fun writeEnumArray(fieldNumber: Int, values: List<KmEnum>, tag: UInt) =
+    override fun writeEnumArray(fieldNumber: Int, values: List<KmEnum>, tag: UInt) =
         writeArray(
             this,
             fieldNumber,
@@ -58,81 +65,81 @@ actual class CodedOutputStream(internal val impl: JSPB.BinaryWriter) {
             writeWithTag = ::writeEnum
         )
 
-    actual fun writeEnumNoTag(value: Int) {
+    override fun writeEnumNoTag(value: Int) {
         impl.encoder.writeEnum(value)
     }
 
-    actual fun writeFixed32(fieldNumber: Int, value: UInt) {
+    override fun writeFixed32(fieldNumber: Int, value: UInt) {
         impl.writeFixed32(fieldNumber, value)
     }
 
-    actual fun writeFixed32Array(
+    override fun writeFixed32Array(
         fieldNumber: Int,
         values: List<UInt>,
         tag: UInt
     ) = writeArray(this, fieldNumber, values, tag, writeNoTag = ::writeFixed32NoTag, writeWithTag = ::writeFixed32)
 
-    actual fun writeFixed32NoTag(value: UInt) {
+    override fun writeFixed32NoTag(value: UInt) {
         impl.encoder.writeUint32(value)
     }
 
-    actual fun writeFixed64(fieldNumber: Int, value: ULong) {
+    override fun writeFixed64(fieldNumber: Int, value: ULong) {
         impl.writeFixed64(fieldNumber, value)
     }
 
-    actual fun writeFixed64Array(
+    override fun writeFixed64Array(
         fieldNumber: Int,
         values: List<ULong>,
         tag: UInt
     ) = writeArray(this, fieldNumber, values, tag, writeNoTag = ::writeFixed64NoTag, writeWithTag = ::writeFixed64)
 
-    actual fun writeFixed64NoTag(value: ULong) {
+    override fun writeFixed64NoTag(value: ULong) {
         impl.encoder.writeUint64(value)
     }
 
-    actual fun writeFloat(fieldNumber: Int, value: Float) {
+    override fun writeFloat(fieldNumber: Int, value: Float) {
         impl.writeFloat(fieldNumber, value)
     }
 
-    actual fun writeFloatArray(
+    override fun writeFloatArray(
         fieldNumber: Int,
         values: List<Float>,
         tag: UInt
     ) = writeArray(this, fieldNumber, values, tag, writeNoTag = ::writeFloatNoTag, writeWithTag = ::writeFloat)
 
-    actual fun writeFloatNoTag(value: Float) {
+    override fun writeFloatNoTag(value: Float) {
         impl.encoder.writeFloat(value)
     }
 
-    actual fun writeInt32(fieldNumber: Int, value: Int) {
+    override fun writeInt32(fieldNumber: Int, value: Int) {
         impl.writeInt32(fieldNumber, value)
     }
 
-    actual fun writeInt32Array(
+    override fun writeInt32Array(
         fieldNumber: Int,
         values: List<Int>,
         tag: UInt
     ) = writeArray(this, fieldNumber, values, tag, writeNoTag = ::writeInt32NoTag, writeWithTag = ::writeInt32)
 
-    actual fun writeInt32NoTag(value: Int) {
+    override fun writeInt32NoTag(value: Int) {
         impl.encoder.writeSignedVarint32(value)
     }
 
-    actual fun writeInt64(fieldNumber: Int, value: Long) {
+    override fun writeInt64(fieldNumber: Int, value: Long) {
         impl.writeInt64(fieldNumber, value)
     }
 
-    actual fun writeInt64Array(
+    override fun writeInt64Array(
         fieldNumber: Int,
         values: List<Long>,
         tag: UInt
     ) = writeArray(this, fieldNumber, values, tag, writeNoTag = ::writeInt64NoTag, writeWithTag = ::writeInt64)
 
-    actual fun writeInt64NoTag(value: Long) {
+    override fun writeInt64NoTag(value: Long) {
         impl.encoder.writeSignedVarint64(value)
     }
 
-    actual fun writeMessage(
+    override fun writeMessage(
         fieldNumber: Int,
         value: KMMessage
     ) {
@@ -141,7 +148,7 @@ actual class CodedOutputStream(internal val impl: JSPB.BinaryWriter) {
         impl.endDelimited(bookmark)
     }
 
-    actual fun writeMessageArray(
+    override fun writeMessageArray(
         fieldNumber: Int,
         values: List<KMMessage>
     ) {
@@ -150,113 +157,155 @@ actual class CodedOutputStream(internal val impl: JSPB.BinaryWriter) {
         }
     }
 
-    actual fun writeRawVarint32(value: Int) {
+    override fun writeRawVarint32(value: Int) {
         impl.encoder.writeUint32(value)
     }
 
-    actual fun writeSFixed32(fieldNumber: Int, value: Int) {
+    override fun writeSFixed32(fieldNumber: Int, value: Int) {
         impl.writeSfixed32(fieldNumber, value)
     }
 
-    actual fun writeSFixed32Array(
+    override fun writeSFixed32Array(
         fieldNumber: Int,
         values: List<Int>,
         tag: UInt
     ) = writeArray(this, fieldNumber, values, tag, writeNoTag = ::writeSFixed32NoTag, writeWithTag = ::writeSFixed32)
 
-    actual fun writeSFixed32NoTag(value: Int) {
+    override fun writeSFixed32NoTag(value: Int) {
         impl.encoder.writeInt32(value)
     }
 
-    actual fun writeSFixed64(fieldNumber: Int, value: Long) {
+    override fun writeSFixed64(fieldNumber: Int, value: Long) {
         impl.writeSfixed64(fieldNumber, value)
     }
 
-    actual fun writeSFixed64Array(
+    override fun writeSFixed64Array(
         fieldNumber: Int,
         values: List<Long>,
         tag: UInt
     ) = writeArray(this, fieldNumber, values, tag, writeNoTag = ::writeSFixed64NoTag, writeWithTag = ::writeSFixed64)
 
-    actual fun writeSFixed64NoTag(value: Long) {
+    override fun writeSFixed64NoTag(value: Long) {
         impl.encoder.writeInt64(value)
     }
 
-    actual fun writeSInt32(fieldNumber: Int, value: Int) {
+    override fun writeSInt32(fieldNumber: Int, value: Int) {
         impl.writeSint32(fieldNumber, value)
     }
 
-    actual fun writeSInt32Array(
+    override fun writeSInt32Array(
         fieldNumber: Int,
         values: List<Int>,
         tag: UInt
     ) = writeArray(this, fieldNumber, values, tag, writeNoTag = ::writeSInt32NoTag, writeWithTag = ::writeSInt32)
 
-    actual fun writeSInt32NoTag(value: Int) {
+    override fun writeSInt32NoTag(value: Int) {
         impl.encoder.writeZigzagVarint32(value)
     }
 
-    actual fun writeSInt64(fieldNumber: Int, value: Long) {
+    override fun writeSInt64(fieldNumber: Int, value: Long) {
         impl.writeSint64(fieldNumber, value)
     }
 
-    actual fun writeSInt64Array(
+    override fun writeSInt64Array(
         fieldNumber: Int,
         values: List<Long>,
         tag: UInt
     ) = writeArray(this, fieldNumber, values, tag, writeNoTag = ::writeSInt64NoTag, writeWithTag = ::writeSInt64)
 
-    actual fun writeSInt64NoTag(value: Long) {
+    override fun writeSInt64NoTag(value: Long) {
         impl.encoder.writeZigzagVarint64(value)
     }
 
-    actual fun writeString(fieldNumber: Int, value: String) {
+    override fun writeString(fieldNumber: Int, value: String) {
         impl.writeString(fieldNumber, value)
     }
 
-    actual fun writeStringArray(
+    override fun writeStringArray(
         fieldNumber: Int,
         values: List<String>
     ) {
         values.forEach { value -> writeString(fieldNumber, value) }
     }
 
-    actual fun writeStringNoTag(value: String) {
+    override fun writeStringNoTag(value: String) {
         impl.encoder.writeString(value)
     }
 
-    actual fun writeTag(
+    override fun writeTag(
         fieldNumber: Int,
         format: WireFormat
     ) {
         impl.encoder.writeUnsignedVarint32(wireFormatMakeTag(fieldNumber, format))
     }
 
-    actual fun writeUInt32(fieldNumber: Int, value: UInt) {
+    override fun writeUInt32(fieldNumber: Int, value: UInt) {
         impl.writeUint32(fieldNumber, value)
     }
 
-    actual fun writeUInt32Array(
+    override fun writeUInt32Array(
         fieldNumber: Int,
         values: List<UInt>,
         tag: UInt
     ) = writeArray(this, fieldNumber, values, tag, writeNoTag = ::writeUInt32NoTag, writeWithTag = ::writeUInt32)
 
-    actual fun writeUInt32NoTag(value: UInt) {
+    override fun writeUInt32NoTag(value: UInt) {
         impl.encoder.writeUnsignedVarint32(value)
     }
 
-    actual fun writeUInt64(fieldNumber: Int, value: ULong) {
+    override fun writeUInt64(fieldNumber: Int, value: ULong) {
         impl.writeUint64(fieldNumber, value)
     }
 
-    actual fun writeUInt64Array(
+    override fun writeUInt64Array(
         fieldNumber: Int,
         values: List<ULong>,
         tag: UInt
     ) = writeArray(this, fieldNumber, values, tag, writeNoTag = ::writeUInt64NoTag, writeWithTag = ::writeUInt64)
 
-    actual fun writeUInt64NoTag(value: ULong) {
+    override fun writeUInt64NoTag(value: ULong) {
         impl.encoder.writeUnsignedVarint64(value)
+    }
+
+    override fun <K, V> writeMap(
+        fieldNumber: Int,
+        map: Map<K, V>,
+        getKeySize: (Int, K) -> Int,
+        getValueSize: (Int, V) -> Int,
+        writeKey: CodedOutputStream.(Int, K) -> Unit,
+        writeValue: CodedOutputStream.(Int, V) -> Unit
+    ) {
+        map.forEach { (key, value) ->
+            impl.beginSubMessage(fieldNumber)
+
+            writeKey(kMapKeyFieldNumber, key)
+            writeValue(kMapValueFieldNumber, value)
+
+            impl.endSubMessage()
+        }
+    }
+
+    /**
+     * Writes a collection of values to a CodedOutputStream.
+     */
+    private fun <T> writeArray(
+        stream: JsCodedOutputStream,
+        fieldNumber: Int,
+        values: Collection<T>,
+        tag: UInt,
+        writeNoTag: (T) -> Unit,
+        writeWithTag: (Int, T) -> Unit
+    ) {
+        if (tag != 0u) {
+            if (values.isEmpty()) return
+
+            val mark = stream.impl.beginDelimited(fieldNumber)
+
+            values.forEach(writeNoTag)
+
+            stream.impl.endDelimited(mark)
+        } else {
+            values.forEach { writeWithTag(fieldNumber, it) }
+        }
     }
 }

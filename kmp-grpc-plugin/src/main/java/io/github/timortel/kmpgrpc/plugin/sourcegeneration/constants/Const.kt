@@ -67,13 +67,8 @@ object Const {
         object Companion {
             val fullNameProperty = Property("fullName", STRING)
 
-            object DataDeserializationFunction {
-                const val NAME = "deserialize"
-                const val DATA_PARAM = "data"
-            }
-
             object WrapperDeserializationFunction {
-                const val NAME = "deserializeFromWrapper"
+                const val NAME = "deserialize"
                 const val STREAM_PARAM = "stream"
             }
         }

@@ -17,7 +17,6 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.m
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.functions.HashCodeFunctionExtension
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.functions.ToStringFunctionExtension
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.serialization.DeserializationFunctionExtension
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.serialization.NativeDeserializationFunctionExtension
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.serialization.RequiredSizePropertyExtension
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.serialization.SerializationFunctionExtension
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.oneof.ProtoOneOfWriter
@@ -41,7 +40,6 @@ abstract class ProtoMessageWriter(private val isActual: Boolean) {
     private val extensions: List<MessageWriterExtension> = listOf(
         SerializationFunctionExtension(),
         RequiredSizePropertyExtension(),
-        NativeDeserializationFunctionExtension(),
         DeserializationFunctionExtension(),
         EqualsFunctionExtension,
         HashCodeFunctionExtension,

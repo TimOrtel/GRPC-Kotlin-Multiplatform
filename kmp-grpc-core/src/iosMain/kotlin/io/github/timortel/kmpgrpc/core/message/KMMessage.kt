@@ -1,8 +1,9 @@
 package io.github.timortel.kmpgrpc.core.message
 
 import cocoapods.Protobuf.GPBCodedOutputStream
-import io.github.timortel.kmpgrpc.core.io.CodedOutputStream
+import io.github.timortel.kmpgrpc.core.io.IosCodedOutputStream
 import io.github.timortel.kmpgrpc.core.common
+import io.github.timortel.kmpgrpc.core.io.CodedOutputStream
 import platform.Foundation.NSData
 import platform.Foundation.NSMutableData
 
@@ -24,7 +25,7 @@ actual interface KMMessage {
     fun serializeNative(): NSData {
         val data = NSMutableData().apply { setLength(requiredSize.toULong()) }
         val stream = GPBCodedOutputStream(data)
-        serialize(CodedOutputStream(stream))
+        serialize(IosCodedOutputStream(stream))
 
         return data
     }
@@ -34,11 +35,7 @@ actual interface KMMessage {
     }
 
     /**
-     * Serializes this message and writes it directly to [CodedOutputStream].
+     * Serializes this message and writes it directly to [IosCodedOutputStream].
      */
-    fun serialize(stream: CodedOutputStream)
+    actual fun serialize(stream: CodedOutputStream)
 }
-
-
-val serializeMessage: (KMMessage, CodedOutputStream) -> Unit = { message, stream -> message.serialize(stream) }
-val requiredSizeMessage: (KMMessage) -> UInt = { message -> message.requiredSize.toUInt() }

@@ -22,6 +22,7 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
                 //The function that builds the message from a stream.
                 FunSpec
                     .builder(Const.Message.Companion.WrapperDeserializationFunction.NAME)
+                    .addModifiers(KModifier.OVERRIDE)
                     .addParameter(
                         Const.Message.Companion.WrapperDeserializationFunction.STREAM_PARAM,
                         CodedInputStream
@@ -140,11 +141,10 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
                         when (type.declType) {
                             ProtoType.DefType.DeclarationType.MESSAGE -> {
                                 CodeBlock.of(
-                                    "%M(%N, %T.Companion::%N)",
-                                    readKMMessage,
+                                    "%N.%N(%T.Companion)",
                                     wrapperParamName,
-                                    field.type.resolve(),
-                                    Const.Message.Companion.WrapperDeserializationFunction.NAME
+                                    "readMessage",
+                                    field.type.resolve()
                                 )
                             }
 
@@ -174,9 +174,9 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
                 addCode(" -> ")
 
                 addCode(
-                    "%M(%N, %N, %T.%N, %T.%N, ",
-                    readMapEntry,
+                    "%N.%N(%N, %T.%N, %T.%N, ",
                     Const.Message.Companion.WrapperDeserializationFunction.STREAM_PARAM,
+                    "readMapEntry",
                     mapField.attributeName,
                     DataType,
                     mapField.keyType.wireType,
@@ -204,10 +204,9 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
                             when (type.declType) {
                                 ProtoType.DefType.DeclarationType.MESSAGE -> {
                                     addCode(
-                                        "{·%M(this, %T.Companion::%N)}",
-                                        readKMMessage,
-                                        type.resolve(),
-                                        Const.Message.Companion.WrapperDeserializationFunction.NAME
+                                        "{·%N(%T.Companion)}",
+                                        "readMessage",
+                                        type.resolve()
                                     )
                                 }
 
@@ -276,12 +275,11 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
 
                             field.type.isMessage -> {
                                 addCode(
-                                    "%N·+=·%M(%N, %T.Companion::%N)\n",
+                                    "%N·+=·%N.%N(%T.Companion)\n",
                                     field.attributeName,
-                                    readKMMessage,
                                     wrapperParamName,
-                                    field.type.resolve(),
-                                    Const.Message.Companion.WrapperDeserializationFunction.NAME
+                                    "readMessage",
+                                    field.type.resolve()
                                 )
                             }
 
@@ -345,7 +343,7 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
             }
 
             // Unknown field
-            addStatement("else -> %M(%N, tag)?.let { unknownFields.add(it) }", readUnknownField, wrapperParamName)
+            addStatement("else -> %N.%N(tag)?.let { unknownFields.add(it) }", wrapperParamName, "readUnknownField")
             // Unknown field
 
             endControlFlow()

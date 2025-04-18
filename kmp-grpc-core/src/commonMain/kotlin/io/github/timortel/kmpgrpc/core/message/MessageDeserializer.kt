@@ -1,8 +1,30 @@
 package io.github.timortel.kmpgrpc.core.message
 
+import io.github.timortel.kmpgrpc.core.io.CodedInputStream
+
 /**
- * Construct a message of type [T].
+ * Interface for deserializing messages from various input sources into instances of type [T].
+ * Type [T] represents a class that implements the [KMMessage] interface and represents a gRPC message.
+ *
+ * Used to handle deserialization of serialized message data back into their structured [KMMessage] representations.
+ *
+ * @param T The type of the message to be deserialized. Must extend [KMMessage].
  */
 expect interface MessageDeserializer<T : KMMessage> {
+
+    /**
+     * Deserializes a message from the provided byte array and constructs an instance of type [T].
+     *
+     * @param data The serialized message data in the form of a byte array.
+     * @return An instance of [T] constructed from the deserialized data.
+     */
     open fun deserialize(`data`: ByteArray): T
+
+    /**
+     * Deserializes data from a provided [CodedInputStream] and constructs an instance of type [T].
+     *
+     * @param stream The [CodedInputStream] containing the serialized message data.
+     * @return An instance of [T] constructed from the deserialized data.
+     */
+    fun deserialize(stream: CodedInputStream): T
 }
