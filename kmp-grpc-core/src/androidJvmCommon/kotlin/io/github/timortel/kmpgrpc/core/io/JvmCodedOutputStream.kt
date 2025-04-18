@@ -3,7 +3,7 @@ package io.github.timortel.kmpgrpc.core.io
 import com.google.protobuf.ByteString
 import com.google.protobuf.CodedOutputStream
 import io.github.timortel.kmpgrpc.core.message.Message
-import io.github.timortel.kmpgrpc.core.message.KmEnum
+import io.github.timortel.kmpgrpc.core.message.Enum
 
 internal class JvmCodedOutputStream(private val impl: CodedOutputStream) : IosJvmCodedOutputStream {
 
@@ -50,9 +50,9 @@ internal class JvmCodedOutputStream(private val impl: CodedOutputStream) : IosJv
 
     override fun writeEnum(fieldNumber: Int, value: Int) = impl.writeEnum(fieldNumber, value)
 
-    override fun writeEnum(fieldNumber: Int, value: KmEnum) = writeEnum(fieldNumber, value.number)
+    override fun writeEnum(fieldNumber: Int, value: Enum) = writeEnum(fieldNumber, value.number)
 
-    override fun writeEnumArray(fieldNumber: Int, values: List<KmEnum>, tag: UInt) =
+    override fun writeEnumArray(fieldNumber: Int, values: List<Enum>, tag: UInt) =
         writeArray(
             fieldNumber,
             values.map { it.number },

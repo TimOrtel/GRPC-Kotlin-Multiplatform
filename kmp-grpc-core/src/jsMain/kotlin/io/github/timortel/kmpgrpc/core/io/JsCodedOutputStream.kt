@@ -2,7 +2,7 @@ package io.github.timortel.kmpgrpc.core.io
 
 import io.github.timortel.kmpgrpc.core.external.JSPB
 import io.github.timortel.kmpgrpc.core.message.Message
-import io.github.timortel.kmpgrpc.core.message.KmEnum
+import io.github.timortel.kmpgrpc.core.message.Enum
 import io.github.timortel.kmpgrpc.core.native
 
 /**
@@ -53,9 +53,9 @@ internal class JsCodedOutputStream(private val impl: JSPB.BinaryWriter) : CodedO
         impl.writeEnum(fieldNumber, value)
     }
 
-    override fun writeEnum(fieldNumber: Int, value: KmEnum) = writeEnum(fieldNumber, value.number)
+    override fun writeEnum(fieldNumber: Int, value: Enum) = writeEnum(fieldNumber, value.number)
 
-    override fun writeEnumArray(fieldNumber: Int, values: List<KmEnum>, tag: UInt) =
+    override fun writeEnumArray(fieldNumber: Int, values: List<Enum>, tag: UInt) =
         writeArray(
             this,
             fieldNumber,

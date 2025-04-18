@@ -1,7 +1,7 @@
 package io.github.timortel.kmpgrpc.core.io
 
 import io.github.timortel.kmpgrpc.core.message.Message
-import io.github.timortel.kmpgrpc.core.message.KmEnum
+import io.github.timortel.kmpgrpc.core.message.Enum
 import io.github.timortel.kmpgrpc.core.message.UnknownField
 
 /**
@@ -30,9 +30,9 @@ interface CodedOutputStream {
 
     fun writeEnum(fieldNumber: Int, value: Int)
 
-    fun writeEnum(fieldNumber: Int, value: KmEnum)
+    fun writeEnum(fieldNumber: Int, value: Enum)
 
-    fun writeEnumArray(fieldNumber: Int, values: List<KmEnum>, tag: UInt)
+    fun writeEnumArray(fieldNumber: Int, values: List<Enum>, tag: UInt)
 
     fun writeEnumNoTag(value: Int)
 

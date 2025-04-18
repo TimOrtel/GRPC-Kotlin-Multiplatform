@@ -12,7 +12,7 @@ val MessageDeserializer = ClassName(PACKAGE_MESSAGE, "MessageDeserializer")
 val MessageCompanion = ClassName(PACKAGE_MESSAGE, "KMMessageCompanion")
 
 val kmMessage = ClassName(PACKAGE_MESSAGE, "Message")
-val kmEnum = ClassName(PACKAGE_MESSAGE, "KmEnum")
+val kmEnum = ClassName(PACKAGE_MESSAGE, "Enum")
 
 val unknownField = ClassName(PACKAGE_MESSAGE, "UnknownField")
 
