@@ -10,7 +10,7 @@ import java.nio.ByteBuffer
 /**
  * On the jvm, we wrap [com.google.protobuf.CodedOutputStream] to serialize our messages.
  */
-actual interface KMMessage : MessageLite {
+actual interface Message : MessageLite {
 
     /**
      * The size of this message when serialized in bytes.

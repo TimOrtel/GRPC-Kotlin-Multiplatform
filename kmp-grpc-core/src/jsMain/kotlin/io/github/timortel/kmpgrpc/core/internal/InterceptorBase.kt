@@ -8,7 +8,7 @@ import io.github.timortel.kmpgrpc.core.external.Request
 import io.github.timortel.kmpgrpc.core.external.UnaryResponse
 import io.github.timortel.kmpgrpc.core.jsMetadata
 import io.github.timortel.kmpgrpc.core.kmMethodType
-import io.github.timortel.kmpgrpc.core.message.KMMessage
+import io.github.timortel.kmpgrpc.core.message.Message
 
 internal interface InterceptorBase {
 
@@ -26,7 +26,7 @@ internal interface InterceptorBase {
         )
 
         val requestMessage = request.getRequestMessage()
-        val newRequestMessage = if (requestMessage is KMMessage) {
+        val newRequestMessage = if (requestMessage is Message) {
             impl.onSendMessage(methodDescriptor, requestMessage)
         } else requestMessage
 
@@ -41,7 +41,7 @@ internal interface InterceptorBase {
     fun <RESP> interceptMessage(response: UnaryResponse<RESP>): dynamic {
         val responseMessage = response.getResponseMessage()
 
-        return if (responseMessage is KMMessage) {
+        return if (responseMessage is Message) {
             impl.onReceiveMessage(getMethodDescriptor(response), responseMessage)
         } else responseMessage
     }

@@ -6,7 +6,7 @@ import io.github.timortel.kmpgrpc.core.io.JsCodedInputStream
 import io.github.timortel.kmpgrpc.core.native
 import org.khronos.webgl.Uint8Array
 
-actual interface MessageDeserializer<T : KMMessage> {
+actual interface MessageDeserializer<T : Message> {
 
     actual fun deserialize(`data`: ByteArray): T {
         return deserialize(data.native)

@@ -6,7 +6,7 @@ import io.github.timortel.kmpgrpc.core.io.CodedOutputStream
 import io.github.timortel.kmpgrpc.core.io.JsCodedOutputStream
 import org.khronos.webgl.Uint8Array
 
-actual interface KMMessage {
+actual interface Message {
 
     actual val fullName: String
 

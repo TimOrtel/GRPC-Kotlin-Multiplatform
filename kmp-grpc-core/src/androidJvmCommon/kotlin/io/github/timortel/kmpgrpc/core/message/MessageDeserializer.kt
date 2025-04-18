@@ -3,7 +3,7 @@ package io.github.timortel.kmpgrpc.core.message
 import io.github.timortel.kmpgrpc.core.io.CodedInputStream
 import io.github.timortel.kmpgrpc.core.io.JvmCodedInputStream
 
-actual interface MessageDeserializer<T : KMMessage> {
+actual interface MessageDeserializer<T : Message> {
     actual fun deserialize(`data`: ByteArray): T {
         val stream = JvmCodedInputStream(com.google.protobuf.CodedInputStream.newInstance(data))
         return deserialize(stream)

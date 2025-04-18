@@ -1,6 +1,6 @@
 package io.github.timortel.kmpgrpc.core.io
 
-import io.github.timortel.kmpgrpc.core.message.KMMessage
+import io.github.timortel.kmpgrpc.core.message.Message
 
 /**
  * An internal interface that extends [CodedOutputStream] to provide specialized methods for encoding messages in the iOS and JVM platforms.
@@ -8,14 +8,14 @@ import io.github.timortel.kmpgrpc.core.message.KMMessage
  */
 internal interface IosJvmCodedOutputStream : CodedOutputStream {
 
-    fun writeMessage(fieldNumber: Int, value: KMMessage, requiredSize: UInt) {
+    fun writeMessage(fieldNumber: Int, value: Message, requiredSize: UInt) {
         writeUInt32NoTag(wireFormatMakeTag(fieldNumber, WireFormat.LENGTH_DELIMITED).toUInt())
         writeUInt32NoTag(requiredSize)
 
         value.serialize(this)
     }
 
-    fun writeMessageArray(fieldNumber: Int, values: List<KMMessage>, requiredSize: (KMMessage) -> UInt) {
+    fun writeMessageArray(fieldNumber: Int, values: List<Message>, requiredSize: (Message) -> UInt) {
         values.forEach { writeMessage(fieldNumber, it, requiredSize(it)) }
     }
 

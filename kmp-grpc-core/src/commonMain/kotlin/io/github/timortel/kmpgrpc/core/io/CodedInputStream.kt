@@ -1,7 +1,7 @@
 package io.github.timortel.kmpgrpc.core.io
 
 import io.github.timortel.kmpgrpc.core.message.DataType
-import io.github.timortel.kmpgrpc.core.message.KMMessage
+import io.github.timortel.kmpgrpc.core.message.Message
 import io.github.timortel.kmpgrpc.core.message.MessageDeserializer
 import io.github.timortel.kmpgrpc.core.message.UnknownField
 
@@ -51,9 +51,9 @@ abstract class CodedInputStream {
      *
      * @param deserializer The implementation of [MessageDeserializer] used to transform the serialized message
      *                     data into an instance of type [M].
-     * @return An instance of type [M], which extends [KMMessage], deserialized from the input stream.
+     * @return An instance of type [M], which extends [Message], deserialized from the input stream.
      */
-    fun <M : KMMessage> readMessage(deserializer: MessageDeserializer<M>): M {
+    fun <M : Message> readMessage(deserializer: MessageDeserializer<M>): M {
         return recursiveRead { deserializer.deserialize(this) }
     }
 

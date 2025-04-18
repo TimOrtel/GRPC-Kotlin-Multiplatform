@@ -6,7 +6,7 @@ import io.github.timortel.kmpgrpc.core.io.IosCodedInputStream
 import io.github.timortel.kmpgrpc.core.native
 import platform.Foundation.NSData
 
-actual interface MessageDeserializer<T : KMMessage> {
+actual interface MessageDeserializer<T : Message> {
 
     actual fun deserialize(`data`: ByteArray): T {
         return deserialize(data.native)

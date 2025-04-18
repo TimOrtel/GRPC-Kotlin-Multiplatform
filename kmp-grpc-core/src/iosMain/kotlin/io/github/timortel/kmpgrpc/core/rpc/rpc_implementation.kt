@@ -3,7 +3,7 @@ package io.github.timortel.kmpgrpc.core.rpc
 import cocoapods.GRPCClient.*
 import io.github.timortel.kmpgrpc.core.*
 import io.github.timortel.kmpgrpc.core.internal.CallInterceptorWrapper
-import io.github.timortel.kmpgrpc.core.message.KMMessage
+import io.github.timortel.kmpgrpc.core.message.Message
 import io.github.timortel.kmpgrpc.core.message.MessageDeserializer
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.awaitClose
@@ -26,7 +26,7 @@ private const val INVALID_UNKNOWN_DESCRIPTION_2 = "UNKNOWN {grpc_message:\"\", g
  * Perform a unary rpc call as a suspending function. Uses [GRPCCall2] for the actual call.
  */
 @Throws(KMStatusException::class, CancellationException::class)
-suspend fun <REQ : KMMessage, RES : KMMessage> unaryCallImplementation(
+suspend fun <REQ : Message, RES : Message> unaryCallImplementation(
     channel: KMChannel,
     callOptions: GRPCCallOptions,
     path: String,
@@ -96,7 +96,7 @@ suspend fun <REQ : KMMessage, RES : KMMessage> unaryCallImplementation(
  * Performs a server side stream call and returns a [Flow] that emits whenever we receive a new message from the server.
  * Uses [GRPCCall2] for the actual call.
  */
-fun <REQ : KMMessage, RES : KMMessage> serverSideStreamingCallImplementation(
+fun <REQ : Message, RES : Message> serverSideStreamingCallImplementation(
     channel: KMChannel,
     callOptions: GRPCCallOptions,
     path: String,
@@ -153,7 +153,7 @@ fun <REQ : KMMessage, RES : KMMessage> serverSideStreamingCallImplementation(
     }
 }
 
-private fun <REQ : KMMessage, RESP : KMMessage> injectCallInterceptor(
+private fun <REQ : Message, RESP : Message> injectCallInterceptor(
     callOptions: GRPCCallOptions,
     interceptor: CallInterceptor?,
     methodDescriptor: KMMethodDescriptor,
@@ -178,7 +178,7 @@ private fun <REQ : KMMessage, RESP : KMMessage> injectCallInterceptor(
     } else callOptions
 }
 
-private class InterceptorFactory<REQ : KMMessage, RES : KMMessage>(
+private class InterceptorFactory<REQ : Message, RES : Message>(
     private val methodDescriptor: KMMethodDescriptor,
     private val interceptor: CallInterceptor,
     private val requestDeserializer: MessageDeserializer<REQ>,

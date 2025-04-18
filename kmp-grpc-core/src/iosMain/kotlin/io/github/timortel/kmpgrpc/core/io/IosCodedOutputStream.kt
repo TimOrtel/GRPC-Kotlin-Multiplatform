@@ -1,7 +1,7 @@
 package io.github.timortel.kmpgrpc.core.io
 
 import cocoapods.Protobuf.*
-import io.github.timortel.kmpgrpc.core.message.KMMessage
+import io.github.timortel.kmpgrpc.core.message.Message
 import io.github.timortel.kmpgrpc.core.message.KmEnum
 import io.github.timortel.kmpgrpc.core.native
 
@@ -111,14 +111,14 @@ internal class IosCodedOutputStream(private val impl: GPBCodedOutputStream) : Io
 
     override fun writeMessage(
         fieldNumber: Int,
-        value: KMMessage
+        value: Message
     ) {
         writeMessage(fieldNumber, value, value.requiredSize.toUInt())
     }
 
     override fun writeMessageArray(
         fieldNumber: Int,
-        values: List<KMMessage>
+        values: List<Message>
     ) {
         writeMessageArray(fieldNumber, values) { it.requiredSize.toUInt() }
     }

@@ -1,7 +1,7 @@
 package io.github.timortel.kmpgrpc.core.internal
 
 import io.github.timortel.kmpgrpc.core.*
-import io.github.timortel.kmpgrpc.core.message.KMMessage
+import io.github.timortel.kmpgrpc.core.message.Message
 import io.grpc.*
 import io.grpc.ForwardingClientCall.SimpleForwardingClientCall
 import io.grpc.ForwardingClientCallListener.SimpleForwardingClientCallListener
@@ -40,7 +40,7 @@ internal class ClientInterceptorImpl(private val impl: CallInterceptor) : Client
                         }
 
                         override fun onMessage(message: RespT) {
-                            if (message is KMMessage) {
+                            if (message is Message) {
                                 super.onMessage(impl.onReceiveMessage(kmMethodDescriptor, message))
                             } else {
                                 super.onMessage(message)
@@ -64,7 +64,7 @@ internal class ClientInterceptorImpl(private val impl: CallInterceptor) : Client
             }
 
             override fun sendMessage(message: ReqT) {
-                if (message is KMMessage) {
+                if (message is Message) {
                     super.sendMessage(impl.onSendMessage(kmMethodDescriptor, message) as ReqT)
                 } else {
                     super.sendMessage(message)

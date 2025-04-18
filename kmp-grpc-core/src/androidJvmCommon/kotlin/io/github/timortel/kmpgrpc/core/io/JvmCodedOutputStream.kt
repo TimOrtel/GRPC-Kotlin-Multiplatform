@@ -2,7 +2,7 @@ package io.github.timortel.kmpgrpc.core.io
 
 import com.google.protobuf.ByteString
 import com.google.protobuf.CodedOutputStream
-import io.github.timortel.kmpgrpc.core.message.KMMessage
+import io.github.timortel.kmpgrpc.core.message.Message
 import io.github.timortel.kmpgrpc.core.message.KmEnum
 
 internal class JvmCodedOutputStream(private val impl: CodedOutputStream) : IosJvmCodedOutputStream {
@@ -158,14 +158,14 @@ internal class JvmCodedOutputStream(private val impl: CodedOutputStream) : IosJv
 
     override fun writeMessage(
         fieldNumber: Int,
-        value: KMMessage
+        value: Message
     ) {
         writeMessage(fieldNumber, value, value.requiredSize.toUInt())
     }
 
     override fun writeMessageArray(
         fieldNumber: Int,
-        values: List<KMMessage>
+        values: List<Message>
     ) {
         writeMessageArray(fieldNumber, values) { it.requiredSize.toUInt() }
     }

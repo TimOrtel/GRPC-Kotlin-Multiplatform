@@ -2,7 +2,7 @@ package io.github.timortel.kmpgrpc.core.internal
 
 import cocoapods.GRPCClient.*
 import io.github.timortel.kmpgrpc.core.*
-import io.github.timortel.kmpgrpc.core.message.KMMessage
+import io.github.timortel.kmpgrpc.core.message.Message
 import io.github.timortel.kmpgrpc.core.message.MessageDeserializer
 import io.github.timortel.kmpgrpc.core.rpc.asGrpcStatus
 import platform.Foundation.NSData
@@ -12,7 +12,7 @@ import platform.darwin.dispatch_queue_t
 
 private const val ERROR_DOMAIN = "io.grpc"
 
-class CallInterceptorWrapper<REQ : KMMessage, RESP : KMMessage>(
+internal class CallInterceptorWrapper<REQ : Message, RESP : Message>(
     private val interceptor: CallInterceptor,
     private val methodDescriptor: KMMethodDescriptor,
     private val requestDeserializer: MessageDeserializer<REQ>,

@@ -1,7 +1,7 @@
 package io.github.timortel.kmpgrpc.core.internal
 
 import io.github.timortel.kmpgrpc.core.*
-import io.github.timortel.kmpgrpc.core.message.KMMessage
+import io.github.timortel.kmpgrpc.core.message.Message
 import io.github.timortel.kmpgrpc.core.external.ClientReadableStream
 import io.github.timortel.kmpgrpc.core.external.Request
 import io.github.timortel.kmpgrpc.core.external.StreamInterceptor
@@ -23,7 +23,7 @@ internal class StreamCallInterceptorWrapper(override val impl: CallInterceptor) 
         override fun on(eventType: String, callback: (dynamic) -> Unit): ClientReadableStream {
             when (eventType) {
                 "data" -> streamImpl.on("data") { response ->
-                    if (response is KMMessage) {
+                    if (response is Message) {
                         callback(impl.onReceiveMessage(methodDescriptor, response))
                     } else {
                         callback(response)

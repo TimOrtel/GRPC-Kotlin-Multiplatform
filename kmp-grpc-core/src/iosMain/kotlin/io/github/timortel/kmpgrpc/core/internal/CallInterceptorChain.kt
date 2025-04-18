@@ -4,7 +4,7 @@ import io.github.timortel.kmpgrpc.core.CallInterceptor
 import io.github.timortel.kmpgrpc.core.Metadata
 import io.github.timortel.kmpgrpc.core.KMMethodDescriptor
 import io.github.timortel.kmpgrpc.core.KMStatus
-import io.github.timortel.kmpgrpc.core.message.KMMessage
+import io.github.timortel.kmpgrpc.core.message.Message
 
 /**
  * Implementation of a [CallInterceptor] that calls all given [callInterceptors].
@@ -23,7 +23,7 @@ internal class CallInterceptorChain(
         }
     }
 
-    override fun <T : KMMessage> onSendMessage(methodDescriptor: KMMethodDescriptor, message: T): T {
+    override fun <T : Message> onSendMessage(methodDescriptor: KMMethodDescriptor, message: T): T {
         return callInterceptors.foldRight(message) { interceptor, currentMessage ->
             interceptor.onSendMessage(
                 methodDescriptor,
@@ -41,7 +41,7 @@ internal class CallInterceptorChain(
         }
     }
 
-    override fun <T : KMMessage> onReceiveMessage(methodDescriptor: KMMethodDescriptor, message: T): T {
+    override fun <T : Message> onReceiveMessage(methodDescriptor: KMMethodDescriptor, message: T): T {
         return callInterceptors.fold(message) { currentMessage, interceptor ->
             interceptor.onReceiveMessage(
                 methodDescriptor,

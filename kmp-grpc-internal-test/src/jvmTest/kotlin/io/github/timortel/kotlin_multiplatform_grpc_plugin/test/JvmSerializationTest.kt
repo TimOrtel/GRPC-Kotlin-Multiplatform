@@ -1,12 +1,12 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.test
 
-import io.github.timortel.kmpgrpc.core.message.KMMessage
+import io.github.timortel.kmpgrpc.core.message.Message
 import io.github.timortel.kmpgrpc.core.message.MessageDeserializer
 import io.github.timortel.kmpgrpc.test.*
 
 class JvmSerializationTest : SerializationTest() {
 
-    private fun <T : KMMessage> serializeImpl(msg: T, deserializer: MessageDeserializer<T>): T {
+    private fun <T : Message> serializeImpl(msg: T, deserializer: MessageDeserializer<T>): T {
         return deserializer.deserialize(msg.serialize())
     }
 

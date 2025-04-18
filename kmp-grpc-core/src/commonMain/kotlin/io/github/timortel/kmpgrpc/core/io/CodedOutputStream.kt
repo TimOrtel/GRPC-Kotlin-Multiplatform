@@ -1,6 +1,6 @@
 package io.github.timortel.kmpgrpc.core.io
 
-import io.github.timortel.kmpgrpc.core.message.KMMessage
+import io.github.timortel.kmpgrpc.core.message.Message
 import io.github.timortel.kmpgrpc.core.message.KmEnum
 import io.github.timortel.kmpgrpc.core.message.UnknownField
 
@@ -66,9 +66,9 @@ interface CodedOutputStream {
 
     fun writeInt64NoTag(value: Long)
 
-    fun writeMessage(fieldNumber: Int, value: KMMessage)
+    fun writeMessage(fieldNumber: Int, value: Message)
 
-    fun writeMessageArray(fieldNumber: Int, values: List<KMMessage>)
+    fun writeMessageArray(fieldNumber: Int, values: List<Message>)
 
     fun writeRawVarint32(value: Int)
 

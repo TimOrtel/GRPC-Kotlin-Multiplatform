@@ -1,7 +1,7 @@
 package io.github.timortel.kmpgrpc.core.io
 
 import io.github.timortel.kmpgrpc.core.message.DataType
-import io.github.timortel.kmpgrpc.core.message.KMMessage
+import io.github.timortel.kmpgrpc.core.message.Message
 import io.github.timortel.kmpgrpc.core.message.UnknownField
 
 fun computeUnknownFieldsRequiredSize(fields: List<UnknownField>): Int {
@@ -77,8 +77,8 @@ expect fun computeSFixed64SizeNoTag(value: Long): Int
 expect fun computeBytesSize(fieldNumber: Int, value: ByteArray): Int
 expect fun computeBytesSizeNoTag(value: ByteArray): Int
 
-expect fun computeMessageSize(fieldNumber: Int, value: KMMessage?): Int
-expect fun computeMessageSizeNoTag(value: KMMessage?): Int
+expect fun computeMessageSize(fieldNumber: Int, value: Message?): Int
+expect fun computeMessageSizeNoTag(value: Message?): Int
 
 
 

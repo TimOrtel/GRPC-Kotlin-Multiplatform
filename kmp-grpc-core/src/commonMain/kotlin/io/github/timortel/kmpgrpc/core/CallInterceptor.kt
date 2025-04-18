@@ -1,6 +1,6 @@
 package io.github.timortel.kmpgrpc.core
 
-import io.github.timortel.kmpgrpc.core.message.KMMessage
+import io.github.timortel.kmpgrpc.core.message.Message
 
 /**
  * Base interface for intercepting calls.
@@ -19,7 +19,7 @@ interface CallInterceptor {
      * @param message the message that is intended to be sent to the server.
      * @return the message that should be sent to the server.
      */
-    fun <T : KMMessage> onSendMessage(methodDescriptor: KMMethodDescriptor, message: T): T = message
+    fun <T : Message> onSendMessage(methodDescriptor: KMMethodDescriptor, message: T): T = message
 
     /**
      * Intercept receiving the initial headers from the server. Always called before [onReceiveMessage].
@@ -36,7 +36,7 @@ interface CallInterceptor {
      * @param message the message received from the server. Potentially modified by previous [CallInterceptor]s.
      * @return the message that should be forwarded.
      */
-    fun <T : KMMessage> onReceiveMessage(methodDescriptor: KMMethodDescriptor, message: T): T = message
+    fun <T : Message> onReceiveMessage(methodDescriptor: KMMethodDescriptor, message: T): T = message
 
     /**
      * Intercept closing the call.

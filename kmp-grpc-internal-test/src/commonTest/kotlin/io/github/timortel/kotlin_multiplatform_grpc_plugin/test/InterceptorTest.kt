@@ -1,7 +1,7 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.test
 
 import io.github.timortel.kmpgrpc.core.*
-import io.github.timortel.kmpgrpc.core.message.KMMessage
+import io.github.timortel.kmpgrpc.core.message.Message
 import io.github.timortel.kmpgrpc.test.InterceptorMessage
 import io.github.timortel.kmpgrpc.test.InterceptorServiceStub
 import io.github.timortel.kmpgrpc.test.interceptorMessage
@@ -18,13 +18,13 @@ abstract class InterceptorTest {
     abstract val isJavaScript: Boolean
 
     private val basicInterceptor = object : CallInterceptor {
-        override fun <T : KMMessage> onReceiveMessage(methodDescriptor: KMMethodDescriptor, message: T): T {
+        override fun <T : Message> onReceiveMessage(methodDescriptor: KMMethodDescriptor, message: T): T {
             assertIs<InterceptorMessage>(message)
             @Suppress("UNCHECKED_CAST")
             return message.copy(a = message.a + 1) as T
         }
 
-        override fun <T : KMMessage> onSendMessage(methodDescriptor: KMMethodDescriptor, message: T): T {
+        override fun <T : Message> onSendMessage(methodDescriptor: KMMethodDescriptor, message: T): T {
             assertIs<InterceptorMessage>(message)
             @Suppress("UNCHECKED_CAST")
             return message.copy(a = message.a + 1) as T
@@ -34,7 +34,7 @@ abstract class InterceptorTest {
     // Reverse order on sending events
 
     private val sendInterceptor1 = object : CallInterceptor {
-        override fun <T : KMMessage> onSendMessage(methodDescriptor: KMMethodDescriptor, message: T): T {
+        override fun <T : Message> onSendMessage(methodDescriptor: KMMethodDescriptor, message: T): T {
             assertIs<InterceptorMessage>(message)
             @Suppress("UNCHECKED_CAST")
             return message.copy(a = message.a + 1) as T
@@ -42,7 +42,7 @@ abstract class InterceptorTest {
     }
 
     private val sendInterceptor2 = object : CallInterceptor {
-        override fun <T : KMMessage> onSendMessage(methodDescriptor: KMMethodDescriptor, message: T): T {
+        override fun <T : Message> onSendMessage(methodDescriptor: KMMethodDescriptor, message: T): T {
             assertIs<InterceptorMessage>(message)
             @Suppress("UNCHECKED_CAST")
             return message.copy(a = message.a * 5) as T
@@ -52,7 +52,7 @@ abstract class InterceptorTest {
     // Normal order on receiving events
 
     private val receiveInterceptor1 = object : CallInterceptor {
-        override fun <T : KMMessage> onReceiveMessage(methodDescriptor: KMMethodDescriptor, message: T): T {
+        override fun <T : Message> onReceiveMessage(methodDescriptor: KMMethodDescriptor, message: T): T {
             assertIs<InterceptorMessage>(message)
             @Suppress("UNCHECKED_CAST")
             return message.copy(a = message.a * 5) as T
@@ -60,7 +60,7 @@ abstract class InterceptorTest {
     }
 
     private val receiveInterceptor2 = object : CallInterceptor {
-        override fun <T : KMMessage> onReceiveMessage(methodDescriptor: KMMethodDescriptor, message: T): T {
+        override fun <T : Message> onReceiveMessage(methodDescriptor: KMMethodDescriptor, message: T): T {
             assertIs<InterceptorMessage>(message)
             @Suppress("UNCHECKED_CAST")
             return message.copy(a = message.a + 1) as T
@@ -222,7 +222,7 @@ abstract class InterceptorTest {
             return super.onStart(methodDescriptor, metadata)
         }
 
-        override fun <T : KMMessage> onSendMessage(methodDescriptor: KMMethodDescriptor, message: T): T {
+        override fun <T : Message> onSendMessage(methodDescriptor: KMMethodDescriptor, message: T): T {
             if (lifecycleStatus == InterceptorLifecycleStatus.STARTED) lifecycleStatus =
                 InterceptorLifecycleStatus.SENT_MESSAGE
             else throw IllegalStateException()
@@ -238,7 +238,7 @@ abstract class InterceptorTest {
             return super.onReceiveHeaders(methodDescriptor, metadata)
         }
 
-        override fun <T : KMMessage> onReceiveMessage(methodDescriptor: KMMethodDescriptor, message: T): T {
+        override fun <T : Message> onReceiveMessage(methodDescriptor: KMMethodDescriptor, message: T): T {
             when {
                 isJs && isStream && lifecycleStatus == InterceptorLifecycleStatus.SENT_MESSAGE -> {
                     lifecycleStatus = InterceptorLifecycleStatus.RECEIVED_MESSAGE

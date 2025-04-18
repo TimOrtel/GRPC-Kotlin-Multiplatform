@@ -1,7 +1,7 @@
 package io.github.timortel.kmpgrpc.core.io
 
 import io.github.timortel.kmpgrpc.core.external.JSPB
-import io.github.timortel.kmpgrpc.core.message.KMMessage
+import io.github.timortel.kmpgrpc.core.message.Message
 import io.github.timortel.kmpgrpc.core.message.KmEnum
 import io.github.timortel.kmpgrpc.core.native
 
@@ -141,7 +141,7 @@ internal class JsCodedOutputStream(private val impl: JSPB.BinaryWriter) : CodedO
 
     override fun writeMessage(
         fieldNumber: Int,
-        value: KMMessage
+        value: Message
     ) {
         val bookmark = impl.beginDelimited(fieldNumber)
         value.serialize(this)
@@ -150,7 +150,7 @@ internal class JsCodedOutputStream(private val impl: JSPB.BinaryWriter) : CodedO
 
     override fun writeMessageArray(
         fieldNumber: Int,
-        values: List<KMMessage>
+        values: List<Message>
     ) {
         values.forEach { message ->
             writeMessage(fieldNumber, message)

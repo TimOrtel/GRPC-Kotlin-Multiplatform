@@ -10,7 +10,7 @@ import platform.Foundation.NSMutableData
 /**
  * Base specification.
  */
-actual interface KMMessage {
+actual interface Message {
 
     /**
      * The size this message takes up in a byte array.

@@ -1,7 +1,7 @@
 package io.github.timortel.kmpgrpc.core.io
 
 import cocoapods.Protobuf.*
-import io.github.timortel.kmpgrpc.core.message.KMMessage
+import io.github.timortel.kmpgrpc.core.message.Message
 
 actual fun computeTagSize(fieldNumber: Int): Int = GPBComputeTagSize(fieldNumber).toInt()
 
@@ -100,11 +100,11 @@ actual fun computeBytesSizeNoTag(value: ByteArray): Int =
 actual fun computeEnumSize(fieldNumber: Int, value: Int): Int = GPBComputeEnumSize(fieldNumber, value).toInt()
 actual fun computeEnumSizeNoTag(value: Int): Int = GPBComputeEnumSizeNoTag(value).toInt()
 
-actual fun computeMessageSize(fieldNumber: Int, value: KMMessage?): Int =
+actual fun computeMessageSize(fieldNumber: Int, value: Message?): Int =
     if (value != null) {
         computeTagSize(fieldNumber) + computeMessageSizeNoTag(value)
     } else 0
 
-actual fun computeMessageSizeNoTag(value: KMMessage?): Int = if (value != null) GPBComputeRawVarint32Size(
+actual fun computeMessageSizeNoTag(value: Message?): Int = if (value != null) GPBComputeRawVarint32Size(
     value.requiredSize
 ).toInt() + value.requiredSize else 0
