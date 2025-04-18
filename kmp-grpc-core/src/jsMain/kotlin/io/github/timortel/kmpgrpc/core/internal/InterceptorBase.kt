@@ -1,13 +1,14 @@
 package io.github.timortel.kmpgrpc.core.internal
 
 import io.github.timortel.kmpgrpc.core.CallInterceptor
-import io.github.timortel.kmpgrpc.core.KMMetadata
-import io.github.timortel.kmpgrpc.core.KMMethodDescriptor
 import io.github.timortel.kmpgrpc.core.MethodDescriptor
-import io.github.timortel.kmpgrpc.core.Request
-import io.github.timortel.kmpgrpc.core.UnaryResponse
+import io.github.timortel.kmpgrpc.core.Metadata
+import io.github.timortel.kmpgrpc.core.external.MethodDescriptor as JsMethodDescriptor
+import io.github.timortel.kmpgrpc.core.external.Request
+import io.github.timortel.kmpgrpc.core.external.UnaryResponse
 import io.github.timortel.kmpgrpc.core.jsMetadata
-import io.github.timortel.kmpgrpc.core.message.KMMessage
+import io.github.timortel.kmpgrpc.core.kmMethodType
+import io.github.timortel.kmpgrpc.core.message.Message
 
 internal interface InterceptorBase {
 
@@ -25,7 +26,7 @@ internal interface InterceptorBase {
         )
 
         val requestMessage = request.getRequestMessage()
-        val newRequestMessage = if (requestMessage is KMMessage) {
+        val newRequestMessage = if (requestMessage is Message) {
             impl.onSendMessage(methodDescriptor, requestMessage)
         } else requestMessage
 
@@ -40,38 +41,38 @@ internal interface InterceptorBase {
     fun <RESP> interceptMessage(response: UnaryResponse<RESP>): dynamic {
         val responseMessage = response.getResponseMessage()
 
-        return if (responseMessage is KMMessage) {
+        return if (responseMessage is Message) {
             impl.onReceiveMessage(getMethodDescriptor(response), responseMessage)
         } else responseMessage
     }
 
-    fun getMethodDescriptor(request: Request): KMMethodDescriptor {
+    fun getMethodDescriptor(request: Request): MethodDescriptor {
         return getMethodDescriptor(request.getMethodDescriptor())
     }
 
-    fun <RESP> getMethodDescriptor(response: UnaryResponse<RESP>): KMMethodDescriptor {
+    fun <RESP> getMethodDescriptor(response: UnaryResponse<RESP>): MethodDescriptor {
         return getMethodDescriptor(response.getMethodDescriptor())
     }
 
-    private fun getMethodDescriptor(methodDescriptor: MethodDescriptor): KMMethodDescriptor {
-        return KMMethodDescriptor(
+    private fun getMethodDescriptor(methodDescriptor: JsMethodDescriptor): MethodDescriptor {
+        return MethodDescriptor(
             fullMethodName = methodDescriptor.getName(),
             methodType = methodDescriptor.methodType.kmMethodType
         )
     }
 
-    fun <RESP> getKmMetadata(response: UnaryResponse<RESP>): KMMetadata {
+    fun <RESP> getKmMetadata(response: UnaryResponse<RESP>): Metadata {
         return getMetadataFromJs(response.getMetadata())
     }
 
-    private fun getMetadata(request: Request): KMMetadata {
+    private fun getMetadata(request: Request): Metadata {
         return getMetadataFromJs(request.getMetadata())
     }
 
-    fun getMetadataFromJs(jsObj: dynamic): KMMetadata {
+    fun getMetadataFromJs(jsObj: dynamic): Metadata {
         val keys = js("Object.keys(jsObj)").unsafeCast<Array<dynamic>>()
 
-        return KMMetadata(
+        return Metadata.of(
             buildMap {
                 keys.forEach { key ->
                     put(key.toString(), jsObj.get(key).toString())

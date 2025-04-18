@@ -31,7 +31,7 @@ object CommonProtoServiceWriter : ProtoServiceWriter(false) {
     override fun applyToRpcFunction(builder: FunSpec.Builder, rpc: ProtoRpc) = Unit
 
     override fun applyToMetadataParameter(builder: ParameterSpec.Builder, service: ProtoService) {
-        builder.defaultValue("%T()", kmMetadata)
+        builder.defaultValue("%T.empty()", kmMetadata)
     }
 
     override fun applyToChannelConstructor(builder: FunSpec.Builder, service: ProtoService) = Unit

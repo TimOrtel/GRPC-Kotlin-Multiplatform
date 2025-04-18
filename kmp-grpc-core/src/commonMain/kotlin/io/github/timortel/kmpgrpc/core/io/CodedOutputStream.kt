@@ -1,13 +1,16 @@
 package io.github.timortel.kmpgrpc.core.io
 
-import io.github.timortel.kmpgrpc.core.message.KMMessage
-import io.github.timortel.kmpgrpc.core.message.KmEnum
+import io.github.timortel.kmpgrpc.core.message.Message
+import io.github.timortel.kmpgrpc.core.message.Enum
+import io.github.timortel.kmpgrpc.core.message.UnknownField
 
 /**
- * Base class that encodes messages to send them over the network connection. Counterpart to [CodedInputStream].
+ * Interface that encodes messages to send them over the network connection. Counterpart to [CodedInputStream].
  * See [the java CodedOutputStream implementation](https://github.com/protocolbuffers/protobuf/blob/main/java/core/src/main/java/com/google/protobuf/CodedOutputStream.java) for further details.
+ *
+ * This class is not stable for inheritance.
  */
-expect class CodedOutputStream {
+interface CodedOutputStream {
 
     fun writeBool(fieldNumber: Int, value: Boolean)
 
@@ -27,9 +30,9 @@ expect class CodedOutputStream {
 
     fun writeEnum(fieldNumber: Int, value: Int)
 
-    fun writeEnum(fieldNumber: Int, value: KmEnum)
+    fun writeEnum(fieldNumber: Int, value: Enum)
 
-    fun writeEnumArray(fieldNumber: Int, values: List<KmEnum>, tag: UInt)
+    fun writeEnumArray(fieldNumber: Int, values: List<Enum>, tag: UInt)
 
     fun writeEnumNoTag(value: Int)
 
@@ -63,9 +66,9 @@ expect class CodedOutputStream {
 
     fun writeInt64NoTag(value: Long)
 
-    fun writeMessage(fieldNumber: Int, value: KMMessage)
+    fun writeMessage(fieldNumber: Int, value: Message)
 
-    fun writeMessageArray(fieldNumber: Int, values: List<KMMessage>)
+    fun writeMessageArray(fieldNumber: Int, values: List<Message>)
 
     fun writeRawVarint32(value: Int)
 
@@ -112,4 +115,45 @@ expect class CodedOutputStream {
     fun writeUInt64Array(fieldNumber: Int, values: List<ULong>, tag: UInt)
 
     fun writeUInt64NoTag(value: ULong)
+
+    /**
+     * Writes a list of unknown fields to the output stream. Each field in the list is processed
+     * based on its concrete type and serialized accordingly.
+     *
+     * @param fields The list of unknown fields to be written.
+     */
+    fun writeUnknownFields(fields: List<UnknownField>) {
+        fields.forEach { unknownField ->
+            when (unknownField) {
+                is UnknownField.Varint -> writeInt64(unknownField.number, unknownField.value)
+                is UnknownField.Fixed32 -> writeFixed32(unknownField.number, unknownField.value)
+                is UnknownField.Fixed64 -> writeFixed64(unknownField.number, unknownField.value)
+                is UnknownField.LengthDelimited -> writeBytes(unknownField.number, unknownField.value)
+                is UnknownField.Group -> {
+                    writeTag(unknownField.number, WireFormat.START_GROUP)
+                    writeUnknownFields(unknownField.values)
+                    writeTag(unknownField.number, WireFormat.END_GROUP)
+                }
+            }
+        }
+    }
+
+    /**
+     * Writes a map of key-value pairs to the output stream.
+     *
+     * @param fieldNumber The field number corresponding to the map field.
+     * @param map The map containing the key-value pairs to be written.
+     * @param getKeySize A function to calculate the serialized size of the key. Takes the field number and key as parameters.
+     * @param getValueSize A function to calculate the serialized size of the value. Takes the field number and value as parameters.
+     * @param writeKey A function to write the key to the output stream. Takes the field number and key as parameters.
+     * @param writeValue A function to write the value to the output stream. Takes the field number and value as parameters.
+     */
+    fun <K, V> writeMap(
+        fieldNumber: Int,
+        map: Map<K, V>,
+        getKeySize: (fieldNumber: Int, key: K) -> Int,
+        getValueSize: (fieldNumber: Int, value: V) -> Int,
+        writeKey: CodedOutputStream.(fieldNumber: Int, K) -> Unit,
+        writeValue: CodedOutputStream.(fieldNumber: Int, V) -> Unit
+    )
 }

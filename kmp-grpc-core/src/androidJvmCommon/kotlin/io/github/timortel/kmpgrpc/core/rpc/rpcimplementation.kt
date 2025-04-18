@@ -9,13 +9,13 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlin.jvm.Throws
 
-@Throws(KMStatusException::class)
+@Throws(StatusException::class)
 suspend fun <REQ, RESP> unaryRpc(
-    channel: KMChannel,
+    channel: Channel,
     method: MethodDescriptor<REQ, RESP>,
     request: REQ,
     callOptions: CallOptions,
-    headers: KMMetadata
+    headers: Metadata
 ): RESP {
     return try {
         ClientCalls.unaryRpc(
@@ -26,16 +26,16 @@ suspend fun <REQ, RESP> unaryRpc(
             headers = headers.jvmMetadata
         )
     } catch (e: StatusException) {
-        throw e.kmStatusException
+        throw e.statusException
     }
 }
 
 fun <REQ, RESP> serverStreamingRpc(
-    channel: KMChannel,
+    channel: Channel,
     method: MethodDescriptor<REQ, RESP>,
     request: REQ,
     callOptions: CallOptions,
-    headers: KMMetadata
+    headers: Metadata
 ): Flow<RESP> {
     return ClientCalls.serverStreamingRpc(
         channel = channel.channel,
@@ -45,15 +45,15 @@ fun <REQ, RESP> serverStreamingRpc(
         headers = headers.jvmMetadata
     )
         .catch { e ->
-            if (e is StatusException) throw e.kmStatusException
+            if (e is StatusException) throw e.statusException
             else throw e
         }
 }
 
-private val StatusException.kmStatusException: KMStatusException
-    get() = KMStatusException(
-        status = KMStatus(
-            code = KMCode.getCodeForValue(status.code.value()),
+private val StatusException.statusException: io.github.timortel.kmpgrpc.core.StatusException
+    get() = StatusException(
+        status = Status(
+            code = Code.getCodeForValue(status.code.value()),
             statusMessage = status.description.orEmpty()
         ),
         cause = this

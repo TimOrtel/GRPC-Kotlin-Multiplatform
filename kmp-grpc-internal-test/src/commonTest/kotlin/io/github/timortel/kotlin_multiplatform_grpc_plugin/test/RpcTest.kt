@@ -1,8 +1,8 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.test
 
-import io.github.timortel.kmpgrpc.core.KMChannel
-import io.github.timortel.kmpgrpc.core.KMMetadata
-import io.github.timortel.kmpgrpc.core.KMStatusException
+import io.github.timortel.kmpgrpc.core.Channel
+import io.github.timortel.kmpgrpc.core.Metadata
+import io.github.timortel.kmpgrpc.core.StatusException
 import io.github.timortel.kmpgrpc.core.message.UnknownField
 import io.github.timortel.kmpgrpc.test.*
 import kotlinx.coroutines.async
@@ -19,8 +19,8 @@ abstract class RpcTest {
     abstract val address: String
     abstract val port: Int
 
-    private val channel: KMChannel
-        get() = KMChannel.Builder
+    private val channel: Channel
+        get() = Channel.Builder
             .forAddress(address, port)
             .usePlaintext()
             .build()
@@ -141,7 +141,7 @@ abstract class RpcTest {
         val value = "custom-value"
 
         val response = InterceptorServiceStub(channel)
-            .testMetadata(message, KMMetadata(mutableMapOf(key to value)))
+            .testMetadata(message, Metadata.of(key, value))
 
         assertContains(response.metadataMap, key, "Metadata does not contain key $key")
         assertEquals(value, response.metadataMap[key], "Metadata value != $value")
@@ -151,8 +151,8 @@ abstract class RpcTest {
     fun testFailedRpcThrowsKmStatusException() = runTest {
         val message = simpleMessage { }
 
-        assertFailsWith<KMStatusException> {
-            TestServiceStub(KMChannel.Builder.forAddress("localhost", 1800).usePlaintext().build())
+        assertFailsWith<StatusException> {
+            TestServiceStub(Channel.Builder.forAddress("localhost", 1800).usePlaintext().build())
                 .simpleRpc(message)
         }
     }
@@ -161,8 +161,8 @@ abstract class RpcTest {
     fun testFailedStreamingRpcThrowsKmStatusException() = runTest {
         val message = simpleMessage { }
 
-        assertFailsWith<KMStatusException> {
-            TestServiceStub(KMChannel.Builder.forAddress("localhost", 1800).usePlaintext().build())
+        assertFailsWith<StatusException> {
+            TestServiceStub(Channel.Builder.forAddress("localhost", 1800).usePlaintext().build())
                 .simpleStreamingRpc(message)
                 .toList()
         }

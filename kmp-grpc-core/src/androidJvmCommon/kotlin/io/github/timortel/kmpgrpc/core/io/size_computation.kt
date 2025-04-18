@@ -3,7 +3,7 @@
 package io.github.timortel.kmpgrpc.core.io
 
 import com.google.protobuf.CodedOutputStream
-import io.github.timortel.kmpgrpc.core.message.KMMessage
+import io.github.timortel.kmpgrpc.core.message.Message
 
 actual fun computeTagSize(fieldNumber: Int): Int = CodedOutputStream.computeTagSize(fieldNumber)
 
@@ -106,11 +106,11 @@ actual fun computeEnumSize(fieldNumber: Int, value: Int): Int =
 actual fun computeEnumSizeNoTag(value: Int): Int =
     CodedOutputStream.computeEnumSizeNoTag(value)
 
-actual fun computeMessageSize(fieldNumber: Int, value: KMMessage?): Int = if (value != null) {
+actual fun computeMessageSize(fieldNumber: Int, value: Message?): Int = if (value != null) {
     computeTagSize(fieldNumber) + computeMessageSizeNoTag(value)
 } else 0
 
-actual fun computeMessageSizeNoTag(value: KMMessage?): Int =
+actual fun computeMessageSizeNoTag(value: Message?): Int =
     if (value != null) CodedOutputStream.computeUInt32SizeNoTag(
         value.requiredSize
     ) + value.requiredSize else 0

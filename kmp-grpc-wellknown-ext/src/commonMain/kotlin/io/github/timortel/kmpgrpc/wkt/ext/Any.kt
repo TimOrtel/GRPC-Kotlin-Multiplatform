@@ -2,8 +2,8 @@ package io.github.timortel.kmpgrpc.wkt.ext
 
 import com.google.protobuf.Any
 import com.google.protobuf.any
-import io.github.timortel.kmpgrpc.core.message.KMMessage
-import io.github.timortel.kmpgrpc.core.message.KMMessageCompanion
+import io.github.timortel.kmpgrpc.core.message.Message
+import io.github.timortel.kmpgrpc.core.message.MessageCompanion
 import io.github.timortel.kmpgrpc.core.message.MessageDeserializer
 
 private const val DEFAULT_TYPE_URL_PREFIX = "type.googleapis.com"
@@ -11,7 +11,7 @@ private const val DEFAULT_TYPE_URL_PREFIX = "type.googleapis.com"
 /**
  * @return a new [Any] message with the given [message] as content.
  */
-fun <T : KMMessage> Any.Companion.wrap(message: T, typeUrlPrefix: String = DEFAULT_TYPE_URL_PREFIX): Any = any {
+fun <T : Message> Any.Companion.wrap(message: T, typeUrlPrefix: String = DEFAULT_TYPE_URL_PREFIX): Any = any {
     type_url = getTypeUrl(message.fullName, typeUrlPrefix)
     value = message.serialize()
 }
@@ -21,7 +21,7 @@ fun <T : KMMessage> Any.Companion.wrap(message: T, typeUrlPrefix: String = DEFAU
  * @param deserializer typically the companion object of [T].
  * @return a message of type [T]
  */
-inline fun <T : KMMessage, DES : MessageDeserializer<T>> Any.unwrap(deserializer: DES): T {
+inline fun <T : Message, DES : MessageDeserializer<T>> Any.unwrap(deserializer: DES): T {
     return deserializer.deserialize(value)
 }
 
@@ -31,17 +31,17 @@ inline fun <T : KMMessage, DES : MessageDeserializer<T>> Any.unwrap(deserializer
  * @param message the companion object of [T]
  * @return if the type held by this object matches [T]
  */
-fun <T : KMMessage> Any.isType(message: KMMessageCompanion<T>, typeUrlPrefix: String): Boolean {
+fun <T : Message> Any.isType(message: MessageCompanion<T>, typeUrlPrefix: String): Boolean {
     return type_url == getTypeUrl(message.fullName, typeUrlPrefix)
 }
 
 /**
- * Checks if the [Any.type_url] matches [T] by checking against the [KMMessageCompanion.fullName].
+ * Checks if the [Any.type_url] matches [T] by checking against the [MessageCompanion.fullName].
  *
  * @param message the companion object of [T]
  * @return if the type held by this object matches [T]
  */
-fun <T : KMMessage> Any.isType(message: KMMessageCompanion<T>): Boolean {
+fun <T : Message> Any.isType(message: MessageCompanion<T>): Boolean {
     return type_url.substringAfterLast('/') == message.fullName
 }
 
@@ -50,16 +50,16 @@ fun <T : KMMessage> Any.isType(message: KMMessageCompanion<T>): Boolean {
  *
  * @return if the type held by this object matches the type of [message]
  */
-fun Any.isSameTypeAs(message: KMMessage, typeUrlPrefix: String): Boolean {
+fun Any.isSameTypeAs(message: Message, typeUrlPrefix: String): Boolean {
     return type_url == getTypeUrl(message.fullName, typeUrlPrefix)
 }
 
 /**
- * Checks if the [Any.type_url] matches the type of [message] by checking against the [KMMessage.fullName].
+ * Checks if the [Any.type_url] matches the type of [message] by checking against the [Message.fullName].
  *
  * @return if the type held by this object matches the type of [message]
  */
-fun Any.isSameTypeAs(message: KMMessage): Boolean {
+fun Any.isSameTypeAs(message: Message): Boolean {
     return type_url.substringAfterLast('/') == message.fullName
 }
 

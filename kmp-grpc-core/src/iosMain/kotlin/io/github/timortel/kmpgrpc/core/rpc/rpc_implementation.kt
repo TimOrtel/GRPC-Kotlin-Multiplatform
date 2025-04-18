@@ -3,7 +3,7 @@ package io.github.timortel.kmpgrpc.core.rpc
 import cocoapods.GRPCClient.*
 import io.github.timortel.kmpgrpc.core.*
 import io.github.timortel.kmpgrpc.core.internal.CallInterceptorWrapper
-import io.github.timortel.kmpgrpc.core.message.KMMessage
+import io.github.timortel.kmpgrpc.core.message.Message
 import io.github.timortel.kmpgrpc.core.message.MessageDeserializer
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.awaitClose
@@ -25,18 +25,18 @@ private const val INVALID_UNKNOWN_DESCRIPTION_2 = "UNKNOWN {grpc_message:\"\", g
 /**
  * Perform a unary rpc call as a suspending function. Uses [GRPCCall2] for the actual call.
  */
-@Throws(KMStatusException::class, CancellationException::class)
-suspend fun <REQ : KMMessage, RES : KMMessage> unaryCallImplementation(
-    channel: KMChannel,
+@Throws(StatusException::class, CancellationException::class)
+suspend fun <REQ : Message, RES : Message> unaryCallImplementation(
+    channel: Channel,
     callOptions: GRPCCallOptions,
     path: String,
     request: REQ,
     requestDeserializer: MessageDeserializer<REQ>,
     responseDeserializer: MessageDeserializer<RES>
 ): RES {
-    val methodDescriptor = KMMethodDescriptor(
+    val methodDescriptor = MethodDescriptor(
         fullMethodName = path,
-        methodType = KMMethodDescriptor.MethodType.UNARY
+        methodType = MethodDescriptor.MethodType.UNARY
     )
 
     return suspendCancellableCoroutine { continuation ->
@@ -50,7 +50,7 @@ suspend fun <REQ : KMMessage, RES : KMMessage> unaryCallImplementation(
                 when {
                     error != null && !isInvalidGrpcError -> {
                         val exception =
-                            KMStatusException(error.asGrpcStatus, null)
+                            StatusException(error.asGrpcStatus, null)
 
                         continuation.resumeWithException(exception)
                     }
@@ -60,8 +60,8 @@ suspend fun <REQ : KMMessage, RES : KMMessage> unaryCallImplementation(
                     }
 
                     else -> {
-                        val status = KMStatus(KMCode.UNKNOWN, "Call closed without error and without a response")
-                        continuation.resumeWithException(KMStatusException(status, null))
+                        val status = Status(Code.UNKNOWN, "Call closed without error and without a response")
+                        continuation.resumeWithException(StatusException(status, null))
                     }
                 }
             }
@@ -96,17 +96,17 @@ suspend fun <REQ : KMMessage, RES : KMMessage> unaryCallImplementation(
  * Performs a server side stream call and returns a [Flow] that emits whenever we receive a new message from the server.
  * Uses [GRPCCall2] for the actual call.
  */
-fun <REQ : KMMessage, RES : KMMessage> serverSideStreamingCallImplementation(
-    channel: KMChannel,
+fun <REQ : Message, RES : Message> serverSideStreamingCallImplementation(
+    channel: Channel,
     callOptions: GRPCCallOptions,
     path: String,
     request: REQ,
     requestDeserializer: MessageDeserializer<REQ>,
     responseDeserializer: MessageDeserializer<RES>
 ): Flow<RES> {
-    val methodDescriptor = KMMethodDescriptor(
+    val methodDescriptor = MethodDescriptor(
         fullMethodName = path,
-        methodType = KMMethodDescriptor.MethodType.SERVER_STREAMING
+        methodType = MethodDescriptor.MethodType.SERVER_STREAMING
     )
 
     return callbackFlow {
@@ -118,7 +118,7 @@ fun <REQ : KMMessage, RES : KMMessage> serverSideStreamingCallImplementation(
             },
             onDone = { error ->
                 if (error != null) {
-                    val exception = KMStatusException(error.asGrpcStatus, null)
+                    val exception = StatusException(error.asGrpcStatus, null)
 
                     close(exception)
                 } else {
@@ -153,10 +153,10 @@ fun <REQ : KMMessage, RES : KMMessage> serverSideStreamingCallImplementation(
     }
 }
 
-private fun <REQ : KMMessage, RESP : KMMessage> injectCallInterceptor(
+private fun <REQ : Message, RESP : Message> injectCallInterceptor(
     callOptions: GRPCCallOptions,
     interceptor: CallInterceptor?,
-    methodDescriptor: KMMethodDescriptor,
+    methodDescriptor: MethodDescriptor,
     requestDeserializer: MessageDeserializer<REQ>,
     responseDeserializer: MessageDeserializer<RESP>
 ): GRPCCallOptions {
@@ -178,8 +178,8 @@ private fun <REQ : KMMessage, RESP : KMMessage> injectCallInterceptor(
     } else callOptions
 }
 
-private class InterceptorFactory<REQ : KMMessage, RES : KMMessage>(
-    private val methodDescriptor: KMMethodDescriptor,
+private class InterceptorFactory<REQ : Message, RES : Message>(
+    private val methodDescriptor: MethodDescriptor,
     private val interceptor: CallInterceptor,
     private val requestDeserializer: MessageDeserializer<REQ>,
     private val responseDeserializer: MessageDeserializer<RES>

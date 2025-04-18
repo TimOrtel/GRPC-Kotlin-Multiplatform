@@ -21,6 +21,8 @@ object JvmProtoServiceWriter : ActualProtoServiceWriter() {
     override val callOptionsType: TypeName = ClassName("io.grpc", "CallOptions")
     override val createEmptyCallOptionsCode: CodeBlock = CodeBlock.of("%T.DEFAULT", callOptionsType)
 
+    private val androidJvmStub = ClassName(PACKAGE_STUB, "AndroidJvmStub")
+
     override fun applyToClass(
         builder: TypeSpec.Builder,
         service: ProtoService
@@ -28,7 +30,7 @@ object JvmProtoServiceWriter : ActualProtoServiceWriter() {
         super.applyToClass(builder, service)
 
         builder.apply {
-            addSuperinterface(ClassName(PACKAGE_STUB, "AndroidJvmKMStub").parameterizedBy(service.className))
+            addSuperinterface(androidJvmStub.parameterizedBy(service.className))
 
             overrideWithDeadlineAfter(builder, service.className)
 

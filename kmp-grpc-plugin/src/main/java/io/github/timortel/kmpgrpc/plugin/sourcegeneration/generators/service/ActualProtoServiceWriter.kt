@@ -10,7 +10,7 @@ abstract class ActualProtoServiceWriter : ProtoServiceWriter(true) {
     abstract val callOptionsType: TypeName
 
     /**
-    * Create empty call options for your platform, e.g. CallOptions.empty() or CallOptions()
+    * Create empty call options for your platform, e.g., CallOptions.empty() or CallOptions()
     */
     abstract val createEmptyCallOptionsCode: CodeBlock
 

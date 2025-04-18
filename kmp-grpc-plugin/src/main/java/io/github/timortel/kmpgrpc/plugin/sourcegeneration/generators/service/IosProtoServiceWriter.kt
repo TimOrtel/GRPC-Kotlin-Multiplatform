@@ -17,6 +17,8 @@ object IosProtoServiceWriter : ActualProtoServiceWriter() {
     override val createEmptyCallOptionsCode: CodeBlock =
         CodeBlock.of("%T()", GRPC_MUTABLE_CALL_OPTIONS)
 
+    private val iosStub = ClassName(PACKAGE_STUB, "IosStub")
+
     override fun applyToClass(
         builder: TypeSpec.Builder,
         service: ProtoService
@@ -42,7 +44,7 @@ object IosProtoServiceWriter : ActualProtoServiceWriter() {
                 Const.Service.CALL_OPTIONS_PROPERTY_NAME,
                 GRPC_MUTABLE_CALL_OPTIONS
             )
-            addStatement("callOptions.setInitialMetadata(%N.metadataMap.toMap())", Const.Service.RpcCall.PARAM_METADATA)
+            addStatement("callOptions.setInitialMetadata(%N.entries.toMap())", Const.Service.RpcCall.PARAM_METADATA)
         }
 
         builder.addStatement(
@@ -64,11 +66,6 @@ object IosProtoServiceWriter : ActualProtoServiceWriter() {
         service: ProtoService
     ) {
         builder.superclass(kmStub.parameterizedBy(service.className))
-        builder.addSuperinterface(
-            ClassName(
-                PACKAGE_STUB,
-                "IOSKMStub"
-            ).parameterizedBy(service.className)
-        )
+        builder.addSuperinterface(iosStub.parameterizedBy(service.className))
     }
 }

@@ -1,7 +1,7 @@
 package io.github.timortel.kmpgrpc.core.message
 
 /**
- * Representation of an unknown field parsed when reading a [KMMessage].
+ * Representation of an unknown field parsed when reading a [Message].
  */
 sealed interface UnknownField {
     val number: Int

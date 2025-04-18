@@ -19,19 +19,22 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
 class SerializationFunctionExtension : BaseSerializationExtension() {
 
     override fun applyToClass(builder: TypeSpec.Builder, message: ProtoMessage, sourceTarget: SourceTarget) {
-        if (sourceTarget is SourceTarget.Actual) {
-            builder.addFunction(
-                FunSpec
-                    .builder(Const.Message.SerializeFunction.NAME)
-                    .addModifiers(KModifier.OVERRIDE)
-                    .addParameter(
-                        Const.Message.SerializeFunction.STREAM_PARAM,
-                        CodedOutputStream
-                    )
-                    .apply { buildSerializeFunction(this, message, sourceTarget) }
-                    .build()
-            )
-        }
+        builder.addFunction(
+            FunSpec
+                .builder(Const.Message.SerializeFunction.NAME)
+                .addModifiers(KModifier.OVERRIDE)
+                .addParameter(
+                    Const.Message.SerializeFunction.STREAM_PARAM,
+                    CodedOutputStream
+                )
+                .apply {
+                    if (sourceTarget is SourceTarget.Actual) {
+                        addModifiers(KModifier.ACTUAL)
+                        buildSerializeFunction(this, message, sourceTarget)
+                    }
+                }
+                .build()
+        )
     }
 
     /**
@@ -120,9 +123,9 @@ class SerializationFunctionExtension : BaseSerializationExtension() {
             }
 
             addStatement(
-                "%M(%N, %N)",
-                writeUnknownFields,
+                "%N.%N(%N)",
                 Const.Message.SerializeFunction.STREAM_PARAM,
+                "writeUnknownFields",
                 Const.Message.Constructor.UnknownFields.name
             )
         }
@@ -133,44 +136,37 @@ class SerializationFunctionExtension : BaseSerializationExtension() {
         field: ProtoMapField,
         sourceTarget: SourceTarget.Actual
     ) {
+        val isJs = sourceTarget is SourceTarget.Js
+
         builder.apply {
-            when (sourceTarget) {
-                SourceTarget.Jvm, SourceTarget.Ios -> {
-                    addCode(
-                        "%M(%N, %L, %N, ",
-                        writeMap,
-                        Const.Message.SerializeFunction.STREAM_PARAM,
-                        field.number,
-                        field.attributeName
-                    )
+            addCode(
+                "%N.%N(%L, %N, ",
+                Const.Message.SerializeFunction.STREAM_PARAM,
+                "writeMap",
+                field.number,
+                field.attributeName
+            )
 
-                    addCode(getComputeMapValueRequiredSizeCode(field.keyType))
-                    addCode(", ")
-
-                    addCode(getComputeMapValueRequiredSizeCode(field.valuesType))
-                    addCode(", ")
-
-                    addMapKeyTypeSerializationCode(field.keyType)
-                    addCode(", ")
-                    addMapValueTypeSerializationCode(field.valuesType)
-                    addCode(")\n")
-                }
-
-                SourceTarget.Js -> {
-                    addCode(
-                        "%M(%N, %L, %N, ",
-                        writeMap,
-                        Const.Message.SerializeFunction.STREAM_PARAM,
-                        field.number,
-                        field.attributeName
-                    )
-
-                    addMapKeyTypeSerializationCode(field.keyType)
-                    addCode(", ")
-                    addMapValueTypeSerializationCode(field.valuesType)
-                    addCode(")\n")
-                }
+            if (isJs) {
+                addCode("{ _, _, -> 0 }")
+            } else {
+                addCode(getComputeMapValueRequiredSizeCode(field.keyType))
             }
+
+            addCode(", ")
+
+            if (isJs) {
+                addCode("{ _, _, -> 0 }")
+            } else {
+                addCode(getComputeMapValueRequiredSizeCode(field.valuesType))
+            }
+
+            addCode(", ")
+
+            addMapKeyTypeSerializationCode(field.keyType)
+            addCode(", ")
+            addMapValueTypeSerializationCode(field.valuesType)
+            addCode(")\n")
         }
     }
 
@@ -194,8 +190,7 @@ class SerializationFunctionExtension : BaseSerializationExtension() {
                 when (type.declType) {
                     ProtoType.DefType.DeclarationType.MESSAGE -> {
                         addCode(
-                            "{·fieldNumber,·msg·-> %N.writeMessage(fieldNumber, msg)·}",
-                            Const.Message.SerializeFunction.STREAM_PARAM
+                            "{·fieldNumber,·msg·-> writeMessage(fieldNumber, msg)·}"
                         )
                     }
 

@@ -1,6 +1,9 @@
 package io.github.timortel.kmpgrpc.core.internal
 
 import io.github.timortel.kmpgrpc.core.*
+import io.github.timortel.kmpgrpc.core.external.Request
+import io.github.timortel.kmpgrpc.core.external.UnaryInterceptor
+import io.github.timortel.kmpgrpc.core.external.UnaryResponse
 import kotlin.js.Promise
 
 internal class UnaryCallInterceptorWrapper(override val impl: CallInterceptor) : UnaryInterceptor, InterceptorBase {
@@ -19,8 +22,8 @@ internal class UnaryCallInterceptorWrapper(override val impl: CallInterceptor) :
 
             val newResponseMessage = interceptMessage(response)
 
-            val status = KMStatus(
-                code = KMCode.getCodeForValue(response.getStatus().code.toInt()),
+            val status = Status(
+                code = Code.getCodeForValue(response.getStatus().code.toInt()),
                 statusMessage = response.getStatus().details
             )
 
@@ -30,8 +33,8 @@ internal class UnaryCallInterceptorWrapper(override val impl: CallInterceptor) :
                 metadata = newHeaders
             )
 
-            if (newStatus.code != KMCode.OK) {
-                Promise.reject(KMStatusException(newStatus, null))
+            if (newStatus.code != Code.OK) {
+                Promise.reject(StatusException(newStatus, null))
             } else {
                 Promise.resolve(
                     UnaryResponseImpl(

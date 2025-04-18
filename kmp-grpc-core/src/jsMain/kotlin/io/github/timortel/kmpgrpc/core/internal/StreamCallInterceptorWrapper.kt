@@ -1,10 +1,10 @@
 package io.github.timortel.kmpgrpc.core.internal
 
 import io.github.timortel.kmpgrpc.core.*
-import io.github.timortel.kmpgrpc.core.message.KMMessage
-import io.github.timortel.kmpgrpc.core.ClientReadableStream
-import io.github.timortel.kmpgrpc.core.Request
-import io.github.timortel.kmpgrpc.core.StreamInterceptor
+import io.github.timortel.kmpgrpc.core.message.Message
+import io.github.timortel.kmpgrpc.core.external.ClientReadableStream
+import io.github.timortel.kmpgrpc.core.external.Request
+import io.github.timortel.kmpgrpc.core.external.StreamInterceptor
 import kotlin.js.json
 
 internal class StreamCallInterceptorWrapper(override val impl: CallInterceptor) : StreamInterceptor, InterceptorBase {
@@ -17,13 +17,13 @@ internal class StreamCallInterceptorWrapper(override val impl: CallInterceptor) 
 
     private inner class Interceptor(
         private val streamImpl: ClientReadableStream,
-        private val methodDescriptor: KMMethodDescriptor,
+        private val methodDescriptor: MethodDescriptor,
     ) : ClientReadableStream {
 
         override fun on(eventType: String, callback: (dynamic) -> Unit): ClientReadableStream {
             when (eventType) {
                 "data" -> streamImpl.on("data") { response ->
-                    if (response is KMMessage) {
+                    if (response is Message) {
                         callback(impl.onReceiveMessage(methodDescriptor, response))
                     } else {
                         callback(response)
@@ -37,7 +37,7 @@ internal class StreamCallInterceptorWrapper(override val impl: CallInterceptor) 
 
                     val (newStatus, newTrailing) = impl.onClose(
                         methodDescriptor = methodDescriptor,
-                        status = KMStatus(KMCode.getCodeForValue(code), details.orEmpty()),
+                        status = Status(Code.getCodeForValue(code), details.orEmpty()),
                         metadata = getMetadataFromJs(metadata)
                     )
 
