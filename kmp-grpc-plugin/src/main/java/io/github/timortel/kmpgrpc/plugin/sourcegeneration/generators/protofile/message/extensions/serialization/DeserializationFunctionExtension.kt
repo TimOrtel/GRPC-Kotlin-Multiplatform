@@ -17,21 +17,24 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.joinToCodeBlock
 class DeserializationFunctionExtension : BaseSerializationExtension() {
 
     override fun applyToCompanionObject(builder: TypeSpec.Builder, message: ProtoMessage, sourceTarget: SourceTarget) {
-        if (sourceTarget is SourceTarget.Actual) {
-            builder.addFunction(
-                //The function that builds the message from a stream.
-                FunSpec
-                    .builder(Const.Message.Companion.WrapperDeserializationFunction.NAME)
-                    .addModifiers(KModifier.OVERRIDE)
-                    .addParameter(
-                        Const.Message.Companion.WrapperDeserializationFunction.STREAM_PARAM,
-                        CodedInputStream
-                    )
-                    .returns(message.className)
-                    .apply { buildWrapperDeserializationFunction(this, message) }
-                    .build()
-            )
-        }
+        builder.addFunction(
+            //The function that builds the message from a stream.
+            FunSpec
+                .builder(Const.Message.Companion.WrapperDeserializationFunction.NAME)
+                .addModifiers(KModifier.OVERRIDE)
+                .addParameter(
+                    Const.Message.Companion.WrapperDeserializationFunction.STREAM_PARAM,
+                    CodedInputStream
+                )
+                .returns(message.className)
+                .apply {
+                    if (sourceTarget is SourceTarget.Actual) {
+                        addModifiers(KModifier.ACTUAL)
+                        buildWrapperDeserializationFunction(this, message)
+                    }
+                }
+                .build()
+        )
     }
 
     private fun buildWrapperDeserializationFunction(
@@ -363,7 +366,8 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
                     )
                 }
 
-            val unknownFieldsBlock = CodeBlock.of("%N·=·%N", Const.Message.Constructor.UnknownFields.name, unknownFieldsFieldName)
+            val unknownFieldsBlock =
+                CodeBlock.of("%N·=·%N", Const.Message.Constructor.UnknownFields.name, unknownFieldsFieldName)
 
             addCode(listOf(fieldsBlock, unknownFieldsBlock).joinCodeBlocks(separator))
 
