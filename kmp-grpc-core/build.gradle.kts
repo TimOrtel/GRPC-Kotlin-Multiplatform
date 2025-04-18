@@ -85,6 +85,10 @@ kotlin {
             }
         }
 
+        val iosJsCommon by creating {
+            dependsOn(commonMain.get())
+        }
+
         jvmMain {
             dependsOn(androidJvmCommon)
 
@@ -99,6 +103,8 @@ kotlin {
         }
 
         jsMain {
+            dependsOn(iosJsCommon)
+
             dependencies {
                 api(npm("google-protobuf", "3.21.2"))
                 api(npm("grpc-web", "1.5.0"))
@@ -107,6 +113,7 @@ kotlin {
         }
 
         iosMain {
+            dependsOn(iosJsCommon)
             dependsOn(iosJvmCommon)
         }
     }

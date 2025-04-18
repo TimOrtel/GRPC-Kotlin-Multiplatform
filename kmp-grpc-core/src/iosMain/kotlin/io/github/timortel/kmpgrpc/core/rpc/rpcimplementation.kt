@@ -6,6 +6,7 @@ import io.github.timortel.kmpgrpc.core.internal.CallInterceptorWrapper
 import io.github.timortel.kmpgrpc.core.message.Message
 import io.github.timortel.kmpgrpc.core.message.MessageDeserializer
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -39,56 +40,58 @@ suspend fun <REQ : Message, RES : Message> unaryCallImplementation(
         methodType = MethodDescriptor.MethodType.UNARY
     )
 
-    return suspendCancellableCoroutine { continuation ->
-        val handler = UnaryCallHandler(
-            onDone = { data, error ->
-                // https://github.com/grpc/grpc/issues/39178
-                val isInvalidGrpcError = error != null && error.domain == GRPC_ERROR_DOMAIN && error.code == 2L
-                        && (error.description.orEmpty().contains(INVALID_UNKNOWN_DESCRIPTION_1) ||
-                        error.description.orEmpty().contains(INVALID_UNKNOWN_DESCRIPTION_2))
+    return unaryCallBaseImplementation(channel) {
+        suspendCancellableCoroutine { continuation ->
+            val handler = UnaryCallHandler(
+                onDone = { data, error ->
+                    // https://github.com/grpc/grpc/issues/39178
+                    val isInvalidGrpcError = error != null && error.domain == GRPC_ERROR_DOMAIN && error.code == 2L
+                            && (error.description.orEmpty().contains(INVALID_UNKNOWN_DESCRIPTION_1) ||
+                            error.description.orEmpty().contains(INVALID_UNKNOWN_DESCRIPTION_2))
 
-                when {
-                    error != null && !isInvalidGrpcError -> {
-                        val exception =
-                            StatusException(error.asGrpcStatus, null)
+                    when {
+                        error != null && !isInvalidGrpcError -> {
+                            val exception =
+                                StatusException(error.asGrpcStatus, null)
 
-                        continuation.resumeWithException(exception)
-                    }
+                            continuation.resumeWithException(exception)
+                        }
 
-                    data != null -> {
-                        continuation.resume(responseDeserializer.deserialize(data as NSData))
-                    }
+                        data != null -> {
+                            continuation.resume(responseDeserializer.deserialize(data as NSData))
+                        }
 
-                    else -> {
-                        val status = Status(Code.UNKNOWN, "Call closed without error and without a response")
-                        continuation.resumeWithException(StatusException(status, null))
+                        else -> {
+                            val status = Status(Code.UNKNOWN, "Call closed without error and without a response")
+                            continuation.resumeWithException(StatusException(status, null))
+                        }
                     }
                 }
-            }
-        )
+            )
 
-        val call = GRPCCall2(
-            requestOptions = channel.buildRequestOptions(path),
-            responseHandler = handler,
-            callOptions = channel.applyToCallOptions(
-                injectCallInterceptor(
-                    callOptions = callOptions,
-                    interceptor = channel.interceptor,
-                    methodDescriptor = methodDescriptor,
-                    requestDeserializer = requestDeserializer,
-                    responseDeserializer = responseDeserializer
+            val call = GRPCCall2(
+                requestOptions = channel.buildRequestOptions(path),
+                responseHandler = handler,
+                callOptions = channel.applyToCallOptions(
+                    injectCallInterceptor(
+                        callOptions = callOptions,
+                        interceptor = channel.interceptor,
+                        methodDescriptor = methodDescriptor,
+                        requestDeserializer = requestDeserializer,
+                        responseDeserializer = responseDeserializer
+                    )
                 )
             )
-        )
 
-        call.start()
-        call.receiveNextMessages(1u)
+            call.start()
+            call.receiveNextMessages(1u)
 
-        call.writeData(request.serializeNative())
+            call.writeData(request.serializeNative())
 
-        call.finish()
+            call.finish()
 
-        continuation.invokeOnCancellation { call.cancel() }
+            continuation.invokeOnCancellation { call.cancel() }
+        }
     }
 }
 
@@ -96,6 +99,7 @@ suspend fun <REQ : Message, RES : Message> unaryCallImplementation(
  * Performs a server side stream call and returns a [Flow] that emits whenever we receive a new message from the server.
  * Uses [GRPCCall2] for the actual call.
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 fun <REQ : Message, RES : Message> serverSideStreamingCallImplementation(
     channel: Channel,
     callOptions: GRPCCallOptions,
@@ -109,7 +113,7 @@ fun <REQ : Message, RES : Message> serverSideStreamingCallImplementation(
         methodType = MethodDescriptor.MethodType.SERVER_STREAMING
     )
 
-    return callbackFlow {
+    val responseFlow = callbackFlow {
         val handler = StreamingCallHandler(
             onReceive = { data ->
                 val msg = responseDeserializer.deserialize(data as NSData)
@@ -151,6 +155,11 @@ fun <REQ : Message, RES : Message> serverSideStreamingCallImplementation(
             call.cancel()
         }
     }
+
+    return serverSideStreamingCallBaseImplementation(
+        channel = channel,
+        responseFlow = responseFlow
+    )
 }
 
 private fun <REQ : Message, RESP : Message> injectCallInterceptor(

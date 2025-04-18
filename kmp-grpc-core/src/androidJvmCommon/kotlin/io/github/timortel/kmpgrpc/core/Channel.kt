@@ -1,14 +1,13 @@
 package io.github.timortel.kmpgrpc.core
 
 import io.github.timortel.kmpgrpc.core.internal.ClientInterceptorImpl
-import io.grpc.Channel
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
 
 /**
  * The Jvm [Channel] wraps the grpc [ManagedChannel] and delegates its operations to the wrapped native channel.
  */
-actual class Channel private constructor(val channel: Channel) {
+actual class Channel private constructor(val channel: ManagedChannel) {
     actual class Builder(private val impl: ManagedChannelBuilder<*>) {
 
         actual companion object {
@@ -30,6 +29,14 @@ actual class Channel private constructor(val channel: Channel) {
             impl.usePlaintext()
         }
 
-        actual fun build(): io.github.timortel.kmpgrpc.core.Channel = Channel(impl.build())
+        actual fun build(): Channel = Channel(impl.build())
+    }
+
+    actual fun shutdown() {
+        channel.shutdown()
+    }
+
+    actual fun shutdownNow() {
+        channel.shutdownNow()
     }
 }

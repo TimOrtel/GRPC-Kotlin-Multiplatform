@@ -55,9 +55,8 @@ internal class StreamCallInterceptorWrapper(override val impl: CallInterceptor) 
             return this
         }
 
-        override fun cancel(): ClientReadableStream {
+        override fun cancel() {
             streamImpl.cancel()
-            return this
         }
     }
 }

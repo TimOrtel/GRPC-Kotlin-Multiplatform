@@ -14,7 +14,7 @@ actual class Channel private constructor(
      * The interceptor associated with this channel, or null.
      */
     val interceptor: CallInterceptor? = null
-) {
+) : IosJsChannel() {
 
     fun buildRequestOptions(path: String) = GRPCRequestOptions("$name:$port", path, safety = GRPCCallSafetyDefault)
 

@@ -69,15 +69,13 @@ object JsProtoServiceWriter : ActualProtoServiceWriter() {
                         .add(")")
                         .build()
 
-                    add("return·")
-
                     val rpcImplMember = if (rpc.isReceivingStream) {
                         serverStreamingCallImpl
                     } else {
                         unaryCallImpl
                     }
 
-                    add("%M(this.%N + metadata)·{·jsMetadata·->\n", rpcImplMember, Const.Service.CALL_OPTIONS_PROPERTY_NAME)
+                    add("return·%M(channel, this.%N + metadata)·{·jsMetadata·->\n", rpcImplMember, Const.Service.CALL_OPTIONS_PROPERTY_NAME)
 
                     indent()
                     add(clientCallCode)
