@@ -9,7 +9,7 @@ val kmChannel = ClassName(PACKAGE_BASE, "KMChannel")
 val kmTimeUnit = ClassName(PACKAGE_UTIL, "TimeUnit")
 
 val MessageDeserializer = ClassName(PACKAGE_MESSAGE, "MessageDeserializer")
-val MessageCompanion = ClassName(PACKAGE_MESSAGE, "KMMessageCompanion")
+val MessageCompanion = ClassName(PACKAGE_MESSAGE, "MessageCompanion")
 
 val kmMessage = ClassName(PACKAGE_MESSAGE, "Message")
 val kmEnum = ClassName(PACKAGE_MESSAGE, "Enum")

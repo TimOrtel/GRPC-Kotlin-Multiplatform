@@ -3,7 +3,7 @@ package io.github.timortel.kmpgrpc.wkt.ext
 import com.google.protobuf.Any
 import com.google.protobuf.any
 import io.github.timortel.kmpgrpc.core.message.Message
-import io.github.timortel.kmpgrpc.core.message.KMMessageCompanion
+import io.github.timortel.kmpgrpc.core.message.MessageCompanion
 import io.github.timortel.kmpgrpc.core.message.MessageDeserializer
 
 private const val DEFAULT_TYPE_URL_PREFIX = "type.googleapis.com"
@@ -31,17 +31,17 @@ inline fun <T : Message, DES : MessageDeserializer<T>> Any.unwrap(deserializer: 
  * @param message the companion object of [T]
  * @return if the type held by this object matches [T]
  */
-fun <T : Message> Any.isType(message: KMMessageCompanion<T>, typeUrlPrefix: String): Boolean {
+fun <T : Message> Any.isType(message: MessageCompanion<T>, typeUrlPrefix: String): Boolean {
     return type_url == getTypeUrl(message.fullName, typeUrlPrefix)
 }
 
 /**
- * Checks if the [Any.type_url] matches [T] by checking against the [KMMessageCompanion.fullName].
+ * Checks if the [Any.type_url] matches [T] by checking against the [MessageCompanion.fullName].
  *
  * @param message the companion object of [T]
  * @return if the type held by this object matches [T]
  */
-fun <T : Message> Any.isType(message: KMMessageCompanion<T>): Boolean {
+fun <T : Message> Any.isType(message: MessageCompanion<T>): Boolean {
     return type_url.substringAfterLast('/') == message.fullName
 }
 
