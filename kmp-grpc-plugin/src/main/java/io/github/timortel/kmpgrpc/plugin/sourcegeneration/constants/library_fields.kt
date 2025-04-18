@@ -4,7 +4,7 @@ import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.MemberName
 
 val kmMetadata = ClassName(PACKAGE_BASE, "Metadata")
-val kmStub = ClassName(PACKAGE_STUB, "KMStub")
+val kmStub = ClassName(PACKAGE_STUB, "Stub")
 val kmChannel = ClassName(PACKAGE_BASE, "Channel")
 val kmTimeUnit = ClassName(PACKAGE_UTIL, "TimeUnit")
 

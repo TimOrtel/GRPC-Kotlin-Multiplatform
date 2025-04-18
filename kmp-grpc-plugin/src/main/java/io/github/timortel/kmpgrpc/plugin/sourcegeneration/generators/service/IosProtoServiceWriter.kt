@@ -17,6 +17,8 @@ object IosProtoServiceWriter : ActualProtoServiceWriter() {
     override val createEmptyCallOptionsCode: CodeBlock =
         CodeBlock.of("%T()", GRPC_MUTABLE_CALL_OPTIONS)
 
+    private val iosStub = ClassName(PACKAGE_STUB, "IosStub")
+
     override fun applyToClass(
         builder: TypeSpec.Builder,
         service: ProtoService
@@ -64,11 +66,6 @@ object IosProtoServiceWriter : ActualProtoServiceWriter() {
         service: ProtoService
     ) {
         builder.superclass(kmStub.parameterizedBy(service.className))
-        builder.addSuperinterface(
-            ClassName(
-                PACKAGE_STUB,
-                "IOSKMStub"
-            ).parameterizedBy(service.className)
-        )
+        builder.addSuperinterface(iosStub.parameterizedBy(service.className))
     }
 }

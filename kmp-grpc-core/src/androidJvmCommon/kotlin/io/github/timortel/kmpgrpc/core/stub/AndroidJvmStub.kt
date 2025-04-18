@@ -8,7 +8,7 @@ import io.grpc.CallOptions
 /**
  * The Android and Jvm stub type.
  */
-interface AndroidJvmKMStub<S : KMStub<S>> {
+interface AndroidJvmStub<S : Stub<S>> {
 
     val channel: Channel
     val callOptions: CallOptions

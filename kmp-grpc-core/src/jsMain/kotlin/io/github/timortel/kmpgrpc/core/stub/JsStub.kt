@@ -4,7 +4,7 @@ import io.github.timortel.kmpgrpc.core.Channel
 import io.github.timortel.kmpgrpc.core.Metadata
 import io.github.timortel.kmpgrpc.core.util.TimeUnit
 
-interface JsStub<S : KMStub<S>> {
+interface JsStub<S : Stub<S>> {
 
     val channel: Channel
     val callOptions: Metadata

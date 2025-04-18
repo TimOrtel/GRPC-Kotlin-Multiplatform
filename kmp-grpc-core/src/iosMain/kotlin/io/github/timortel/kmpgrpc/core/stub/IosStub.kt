@@ -7,9 +7,9 @@ import io.github.timortel.kmpgrpc.core.Metadata
 import io.github.timortel.kmpgrpc.core.util.TimeUnit
 
 /**
- * Ios [KMStub] wrapper.
+ * Ios [Stub] wrapper.
  */
-interface IOSKMStub<S : KMStub<S>> {
+interface IosStub<S : Stub<S>> {
 
     /**
      * The [Channel] of this stub.
