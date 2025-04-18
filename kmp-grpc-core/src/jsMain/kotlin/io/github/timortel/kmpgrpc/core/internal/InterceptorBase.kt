@@ -1,9 +1,9 @@
 package io.github.timortel.kmpgrpc.core.internal
 
 import io.github.timortel.kmpgrpc.core.CallInterceptor
-import io.github.timortel.kmpgrpc.core.KMMethodDescriptor
+import io.github.timortel.kmpgrpc.core.MethodDescriptor
 import io.github.timortel.kmpgrpc.core.Metadata
-import io.github.timortel.kmpgrpc.core.external.MethodDescriptor
+import io.github.timortel.kmpgrpc.core.external.MethodDescriptor as JsMethodDescriptor
 import io.github.timortel.kmpgrpc.core.external.Request
 import io.github.timortel.kmpgrpc.core.external.UnaryResponse
 import io.github.timortel.kmpgrpc.core.jsMetadata
@@ -46,16 +46,16 @@ internal interface InterceptorBase {
         } else responseMessage
     }
 
-    fun getMethodDescriptor(request: Request): KMMethodDescriptor {
+    fun getMethodDescriptor(request: Request): MethodDescriptor {
         return getMethodDescriptor(request.getMethodDescriptor())
     }
 
-    fun <RESP> getMethodDescriptor(response: UnaryResponse<RESP>): KMMethodDescriptor {
+    fun <RESP> getMethodDescriptor(response: UnaryResponse<RESP>): MethodDescriptor {
         return getMethodDescriptor(response.getMethodDescriptor())
     }
 
-    private fun getMethodDescriptor(methodDescriptor: MethodDescriptor): KMMethodDescriptor {
-        return KMMethodDescriptor(
+    private fun getMethodDescriptor(methodDescriptor: JsMethodDescriptor): MethodDescriptor {
+        return MethodDescriptor(
             fullMethodName = methodDescriptor.getName(),
             methodType = methodDescriptor.methodType.kmMethodType
         )

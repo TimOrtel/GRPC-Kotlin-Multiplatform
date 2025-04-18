@@ -34,9 +34,9 @@ suspend fun <REQ : Message, RES : Message> unaryCallImplementation(
     requestDeserializer: MessageDeserializer<REQ>,
     responseDeserializer: MessageDeserializer<RES>
 ): RES {
-    val methodDescriptor = KMMethodDescriptor(
+    val methodDescriptor = MethodDescriptor(
         fullMethodName = path,
-        methodType = KMMethodDescriptor.MethodType.UNARY
+        methodType = MethodDescriptor.MethodType.UNARY
     )
 
     return suspendCancellableCoroutine { continuation ->
@@ -104,9 +104,9 @@ fun <REQ : Message, RES : Message> serverSideStreamingCallImplementation(
     requestDeserializer: MessageDeserializer<REQ>,
     responseDeserializer: MessageDeserializer<RES>
 ): Flow<RES> {
-    val methodDescriptor = KMMethodDescriptor(
+    val methodDescriptor = MethodDescriptor(
         fullMethodName = path,
-        methodType = KMMethodDescriptor.MethodType.SERVER_STREAMING
+        methodType = MethodDescriptor.MethodType.SERVER_STREAMING
     )
 
     return callbackFlow {
@@ -156,7 +156,7 @@ fun <REQ : Message, RES : Message> serverSideStreamingCallImplementation(
 private fun <REQ : Message, RESP : Message> injectCallInterceptor(
     callOptions: GRPCCallOptions,
     interceptor: CallInterceptor?,
-    methodDescriptor: KMMethodDescriptor,
+    methodDescriptor: MethodDescriptor,
     requestDeserializer: MessageDeserializer<REQ>,
     responseDeserializer: MessageDeserializer<RESP>
 ): GRPCCallOptions {
@@ -179,7 +179,7 @@ private fun <REQ : Message, RESP : Message> injectCallInterceptor(
 }
 
 private class InterceptorFactory<REQ : Message, RES : Message>(
-    private val methodDescriptor: KMMethodDescriptor,
+    private val methodDescriptor: MethodDescriptor,
     private val interceptor: CallInterceptor,
     private val requestDeserializer: MessageDeserializer<REQ>,
     private val responseDeserializer: MessageDeserializer<RES>

@@ -17,7 +17,7 @@ internal class StreamCallInterceptorWrapper(override val impl: CallInterceptor) 
 
     private inner class Interceptor(
         private val streamImpl: ClientReadableStream,
-        private val methodDescriptor: KMMethodDescriptor,
+        private val methodDescriptor: MethodDescriptor,
     ) : ClientReadableStream {
 
         override fun on(eventType: String, callback: (dynamic) -> Unit): ClientReadableStream {

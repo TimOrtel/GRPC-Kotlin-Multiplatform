@@ -2,7 +2,7 @@ package io.github.timortel.kmpgrpc.core.internal
 
 import io.github.timortel.kmpgrpc.core.CallInterceptor
 import io.github.timortel.kmpgrpc.core.Metadata
-import io.github.timortel.kmpgrpc.core.KMMethodDescriptor
+import io.github.timortel.kmpgrpc.core.MethodDescriptor
 import io.github.timortel.kmpgrpc.core.Status
 import io.github.timortel.kmpgrpc.core.message.Message
 
@@ -14,7 +14,7 @@ internal class CallInterceptorChain(
     private val callInterceptors: List<CallInterceptor>
 ) : CallInterceptor {
 
-    override fun onStart(methodDescriptor: KMMethodDescriptor, metadata: Metadata): Metadata {
+    override fun onStart(methodDescriptor: MethodDescriptor, metadata: Metadata): Metadata {
         return callInterceptors.foldRight(metadata) { interceptor, currentMetadata ->
             interceptor.onStart(
                 methodDescriptor,
@@ -23,7 +23,7 @@ internal class CallInterceptorChain(
         }
     }
 
-    override fun <T : Message> onSendMessage(methodDescriptor: KMMethodDescriptor, message: T): T {
+    override fun <T : Message> onSendMessage(methodDescriptor: MethodDescriptor, message: T): T {
         return callInterceptors.foldRight(message) { interceptor, currentMessage ->
             interceptor.onSendMessage(
                 methodDescriptor,
@@ -32,7 +32,7 @@ internal class CallInterceptorChain(
         }
     }
 
-    override fun onReceiveHeaders(methodDescriptor: KMMethodDescriptor, metadata: Metadata): Metadata {
+    override fun onReceiveHeaders(methodDescriptor: MethodDescriptor, metadata: Metadata): Metadata {
         return callInterceptors.fold(metadata) { currentMetadata, interceptor ->
             interceptor.onReceiveHeaders(
                 methodDescriptor,
@@ -41,7 +41,7 @@ internal class CallInterceptorChain(
         }
     }
 
-    override fun <T : Message> onReceiveMessage(methodDescriptor: KMMethodDescriptor, message: T): T {
+    override fun <T : Message> onReceiveMessage(methodDescriptor: MethodDescriptor, message: T): T {
         return callInterceptors.fold(message) { currentMessage, interceptor ->
             interceptor.onReceiveMessage(
                 methodDescriptor,
@@ -51,7 +51,7 @@ internal class CallInterceptorChain(
     }
 
     override fun onClose(
-        methodDescriptor: KMMethodDescriptor,
+        methodDescriptor: MethodDescriptor,
         status: Status,
         metadata: Metadata
     ): Pair<Status, Metadata> {

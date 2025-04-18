@@ -14,7 +14,7 @@ private const val ERROR_DOMAIN = "io.grpc"
 
 internal class CallInterceptorWrapper<REQ : Message, RESP : Message>(
     private val interceptor: CallInterceptor,
-    private val methodDescriptor: KMMethodDescriptor,
+    private val methodDescriptor: MethodDescriptor,
     private val requestDeserializer: MessageDeserializer<REQ>,
     private val responseDeserializer: MessageDeserializer<RESP>,
     val interceptorManager: GRPCInterceptorManager,

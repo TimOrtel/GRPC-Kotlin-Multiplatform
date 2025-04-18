@@ -13,11 +13,11 @@ internal val Metadata.jsMetadata: JsMetadata
         *entries.map { (key, value) -> key to value }.toTypedArray()
     ).unsafeCast<JsMetadata>()
 
-internal val String.kmMethodType: KMMethodDescriptor.MethodType
+internal val String.kmMethodType: MethodDescriptor.MethodType
     get() = when (this) {
-        MethodType.UNARY -> KMMethodDescriptor.MethodType.UNARY
-        MethodType.SERVER_STREAMING -> KMMethodDescriptor.MethodType.SERVER_STREAMING
-        MethodType.BIDI_STREAMING -> KMMethodDescriptor.MethodType.BIDI_STREAMING
+        MethodType.UNARY -> MethodDescriptor.MethodType.UNARY
+        MethodType.SERVER_STREAMING -> MethodDescriptor.MethodType.SERVER_STREAMING
+        MethodType.BIDI_STREAMING -> MethodDescriptor.MethodType.BIDI_STREAMING
         else -> throw IllegalArgumentException("Unknown method type $this")
     }
 

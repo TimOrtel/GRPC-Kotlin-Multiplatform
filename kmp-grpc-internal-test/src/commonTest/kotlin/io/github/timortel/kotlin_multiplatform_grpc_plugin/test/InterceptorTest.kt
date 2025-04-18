@@ -18,13 +18,13 @@ abstract class InterceptorTest {
     abstract val isJavaScript: Boolean
 
     private val basicInterceptor = object : CallInterceptor {
-        override fun <T : Message> onReceiveMessage(methodDescriptor: KMMethodDescriptor, message: T): T {
+        override fun <T : Message> onReceiveMessage(methodDescriptor: MethodDescriptor, message: T): T {
             assertIs<InterceptorMessage>(message)
             @Suppress("UNCHECKED_CAST")
             return message.copy(a = message.a + 1) as T
         }
 
-        override fun <T : Message> onSendMessage(methodDescriptor: KMMethodDescriptor, message: T): T {
+        override fun <T : Message> onSendMessage(methodDescriptor: MethodDescriptor, message: T): T {
             assertIs<InterceptorMessage>(message)
             @Suppress("UNCHECKED_CAST")
             return message.copy(a = message.a + 1) as T
@@ -34,7 +34,7 @@ abstract class InterceptorTest {
     // Reverse order on sending events
 
     private val sendInterceptor1 = object : CallInterceptor {
-        override fun <T : Message> onSendMessage(methodDescriptor: KMMethodDescriptor, message: T): T {
+        override fun <T : Message> onSendMessage(methodDescriptor: MethodDescriptor, message: T): T {
             assertIs<InterceptorMessage>(message)
             @Suppress("UNCHECKED_CAST")
             return message.copy(a = message.a + 1) as T
@@ -42,7 +42,7 @@ abstract class InterceptorTest {
     }
 
     private val sendInterceptor2 = object : CallInterceptor {
-        override fun <T : Message> onSendMessage(methodDescriptor: KMMethodDescriptor, message: T): T {
+        override fun <T : Message> onSendMessage(methodDescriptor: MethodDescriptor, message: T): T {
             assertIs<InterceptorMessage>(message)
             @Suppress("UNCHECKED_CAST")
             return message.copy(a = message.a * 5) as T
@@ -52,7 +52,7 @@ abstract class InterceptorTest {
     // Normal order on receiving events
 
     private val receiveInterceptor1 = object : CallInterceptor {
-        override fun <T : Message> onReceiveMessage(methodDescriptor: KMMethodDescriptor, message: T): T {
+        override fun <T : Message> onReceiveMessage(methodDescriptor: MethodDescriptor, message: T): T {
             assertIs<InterceptorMessage>(message)
             @Suppress("UNCHECKED_CAST")
             return message.copy(a = message.a * 5) as T
@@ -60,7 +60,7 @@ abstract class InterceptorTest {
     }
 
     private val receiveInterceptor2 = object : CallInterceptor {
-        override fun <T : Message> onReceiveMessage(methodDescriptor: KMMethodDescriptor, message: T): T {
+        override fun <T : Message> onReceiveMessage(methodDescriptor: MethodDescriptor, message: T): T {
             assertIs<InterceptorMessage>(message)
             @Suppress("UNCHECKED_CAST")
             return message.copy(a = message.a + 1) as T
@@ -155,7 +155,7 @@ abstract class InterceptorTest {
         val value = "test-value"
 
         val interceptor = object : CallInterceptor {
-            override fun onStart(methodDescriptor: KMMethodDescriptor, metadata: Metadata): Metadata {
+            override fun onStart(methodDescriptor: MethodDescriptor, metadata: Metadata): Metadata {
                 return super.onStart(methodDescriptor, metadata.withEntry(key, value))
             }
         }
@@ -179,7 +179,7 @@ abstract class InterceptorTest {
 
         val interceptor = object : CallInterceptor {
             override fun onClose(
-                methodDescriptor: KMMethodDescriptor,
+                methodDescriptor: MethodDescriptor,
                 status: Status,
                 metadata: Metadata
             ): Pair<Status, Metadata> {
@@ -215,14 +215,14 @@ abstract class InterceptorTest {
 
         var lifecycleStatus: InterceptorLifecycleStatus = InterceptorLifecycleStatus.INIT
 
-        override fun onStart(methodDescriptor: KMMethodDescriptor, metadata: Metadata): Metadata {
+        override fun onStart(methodDescriptor: MethodDescriptor, metadata: Metadata): Metadata {
             if (lifecycleStatus == InterceptorLifecycleStatus.INIT) lifecycleStatus = InterceptorLifecycleStatus.STARTED
             else throw IllegalStateException()
 
             return super.onStart(methodDescriptor, metadata)
         }
 
-        override fun <T : Message> onSendMessage(methodDescriptor: KMMethodDescriptor, message: T): T {
+        override fun <T : Message> onSendMessage(methodDescriptor: MethodDescriptor, message: T): T {
             if (lifecycleStatus == InterceptorLifecycleStatus.STARTED) lifecycleStatus =
                 InterceptorLifecycleStatus.SENT_MESSAGE
             else throw IllegalStateException()
@@ -230,7 +230,7 @@ abstract class InterceptorTest {
             return super.onSendMessage(methodDescriptor, message)
         }
 
-        override fun onReceiveHeaders(methodDescriptor: KMMethodDescriptor, metadata: Metadata): Metadata {
+        override fun onReceiveHeaders(methodDescriptor: MethodDescriptor, metadata: Metadata): Metadata {
             if (lifecycleStatus == InterceptorLifecycleStatus.SENT_MESSAGE) lifecycleStatus =
                 InterceptorLifecycleStatus.RECEIVED_HEADERS
             else throw IllegalStateException()
@@ -238,7 +238,7 @@ abstract class InterceptorTest {
             return super.onReceiveHeaders(methodDescriptor, metadata)
         }
 
-        override fun <T : Message> onReceiveMessage(methodDescriptor: KMMethodDescriptor, message: T): T {
+        override fun <T : Message> onReceiveMessage(methodDescriptor: MethodDescriptor, message: T): T {
             when {
                 isJs && isStream && lifecycleStatus == InterceptorLifecycleStatus.SENT_MESSAGE -> {
                     lifecycleStatus = InterceptorLifecycleStatus.RECEIVED_MESSAGE
@@ -257,7 +257,7 @@ abstract class InterceptorTest {
         }
 
         override fun onClose(
-            methodDescriptor: KMMethodDescriptor,
+            methodDescriptor: MethodDescriptor,
             status: Status,
             metadata: Metadata
         ): Pair<Status, Metadata> {
