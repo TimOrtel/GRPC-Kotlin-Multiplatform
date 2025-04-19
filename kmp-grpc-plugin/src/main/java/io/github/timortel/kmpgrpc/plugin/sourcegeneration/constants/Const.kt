@@ -26,6 +26,7 @@ object Const {
 
         object RpcCall {
             const val PARAM_REQUEST = "request"
+            const val PARAM_REQUESTS = "requests"
             const val PARAM_METADATA = "metadata"
         }
     }

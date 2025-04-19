@@ -7,6 +7,9 @@ import io.grpc.protobuf.services.ProtoReflectionServiceV1
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.last
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.toList
 import kotlin.time.Duration.Companion.seconds
 
 
@@ -59,6 +62,16 @@ object TestServer {
                             emit(request)
                         }
                     }
+
+                    override suspend fun simpleClientStreamingRpc(requests: Flow<SimpleMessage>): SimpleMessage {
+                        val responseContent = requests.toList().joinToString(separator = "") { it.field1 }
+
+                        return simpleMessage { field1 = responseContent }
+                    }
+
+                    override fun bidiStreamingRpc(requests: Flow<SimpleMessage>): Flow<SimpleMessage> {
+                        return requests
+                    }
                 }
             )
             .addService(
@@ -81,15 +94,24 @@ object TestServer {
                 object : CancellationServiceGrpcKt.CancellationServiceCoroutineImplBase() {
                     override suspend fun respondAfter10Sec(request: CancellationMessage): CancellationResponse {
                         delay(10.seconds)
-                        return cancellationResponse {  }
+                        return cancellationResponse { }
                     }
 
                     override fun respondImmediatelyAndAfter10Sec(request: CancellationMessage): Flow<CancellationResponse> {
                         return flow {
-                            emit(cancellationResponse {  })
+                            emit(cancellationResponse { })
                             delay(10.seconds)
-                            emit(cancellationResponse {  })
+                            emit(cancellationResponse { })
                         }
+                    }
+
+                    override suspend fun respondAfter10SecClientStreaming(requests: Flow<CancellationMessage>): CancellationResponse {
+                        delay(10.seconds)
+                        return cancellationResponse { }
+                    }
+
+                    override fun pingPong(requests: Flow<CancellationMessage>): Flow<CancellationResponse> {
+                        return requests.map { cancellationResponse {  } }
                     }
                 }
             )
@@ -113,6 +135,14 @@ object TestServer {
                         return metadataMessage {
                             this.metadata.putAll(metadata)
                         }
+                    }
+
+                    override suspend fun clientStream(requests: Flow<InterceptorMessage>): InterceptorMessage {
+                        return requests.last()
+                    }
+
+                    override fun bidiStream(requests: Flow<InterceptorMessage>): Flow<InterceptorMessage> {
+                        return requests
                     }
                 }
             )

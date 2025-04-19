@@ -12,4 +12,8 @@ service CancellationService {
   rpc respondAfter10Sec(CancellationMessage) returns (CancellationResponse);
 
   rpc respondImmediatelyAndAfter10Sec(CancellationMessage) returns (stream CancellationResponse);
+
+  rpc respondAfter10SecClientStreaming (stream CancellationMessage) returns (CancellationResponse);
+
+  rpc pingPong (stream CancellationMessage) returns (stream CancellationResponse);
 }

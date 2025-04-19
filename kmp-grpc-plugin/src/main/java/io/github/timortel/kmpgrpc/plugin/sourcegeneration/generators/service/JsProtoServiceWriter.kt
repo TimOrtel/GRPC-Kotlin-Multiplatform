@@ -13,7 +13,7 @@ object JsProtoServiceWriter : ActualProtoServiceWriter() {
 
     override val callOptionsType: TypeName = kmMetadata
     override val createEmptyCallOptionsCode: CodeBlock = CodeBlock.of("%T.empty()", kmMetadata)
-
+    
     private val grpcWebClientBase =
         ClassName(PACKAGE_EXTERNAL, "GrpcWebClientBase")
     private val methodDescriptor =
@@ -58,6 +58,16 @@ object JsProtoServiceWriter : ActualProtoServiceWriter() {
         builder: FunSpec.Builder,
         rpc: ProtoRpc
     ) {
+        if (rpc.isSendingStream) {
+            builder.addCode(
+                "throw %T(%S)",
+                NotImplementedError::class.asTypeName(),
+                "Client side streaming RPCs are not supported for JavaScript targets."
+            )
+
+            return
+        }
+
         builder.addCode(
             CodeBlock.builder()
                 .apply {
@@ -75,7 +85,11 @@ object JsProtoServiceWriter : ActualProtoServiceWriter() {
                         unaryCallImpl
                     }
 
-                    add("return·%M(channel, this.%N + metadata)·{·jsMetadata·->\n", rpcImplMember, Const.Service.CALL_OPTIONS_PROPERTY_NAME)
+                    add(
+                        "return·%M(channel, this.%N + metadata)·{·jsMetadata·->\n",
+                        rpcImplMember,
+                        Const.Service.CALL_OPTIONS_PROPERTY_NAME
+                    )
 
                     indent()
                     add(clientCallCode)

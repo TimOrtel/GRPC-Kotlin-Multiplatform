@@ -30,7 +30,7 @@ suspend fun <JS_RESPONSE> unaryCallImplementation(
     metadata: Metadata,
     performCall: (metadata: JsMetadata) -> Promise<JS_RESPONSE>
 ): JS_RESPONSE {
-    return unaryCallBaseImplementation(channel) {
+    return unaryResponseCallBaseImplementation(channel) {
         try {
             performCall(metadata.jsMetadata).await()
         } catch (e: RpcError) {
@@ -94,7 +94,7 @@ fun <JS_RESPONSE> serverSideStreamingCallImplementation(
         // Catch a weird bug that occurs when calling close()
         .catch { if (it !is ClassCastException) throw it }
 
-    return serverSideStreamingCallBaseImplementation(
+    return streamingResponseCallBaseImplementation(
         channel = channel,
         responseFlow = responseFlow
     )

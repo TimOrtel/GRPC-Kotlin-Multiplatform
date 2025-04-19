@@ -13,10 +13,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
 
 /**
- * Executes a unary gRPC call operation while handling channel shutdowns.
+ * Executes a gRPC call with a non-streaming response while handling channel shutdowns.
  */
 @Throws(StatusException::class, CancellationException::class)
-internal suspend fun <RESP> unaryCallBaseImplementation(
+internal suspend fun <RESP> unaryResponseCallBaseImplementation(
     channel: IosJsChannel,
     performCall: suspend () -> RESP
 ): RESP {
@@ -36,7 +36,7 @@ internal suspend fun <RESP> unaryCallBaseImplementation(
         select {
             waitForCancellationJob.onJoin {
                 responseDeferred.cancel("Cancelled due to channel shutdown")
-                throw StatusException.UnavailableDueToShutdown
+                throw StatusException.CancelledDueToShutdown
             }
 
             responseDeferred.onAwait { result ->
@@ -51,7 +51,7 @@ internal suspend fun <RESP> unaryCallBaseImplementation(
  * The flow throws [StatusException] with code [io.github.timortel.kmpgrpc.core.Code.UNAVAILABLE] on closed channels.
  * @return a flow that executes a server side streaming gRPC call operation while handling channel shutdowns.
  */
-internal fun <RESP> serverSideStreamingCallBaseImplementation(
+internal fun <RESP> streamingResponseCallBaseImplementation(
     channel: IosJsChannel,
     responseFlow: Flow<RESP>
 ): Flow<RESP> {
@@ -74,7 +74,7 @@ internal fun <RESP> serverSideStreamingCallBaseImplementation(
             awaitShutdownJob.onJoin {
                 emitJob.cancel()
 
-                throw StatusException.UnavailableDueToShutdown
+                throw StatusException.CancelledDueToShutdown
             }
         }
     }

@@ -6,7 +6,7 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.*
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.service.ProtoRpc
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.service.ProtoService
 
-object JvmProtoServiceWriter : ActualProtoServiceWriter() {
+object JvmProtoServiceWriter : IosJvmProtoServiceWriter() {
 
     override val channelConstructorModifiers: List<KModifier> = listOf(KModifier.ACTUAL)
     override val primaryConstructorModifiers: List<KModifier> = listOf(KModifier.PRIVATE, KModifier.ACTUAL)
@@ -15,8 +15,10 @@ object JvmProtoServiceWriter : ActualProtoServiceWriter() {
     private val METHOD_TYPE = METHOD_DESCRIPTOR.nestedClass("MethodType")
     private val PROTO_LITE_UTILS = ClassName("io.grpc.protobuf.lite", "ProtoLiteUtils")
 
-    private val unaryRpc = MemberName(PACKAGE_RPC, "unaryRpc")
-    private val serverStreamingRpc = MemberName(PACKAGE_RPC, "serverStreamingRpc")
+    override val unaryCallMemberName: MemberName = MemberName(PACKAGE_RPC, "unaryRpc")
+    override val clientStreamingCallMemberName: MemberName = MemberName(PACKAGE_RPC, "clientStreamingRpc")
+    override val serverStreamingCallMemberName: MemberName = MemberName(PACKAGE_RPC, "serverStreamingRpc")
+    override val bidiStreamingCallMemberName: MemberName = MemberName(PACKAGE_RPC, "bidiStreamingRpc")
 
     override val callOptionsType: TypeName = ClassName("io.grpc", "CallOptions")
     override val createEmptyCallOptionsCode: CodeBlock = CodeBlock.of("%T.DEFAULT", callOptionsType)
@@ -51,12 +53,6 @@ object JvmProtoServiceWriter : ActualProtoServiceWriter() {
                                     )
                                     .initializer(
                                         CodeBlock.builder().apply {
-                                            val methodType = if (rpc.isReceivingStream) {
-                                                "SERVER_STREAMING"
-                                            } else {
-                                                "UNARY"
-                                            }
-
                                             val fullMethodName =
                                                 "${service.file.`package`.orEmpty()}.${service.name}/${rpc.name}"
 
@@ -66,7 +62,7 @@ object JvmProtoServiceWriter : ActualProtoServiceWriter() {
                                                 rpc.sendType.resolve(),
                                                 rpc.returnType.resolve()
                                             )
-                                            add(".setType(%T.%N)", METHOD_TYPE, methodType)
+                                            add(".setType(%T.%N)", METHOD_TYPE, rpc.methodType.jvmMethodType)
                                             add(".setFullMethodName(%S)", fullMethodName)
                                             add(".setSampledToLocalTracing(true)")
                                             add(
@@ -93,21 +89,17 @@ object JvmProtoServiceWriter : ActualProtoServiceWriter() {
 
     override fun applyToRpcFunction(
         builder: FunSpec.Builder,
-        rpc: ProtoRpc
+        rpc: ProtoRpc,
+        rpcImplementation: MemberName,
+        requestParamName: String
     ) {
         builder.apply {
-            val memberName = if(rpc.isReceivingStream) {
-                serverStreamingRpc
-            } else {
-                unaryRpc
-            }
-
-            addCode("return %M(", memberName)
+            addCode("return %M(", rpcImplementation)
             addCode("channel = %N,", Const.Service.CHANNEL_PROPERTY_NAME)
             addCode("callOptions = %N,", Const.Service.CALL_OPTIONS_PROPERTY_NAME)
             addCode("method = %N,", rpc.jvmMethodDescriptorName)
             addCode("headers = metadata,")
-            addCode("request = %N", Const.Service.RpcCall.PARAM_REQUEST)
+            addCode("%N = %N", requestParamName, requestParamName)
             addCode(")")
         }
     }

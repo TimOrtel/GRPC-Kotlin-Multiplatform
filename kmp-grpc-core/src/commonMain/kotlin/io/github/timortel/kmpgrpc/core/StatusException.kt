@@ -19,5 +19,10 @@ class StatusException internal constructor(val status: Status, override val caus
             status = Status(code = Code.UNAVAILABLE, statusMessage = "The channel is shutdown."),
             cause = null
         )
+
+        val CancelledDueToShutdown = StatusException(
+            status = Status(code = Code.CANCELLED, statusMessage = "Call was cancelled due to channel shutdown."),
+            cause = null
+        )
     }
 }
