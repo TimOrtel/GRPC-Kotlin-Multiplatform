@@ -4,8 +4,10 @@ import io.github.timortel.kmpgrpc.test.*
 import io.grpc.*
 import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder
 import io.grpc.protobuf.services.ProtoReflectionServiceV1
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlin.time.Duration.Companion.seconds
 
 
 object TestServer {
@@ -72,6 +74,22 @@ object TestServer {
 
                     override suspend fun returnIdentically(request: Unknownfield.MessageWithUnknownField): Unknownfield.MessageWithUnknownField {
                         return request
+                    }
+                }
+            )
+            .addService(
+                object : CancellationServiceGrpcKt.CancellationServiceCoroutineImplBase() {
+                    override suspend fun respondAfter10Sec(request: CancellationMessage): CancellationResponse {
+                        delay(10.seconds)
+                        return cancellationResponse {  }
+                    }
+
+                    override fun respondImmediatelyAndAfter10Sec(request: CancellationMessage): Flow<CancellationResponse> {
+                        return flow {
+                            emit(cancellationResponse {  })
+                            delay(10.seconds)
+                            emit(cancellationResponse {  })
+                        }
                     }
                 }
             )

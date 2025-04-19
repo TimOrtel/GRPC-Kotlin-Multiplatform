@@ -29,4 +29,20 @@ expect class Channel {
          */
         fun build(): Channel
     }
+
+    /**
+     * Initiates an orderly shutdown of the gRPC channel. After this method is called, no new calls can be started
+     * using the channel. However, existing calls will continue until they are completed or canceled.
+     */
+    fun shutdown()
+
+    /**
+     * Initiates a forceful shutdown of the gRPC channel. After invoking this method, no new calls
+     * can be started, and ongoing calls are immediately canceled.
+     *
+     * This method is used to terminate the channel abruptly, without waiting for ongoing calls
+     * to complete gracefully. It should be used with caution, as it can interrupt active
+     * operations and cause incomplete responses.
+     */
+    fun shutdownNow()
 }

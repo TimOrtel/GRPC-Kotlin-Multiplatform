@@ -11,7 +11,7 @@ actual class Channel private constructor(
     private val port: Int,
     private val usePlainText: Boolean,
     val clientOptions: ClientOptions
-) {
+) : IosJsChannel() {
     @Suppress("HttpUrlsUsage")
     val connectionString = (if (usePlainText) "http://" else "https://") + "$name:$port"
 

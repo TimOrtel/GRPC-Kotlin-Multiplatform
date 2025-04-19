@@ -1,10 +1,12 @@
 package io.github.timortel.kmpgrpc.core.rpc
 
+import io.github.timortel.kmpgrpc.core.Channel
 import io.github.timortel.kmpgrpc.core.JsMetadata
 import io.github.timortel.kmpgrpc.core.Code
 import io.github.timortel.kmpgrpc.core.Status
 import io.github.timortel.kmpgrpc.core.StatusException
 import io.github.timortel.kmpgrpc.core.Metadata
+import io.github.timortel.kmpgrpc.core.external.ClientReadableStream
 import io.github.timortel.kmpgrpc.core.external.RpcError
 import io.github.timortel.kmpgrpc.core.jsMetadata
 import kotlinx.coroutines.await
@@ -24,21 +26,24 @@ import kotlin.js.Promise
  * @throws Exception if any other exception is caught during execution.
  */
 suspend fun <JS_RESPONSE> unaryCallImplementation(
+    channel: Channel,
     metadata: Metadata,
     performCall: (metadata: JsMetadata) -> Promise<JS_RESPONSE>
 ): JS_RESPONSE {
-    return try {
-        performCall(metadata.jsMetadata).await()
-    } catch (e: RpcError) {
-        throw StatusException(
-            status = Status(
-                code = Code.getCodeForValue(e.code.toInt()),
-                statusMessage = e.message
-            ),
-            cause = e
-        )
-    } catch (e: Exception) {
-        throw e
+    return unaryCallBaseImplementation(channel) {
+        try {
+            performCall(metadata.jsMetadata).await()
+        } catch (e: RpcError) {
+            throw StatusException(
+                status = Status(
+                    code = Code.getCodeForValue(e.code.toInt()),
+                    statusMessage = e.message
+                ),
+                cause = e
+            )
+        } catch (e: Exception) {
+            throw e
+        }
     }
 }
 
@@ -50,8 +55,12 @@ suspend fun <JS_RESPONSE> unaryCallImplementation(
  * @param performCall A lambda function that performs the backend call and returns a dynamic streaming object.
  * @return A [Flow] instance emitting responses of type JS_RESPONSE, or errors if the streaming call fails.
  */
-fun <JS_RESPONSE> serverSideStreamingCallImplementation(metadata: Metadata, performCall: (metadata: JsMetadata) -> dynamic): Flow<JS_RESPONSE> {
-    return callbackFlow {
+fun <JS_RESPONSE> serverSideStreamingCallImplementation(
+    channel: Channel,
+    metadata: Metadata,
+    performCall: (metadata: JsMetadata) -> ClientReadableStream
+): Flow<JS_RESPONSE> {
+    val responseFlow = callbackFlow {
         val stream = performCall(metadata.jsMetadata)
         stream.on("data") { data ->
             trySend(data as JS_RESPONSE)
@@ -79,9 +88,14 @@ fun <JS_RESPONSE> serverSideStreamingCallImplementation(metadata: Metadata, perf
         }
 
         awaitClose {
-            stream.cancel() as Unit
+            stream.cancel()
         }
     }
         // Catch a weird bug that occurs when calling close()
         .catch { if (it !is ClassCastException) throw it }
+
+    return serverSideStreamingCallBaseImplementation(
+        channel = channel,
+        responseFlow = responseFlow
+    )
 }

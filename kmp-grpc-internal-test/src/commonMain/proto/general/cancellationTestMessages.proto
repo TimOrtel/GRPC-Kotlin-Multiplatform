@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package io.github.timortel.kmpgrpc.test;
+
+option java_multiple_files = true;
+
+message CancellationMessage {}
+
+message CancellationResponse {}
+
+service CancellationService {
+  rpc respondAfter10Sec(CancellationMessage) returns (CancellationResponse);
+
+  rpc respondImmediatelyAndAfter10Sec(CancellationMessage) returns (stream CancellationResponse);
+}

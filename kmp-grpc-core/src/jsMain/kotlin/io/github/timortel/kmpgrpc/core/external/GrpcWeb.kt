@@ -109,7 +109,7 @@ external class Status {
 external interface ClientReadableStream {
     fun on(eventType: String, callback: (dynamic) -> Unit): ClientReadableStream
 
-    fun cancel(): ClientReadableStream
+    fun cancel()
 }
 
 external interface Metadata

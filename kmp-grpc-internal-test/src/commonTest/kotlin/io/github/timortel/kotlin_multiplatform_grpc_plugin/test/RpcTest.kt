@@ -1,14 +1,20 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.test
 
 import io.github.timortel.kmpgrpc.core.Channel
+import io.github.timortel.kmpgrpc.core.Code
 import io.github.timortel.kmpgrpc.core.Metadata
 import io.github.timortel.kmpgrpc.core.StatusException
 import io.github.timortel.kmpgrpc.core.message.UnknownField
 import io.github.timortel.kmpgrpc.test.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
@@ -166,5 +172,91 @@ abstract class RpcTest {
                 .simpleStreamingRpc(message)
                 .toList()
         }
+    }
+
+    @Test
+    fun testCannotStartUnaryRpcOnCancelledChannel() = runTest {
+        val message = cancellationMessage {}
+
+        val channel = channel
+        channel.shutdown()
+
+        assertFailsWithUnavailableStatus {
+            CancellationServiceStub(channel)
+                .respondAfter10Sec(message)
+        }
+    }
+
+    @Test
+    fun testCannotStartStreamingRpcOnCancelledChannel() = runTest {
+        val message = cancellationMessage {}
+
+        val channel = channel
+        channel.shutdown()
+
+        assertFailsWithUnavailableStatus {
+            CancellationServiceStub(channel)
+                .respondImmediatelyAndAfter10Sec(message)
+                .toList()
+        }
+    }
+
+    @Test
+    fun testUnaryRpcIsCancelledImmediatelyOnImmediateShutdown() = runTest {
+        val message = cancellationMessage {}
+
+        val channel = channel
+
+        coroutineScope {
+            launch {
+                withContext(Dispatchers.Default) {
+                    delay(1000)
+                }
+
+                channel.shutdownNow()
+            }
+
+            assertFailsWithUnavailableStatus {
+                CancellationServiceStub(channel)
+                    .respondAfter10Sec(message)
+            }
+        }
+    }
+
+    @Test
+    fun testStreamingRpcIsCancelledImmediatelyOnImmediateShutdown() = runTest {
+        val message = cancellationMessage {}
+
+        val channel = channel
+
+        coroutineScope {
+            launch {
+                withContext(Dispatchers.Default) {
+                    delay(1000)
+                }
+
+                channel.shutdownNow()
+            }
+
+            val receivedResponses = mutableListOf<CancellationResponse>()
+
+            assertFailsWithUnavailableStatus {
+                CancellationServiceStub(channel)
+                    .respondImmediatelyAndAfter10Sec(message)
+                    .collect { receivedResponses += it }
+            }
+
+            assertEquals(1, receivedResponses.size, "Expected to have received exactly 1 response.")
+        }
+    }
+
+    private inline fun assertFailsWithUnavailableStatus(block: () -> Unit) {
+        val exception = assertFailsWith<StatusException> { block() }
+
+        assertEquals(
+            Code.UNAVAILABLE,
+            exception.status.code,
+            "Expected to fail with UNAVAILABLE status. statusMessage=${exception.status.statusMessage}"
+        )
     }
 }
