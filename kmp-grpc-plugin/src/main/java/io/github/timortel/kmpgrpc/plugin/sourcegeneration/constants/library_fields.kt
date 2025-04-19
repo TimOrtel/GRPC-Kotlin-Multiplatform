@@ -24,7 +24,4 @@ val computeMessageSize = MemberName(PACKAGE_IO, "computeMessageSize")
 val CodedOutputStream = ClassName(PACKAGE_IO, "CodedOutputStream")
 val CodedInputStream = ClassName(PACKAGE_IO, "CodedInputStream")
 
-val iosUnaryCallImplementation = MemberName(PACKAGE_RPC, "unaryCallImplementation")
-val iosServerSideStreamingCallImplementation = MemberName(PACKAGE_RPC, "serverSideStreamingCallImplementation")
-
 val byteArrayListEquals = MemberName(PACKAGE_UTIL, "byteArrayListsEqual")

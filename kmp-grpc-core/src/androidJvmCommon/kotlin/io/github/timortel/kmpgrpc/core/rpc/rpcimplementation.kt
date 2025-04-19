@@ -50,6 +50,49 @@ fun <REQ, RESP> serverStreamingRpc(
         }
 }
 
+@Throws(StatusException::class)
+suspend fun <REQ, RESP> clientStreamingRpc(
+    channel: Channel,
+    method: MethodDescriptor<REQ, RESP>,
+    requests: Flow<REQ>,
+    callOptions: CallOptions,
+    headers: Metadata
+): RESP {
+    return try {
+        ClientCalls.clientStreamingRpc(
+            channel.channel,
+            method = method,
+            requests = requests,
+            callOptions = callOptions,
+            headers = headers.jvmMetadata
+        )
+    } catch (e: StatusException) {
+        throw e.statusException
+    }
+}
+
+@Throws(StatusException::class)
+fun <REQ, RESP> bidiStreamingRpc(
+    channel: Channel,
+    method: MethodDescriptor<REQ, RESP>,
+    requests: Flow<REQ>,
+    callOptions: CallOptions,
+    headers: Metadata
+): Flow<RESP> {
+    return ClientCalls.bidiStreamingRpc(
+        channel.channel,
+        method = method,
+        requests = requests,
+        callOptions = callOptions,
+        headers = headers.jvmMetadata
+    )
+        .catch { e ->
+            if (e is StatusException) throw e.statusException
+            else throw e
+        }
+}
+
+
 private val StatusException.statusException: io.github.timortel.kmpgrpc.core.StatusException
     get() = StatusException(
         status = Status(

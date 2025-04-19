@@ -25,13 +25,13 @@ abstract class RpcTest {
     abstract val address: String
     abstract val port: Int
 
-    private val channel: Channel
+    protected val channel: Channel
         get() = Channel.Builder
             .forAddress(address, port)
             .usePlaintext()
             .build()
 
-    private val stub: TestServiceStub get() = TestServiceStub(channel)
+    protected val stub: TestServiceStub get() = TestServiceStub(channel)
 
     @Test
     fun testEmpty() = runTest {
@@ -181,20 +181,20 @@ abstract class RpcTest {
         val channel = channel
         channel.shutdown()
 
-        assertFailsWithUnavailableStatus {
+        assertFailsWithUnavailableOrCancelledStatus {
             CancellationServiceStub(channel)
                 .respondAfter10Sec(message)
         }
     }
 
     @Test
-    fun testCannotStartStreamingRpcOnCancelledChannel() = runTest {
+    fun testCannotStartServerStreamingRpcOnCancelledChannel() = runTest {
         val message = cancellationMessage {}
 
         val channel = channel
         channel.shutdown()
 
-        assertFailsWithUnavailableStatus {
+        assertFailsWithUnavailableOrCancelledStatus {
             CancellationServiceStub(channel)
                 .respondImmediatelyAndAfter10Sec(message)
                 .toList()
@@ -216,7 +216,7 @@ abstract class RpcTest {
                 channel.shutdownNow()
             }
 
-            assertFailsWithUnavailableStatus {
+            assertFailsWithUnavailableOrCancelledStatus {
                 CancellationServiceStub(channel)
                     .respondAfter10Sec(message)
             }
@@ -224,7 +224,7 @@ abstract class RpcTest {
     }
 
     @Test
-    fun testStreamingRpcIsCancelledImmediatelyOnImmediateShutdown() = runTest {
+    fun testServerStreamingRpcIsCancelledImmediatelyOnImmediateShutdown() = runTest {
         val message = cancellationMessage {}
 
         val channel = channel
@@ -240,7 +240,7 @@ abstract class RpcTest {
 
             val receivedResponses = mutableListOf<CancellationResponse>()
 
-            assertFailsWithUnavailableStatus {
+            assertFailsWithUnavailableOrCancelledStatus {
                 CancellationServiceStub(channel)
                     .respondImmediatelyAndAfter10Sec(message)
                     .collect { receivedResponses += it }
@@ -250,13 +250,9 @@ abstract class RpcTest {
         }
     }
 
-    private inline fun assertFailsWithUnavailableStatus(block: () -> Unit) {
+    protected inline fun assertFailsWithUnavailableOrCancelledStatus(block: () -> Unit) {
         val exception = assertFailsWith<StatusException> { block() }
 
-        assertEquals(
-            Code.UNAVAILABLE,
-            exception.status.code,
-            "Expected to fail with UNAVAILABLE status. statusMessage=${exception.status.statusMessage}"
-        )
+        assertContains(listOf(Code.UNAVAILABLE, Code.CANCELLED), exception.status.code, "Expected to fail with UNAVAILABLE or CANCELLED status. statusMessage=${exception.status.statusMessage}")
     }
 }

@@ -74,16 +74,22 @@ kotlin {
             }
         }
 
+        val iosJvmTest by creating {
+            dependsOn(commonTest.get())
+        }
+
         jsTest {
             dependsOn(serializationTest)
         }
 
         iosTest {
             dependsOn(serializationTest)
+            dependsOn(iosJvmTest)
         }
 
         jvmTest {
             dependsOn(serializationTest)
+            dependsOn(iosJvmTest)
 
             dependencies {
                 runtimeOnly(libs.grpc.netty)

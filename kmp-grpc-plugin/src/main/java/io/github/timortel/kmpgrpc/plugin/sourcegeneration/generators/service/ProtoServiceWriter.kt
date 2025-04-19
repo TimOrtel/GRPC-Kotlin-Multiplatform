@@ -51,9 +51,20 @@ abstract class ProtoServiceWriter(private val isActual: Boolean) {
                                 if (!rpc.isReceivingStream) {
                                     this.addModifiers(KModifier.SUSPEND)
                                 }
+
+                                if (rpc.isSendingStream) {
+                                    addParameter(
+                                        Const.Service.RpcCall.PARAM_REQUESTS,
+                                        Flow::class.asTypeName().parameterizedBy(rpc.sendType.resolve())
+                                    )
+                                } else {
+                                    addParameter(
+                                        Const.Service.RpcCall.PARAM_REQUEST,
+                                        rpc.sendType.resolve()
+                                    )
+                                }
                             }
                             .addModifiers(classAndFunctionModifiers)
-                            .addParameter(Const.Service.RpcCall.PARAM_REQUEST, rpc.sendType.resolve())
                             .addParameter(
                                 ParameterSpec
                                     .builder(Const.Service.RpcCall.PARAM_METADATA, kmMetadata)

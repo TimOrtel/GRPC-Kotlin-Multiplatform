@@ -6,7 +6,7 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.*
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.service.ProtoRpc
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.service.ProtoService
 
-object IosProtoServiceWriter : ActualProtoServiceWriter() {
+object IosProtoServiceWriter : IosJvmProtoServiceWriter() {
 
     override val channelConstructorModifiers: List<KModifier> = listOf(KModifier.ACTUAL)
     override val primaryConstructorModifiers: List<KModifier> = listOf(KModifier.PRIVATE, KModifier.ACTUAL)
@@ -19,6 +19,11 @@ object IosProtoServiceWriter : ActualProtoServiceWriter() {
 
     private val iosStub = ClassName(PACKAGE_STUB, "IosStub")
 
+    override val unaryCallMemberName: MemberName = MemberName(PACKAGE_RPC, "unaryCallImplementation")
+    override val clientStreamingCallMemberName: MemberName = MemberName(PACKAGE_RPC, "clientStreamingCallImplementation")
+    override val serverStreamingCallMemberName: MemberName = MemberName(PACKAGE_RPC, "serverSideStreamingCallImplementation")
+    override val bidiStreamingCallMemberName: MemberName = MemberName(PACKAGE_RPC, "bidiStreamingCallImplementation")
+
     override fun applyToClass(
         builder: TypeSpec.Builder,
         service: ProtoService
@@ -30,14 +35,10 @@ object IosProtoServiceWriter : ActualProtoServiceWriter() {
 
     override fun applyToRpcFunction(
         builder: FunSpec.Builder,
-        rpc: ProtoRpc
+        rpc: ProtoRpc,
+        rpcImplementation: MemberName,
+        requestParamName: String
     ) {
-        val impl = if (rpc.isReceivingStream) {
-            iosServerSideStreamingCallImplementation
-        } else {
-            iosUnaryCallImplementation
-        }
-
         builder.apply {
             addStatement(
                 "val callOptions = %N.mutableCopy() as %T",
@@ -49,10 +50,10 @@ object IosProtoServiceWriter : ActualProtoServiceWriter() {
 
         builder.addStatement(
             "return %M(%N, callOptions, %S, %N, %T.Companion, %T.Companion)",
-            impl,
+            rpcImplementation,
             Const.Service.CHANNEL_PROPERTY_NAME,
             "/${rpc.file.`package`.orEmpty()}.${rpc.service.name}/${rpc.name}",
-            Const.Service.RpcCall.PARAM_REQUEST,
+            requestParamName,
             rpc.sendType.resolve(),
             rpc.returnType.resolve()
         )

@@ -25,8 +25,22 @@ data class ProtoRpc(
 
     override val supportedOptions: List<Options.Option<*>> = emptyList()
 
+    val methodType: MethodType = when {
+        isSendingStream && isReceivingStream -> MethodType.BIDI_STREAMING
+        isSendingStream -> MethodType.CLIENT_STREAMING
+        isReceivingStream -> MethodType.SERVER_STREAMING
+        else -> MethodType.UNARY
+    }
+
     init {
         sendType.parent = ProtoType.Parent.Rpc(this)
         returnType.parent = ProtoType.Parent.Rpc(this)
+    }
+
+    enum class MethodType(val jvmMethodType: String) {
+        UNARY("UNARY"),
+        CLIENT_STREAMING("CLIENT_STREAMING"),
+        SERVER_STREAMING("SERVER_STREAMING"),
+        BIDI_STREAMING("BIDI_STREAMING")
     }
 }

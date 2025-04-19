@@ -146,4 +146,7 @@ service TestService {
   rpc emptyStream (EmptyMessage) returns (stream EmptyMessage);
   rpc simpleStreamingRpc (SimpleMessage) returns (stream SimpleMessage);
   rpc everythingStreamingRpc (MessageWithEverything) returns (stream MessageWithEverything);
+
+  rpc simpleClientStreamingRpc (stream SimpleMessage) returns (SimpleMessage);
+  rpc bidiStreamingRpc (stream SimpleMessage) returns (stream SimpleMessage);
 }

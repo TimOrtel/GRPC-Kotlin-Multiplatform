@@ -22,11 +22,12 @@ This projects implements client-side gRPC for Android, JVM, iOS and the JS for b
 
 ## Features
 ### Supported rpc types:
-| RPC Type              | Support Status |
-|-----------------------|---------------|
-| Unary                | ✅ Supported  |
-| Server-side Streaming | ✅ Supported  |
-| Client-side Streaming | ⏳ Planned    |
+|                 | JVM/Android | iOS | JavaScript |
+|-----------------|-------------|-----|-------------|
+| `Unary`           | ✅          | ✅  | ✅          |
+| `Client-streaming`| ✅          | ✅  | ❌          |
+| `Server-streaming`| ✅          | ✅  | ✅          |
+| `Bidi-streaming`  | ✅          | ✅  | ❌          |
 
 ### Supported proto types:
 | Proto Type   | Kotlin Type  |

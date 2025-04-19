@@ -115,7 +115,7 @@ abstract class InterceptorTest {
      */
     @Test
     fun testInterceptorInternalCallOrderUnary() = runTest {
-        val interceptor = CheckCallOrderInterceptor(isStream = false, isJs = isJavaScript)
+        val interceptor = CheckCallOrderInterceptor(isClientStream = false, isServerStream = false, isJs = isJavaScript)
 
         val channel = Channel.Builder
             .forAddress(address, port)
@@ -134,7 +134,7 @@ abstract class InterceptorTest {
      */
     @Test
     fun testInterceptorInternalCallOrderServerStreaming() = runTest {
-        val interceptor = CheckCallOrderInterceptor(isStream = true, isJs = isJavaScript)
+        val interceptor = CheckCallOrderInterceptor(isClientStream = false, isServerStream = true, isJs = isJavaScript)
 
         val channel = Channel.Builder
             .forAddress(address, port)
@@ -202,7 +202,7 @@ abstract class InterceptorTest {
         assertContains(exception.status.statusMessage, message)
     }
 
-    private enum class InterceptorLifecycleStatus {
+    protected enum class InterceptorLifecycleStatus {
         INIT,
         STARTED,
         SENT_MESSAGE,
@@ -211,7 +211,11 @@ abstract class InterceptorTest {
         CLOSED
     }
 
-    private class CheckCallOrderInterceptor(val isStream: Boolean, val isJs: Boolean) : CallInterceptor {
+    protected class CheckCallOrderInterceptor(
+        val isClientStream: Boolean,
+        val isServerStream: Boolean,
+        val isJs: Boolean
+    ) : CallInterceptor {
 
         var lifecycleStatus: InterceptorLifecycleStatus = InterceptorLifecycleStatus.INIT
 
@@ -223,9 +227,14 @@ abstract class InterceptorTest {
         }
 
         override fun <T : Message> onSendMessage(methodDescriptor: MethodDescriptor, message: T): T {
-            if (lifecycleStatus == InterceptorLifecycleStatus.STARTED) lifecycleStatus =
-                InterceptorLifecycleStatus.SENT_MESSAGE
-            else throw IllegalStateException()
+            when {
+                lifecycleStatus == InterceptorLifecycleStatus.STARTED -> lifecycleStatus =
+                    InterceptorLifecycleStatus.SENT_MESSAGE
+
+                isClientStream && lifecycleStatus == InterceptorLifecycleStatus.SENT_MESSAGE -> {}
+
+                else -> throw IllegalStateException()
+            }
 
             return super.onSendMessage(methodDescriptor, message)
         }
@@ -240,7 +249,7 @@ abstract class InterceptorTest {
 
         override fun <T : Message> onReceiveMessage(methodDescriptor: MethodDescriptor, message: T): T {
             when {
-                isJs && isStream && lifecycleStatus == InterceptorLifecycleStatus.SENT_MESSAGE -> {
+                isJs && isServerStream && lifecycleStatus == InterceptorLifecycleStatus.SENT_MESSAGE -> {
                     lifecycleStatus = InterceptorLifecycleStatus.RECEIVED_MESSAGE
                 }
 
@@ -248,7 +257,7 @@ abstract class InterceptorTest {
                     lifecycleStatus = InterceptorLifecycleStatus.RECEIVED_MESSAGE
                 }
 
-                isStream && lifecycleStatus == InterceptorLifecycleStatus.RECEIVED_MESSAGE -> {}
+                isServerStream && lifecycleStatus == InterceptorLifecycleStatus.RECEIVED_MESSAGE -> {}
 
                 else -> throw IllegalStateException()
             }
