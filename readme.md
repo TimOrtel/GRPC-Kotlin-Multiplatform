@@ -338,7 +338,7 @@ When you build your app, you might encounter compilation errors of multiple Pods
 See an example implementation of an Android app and an iOS app in the `example` folder. 
 
 ## Roadmap
-- Support all proto data types
+- Support Proto Editions
 
 ## Building locally
 Run the following Gradle commands:
