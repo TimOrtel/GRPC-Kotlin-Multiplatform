@@ -4,6 +4,7 @@ import io.github.timortel.kmpgrpc.composeexample.shared.Communication
 import io.github.timortel.kmpgrpc.composeexample.shared.CommunicationServiceGrpcKt
 import io.github.timortel.kmpgrpc.composeexample.shared.numMessage
 import io.grpc.ServerBuilder
+import io.grpc.protobuf.services.ProtoReflectionServiceV1
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -47,7 +48,12 @@ fun main() {
                     }
                 }
             }
+
+            override suspend fun emptyRpc(request: Communication.NumMessage): Communication.NumMessage {
+                return request
+            }
         })
+        .addService(ProtoReflectionServiceV1.newInstance())
         .build()
         .start()
         .awaitTermination()
