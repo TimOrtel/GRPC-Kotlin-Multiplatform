@@ -7,4 +7,6 @@ plugins {
     alias(libs.plugins.composeCompiler) apply false
     alias(libs.plugins.kotlinMultiplatform) apply false
     alias(libs.plugins.kmpGrpcPlugin) apply false
+    alias(libs.plugins.protobuf) apply false
+    alias(libs.plugins.cocoapods) apply false
 }
