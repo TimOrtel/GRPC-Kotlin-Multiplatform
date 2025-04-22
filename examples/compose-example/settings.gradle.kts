@@ -31,4 +31,5 @@ dependencyResolutionManagement {
 }
 
 include(":composeApp")
+include(":composeAppJs")
 include(":server")

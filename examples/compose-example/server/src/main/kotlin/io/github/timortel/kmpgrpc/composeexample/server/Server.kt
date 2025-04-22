@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 
 fun main() {
-    ServerBuilder.forPort(17000)
+    ServerBuilder.forPort(17888)
         .addService(object : CommunicationServiceGrpcKt.CommunicationServiceCoroutineImplBase() {
             override suspend fun squareNumber(request: Communication.NumMessage): Communication.NumMessage {
                 return numMessage { value = request.value * request.value }

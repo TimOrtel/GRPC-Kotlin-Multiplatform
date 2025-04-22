@@ -77,7 +77,7 @@ abstract class AppTest {
 
     private fun ComposeUiTest.enterServerAddressAndSelect(destinationTag: String) {
         onNodeWithTag(TAG_HOST).performTextInput("localhost")
-        onNodeWithTag(TAG_PORT).performTextInput("17000")
+        onNodeWithTag(TAG_PORT).performTextInput("17600")
 
         onNodeWithTag(destinationTag).performScrollTo().performClick()
     }
