@@ -5,6 +5,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     kotlin("jvm")
     id("com.google.protobuf")
+    application
 }
 
 group = "io.github.timortel.kmpgrpc.composeexample.server"
@@ -72,4 +73,8 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
 java {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
+}
+
+application {
+    mainClass.set("io.github.timortel.kmpgrpc.composeexample.server.ServerKt")
 }
