@@ -38,7 +38,7 @@ jobs:
         run: |
           docker pull fullstorydev/grpcurl:latest
           echo "Waiting for service..."
-          while ! docker run --network host fullstorydev/grpcurl -plaintext localhost:17000 io.github.timortel.kmpgrpc.composeexample.shared.CommunicationService/emptyRpc | grep -q "{}"; do
+          while ! docker run --network host fullstorydev/grpcurl -plaintext localhost:17600 io.github.timortel.kmpgrpc.composeexample.shared.CommunicationService/emptyRpc | grep -q "{}"; do
             sleep 5
           done
           echo "Service is healthy!"
@@ -75,7 +75,7 @@ jobs:
         run: |
           docker pull fullstorydev/grpcurl:latest
           echo "Waiting for service..."
-          while ! docker run --network host fullstorydev/grpcurl -plaintext localhost:17000 io.github.timortel.kmpgrpc.composeexample.shared.CommunicationService/emptyRpc | grep -q "{}"; do
+          while ! docker run --network host fullstorydev/grpcurl -plaintext localhost:17600 io.github.timortel.kmpgrpc.composeexample.shared.CommunicationService/emptyRpc | grep -q "{}"; do
             sleep 5
           done
           echo "Service is healthy!"
@@ -117,7 +117,7 @@ jobs:
         timeout-minutes: 10
         run: |
           echo "Waiting for service..."
-          while ! grpcurl -plaintext localhost:17000 io.github.timortel.kmpgrpc.composeexample.shared.CommunicationService/emptyRpc | grep -q "{}"; do
+          while ! grpcurl -plaintext localhost:17600 io.github.timortel.kmpgrpc.composeexample.shared.CommunicationService/emptyRpc | grep -q "{}"; do
             sleep 5
           done
           echo "Service is healthy!"
