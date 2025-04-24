@@ -5,15 +5,19 @@ import io.github.timortel.kmpgrpc.core.external.StreamInterceptor
 import io.github.timortel.kmpgrpc.core.external.UnaryInterceptor
 import io.github.timortel.kmpgrpc.core.internal.StreamCallInterceptorWrapper
 import io.github.timortel.kmpgrpc.core.internal.UnaryCallInterceptorWrapper
+import io.ktor.client.HttpClient
 
 actual class Channel private constructor(
     private val name: String,
     private val port: Int,
     private val usePlainText: Boolean,
-    val clientOptions: ClientOptions
+    internal val interceptors: List<CallInterceptor>,
+    val clientOptions: ClientOptions,
 ) : IosJsChannel() {
     @Suppress("HttpUrlsUsage")
     val connectionString = (if (usePlainText) "http://" else "https://") + "$name:$port"
+
+    val client = HttpClient()
 
     actual data class Builder(val name: String, val port: Int) {
 
@@ -55,8 +59,14 @@ actual class Channel private constructor(
                 name = name,
                 port = port,
                 usePlainText = usePlainText,
+                interceptors = interceptors,
                 clientOptions = clientOptions
             )
         }
+    }
+
+    actual override fun shutdown() {
+        super.shutdown()
+        client.close()
     }
 }

@@ -109,6 +109,8 @@ kotlin {
                 api(npm("google-protobuf", "3.21.2"))
                 api(npm("grpc-web", "1.5.0"))
                 api(npm("protobufjs", "7.2.6"))
+
+                implementation(libs.ktor.core)
             }
         }
 

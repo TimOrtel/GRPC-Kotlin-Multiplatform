@@ -13,7 +13,7 @@ object JsProtoServiceWriter : ActualProtoServiceWriter() {
 
     override val callOptionsType: TypeName = kmMetadata
     override val createEmptyCallOptionsCode: CodeBlock = CodeBlock.of("%T.empty()", kmMetadata)
-    
+
     private val grpcWebClientBase =
         ClassName(PACKAGE_EXTERNAL, "GrpcWebClientBase")
     private val methodDescriptor =
@@ -71,31 +71,19 @@ object JsProtoServiceWriter : ActualProtoServiceWriter() {
         builder.addCode(
             CodeBlock.builder()
                 .apply {
-                    val clientCallCode = CodeBlock
-                        .builder()
-                        .add("client.${rpc.name}(")
-                        .add("request, ")
-                        .add("jsMetadata")
-                        .add(")")
-                        .build()
-
                     val rpcImplMember = if (rpc.isReceivingStream) {
                         serverStreamingCallImpl
                     } else {
                         unaryCallImpl
                     }
 
-                    add(
-                        "return·%M(channel, this.%N + metadata)·{·jsMetadata·->\n",
+                    addStatement(
+                        "return %M(channel, %S, request, %T.Companion, this.%N + metadata)",
                         rpcImplMember,
+                        "/${rpc.file.`package`}.${rpc.service.name}/${rpc.name}",
+                        rpc.returnType.resolve(),
                         Const.Service.CALL_OPTIONS_PROPERTY_NAME
                     )
-
-                    indent()
-                    add(clientCallCode)
-                    unindent()
-
-                    add("\n}")
                 }
                 .build()
         )
