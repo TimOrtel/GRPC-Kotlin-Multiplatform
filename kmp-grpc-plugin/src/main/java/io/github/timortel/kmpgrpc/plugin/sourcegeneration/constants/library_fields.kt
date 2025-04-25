@@ -2,6 +2,7 @@ package io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants
 
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.MemberName
+import com.squareup.kotlinpoet.MemberName.Companion.member
 
 val kmMetadata = ClassName(PACKAGE_BASE, "Metadata")
 val kmStub = ClassName(PACKAGE_STUB, "Stub")
@@ -16,12 +17,17 @@ val kmEnum = ClassName(PACKAGE_MESSAGE, "Enum")
 
 val unknownField = ClassName(PACKAGE_MESSAGE, "UnknownField")
 
-val computeUnknownFieldsRequiredSize = MemberName(PACKAGE_IO, "computeUnknownFieldsRequiredSize")
-
-val computeMapSize = MemberName(PACKAGE_IO, "computeMapSize")
-val computeMessageSize = MemberName(PACKAGE_IO, "computeMessageSize")
-
 val CodedOutputStream = ClassName(PACKAGE_IO, "CodedOutputStream")
 val CodedInputStream = ClassName(PACKAGE_IO, "CodedInputStream")
 
 val byteArrayListEquals = MemberName(PACKAGE_UTIL, "byteArrayListsEqual")
+
+val dataSize = ClassName(PACKAGE_IO, "DataSize")
+val computeUnknownFieldsRequiredSize = dataSize.member("computeUnknownFieldsRequiredSize")
+val computeMapSize = dataSize.member("computeMapSize")
+val computeMessageSize = dataSize.member("computeMessageSize")
+val computeMessageSizeNoTag = dataSize.member("computeMessageSizeNoTag")
+val computeEnumSize = dataSize.member("computeEnumSize")
+val computeEnumSizeNoTag = dataSize.member("computeEnumSizeNoTag")
+val computeTagSize = dataSize.member("computeTagSize")
+val computeInt32SizeNoTag = dataSize.member("computeInt32SizeNoTag")

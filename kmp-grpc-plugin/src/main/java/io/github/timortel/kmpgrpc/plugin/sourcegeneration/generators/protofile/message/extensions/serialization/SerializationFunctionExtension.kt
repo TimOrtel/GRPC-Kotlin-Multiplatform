@@ -147,19 +147,11 @@ class SerializationFunctionExtension : BaseSerializationExtension() {
                 field.attributeName
             )
 
-            if (isJs) {
-                addCode("{ _, _, -> 0 }")
-            } else {
-                addCode(getComputeMapValueRequiredSizeCode(field.keyType))
-            }
+            addCode(getComputeMapValueRequiredSizeCode(field.keyType))
 
             addCode(", ")
 
-            if (isJs) {
-                addCode("{ _, _, -> 0 }")
-            } else {
-                addCode(getComputeMapValueRequiredSizeCode(field.valuesType))
-            }
+            addCode(getComputeMapValueRequiredSizeCode(field.valuesType))
 
             addCode(", ")
 

@@ -66,13 +66,11 @@ object JvmProtoServiceWriter : IosJvmProtoServiceWriter() {
                                             add(".setFullMethodName(%S)", fullMethodName)
                                             add(".setSampledToLocalTracing(true)")
                                             add(
-                                                ".setRequestMarshaller(%T.marshaller(%T()))",
-                                                PROTO_LITE_UTILS,
+                                                ".setRequestMarshaller(%T.Companion)",
                                                 rpc.sendType.resolve()
                                             )
                                             add(
-                                                ".setResponseMarshaller(%T.marshaller(%T()))",
-                                                PROTO_LITE_UTILS,
+                                                ".setResponseMarshaller(%T.Companion)",
                                                 rpc.returnType.resolve()
                                             )
                                             add(".build()")

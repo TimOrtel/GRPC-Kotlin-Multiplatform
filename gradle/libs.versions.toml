@@ -6,6 +6,9 @@ androidCompileSdk = "35"
 androidMinSdk = "21"
 
 kotlin = "2.1.20"
+kotlinxIo = "0.7.0"
+
+okio = "3.11.0"
 
 grpcJvm = "1.71.0"
 grpcKotlin = "1.4.1"
@@ -26,6 +29,8 @@ antlr = { group = "org.antlr", name = "antlr4", version.ref = "antlr" }
 
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
+kotlinx-io-core = { module = "org.jetbrains.kotlinx:kotlinx-io-core", version.ref = "kotlinxIo" }
+
 google-protobuf-kotlin = { group = "com.google.protobuf", name = "protobuf-kotlin", version.ref = "protobufJvm" }
 google-protobuf-java-util = { group = "com.google.protobuf", name = "protobuf-java-util", version.ref = "protobufJvm" }
 
@@ -42,6 +47,7 @@ grpc-netty = { group = "io.grpc", name = "grpc-netty", version = "1.69.1" }
 grpc-netty-shaded = { group = "io.grpc", name = "grpc-netty-shaded", version.ref = "grpcJvm" }
 
 squareup-kotlinpoet = { group = "com.squareup", name = "kotlinpoet", version = "1.16.0" }
+squareup-okio = { module = "com.squareup.okio:okio", version.ref = "okio"}
 
 kotlin-gradle-plugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
 android-gradle-plugin = { group = "com.android.tools.build", name = "gradle", version.ref = "androidGradlePlugin" }

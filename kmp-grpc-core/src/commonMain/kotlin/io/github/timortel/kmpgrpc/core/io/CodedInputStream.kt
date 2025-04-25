@@ -111,8 +111,6 @@ abstract class CodedInputStream {
 
     abstract fun readBytes(): ByteArray
 
-    abstract fun readByteArray(): ByteArray
-
     abstract fun readUInt32(): UInt
 
     abstract fun readEnum(): Int
@@ -125,24 +123,16 @@ abstract class CodedInputStream {
 
     abstract fun readSInt64(): Long
 
-    abstract fun readRawVarint32(): Int
-
-    abstract fun readRawVarint64(): Long
-
-    abstract fun readRawByte(): Byte
-
     abstract fun pushLimit(newLimit: Int): Int
 
     abstract fun popLimit(oldLimit: Int)
-
-    abstract fun setSizeLimit(newLimit: Int): Int
 
     fun readUnknownField(tag: Int): UnknownField? {
         val number = wireFormatGetTagFieldNumber(tag)
         val wireTypeNumber = wireFormatGetTagWireType(tag)
 
         return when (WireFormat.entries.firstOrNull { it.value == wireTypeNumber }) {
-            WireFormat.VARINT -> UnknownField.Varint(number, readRawVarint64())
+            WireFormat.VARINT -> UnknownField.Varint(number, readInt64())
             WireFormat.FIXED32 -> UnknownField.Fixed32(number, readFixed32())
             WireFormat.FIXED64 -> UnknownField.Fixed64(number, readFixed64())
             WireFormat.LENGTH_DELIMITED -> UnknownField.LengthDelimited(number, readBytes())

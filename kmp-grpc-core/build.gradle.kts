@@ -61,6 +61,8 @@ kotlin {
             dependencies {
                 implementation(kotlin("stdlib-common"))
                 implementation(libs.kotlinx.coroutines.core)
+                implementation(libs.kotlinx.io.core)
+                implementation(libs.squareup.okio)
             }
         }
 
@@ -151,4 +153,12 @@ kotlin.targets.withType(org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarge
     binaries.all {
         binaryOptions["memoryModel"] = "experimental"
     }
+}
+
+tasks.withType<org.gradle.jvm.tasks.Jar>().configureEach {
+    from(layout.projectDirectory.file("../THIRD_PARTY_LICENSES.txt")) {
+        into("META-INF")
+    }
+
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
