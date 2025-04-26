@@ -47,12 +47,12 @@ import io.github.timortel.kmpgrpc.composeexample.shared.Communication
 import io.github.timortel.kmpgrpc.composeexample.shared.numMessage
 import io.github.timortel.kmpgrpc.core.Channel
 import io.github.timortel.kmpgrpc.core.StatusException
-import io.github.timortel.kmpgrpc.core.util.TimeUnit
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.seconds
 
 const val TAG_BUTTON_BACK = "TAG_BUTTON_BACK"
 
@@ -243,7 +243,7 @@ private fun UnaryDestination(modifier: Modifier, host: String, port: Int, onNavi
             scope.launch {
                 serverResponse = try {
                     stub
-                        .withDeadlineAfter(2L, TimeUnit.SECONDS)
+                        .withDeadlineAfter(2.seconds)
                         .squareNumber(
                         numMessage { value = num }
                     ).value.toString()
