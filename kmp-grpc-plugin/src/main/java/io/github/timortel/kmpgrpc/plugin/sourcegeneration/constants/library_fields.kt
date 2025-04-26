@@ -7,7 +7,6 @@ import com.squareup.kotlinpoet.MemberName.Companion.member
 val kmMetadata = ClassName(PACKAGE_BASE, "Metadata")
 val kmStub = ClassName(PACKAGE_STUB, "Stub")
 val kmChannel = ClassName(PACKAGE_BASE, "Channel")
-val kmTimeUnit = ClassName(PACKAGE_UTIL, "TimeUnit")
 
 val MessageDeserializer = ClassName(PACKAGE_MESSAGE, "MessageDeserializer")
 val MessageCompanion = ClassName(PACKAGE_MESSAGE, "MessageCompanion")

@@ -1,5 +1,7 @@
 package io.github.timortel.kmpgrpc.core
 
+import kotlin.time.Duration
+
 /**
  * Represents an exception that includes a gRPC [Status] and an associated cause for the error.
  *
@@ -33,6 +35,22 @@ class StatusException internal constructor(val status: Status, override val caus
         val InternalExpectedAtLeastOneElement = StatusException(
             status = Status(code = Code.INTERNAL, statusMessage = "Expected call to yield exactly one element, but received none."),
             cause = null
+        )
+
+        fun requestTimeout(duration: Duration, cause: Throwable?) = StatusException(
+            status = Status(
+                code = Code.DEADLINE_EXCEEDED,
+                statusMessage = "RPC request timeout exceeded after set deadline of $duration"
+            ),
+            cause = cause
+        )
+
+        fun internal(message: String, cause: Throwable? = null) = StatusException(
+            status = Status(
+                code = Code.INTERNAL,
+                statusMessage = message
+            ),
+            cause = cause
         )
     }
 }

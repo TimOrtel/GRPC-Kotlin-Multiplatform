@@ -11,20 +11,11 @@ object JsProtoServiceWriter : ActualProtoServiceWriter() {
     override val channelConstructorModifiers: List<KModifier> = listOf(KModifier.ACTUAL)
     override val primaryConstructorModifiers: List<KModifier> = listOf(KModifier.PRIVATE, KModifier.ACTUAL)
 
-    override val callOptionsType: TypeName = kmMetadata
-    override val createEmptyCallOptionsCode: CodeBlock = CodeBlock.of("%T.empty()", kmMetadata)
+    override val callOptionsType: TypeName = ClassName(PACKAGE_BASE, "CallOptions")
+    override val createEmptyCallOptionsCode: CodeBlock = CodeBlock.of("%T()", callOptionsType)
 
     private val unaryCallImpl = MemberName(PACKAGE_RPC, "unaryCallImplementation")
     private val serverStreamingCallImpl = MemberName(PACKAGE_RPC, "serverSideStreamingCallImplementation")
-
-    override fun applyToClass(
-        builder: TypeSpec.Builder,
-        service: ProtoService
-    ) {
-        super.applyToClass(builder, service)
-
-        overrideWithDeadlineAfter(builder, service.className)
-    }
 
     override fun applyToRpcFunction(
         builder: FunSpec.Builder,

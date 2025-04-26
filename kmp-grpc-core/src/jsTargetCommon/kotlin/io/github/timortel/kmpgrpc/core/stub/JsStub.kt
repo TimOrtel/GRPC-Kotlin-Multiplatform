@@ -1,20 +1,20 @@
 package io.github.timortel.kmpgrpc.core.stub
 
+import io.github.timortel.kmpgrpc.core.CallOptions
 import io.github.timortel.kmpgrpc.core.Channel
-import io.github.timortel.kmpgrpc.core.Metadata
-import io.github.timortel.kmpgrpc.core.util.TimeUnit
+import kotlin.time.Duration
 
 interface JsStub<S : Stub<S>> {
 
     val channel: Channel
-    val callOptions: Metadata
+    val callOptions: CallOptions
 
-    fun build(channel: Channel, callOptions: Metadata): S
+    fun build(channel: Channel, callOptions: CallOptions): S
 
-    fun withDeadlineAfter(duration: Long, unit: TimeUnit): S {
+    fun withDeadlineAfter(duration: Duration): S {
         return build(
             channel = channel,
-            callOptions = callOptions.withEntry("deadline", (duration * unit.toMilliFactor).toString())
+            callOptions = callOptions.copy(deadlineAfter = duration)
         )
     }
 }

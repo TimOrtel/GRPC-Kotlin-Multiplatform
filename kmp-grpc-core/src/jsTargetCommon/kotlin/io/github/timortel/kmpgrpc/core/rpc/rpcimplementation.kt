@@ -3,6 +3,7 @@ package io.github.timortel.kmpgrpc.core.rpc
 import io.github.timortel.kmpgrpc.core.*
 import io.github.timortel.kmpgrpc.core.message.Message
 import io.github.timortel.kmpgrpc.core.message.MessageDeserializer
+import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -14,6 +15,7 @@ import kotlinx.io.Buffer
 import kotlinx.io.Source
 import kotlinx.io.readByteArray
 import kotlinx.io.readString
+import kotlin.time.DurationUnit
 import kotlin.time.ExperimentalTime
 
 private const val KEY_GRPC_STATUS = "grpc-status"
@@ -22,7 +24,7 @@ private const val KEY_GRPC_MESSAGE = "grpc-message"
 /**
  * Executes the unary given unary call using Ktor.
  *
- * @param metadata The metadata that should be sent with this call.
+ * @param callOptions The callOptions that provide additional configuration to this call.
  * @return The result of the call
  * @throws StatusException if an RpcError is caught, wrapping the error details into a KMStatusException.
  * @throws Exception if any other exception is caught during execution.
@@ -32,7 +34,7 @@ suspend fun <Request : Message, Response : Message> unaryCallImplementation(
     path: String,
     request: Request,
     responseDeserializer: MessageDeserializer<Response>,
-    metadata: Metadata
+    callOptions: CallOptions
 ): Response {
     val methodDescriptor = MethodDescriptor(
         fullMethodName = path,
@@ -40,7 +42,7 @@ suspend fun <Request : Message, Response : Message> unaryCallImplementation(
     )
 
     return unaryResponseCallBaseImplementation(channel) {
-        grpcImplementation(channel, path, request, responseDeserializer, metadata, methodDescriptor)
+        grpcImplementation(channel, path, request, responseDeserializer, callOptions, methodDescriptor)
             .singleOrStatus()
     }
 }
@@ -48,7 +50,7 @@ suspend fun <Request : Message, Response : Message> unaryCallImplementation(
 /**
  * Handles server-side streaming calls by converting a dynamic call response into a Flow of type JS_RESPONSE.
  *
- * @param metadata The metadata that should be sent with this call.
+ * @param callOptions The callOptions that provide additional configuration to this call.
  * @return A [Flow] instance emitting responses of type JS_RESPONSE, or errors if the streaming call fails.
  */
 fun <Request : Message, Response : Message> serverSideStreamingCallImplementation(
@@ -56,7 +58,7 @@ fun <Request : Message, Response : Message> serverSideStreamingCallImplementatio
     path: String,
     request: Request,
     responseDeserializer: MessageDeserializer<Response>,
-    metadata: Metadata
+    callOptions: CallOptions
 ): Flow<Response> {
     val methodDescriptor = MethodDescriptor(
         fullMethodName = path,
@@ -65,7 +67,7 @@ fun <Request : Message, Response : Message> serverSideStreamingCallImplementatio
 
     return streamingResponseCallBaseImplementation(
         channel = channel,
-        responseFlow = grpcImplementation(channel, path, request, responseDeserializer, metadata, methodDescriptor)
+        responseFlow = grpcImplementation(channel, path, request, responseDeserializer, callOptions, methodDescriptor)
     )
 }
 
@@ -75,9 +77,11 @@ private fun <Request : Message, Response : Message> grpcImplementation(
     path: String,
     request: Request,
     deserializer: MessageDeserializer<Response>,
-    metadata: Metadata,
+    callOptions: CallOptions,
     methodDescriptor: MethodDescriptor
 ): Flow<Response> {
+    val metadata = callOptions.metadata
+
     return flow {
         val actualHeaders = channel.interceptors.foldRight(metadata) { interceptor, currentMetadata ->
             interceptor.onStart(methodDescriptor, currentMetadata)
@@ -97,10 +101,15 @@ private fun <Request : Message, Response : Message> grpcImplementation(
                         header(entry.key, entry.value)
                     }
 
+                    if (callOptions.deadlineAfter != null) {
+                        timeout {
+                            requestTimeoutMillis = callOptions.deadlineAfter.toLong(DurationUnit.MILLISECONDS)
+                        }
+                    }
+
                     setBody(encodeMessageFrame(actualRequest))
                 }
                 .execute { response ->
-                    println("RESPONSE START\n")
                     val responseMetadata = Metadata.of(
                         response.headers.entries().associate { (key, value) ->
                             key to value.joinToString()
@@ -178,6 +187,12 @@ private fun <Request : Message, Response : Message> grpcImplementation(
             throw e
         } catch (e: CancellationException) {
             throw e
+        } catch (e: HttpRequestTimeoutException) {
+            if (callOptions.deadlineAfter != null) {
+                throw StatusException.requestTimeout(callOptions.deadlineAfter, e)
+            } else {
+                throw StatusException.internal("Unexpected timeout except caught.", e)
+            }
         } catch (t: Throwable) {
             throw StatusException(
                 status = Status(

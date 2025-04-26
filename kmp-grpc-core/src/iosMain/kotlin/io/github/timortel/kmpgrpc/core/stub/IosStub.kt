@@ -4,7 +4,8 @@ import cocoapods.GRPCClient.GRPCCallOptions
 import cocoapods.GRPCClient.GRPCMutableCallOptions
 import io.github.timortel.kmpgrpc.core.Channel
 import io.github.timortel.kmpgrpc.core.Metadata
-import io.github.timortel.kmpgrpc.core.util.TimeUnit
+import kotlin.time.Duration
+import kotlin.time.DurationUnit
 
 /**
  * Ios [Stub] wrapper.
@@ -39,13 +40,10 @@ interface IosStub<S : Stub<S>> {
     /**
      * @return a new stub that aborts every call after the specified deadline.
      */
-    fun withDeadlineAfter(duration: Long, unit: TimeUnit): S {
+    fun withDeadlineAfter(duration: Duration): S {
         val mutableOptions = callOptions.mutableCopy() as GRPCMutableCallOptions
 
-        val millis = (duration * unit.toMilliFactor).toDouble()
-        val seconds = millis / 1000.0
-
-        mutableOptions.setTimeout(seconds)
+        mutableOptions.setTimeout(duration.toDouble(DurationUnit.SECONDS))
 
         return build(channel, mutableOptions)
     }

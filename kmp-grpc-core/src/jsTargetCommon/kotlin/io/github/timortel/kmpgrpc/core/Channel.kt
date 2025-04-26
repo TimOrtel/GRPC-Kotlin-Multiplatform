@@ -1,6 +1,7 @@
 package io.github.timortel.kmpgrpc.core
 
 import io.ktor.client.*
+import io.ktor.client.plugins.*
 
 actual class Channel private constructor(
     private val name: String,
@@ -12,7 +13,9 @@ actual class Channel private constructor(
     @Suppress("HttpUrlsUsage")
     val connectionString = (if (usePlainText) "http://" else "https://") + "$name:$port"
 
-    val client = HttpClient()
+    val client = HttpClient {
+        install(HttpTimeout) {}
+    }
 
     actual data class Builder(val name: String, val port: Int) {
 

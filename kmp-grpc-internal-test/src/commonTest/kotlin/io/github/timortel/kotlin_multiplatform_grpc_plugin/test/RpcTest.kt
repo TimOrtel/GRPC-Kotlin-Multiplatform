@@ -6,19 +6,16 @@ import io.github.timortel.kmpgrpc.core.Metadata
 import io.github.timortel.kmpgrpc.core.StatusException
 import io.github.timortel.kmpgrpc.core.message.UnknownField
 import io.github.timortel.kmpgrpc.test.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.withContext
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 abstract class RpcTest {
 
@@ -35,28 +32,20 @@ abstract class RpcTest {
 
     @Test
     fun testEmpty() = runTest {
-        try {
-            val message = emptyMessage { }
-            val response = stub
-                .emptyRpc(message)
+        val message = emptyMessage { }
+        val response = stub
+            .emptyRpc(message)
 
-            assertEquals(message, response)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            throw e
-        }
-
+        assertEquals(message, response)
     }
 
     @Test
     fun testSimple() = runTest {
         val message = simpleMessage { field1 = "Test" }
 
-        val response = async {
-            stub.simpleRpc(message)
-        }
+        val response = stub.simpleRpc(message)
 
-        assertEquals(message, response.await())
+        assertEquals(message, response)
     }
 
     @Test
@@ -250,9 +239,60 @@ abstract class RpcTest {
         }
     }
 
+    @Test
+    fun testUnaryDeadlineTriggered() = runTest {
+        assertFailsWithTimeoutStatus {
+            withContext(Dispatchers.Default) {
+                stub
+                    .withDeadlineAfter(200.milliseconds)
+                    .unaryDelayed(simpleMessage {  })
+            }
+        }
+    }
+
+    @Test
+    fun testUnaryDeadlineNotTriggered() = runTest {
+        stub
+            .withDeadlineAfter(1.seconds)
+            .simpleRpc(simpleMessage { field1 = "Test" })
+    }
+
+    @Test
+    fun testServerStreamingDeadlineTriggered() = runTest {
+        val received = mutableListOf<SimpleMessage>()
+
+        assertFailsWithTimeoutStatus {
+            withContext(Dispatchers.Default) {
+                stub
+                    .withDeadlineAfter(200.milliseconds)
+                    .serverStreamingDelayed(simpleMessage {  })
+                    .toList(received)
+            }
+        }
+
+        assertEquals(1, received.size, "Expected to have received exactly 1 message.")
+    }
+
+    @Test
+    fun testServerStreamingDeadlineNotTriggered() = runTest {
+        val received = stub
+            .withDeadlineAfter(1.seconds)
+            .serverStreamingDelayed(simpleMessage {  })
+            .toList()
+
+        assertEquals(2, received.size, "Expected to have received 2 messages.")
+    }
+
     protected inline fun assertFailsWithUnavailableOrCancelledStatus(block: () -> Unit) {
         val exception = assertFailsWith<StatusException> { block() }
 
         assertContains(listOf(Code.UNAVAILABLE, Code.CANCELLED), exception.status.code, "Expected to fail with UNAVAILABLE or CANCELLED status. statusMessage=${exception.status.statusMessage}")
     }
+
+    protected inline fun assertFailsWithTimeoutStatus(block: () -> Unit) {
+        val exception = assertFailsWith<StatusException> { block() }
+
+        assertContains(listOf(Code.DEADLINE_EXCEEDED), exception.status.code, "Expected to fail with DEADLINE_EXCEEDED status. statusMessage=${exception.status.statusMessage}")
+    }
 }
+
