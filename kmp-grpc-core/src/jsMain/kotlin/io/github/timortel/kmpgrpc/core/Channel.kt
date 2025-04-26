@@ -1,19 +1,14 @@
 package io.github.timortel.kmpgrpc.core
 
-import io.github.timortel.kmpgrpc.core.external.ClientOptions
-import io.github.timortel.kmpgrpc.core.external.StreamInterceptor
-import io.github.timortel.kmpgrpc.core.external.UnaryInterceptor
-import io.github.timortel.kmpgrpc.core.internal.StreamCallInterceptorWrapper
-import io.github.timortel.kmpgrpc.core.internal.UnaryCallInterceptorWrapper
-import io.ktor.client.HttpClient
+import io.ktor.client.*
 
 actual class Channel private constructor(
     private val name: String,
     private val port: Int,
     private val usePlainText: Boolean,
     internal val interceptors: List<CallInterceptor>,
-    val clientOptions: ClientOptions,
 ) : IosJsChannel() {
+
     @Suppress("HttpUrlsUsage")
     val connectionString = (if (usePlainText) "http://" else "https://") + "$name:$port"
 
@@ -42,25 +37,11 @@ actual class Channel private constructor(
         }
 
         actual fun build(): Channel {
-            val unaryInterceptors =
-                interceptors.map { UnaryCallInterceptorWrapper(it) }.toTypedArray<UnaryInterceptor>()
-            val streamInterceptors =
-                interceptors.map { StreamCallInterceptorWrapper(it) }.toTypedArray<StreamInterceptor>()
-
-            val clientOptions: ClientOptions = js("{}")
-                .unsafeCast<ClientOptions>()
-                .apply {
-                    format = "text"
-                    this.unaryInterceptors = unaryInterceptors
-                    this.streamInterceptors = streamInterceptors
-                }
-
             return Channel(
                 name = name,
                 port = port,
                 usePlainText = usePlainText,
-                interceptors = interceptors,
-                clientOptions = clientOptions
+                interceptors = interceptors
             )
         }
     }

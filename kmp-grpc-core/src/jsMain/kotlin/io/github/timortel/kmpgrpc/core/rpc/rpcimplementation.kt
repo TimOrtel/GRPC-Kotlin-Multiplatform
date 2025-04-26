@@ -1,7 +1,6 @@
 package io.github.timortel.kmpgrpc.core.rpc
 
 import io.github.timortel.kmpgrpc.core.*
-import io.github.timortel.kmpgrpc.core.external.RpcError
 import io.github.timortel.kmpgrpc.core.message.Message
 import io.github.timortel.kmpgrpc.core.message.MessageDeserializer
 import io.ktor.client.request.*
@@ -22,7 +21,7 @@ private const val KEY_GRPC_STATUS = "grpc-status"
 private const val KEY_GRPC_MESSAGE = "grpc-message"
 
 /**
- * Executes the unary given call and maps [RpcError]s to [StatusException]s.
+ * Executes the unary given unary call using Ktor.
  *
  * @param metadata The metadata that should be sent with this call.
  * @return The result of the call
@@ -42,24 +41,8 @@ suspend fun <Request : Message, Response : Message> unaryCallImplementation(
     )
 
     return unaryResponseCallBaseImplementation(channel) {
-        // Taken from https://github.com/grpc/grpc-kotlin/blob/6f774052d1d6923f8af2e0023886d69949b695ee/stub/src/main/java/io/grpc/kotlin/Helpers.kt#L57
-        flow {
-            var receivedResponse = false
-            grpcImplementation(channel, path, request, responseDeserializer, metadata, methodDescriptor)
-                .collect { response ->
-                    if (!receivedResponse) {
-                        receivedResponse = true
-                        emit(response)
-                    } else {
-                        throw StatusException.InternalOnlyExpectedOneElement
-                    }
-                }
-
-            if (!receivedResponse) {
-                throw StatusException.InternalExpectedAtLeastOneElement
-            }
-        }
-            .single()
+        grpcImplementation(channel, path, request, responseDeserializer, metadata, methodDescriptor)
+            .singleOrStatus()
     }
 }
 
