@@ -24,5 +24,15 @@ class StatusException internal constructor(val status: Status, override val caus
             status = Status(code = Code.CANCELLED, statusMessage = "Call was cancelled due to channel shutdown."),
             cause = null
         )
+
+        val InternalOnlyExpectedOneElement = StatusException(
+            status = Status(code = Code.INTERNAL, statusMessage = "Expected call to only yield one element, but received more than 1."),
+            cause = null
+        )
+
+        val InternalExpectedAtLeastOneElement = StatusException(
+            status = Status(code = Code.INTERNAL, statusMessage = "Expected call to yield exactly one element, but received none."),
+            cause = null
+        )
     }
 }

@@ -20,8 +20,6 @@ data class ProtoService(
 
     override val kotlinClassName: String = "${name}Stub"
 
-    val jsServiceClassName: ClassName get() = className.nestedClass("${name.capitalize()}Bridge")
-
     init {
         rpcs.forEach { it.service = this }
     }

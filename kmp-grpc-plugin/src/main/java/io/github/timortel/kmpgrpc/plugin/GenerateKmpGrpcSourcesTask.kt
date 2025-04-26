@@ -22,6 +22,7 @@ abstract class GenerateKmpGrpcSourcesTask : DefaultTask() {
         fun getCommonOutputFolder(project: Project): File = getOutputFolder(project).resolve("commonMain/kotlin")
         fun getJVMOutputFolder(project: Project): File = getOutputFolder(project).resolve("jvmMain/kotlin")
         fun getJSOutputFolder(project: Project): File = getOutputFolder(project).resolve("jsMain/kotlin")
+        fun getWasmJsOutputFolder(project: Project): File = getOutputFolder(project).resolve("wasmJsMain/kotlin")
         fun getIOSOutputFolder(project: Project): File = getOutputFolder(project).resolve("iosMain/kotlin")
 
         fun getWellKnownTypesFolder(project: Project): File =
@@ -46,7 +47,8 @@ abstract class GenerateKmpGrpcSourcesTask : DefaultTask() {
                 getCommonOutputFolder(project),
                 getJVMOutputFolder(project),
                 getJSOutputFolder(project),
-                getIOSOutputFolder(project)
+                getIOSOutputFolder(project),
+                getWasmJsOutputFolder(project)
             )
         )
     }
@@ -75,6 +77,7 @@ abstract class GenerateKmpGrpcSourcesTask : DefaultTask() {
             commonOutputFolder = getCommonOutputFolder(project),
             jvmOutputFolder = getJVMOutputFolder(project),
             jsOutputFolder = getJSOutputFolder(project),
+            wasmJsFolder = getWasmJsOutputFolder(project),
             iosOutputDir = getIOSOutputFolder(project)
         )
 

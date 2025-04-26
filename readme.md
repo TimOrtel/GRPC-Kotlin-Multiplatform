@@ -5,10 +5,11 @@
 ![badge][badge-android]
 ![badge][badge-jvm]
 ![badge][badge-js]
+![badge][badge-wasmjs]
 ![badge][badge-ios]
 
 # gRPC Kotlin Multiplatform
-This projects implements client-side gRPC for Android, JVM, iOS and the JS for browser.
+This projects implements client-side gRPC for Android, JVM, iOS, JavaScript and WASM.
 
 ## Table of contents
 - [Features](#features)
@@ -22,12 +23,12 @@ This projects implements client-side gRPC for Android, JVM, iOS and the JS for b
 
 ## Features
 ### Supported rpc types:
-|                 | JVM/Android | iOS | JavaScript |
-|-----------------|-------------|-----|-------------|
-| `Unary`           | ✅          | ✅  | ✅          |
-| `Client-streaming`| ✅          | ✅  | ❌          |
-| `Server-streaming`| ✅          | ✅  | ✅          |
-| `Bidi-streaming`  | ✅          | ✅  | ❌          |
+|                    | JVM/Android | iOS | JavaScript (Browser + NodeJs)) | WasmJs (Browser + NodeJs)) |
+|--------------------|-------------|-----|--------------------------------|----------------------------|
+| `Unary`            | ✅           | ✅   | ✅                              | ✅                          |
+| `Client-streaming` | ✅           | ✅   | ❌                              | ❌                          |
+| `Server-streaming` | ✅           | ✅   | ✅                              | ✅                          |
+| `Bidi-streaming`   | ✅           | ✅   | ❌                              | ❌                          |
 
 ### Supported proto types:
 | Proto Type   | Kotlin Type  |
@@ -264,34 +265,12 @@ plugins {
     kotlin("multiplatform")
 
     //...
-    id("io.github.timortel.kmp-grpc-plugin") version "<latest version>"
+    id("io.github.timortel.kmpgrpc.plugin") version "<latest version>"
 
     // Required when targeting iOS
     kotlin("native.cocoapods")
 }
 ```
-
-Update your JS configuration:
-```kotlin
-kotlin {
-    // ...
-
-    js(IR) {
-        useCommonJs()
-
-        browser {
-            webpackTask {
-                output.libraryTarget = "commonjs2"
-            }
-        }
-
-        binaries.executable()
-    }
-    
-    // ...
-}
-```
-While other configurations may work, I have only tested this one.
 
 Add the library as a dependency:
 ```kotlin
@@ -353,7 +332,7 @@ Please send all pull requests to the develop branch, as the master always holds 
 
 ### How does it work internally?
 The plugin generates kotlin code for all provided proto files. No `protoc` is needed. The networking code is handled
-by the native gRPC implementations for each platform.
+by the native gRPC implementations for JVM and iOS. For all JavaScript targets, the requests are handled by [ktor](https://github.com/ktorio/ktor).
 
 ## License
 Copyright 2025 Tim Ortel
@@ -367,4 +346,5 @@ Unless required by applicable law or agreed to in writing, software distributed 
 [badge-android]: http://img.shields.io/badge/platform-android-6EDB8D.svg?style=flat
 [badge-ios]: http://img.shields.io/badge/platform-ios-CDCDCD.svg?style=flat
 [badge-js]: http://img.shields.io/badge/platform-js-F8DB5D.svg?style=flat
+[badge-wasmjs]: http://img.shields.io/badge/platform-wasmjs-F8DB5D.svg?style=flat
 [badge-jvm]: http://img.shields.io/badge/platform-jvm-DB413D.svg?style=flat
