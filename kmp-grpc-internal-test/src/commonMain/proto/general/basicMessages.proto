@@ -152,4 +152,6 @@ service TestService {
 
   rpc unaryDelayed (SimpleMessage) returns (SimpleMessage);
   rpc serverStreamingDelayed(SimpleMessage) returns (stream SimpleMessage);
+
+  rpc unaryUnimplemented (SimpleMessage) returns (SimpleMessage);
 }

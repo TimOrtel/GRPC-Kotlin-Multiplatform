@@ -10,6 +10,7 @@ import io.ktor.http.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.flow
 import kotlinx.io.Buffer
 import kotlinx.io.Source
@@ -116,10 +117,6 @@ private fun <Request : Message, Response : Message> grpcImplementation(
                         }
                     )
 
-                    channel.interceptors.fold(responseMetadata) { currentMetadata, interceptor ->
-                        interceptor.onReceiveHeaders(methodDescriptor, metadata)
-                    }
-
                     if (!response.status.isSuccess()) {
                         throw StatusException(
                             Status(Code.UNAVAILABLE, "Unsuccessful http request. HTTP-Code=${response.status}"),
@@ -127,61 +124,21 @@ private fun <Request : Message, Response : Message> grpcImplementation(
                         )
                     }
 
-                    val bodyChannel = response.bodyAsChannel()
-                    while (!bodyChannel.exhausted()) {
-                        val frame = Buffer()
-                        ByteArray(5).apply {
-                            bodyChannel.readFully(this)
-                            frame.write(this)
-                        }
-
-                        if (frame.remaining == 0L) break
-
-                        val flag = frame.readByte().toUByte()
-                        val length = frame.readInt()
-
-                        val payload = bodyChannel.readRemaining(length.toLong())
-
-                        if (flag == 0.toUByte()) {
-                            // data received
-                            val receivedMessage = deserializer.deserialize(payload.readByteArray())
-
-                            val actualMessage =
-                                channel.interceptors.fold(receivedMessage) { currentMessage, interceptor ->
-                                    interceptor.onReceiveMessage(methodDescriptor, currentMessage)
-                                }
-
-                            emit(actualMessage)
-                        } else if (flag == 0x80.toUByte()) {
-                            val headers = decodeHeadersFrame(payload)
-
-                            val rawStatus = headers[KEY_GRPC_STATUS]
-
-                            if (rawStatus != null && rawStatus.toIntOrNull() != null) {
-                                val code = Code.getCodeForValue(rawStatus.toInt())
-                                val status = Status(
-                                    code = code,
-                                    statusMessage = headers[KEY_GRPC_MESSAGE].orEmpty()
-                                )
-
-                                val (finalStatus, _) = channel.interceptors.fold(
-                                    Pair(
-                                        status,
-                                        metadata
-                                    )
-                                ) { (currentStatus, currentMetadata), interceptor ->
-                                    interceptor.onClose(methodDescriptor, currentStatus, currentMetadata)
-                                }
-
-                                if (finalStatus.code != Code.OK) {
-                                    throw StatusException(
-                                        status = finalStatus,
-                                        cause = null
-                                    )
-                                }
-                            }
-                        }
+                    val finalMetadata = channel.interceptors.fold(responseMetadata) { currentMetadata, interceptor ->
+                        interceptor.onReceiveHeaders(methodDescriptor, metadata)
                     }
+
+                    extractStatusFromMetadataAndVerify(
+                        metadata = finalMetadata,
+                        runInterceptors = { it }
+                    )
+
+                    readResponse(
+                        channel = response.bodyAsChannel(),
+                        methodDescriptor = methodDescriptor,
+                        deserializer = deserializer,
+                        interceptors = channel.interceptors
+                    )
                 }
         } catch (e: StatusException) {
             throw e
@@ -203,6 +160,81 @@ private fun <Request : Message, Response : Message> grpcImplementation(
             )
         }
     }
+}
+
+private suspend fun <T : Message> FlowCollector<T>.readResponse(
+    channel: ByteReadChannel,
+    methodDescriptor: MethodDescriptor,
+    deserializer: MessageDeserializer<T>,
+    interceptors: List<CallInterceptor>
+) {
+    while (!channel.exhausted()) {
+        val frame = Buffer()
+        ByteArray(5).apply {
+            channel.readFully(this)
+            frame.write(this)
+        }
+
+        if (frame.remaining == 0L) break
+
+        val flag = frame.readByte().toUByte()
+        val length = frame.readInt()
+
+        val payload = channel.readRemaining(length.toLong())
+
+        if (flag == 0.toUByte()) {
+            // data received
+            val receivedMessage = deserializer.deserialize(payload.readByteArray())
+
+            val actualMessage =
+                interceptors.fold(receivedMessage) { currentMessage, interceptor ->
+                    interceptor.onReceiveMessage(methodDescriptor, currentMessage)
+                }
+
+            emit(actualMessage)
+        } else if (flag == 0x80.toUByte()) {
+            val headers = decodeHeadersFrame(payload)
+
+            extractStatusFromMetadataAndVerify(
+                metadata = headers,
+                runInterceptors = { status ->
+                    interceptors
+                        .fold(
+                            Pair(status, headers)
+                        ) { (currentStatus, currentMetadata), interceptor ->
+                            interceptor.onClose(methodDescriptor, currentStatus, currentMetadata)
+                        }
+                        .first
+                }
+            )
+        }
+    }
+}
+
+private fun extractStatusFromMetadataAndVerify(metadata: Metadata, runInterceptors: (Status) -> Status) {
+    val status = extractStatusFromMetadata(metadata)
+    if (status != null) {
+        val finalStatus = runInterceptors(status)
+
+        if (finalStatus.code != Code.OK) {
+            throw StatusException(
+                status = finalStatus,
+                cause = null
+            )
+        }
+    }
+}
+
+private fun extractStatusFromMetadata(metadata: Metadata): Status? {
+    val rawStatus = metadata[KEY_GRPC_STATUS]
+
+    return if (rawStatus != null && rawStatus.toIntOrNull() != null) {
+        val code = Code.getCodeForValue(rawStatus.toInt())
+        Status(
+            code = code,
+            statusMessage = metadata[KEY_GRPC_MESSAGE].orEmpty()
+        )
+    } else null
 }
 
 private fun encodeMessageFrame(message: Message): ByteArray {
