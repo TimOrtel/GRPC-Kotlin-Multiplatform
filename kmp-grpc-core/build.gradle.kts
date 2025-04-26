@@ -61,6 +61,8 @@ kotlin {
             dependencies {
                 implementation(kotlin("stdlib-common"))
                 implementation(libs.kotlinx.coroutines.core)
+                implementation(libs.kotlinx.io.core)
+                implementation(libs.squareup.okio)
             }
         }
 
@@ -106,9 +108,7 @@ kotlin {
             dependsOn(iosJsCommon)
 
             dependencies {
-                api(npm("google-protobuf", "3.21.2"))
                 api(npm("grpc-web", "1.5.0"))
-                api(npm("protobufjs", "7.2.6"))
             }
         }
 
@@ -151,4 +151,12 @@ kotlin.targets.withType(org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarge
     binaries.all {
         binaryOptions["memoryModel"] = "experimental"
     }
+}
+
+tasks.withType<org.gradle.jvm.tasks.Jar>().configureEach {
+    from(layout.projectDirectory.file("../THIRD_PARTY_LICENSES.txt")) {
+        into("META-INF")
+    }
+
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
