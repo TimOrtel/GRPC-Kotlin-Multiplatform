@@ -15,6 +15,8 @@ grpcKotlin = "1.4.1"
 protobufJvm = "3.25.6"
 protobufGradlePlugin = "0.9.4"
 
+ktor = "3.1.2"
+
 kotlinxCoroutines = "1.10.1"
 antlr = "4.13.1"
 
@@ -45,6 +47,8 @@ grpc-services = { group = "io.grpc", name = "grpc-services", version.ref = "grpc
 grpc-kotlin-stub = { group = "io.grpc", name = "grpc-kotlin-stub", version.ref = "grpcKotlin" }
 grpc-netty = { group = "io.grpc", name = "grpc-netty", version = "1.69.1" }
 grpc-netty-shaded = { group = "io.grpc", name = "grpc-netty-shaded", version.ref = "grpcJvm" }
+
+ktor-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 
 squareup-kotlinpoet = { group = "com.squareup", name = "kotlinpoet", version = "1.16.0" }
 squareup-okio = { module = "com.squareup.okio:okio", version.ref = "okio"}

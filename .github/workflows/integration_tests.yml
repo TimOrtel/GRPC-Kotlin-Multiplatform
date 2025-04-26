@@ -78,7 +78,7 @@ jobs:
           echo "Service is healthy!"
 
       - name: Run tests in plugin module
-        run: ./gradlew :kmp-grpc-internal-test:jsTest --info
+        run: ./gradlew :kmp-grpc-internal-test:jsTest :kmp-grpc-internal-test:wasmJsTest --info
 
       - name: Stop docker services
         run: docker stop envoy

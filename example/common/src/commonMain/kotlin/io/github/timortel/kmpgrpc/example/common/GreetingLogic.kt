@@ -3,7 +3,7 @@ package io.github.timortel.kmpgrpc.example.common
 import io.github.timortel.kmpgrpc.example.HelloServiceStub
 import io.github.timortel.kmpgrpc.example.helloRequest
 import io.github.timortel.kmpgrpc.core.Channel
-import io.github.timortel.kmpgrpc.core.util.TimeUnit
+import kotlin.time.Duration.Companion.seconds
 
 object GreetingLogic {
 
@@ -16,7 +16,7 @@ object GreetingLogic {
         val stub = HelloServiceStub(channel)
         return try {
             stub
-                .withDeadlineAfter(3, TimeUnit.SECONDS)
+                .withDeadlineAfter(3.seconds)
                 .sayHello(
                 request = helloRequest {
                     greeting = message
@@ -41,7 +41,7 @@ object GreetingLogic {
         }
 
         stub
-            .withDeadlineAfter(10, TimeUnit.SECONDS)
+            .withDeadlineAfter(10.seconds)
             .sayHelloMultipleTimes(request)
             .collect {
                 println("Received: ${it.response}")

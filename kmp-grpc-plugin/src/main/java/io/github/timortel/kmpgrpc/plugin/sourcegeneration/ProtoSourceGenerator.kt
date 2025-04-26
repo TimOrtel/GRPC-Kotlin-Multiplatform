@@ -25,6 +25,7 @@ object ProtoSourceGenerator {
         commonOutputFolder: File,
         jvmOutputFolder: File,
         jsOutputFolder: File,
+        wasmJsFolder: File,
         iosOutputDir: File
     ) {
         val folders = protoFolders.mapNotNull { sourceFolder ->
@@ -52,6 +53,10 @@ object ProtoSourceGenerator {
 
         if (shouldGenerateTargetMap[KmpGrpcExtension.JS] == true) {
             JsProtoProjectWriter.writeProject(project, jsOutputFolder)
+        }
+
+        if (shouldGenerateTargetMap[KmpGrpcExtension.WASMJS] == true) {
+            JsProtoProjectWriter.writeProject(project, wasmJsFolder)
         }
 
         if (shouldGenerateTargetMap[KmpGrpcExtension.IOS] == true) {

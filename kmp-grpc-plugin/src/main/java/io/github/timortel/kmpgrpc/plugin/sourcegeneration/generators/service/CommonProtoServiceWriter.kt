@@ -21,7 +21,6 @@ object CommonProtoServiceWriter : ProtoServiceWriter(false) {
             FunSpec
                 .builder(Const.Service.Functions.WithDeadlineAfter.NAME)
                 .addParameter(Const.Service.Functions.WithDeadlineAfter.ParamDuration.toParamSpec())
-                .addParameter(Const.Service.Functions.WithDeadlineAfter.ParamUnit.toParamSpec())
                 .addModifiers(KModifier.OVERRIDE)
                 .returns(service.className)
                 .build()
