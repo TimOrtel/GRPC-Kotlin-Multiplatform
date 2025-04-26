@@ -36,7 +36,6 @@ abstract class ProtoServiceWriter(private val isActual: Boolean) {
                 specifyInheritance(this, service)
                 applyToClass(this, service)
 
-
                 service.rpcs.forEach { rpc ->
                     val returnType = if (rpc.isReceivingStream) {
                         Flow::class.asTypeName().parameterizedBy(rpc.returnType.resolve())

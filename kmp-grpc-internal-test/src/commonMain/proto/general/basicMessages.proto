@@ -149,4 +149,7 @@ service TestService {
 
   rpc simpleClientStreamingRpc (stream SimpleMessage) returns (SimpleMessage);
   rpc bidiStreamingRpc (stream SimpleMessage) returns (stream SimpleMessage);
+
+  rpc unaryDelayed (SimpleMessage) returns (SimpleMessage);
+  rpc serverStreamingDelayed(SimpleMessage) returns (stream SimpleMessage);
 }

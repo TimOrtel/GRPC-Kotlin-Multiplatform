@@ -13,7 +13,6 @@ object JvmProtoServiceWriter : IosJvmProtoServiceWriter() {
 
     private val METHOD_DESCRIPTOR = ClassName("io.grpc", "MethodDescriptor")
     private val METHOD_TYPE = METHOD_DESCRIPTOR.nestedClass("MethodType")
-    private val PROTO_LITE_UTILS = ClassName("io.grpc.protobuf.lite", "ProtoLiteUtils")
 
     override val unaryCallMemberName: MemberName = MemberName(PACKAGE_RPC, "unaryRpc")
     override val clientStreamingCallMemberName: MemberName = MemberName(PACKAGE_RPC, "clientStreamingRpc")
@@ -33,8 +32,6 @@ object JvmProtoServiceWriter : IosJvmProtoServiceWriter() {
 
         builder.apply {
             addSuperinterface(androidJvmStub.parameterizedBy(service.className))
-
-            overrideWithDeadlineAfter(builder, service.className)
 
             addType(
                 TypeSpec

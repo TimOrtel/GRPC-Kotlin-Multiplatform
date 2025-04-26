@@ -5,11 +5,7 @@ import io.grpc.*
 import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder
 import io.grpc.protobuf.services.ProtoReflectionServiceV1
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.last
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.flow.*
 import kotlin.time.Duration.Companion.seconds
 
 
@@ -71,6 +67,19 @@ object TestServer {
 
                     override fun bidiStreamingRpc(requests: Flow<SimpleMessage>): Flow<SimpleMessage> {
                         return requests
+                    }
+
+                    override suspend fun unaryDelayed(request: SimpleMessage): SimpleMessage {
+                        delay(500)
+                        return request
+                    }
+
+                    override fun serverStreamingDelayed(request: SimpleMessage): Flow<SimpleMessage> {
+                        return flow {
+                            emit(request)
+                            delay(500)
+                            emit(request)
+                        }
                     }
                 }
             )

@@ -24,15 +24,6 @@ object IosProtoServiceWriter : IosJvmProtoServiceWriter() {
     override val serverStreamingCallMemberName: MemberName = MemberName(PACKAGE_RPC, "serverSideStreamingCallImplementation")
     override val bidiStreamingCallMemberName: MemberName = MemberName(PACKAGE_RPC, "bidiStreamingCallImplementation")
 
-    override fun applyToClass(
-        builder: TypeSpec.Builder,
-        service: ProtoService
-    ) {
-        super.applyToClass(builder, service)
-
-        overrideWithDeadlineAfter(builder, service.className)
-    }
-
     override fun applyToRpcFunction(
         builder: FunSpec.Builder,
         rpc: ProtoRpc,
