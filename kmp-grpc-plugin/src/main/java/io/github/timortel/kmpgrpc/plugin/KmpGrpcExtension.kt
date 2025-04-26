@@ -4,6 +4,7 @@ import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
+import org.jetbrains.kotlin.gradle.targets.js.WASM
 import javax.inject.Inject
 
 open class KmpGrpcExtension @Inject constructor(objects: ObjectFactory) {
@@ -12,9 +13,10 @@ open class KmpGrpcExtension @Inject constructor(objects: ObjectFactory) {
         internal const val COMMON = "common"
         internal const val JVM = "jvm"
         internal const val JS = "js"
+        internal const val WASMJS = "wasmjs"
         internal const val IOS = "ios"
 
-        internal val targets = listOf(COMMON, JVM, JS, IOS)
+        internal val targets = listOf(COMMON, JVM, JS, WASMJS, IOS)
     }
 
     /**
@@ -49,6 +51,10 @@ open class KmpGrpcExtension @Inject constructor(objects: ObjectFactory) {
 
     fun js(targets: List<String> = listOf("jsMain")) {
         targetSourcesMap.put(JS, targets)
+    }
+
+    fun wasmjs(targets: List<String> = listOf("wasmJsMain")) {
+        targetSourcesMap.put(WASMJS, targets)
     }
 
     fun ios(targets: List<String> = listOf("iosMain")) {
