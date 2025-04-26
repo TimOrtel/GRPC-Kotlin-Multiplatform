@@ -283,16 +283,26 @@ abstract class RpcTest {
         assertEquals(2, received.size, "Expected to have received 2 messages.")
     }
 
-    protected inline fun assertFailsWithUnavailableOrCancelledStatus(block: () -> Unit) {
-        val exception = assertFailsWith<StatusException> { block() }
+    @Test
+    fun testUnimplementedRpcThrowsStatusException() = runTest {
+        assertFailsWithCode(listOf(Code.UNIMPLEMENTED)) {
+            stub
+                .unaryUnimplemented(simpleMessage {  })
+        }
+    }
 
-        assertContains(listOf(Code.UNAVAILABLE, Code.CANCELLED), exception.status.code, "Expected to fail with UNAVAILABLE or CANCELLED status. statusMessage=${exception.status.statusMessage}")
+    protected inline fun assertFailsWithUnavailableOrCancelledStatus(block: () -> Unit) {
+        assertFailsWithCode(listOf(Code.UNAVAILABLE, Code.CANCELLED), block)
     }
 
     protected inline fun assertFailsWithTimeoutStatus(block: () -> Unit) {
+        assertFailsWithCode(listOf(Code.DEADLINE_EXCEEDED), block)
+    }
+
+    protected inline fun assertFailsWithCode(codes: List<Code>, block: () -> Unit) {
         val exception = assertFailsWith<StatusException> { block() }
 
-        assertContains(listOf(Code.DEADLINE_EXCEEDED), exception.status.code, "Expected to fail with DEADLINE_EXCEEDED status. statusMessage=${exception.status.statusMessage}")
+        assertContains(codes, exception.status.code, "Expected to fail with $codes status. statusMessage=${exception.status.statusMessage}")
     }
 }
 
