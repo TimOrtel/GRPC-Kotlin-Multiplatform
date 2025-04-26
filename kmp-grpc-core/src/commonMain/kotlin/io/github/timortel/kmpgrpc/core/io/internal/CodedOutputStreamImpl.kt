@@ -305,7 +305,6 @@ internal class CodedOutputStreamImpl(private val sink: Sink) : CodedOutputStream
     override fun writeSInt64NoTag(value: Long) = writeUInt64NoTag(DataEncoding.encodeZigZag64(value))
 
     override fun writeString(fieldNumber: Int, value: String) {
-        println("writeString $fieldNumber $value")
         writeTag(fieldNumber, DataType.STRING, false)
         writeStringNoTag(value)
     }

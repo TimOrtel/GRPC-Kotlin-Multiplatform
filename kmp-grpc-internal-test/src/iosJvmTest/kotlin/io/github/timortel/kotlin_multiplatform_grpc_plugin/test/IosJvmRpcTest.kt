@@ -3,14 +3,15 @@ package io.github.timortel.kotlin_multiplatform_grpc_plugin.test
 import io.github.timortel.kmpgrpc.test.CancellationServiceStub
 import io.github.timortel.kmpgrpc.test.cancellationMessage
 import io.github.timortel.kmpgrpc.test.simpleMessage
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 abstract class IosJvmRpcTest : RpcTest() {
 
@@ -135,5 +136,43 @@ abstract class IosJvmRpcTest : RpcTest() {
                     .toList()
             }
         }
+    }
+
+    @Test
+    fun testClientStreamingDeadlineTriggered() = runTest {
+        assertFailsWithTimeoutStatus {
+            withContext(Dispatchers.Default) {
+                stub
+                    .withDeadlineAfter(200.milliseconds)
+                    .simpleClientStreamingRpc(flow { delay(1.seconds) })
+            }
+        }
+    }
+
+    @Test
+    fun testClientStreamingDeadlineNotTriggered() = runTest {
+        stub
+            .withDeadlineAfter(1.seconds)
+            .simpleClientStreamingRpc(flowOf(simpleMessage {  }))
+    }
+
+    @Test
+    fun testBidiStreamingDeadlineTriggered() = runTest {
+        assertFailsWithTimeoutStatus {
+            withContext(Dispatchers.Default) {
+                stub
+                    .withDeadlineAfter(200.milliseconds)
+                    .bidiStreamingRpc(flow { delay(1.seconds) })
+                    .toList()
+            }
+        }
+    }
+
+    @Test
+    fun testBidiStreamingDeadlineNotTriggered() = runTest {
+        stub
+            .withDeadlineAfter(200.milliseconds)
+            .bidiStreamingRpc(flowOf(simpleMessage {  }))
+            .toList()
     }
 }

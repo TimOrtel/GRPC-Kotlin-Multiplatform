@@ -1,9 +1,10 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants
 
 import com.squareup.kotlinpoet.LIST
-import com.squareup.kotlinpoet.LONG
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.STRING
+import com.squareup.kotlinpoet.asTypeName
+import kotlin.time.Duration
 
 object Const {
     object Service {
@@ -19,8 +20,7 @@ object Const {
             object WithDeadlineAfter {
                 const val NAME = "withDeadlineAfter"
 
-                val ParamDuration = Property("duration", LONG)
-                val ParamUnit = Property("unit", kmTimeUnit)
+                val ParamDuration = Property("duration", Duration::class.asTypeName())
             }
         }
 

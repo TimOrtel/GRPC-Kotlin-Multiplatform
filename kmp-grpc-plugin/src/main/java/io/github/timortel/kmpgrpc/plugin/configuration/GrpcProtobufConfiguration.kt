@@ -64,6 +64,14 @@ object GrpcProtobufConfiguration {
                     )
                 }
 
+                targetSourceMap[KmpGrpcExtension.WASMJS].orEmpty().forEach {
+                    kotlinExtension.sourceSets.findByName(it)?.kotlin?.srcDir(
+                        GenerateKmpGrpcSourcesTask.getWasmJsOutputFolder(
+                            project
+                        )
+                    )
+                }
+
                 targetSourceMap[KmpGrpcExtension.IOS].orEmpty().forEach {
                     kotlinExtension.sourceSets.findByName(it)?.kotlin?.srcDir(
                         GenerateKmpGrpcSourcesTask.getIOSOutputFolder(

@@ -1,3 +1,7 @@
+@file:OptIn(ExperimentalWasmDsl::class)
+
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
+
 plugins {
     id("com.android.library")
     kotlin("multiplatform")
@@ -18,10 +22,19 @@ kotlin {
     androidTarget("android") {
         publishLibraryVariants("release", "debug")
     }
+
     js(IR) {
         browser()
+        nodejs()
     }
+
+    wasmJs {
+        browser()
+        nodejs()
+    }
+
     jvm("jvm")
+
     iosX64()
     iosArm64()
     iosSimulatorArm64()
@@ -101,20 +114,28 @@ kotlin {
 
         androidMain {
             dependsOn(androidJvmCommon)
-
-        }
-
-        jsMain {
-            dependsOn(iosJsCommon)
-
-            dependencies {
-                api(npm("grpc-web", "1.5.0"))
-            }
         }
 
         iosMain {
             dependsOn(iosJsCommon)
             dependsOn(iosJvmCommon)
+        }
+
+        val jsTargetCommon by creating {
+            dependsOn(iosJsCommon)
+            dependsOn(commonMain.get())
+
+            dependencies {
+                implementation(libs.ktor.core)
+            }
+        }
+
+        jsMain {
+            dependsOn(jsTargetCommon)
+        }
+
+        wasmJsMain {
+            dependsOn(jsTargetCommon)
         }
     }
 }

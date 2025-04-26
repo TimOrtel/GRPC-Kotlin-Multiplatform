@@ -64,6 +64,8 @@ abstract class ActualProtoServiceWriter : ProtoServiceWriter(true) {
                     .build()
             )
         }
+
+        overrideWithDeadlineAfter(builder, service.className)
     }
 
     override fun applyToChannelConstructor(builder: FunSpec.Builder, service: ProtoService) {
@@ -74,5 +76,20 @@ abstract class ActualProtoServiceWriter : ProtoServiceWriter(true) {
                 createEmptyCallOptionsCode
             )
         }
+    }
+
+    private fun overrideWithDeadlineAfter(builder: TypeSpec.Builder, serviceClass: ClassName) {
+        builder.addFunction(
+            FunSpec.builder(Const.Service.Functions.WithDeadlineAfter.NAME)
+                .addModifiers(KModifier.OVERRIDE, KModifier.ACTUAL)
+                .addParameter(Const.Service.Functions.WithDeadlineAfter.ParamDuration.toParamSpec())
+                .returns(serviceClass)
+                .addStatement(
+                    "return super.%N(%N)",
+                    Const.Service.Functions.WithDeadlineAfter.NAME,
+                    Const.Service.Functions.WithDeadlineAfter.ParamDuration.toParamSpec(),
+                )
+                .build()
+        )
     }
 }

@@ -13,7 +13,7 @@ abstract class IosJsChannel {
 
     internal var isShutdown: Boolean = false
 
-    fun shutdown() {
+    open fun shutdown() {
         isShutdown = true
     }
 

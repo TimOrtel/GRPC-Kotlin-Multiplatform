@@ -25,8 +25,6 @@ kotlin {
     }
 
     js(IR) {
-        useCommonJs()
-
         browser {
             testTask {
                 useKarma {
@@ -35,6 +33,12 @@ kotlin {
                 }
             }
         }
+        nodejs()
+    }
+
+    wasmJs {
+        browser()
+        nodejs()
     }
 
     iosArm64()
@@ -78,8 +82,20 @@ kotlin {
             dependsOn(commonTest.get())
         }
 
-        jsTest {
+        val jsTestTargetCommon by creating {
             dependsOn(serializationTest)
+
+            dependencies {
+                implementation(libs.ktor.core)
+            }
+        }
+
+        jsTest {
+            dependsOn(jsTestTargetCommon)
+        }
+
+        wasmJsTest {
+            dependsOn(jsTestTargetCommon)
         }
 
         iosTest {
@@ -125,6 +141,7 @@ kmpGrpc {
     jvm()
     android()
     js()
+    wasmjs()
     ios()
 
     includeWellKnownTypes = true

@@ -1,4 +1,4 @@
-name: Build Example Android and iOS Apps
+name: Build Native Integration Example Android and iOS Apps
 
 on:
   push:
@@ -29,7 +29,7 @@ jobs:
 
       - name: Build Android app
         run: |
-          cd example
+          cd examples/native-integration
           ./gradlew android:assembleDebug
 
   build-ios:
@@ -53,7 +53,7 @@ jobs:
       - name: Cache Example Common Cocoapods Synthetic Build
         uses: actions/cache@v4
         with:
-          path: example/common/build/cocoapods/synthetic
+          path: examples/native-integration/common/build/cocoapods/synthetic
           key: example-common-cocoapods-synthetic-${{ runner.os }}-${{ hashFiles('kmp-grpc-core/gradle.properties') }}
 
       - name: Publish revision to maven local
@@ -62,15 +62,15 @@ jobs:
 
       - name: Build common module
         run: |
-          cd example
+          cd examples/native-integration
           ./gradlew common:build common:podspec common:generateDummyFramework
 
       - name: Install CocoaPods dependencies
         run: |
-          cd example/iosApp
+          cd examples/native-integration/iosApp
           pod install
 
       - name: Build iOS app
         run: |
-          cd example/iosApp
+          cd examples/native-integration/iosApp
           xcodebuild -workspace iosApp.xcworkspace -scheme iosApp -sdk iphonesimulator -configuration Debug CLANG_CXX_LANGUAGE_STANDARD=c++17 LLVM_TARGET_TRIPLE_OS_VERSION=ios15.6

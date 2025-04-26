@@ -19,6 +19,7 @@ abstract class BaseValidationTest {
             File(""),
             File(""),
             File(""),
+            File(""),
             File("")
         )
     }

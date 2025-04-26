@@ -1,8 +1,9 @@
 package io.github.timortel.kmpgrpc.core.stub
 
 import io.github.timortel.kmpgrpc.core.Channel
-import io.github.timortel.kmpgrpc.core.util.TimeUnit
 import io.grpc.CallOptions
+import kotlin.time.Duration
+import kotlin.time.toJavaDuration
 
 // Additional layer of abstraction for the second generic argument.
 /**
@@ -15,7 +16,7 @@ interface AndroidJvmStub<S : Stub<S>> {
 
     fun build(channel: Channel, callOptions: CallOptions): S
 
-    fun withDeadlineAfter(duration: Long, unit: TimeUnit): S {
-        return build(channel, callOptions.withDeadlineAfter(duration, unit.javaTimeUnit))
+    fun withDeadlineAfter(duration: Duration): S {
+        return build(channel, callOptions.withDeadlineAfter(duration.toJavaDuration()))
     }
 }
