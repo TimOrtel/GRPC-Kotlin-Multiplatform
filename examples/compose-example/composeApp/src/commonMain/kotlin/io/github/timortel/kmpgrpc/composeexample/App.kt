@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -46,6 +47,7 @@ import io.github.timortel.kmpgrpc.composeexample.shared.Communication
 import io.github.timortel.kmpgrpc.composeexample.shared.numMessage
 import io.github.timortel.kmpgrpc.core.Channel
 import io.github.timortel.kmpgrpc.core.StatusException
+import io.github.timortel.kmpgrpc.core.util.TimeUnit
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -91,7 +93,7 @@ private sealed class Destination(val name: String, val description: String, val 
 }
 
 @Composable
-fun App(modifier: Modifier) {
+fun App(modifier: Modifier, supportClientStreaming: Boolean = true) {
     var currentDestination: Destination by remember { mutableStateOf(Destination.Home) }
 
     var host: String by remember { mutableStateOf("") }
@@ -108,6 +110,7 @@ fun App(modifier: Modifier) {
                     modifier = destinationModifier,
                     host = host,
                     port = port,
+                    supportClientStreaming = supportClientStreaming,
                     onUpdateHost = { host = it },
                     onUpdatePort = { port = it },
                     onChangeDestination = { currentDestination = it }
@@ -166,6 +169,7 @@ private fun HomeDestination(
     modifier: Modifier,
     host: String,
     port: String,
+    supportClientStreaming: Boolean,
     onUpdateHost: (String) -> Unit,
     onUpdatePort: (String) -> Unit,
     onChangeDestination: (Destination) -> Unit
@@ -195,12 +199,19 @@ private fun HomeDestination(
                 onValueChange = onUpdatePort
             )
 
-            listOf(
-                Destination.Unary,
-                Destination.ClientStreaming,
-                Destination.ServerStreaming,
-                Destination.BidiStreaming
-            ).fastForEach { dest ->
+            if (supportClientStreaming) {
+                listOf(
+                    Destination.Unary,
+                    Destination.ClientStreaming,
+                    Destination.ServerStreaming,
+                    Destination.BidiStreaming
+                )
+            } else {
+                listOf(
+                    Destination.Unary,
+                    Destination.ServerStreaming,
+                )
+            }.fastForEach { dest ->
                 Button(
                     modifier = Modifier.fillMaxWidth().testTag(dest.buttonTag),
                     onClick = {
@@ -231,7 +242,9 @@ private fun UnaryDestination(modifier: Modifier, host: String, port: Int, onNavi
         onNumberEntered = { num ->
             scope.launch {
                 serverResponse = try {
-                    stub.squareNumber(
+                    stub
+                        .withDeadlineAfter(2L, TimeUnit.SECONDS)
+                        .squareNumber(
                         numMessage { value = num }
                     ).value.toString()
                 } catch (e: StatusException) {
@@ -445,7 +458,10 @@ private fun DestinationBase(
         }
     ) { padding ->
         Column(
-            modifier = Modifier.fillMaxSize().padding(padding).padding(horizontal = 20.dp)
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(horizontal = 20.dp)
         ) {
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -469,7 +485,10 @@ private fun DestinationWithNumPadBase(
 ) {
     DestinationBase(modifier = modifier, destination = destination, onNavigateBack = onNavigateBack) {
         NumPad(
-            modifier = Modifier.fillMaxWidth(0.6f).align(Alignment.CenterHorizontally),
+            modifier = Modifier
+                .widthIn(max = 400.dp)
+                .fillMaxWidth(0.6f)
+                .align(Alignment.CenterHorizontally),
             enabled = numPadEnabled,
             onNumberEntered = onNumberEntered
         )
