@@ -16,14 +16,18 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.joinToCodeBlock
 class RequiredSizePropertyExtension : BaseSerializationExtension() {
 
     override fun applyToClass(builder: TypeSpec.Builder, message: ProtoMessage, sourceTarget: SourceTarget) {
-        if (sourceTarget is SourceTarget.Actual) {
-            builder.addProperty(
-                PropertySpec
-                    .builder("requiredSize", INT, KModifier.OVERRIDE)
-                    .initializer(buildRequiredSizeInitializer(message))
-                    .build()
-            )
-        }
+        builder.addProperty(
+            PropertySpec
+                .builder("requiredSize", INT, KModifier.OVERRIDE)
+                .apply {
+                    if (sourceTarget is SourceTarget.Actual) {
+                        addModifiers(KModifier.ACTUAL)
+
+                        initializer(buildRequiredSizeInitializer(message))
+                    }
+                }
+                .build()
+        )
     }
 
     private fun buildRequiredSizeInitializer(message: ProtoMessage): CodeBlock {
