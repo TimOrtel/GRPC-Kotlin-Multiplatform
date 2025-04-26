@@ -86,7 +86,7 @@ jobs:
       - name: Run tests
         run: |
           cd examples/compose-example
-          ./gradlew :composeAppJs:jsTest
+          ./gradlew :composeAppJs:jsTest :composeApp:wasmJsTest
 
   test-ios:
     runs-on: macos-latest
