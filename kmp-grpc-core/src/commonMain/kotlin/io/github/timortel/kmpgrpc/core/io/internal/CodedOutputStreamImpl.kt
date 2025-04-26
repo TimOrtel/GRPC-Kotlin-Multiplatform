@@ -218,15 +218,15 @@ internal class CodedOutputStreamImpl(private val sink: Sink) : CodedOutputStream
         writeKey: CodedOutputStream.(Int, K) -> Unit,
         writeValue: CodedOutputStream.(Int, V) -> Unit
     ) {
-        val tag = wireFormatMakeTag(fieldNumber, WireFormat.LENGTH_DELIMITED)
         map.forEach { (key, value) ->
             // Write tag
-            writeInt32NoTag(tag)
+            writeTag(fieldNumber, WireFormat.LENGTH_DELIMITED)
             // Write the size of the message
             val msgSize =
                 getKeySize(kMapKeyFieldNumber, key) + getValueSize(kMapValueFieldNumber, value)
             writeInt32NoTag(msgSize)
-            //Write fields
+
+            // Write fields
             writeKey(kMapKeyFieldNumber, key)
             writeValue(kMapValueFieldNumber, value)
         }

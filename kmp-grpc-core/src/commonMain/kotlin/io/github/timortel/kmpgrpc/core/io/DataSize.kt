@@ -212,7 +212,7 @@ object DataSize {
     }
 
     fun computeMessageSizeNoTag(value: Message?): Int {
-        return value?.requiredSize ?: 0
+        return if (value == null) 0 else computeLengthDelimitedFieldSize(value.requiredSize)
     }
 
     fun <K, V> computeMapSize(
