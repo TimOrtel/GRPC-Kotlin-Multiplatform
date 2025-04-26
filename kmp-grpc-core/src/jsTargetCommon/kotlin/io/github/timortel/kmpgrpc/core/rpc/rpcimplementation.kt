@@ -169,18 +169,14 @@ private suspend fun <T : Message> FlowCollector<T>.readResponse(
     interceptors: List<CallInterceptor>
 ) {
     while (!channel.exhausted()) {
-        val frame = Buffer()
-        ByteArray(5).apply {
-            channel.readFully(this)
-            frame.write(this)
-        }
+        val frame = channel.readBuffer(5)
 
         if (frame.remaining == 0L) break
 
         val flag = frame.readByte().toUByte()
         val length = frame.readInt()
 
-        val payload = channel.readRemaining(length.toLong())
+        val payload = channel.readBuffer(length)
 
         if (flag == 0.toUByte()) {
             // data received
