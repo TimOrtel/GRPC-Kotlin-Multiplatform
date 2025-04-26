@@ -8,6 +8,11 @@ import io.github.timortel.kmpgrpc.core.io.CodedOutputStream
 expect interface Message {
 
     /**
+     * The size this message takes up in a byte array.
+     */
+    val requiredSize: Int
+
+    /**
      * The name of this proto: <proto-package>.<name>
      */
     val fullName: String

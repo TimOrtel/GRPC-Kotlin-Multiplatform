@@ -70,8 +70,6 @@ interface CodedOutputStream {
 
     fun writeMessageArray(fieldNumber: Int, values: List<Message>)
 
-    fun writeRawVarint32(value: Int)
-
     fun writeSFixed32(fieldNumber: Int, value: Int)
 
     fun writeSFixed32Array(fieldNumber: Int, values: List<Int>, tag: UInt)

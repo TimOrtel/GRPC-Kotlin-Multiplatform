@@ -16,7 +16,7 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.joinToCodeBlock
 class RequiredSizePropertyExtension : BaseSerializationExtension() {
 
     override fun applyToClass(builder: TypeSpec.Builder, message: ProtoMessage, sourceTarget: SourceTarget) {
-        if (sourceTarget == SourceTarget.Ios || sourceTarget == SourceTarget.Jvm) {
+        if (sourceTarget is SourceTarget.Actual) {
             builder.addProperty(
                 PropertySpec
                     .builder("requiredSize", INT, KModifier.OVERRIDE)
@@ -69,31 +69,27 @@ class RequiredSizePropertyExtension : BaseSerializationExtension() {
                                         ProtoType.DefType.DeclarationType.MESSAGE -> {
                                             add(
                                                 "%M(it)",
-                                                MemberName(
-                                                    PACKAGE_IO,
-                                                    "computeMessageSizeNoTag"
-                                                )
+                                                computeMessageSizeNoTag
                                             )
                                         }
 
                                         ProtoType.DefType.DeclarationType.ENUM -> {
                                             add(
                                                 "%M(it.%N)",
-                                                MemberName(PACKAGE_IO, "computeEnumSizeNoTag"),
+                                                computeEnumSizeNoTag,
                                                 Const.Enum.NUMBER_PROPERTY_NAME
                                             )
-
                                         }
                                     }
                                 }
                             }
                             endControlFlow()
-                            addStatement("val tagSize = %M(%L)", ComputeTagSize, field.number)
+                            addStatement("val tagSize = %M(%L)", computeTagSize, field.number)
 
                             if (field.type.isPackable) {
                                 addStatement(
                                     "dataSize + tagSize + %M(tagSize)",
-                                    ComputeInt32SizeNoTag
+                                    computeInt32SizeNoTag
                                 )
                             } else {
                                 addStatement("dataSize + %N.size * tagSize", field.attributeName)
@@ -159,10 +155,7 @@ class RequiredSizePropertyExtension : BaseSerializationExtension() {
                         ProtoType.DefType.DeclarationType.MESSAGE -> {
                             CodeBlock.of(
                                 "%M(%L, %N)",
-                                MemberName(
-                                    PACKAGE_IO,
-                                    "computeMessageSize"
-                                ),
+                                computeMessageSize,
                                 field.number,
                                 field.attributeName
                             )
@@ -171,7 +164,7 @@ class RequiredSizePropertyExtension : BaseSerializationExtension() {
                         ProtoType.DefType.DeclarationType.ENUM -> {
                             CodeBlock.of(
                                 "%M(%L, %N.%N)",
-                                MemberName(PACKAGE_IO, "computeEnumSize"),
+                                computeEnumSize,
                                 field.number,
                                 field.attributeName,
                                 Const.Enum.NUMBER_PROPERTY_NAME

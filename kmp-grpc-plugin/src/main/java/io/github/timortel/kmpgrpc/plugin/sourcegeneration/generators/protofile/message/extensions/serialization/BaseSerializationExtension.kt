@@ -2,9 +2,9 @@ package io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.
 
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.MemberName
+import com.squareup.kotlinpoet.MemberName.Companion.member
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.Const
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.PACKAGE_IO
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.computeMessageSize
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.dataSize
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.MessageWriterExtension
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
 
@@ -48,19 +48,17 @@ abstract class BaseSerializationExtension : MessageWriterExtension {
             protoType: ProtoType,
             withTag: Boolean
         ): MemberName {
-            return when (protoType) {
+            val functionName = when (protoType) {
                 is ProtoType.DefType -> {
                     when (protoType.declType) {
-                        ProtoType.DefType.DeclarationType.MESSAGE -> computeMessageSize
-                        ProtoType.DefType.DeclarationType.ENUM -> {
-                            MemberName(PACKAGE_IO, "computeEnumSize${if (!withTag) "NoTag" else ""}")
-                        }
+                        ProtoType.DefType.DeclarationType.MESSAGE -> "computeMessageSize${if (!withTag) "NoTag" else ""}"
+                        ProtoType.DefType.DeclarationType.ENUM -> "computeEnumSize${if (!withTag) "NoTag" else ""}"
                     }
                 }
 
                 is ProtoType.NonDeclType -> {
                     val name = when (protoType) {
-                        ProtoType.BytesType -> "Bytes"
+                        ProtoType.BytesType -> "ByteArray"
                         ProtoType.DoubleType -> "Double"
                         ProtoType.FloatType -> "Float"
                         ProtoType.BoolType -> "Bool"
@@ -76,9 +74,11 @@ abstract class BaseSerializationExtension : MessageWriterExtension {
                         ProtoType.UInt32Type -> "UInt32"
                         ProtoType.UInt64Type -> "UInt64"
                     }
-                    MemberName(PACKAGE_IO, "compute${name}Size${if (!withTag) "NoTag" else ""}")
+                    "compute${name}Size${if (!withTag) "NoTag" else ""}"
                 }
             }
+
+            return dataSize.member(functionName)
         }
     }
 }
