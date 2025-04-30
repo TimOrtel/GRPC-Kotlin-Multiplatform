@@ -36,13 +36,6 @@ object ProjectSetupConfiguration {
                 )
             }
 
-            val cocoapodsExtension = kotlinExtension.extensions.findByType(CocoapodsExtension::class.java)
-
-            cocoapodsExtension?.apply {
-                pod("gRPC-ProtoRPC", moduleName = "GRPCClient")
-                pod("Protobuf")
-            }
-
             project.replacePodBuildWithCustomPodBuildTask()
         }
     }

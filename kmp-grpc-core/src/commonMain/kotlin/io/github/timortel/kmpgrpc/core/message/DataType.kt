@@ -3,7 +3,7 @@ package io.github.timortel.kmpgrpc.core.message
 /**
  * The supported data types that can be used as message fields.
  */
-expect enum class DataType {
+enum class DataType {
     DOUBLE,
     FLOAT,
     INT64,

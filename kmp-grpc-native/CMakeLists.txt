@@ -1,0 +1,156 @@
+cmake_minimum_required(VERSION 3.31)
+project(kmp_grpc_native)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(ABSL_PROPAGATE_CXX_STD ON)
+set(gRPC_BUILD_CODEGEN OFF)
+set(protobuf_INSTALL OFF)
+set(protobuf_BUILD_TESTS OFF)
+set(utf8_range_ENABLE_INSTALL OFF)
+
+add_subdirectory("third_party/grpc" "${CMAKE_BINARY_DIR}/grpc")
+
+function(set_output_directory_for_target target)
+    set_target_properties(${target} PROPERTIES
+            ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/output"
+            LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/output"
+            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/output"
+    )
+endfunction()
+
+
+set_output_directory_for_target(absl_cord)
+set_output_directory_for_target(absl_string_view)
+set_output_directory_for_target(absl_cord_internal)
+set_output_directory_for_target(absl_cordz_info)
+set_output_directory_for_target(absl_strings)
+set_output_directory_for_target(absl_str_format_internal)
+set_output_directory_for_target(absl_strings_internal)
+set_output_directory_for_target(absl_cordz_handle)
+set_output_directory_for_target(absl_cordz_functions)
+set_output_directory_for_target(absl_bad_optional_access)
+set_output_directory_for_target(absl_bad_variant_access)
+set_output_directory_for_target(absl_flags_commandlineflag)
+set_output_directory_for_target(absl_flags_private_handle_accessor)
+set_output_directory_for_target(absl_flags_program_name)
+set_output_directory_for_target(absl_flags_config)
+set_output_directory_for_target(absl_flags_commandlineflag_internal)
+set_output_directory_for_target(absl_flags_marshalling)
+set_output_directory_for_target(absl_flags_reflection)
+set_output_directory_for_target(absl_flags_internal)
+set_output_directory_for_target(absl_kernel_timeout_internal)
+set_output_directory_for_target(absl_graphcycles_internal)
+set_output_directory_for_target(absl_synchronization)
+set_output_directory_for_target(absl_city)
+set_output_directory_for_target(absl_hash)
+set_output_directory_for_target(absl_low_level_hash)
+set_output_directory_for_target(absl_utf8_for_code_point)
+set_output_directory_for_target(absl_decode_rust_punycode)
+set_output_directory_for_target(absl_debugging_internal)
+set_output_directory_for_target(absl_symbolize)
+set_output_directory_for_target(absl_stacktrace)
+set_output_directory_for_target(absl_demangle_rust)
+set_output_directory_for_target(absl_demangle_internal)
+set_output_directory_for_target(absl_leak_check)
+set_output_directory_for_target(absl_examine_stack)
+set_output_directory_for_target(absl_crc_cord_state)
+set_output_directory_for_target(absl_crc32c)
+set_output_directory_for_target(absl_crc_internal)
+set_output_directory_for_target(absl_crc_cpu_detect)
+set_output_directory_for_target(absl_status)
+set_output_directory_for_target(absl_statusor)
+set_output_directory_for_target(absl_time_zone)
+set_output_directory_for_target(absl_time)
+set_output_directory_for_target(absl_civil_time)
+set_output_directory_for_target(absl_raw_hash_set)
+set_output_directory_for_target(absl_hashtablez_sampler)
+set_output_directory_for_target(absl_int128)
+set_output_directory_for_target(absl_exponential_biased)
+set_output_directory_for_target(absl_die_if_null)
+set_output_directory_for_target(absl_log_internal_conditions)
+set_output_directory_for_target(absl_log_internal_nullguard)
+set_output_directory_for_target(absl_log_internal_log_sink_set)
+set_output_directory_for_target(absl_log_internal_format)
+set_output_directory_for_target(absl_log_internal_fnmatch)
+set_output_directory_for_target(absl_log_internal_globals)
+set_output_directory_for_target(absl_log_sink)
+set_output_directory_for_target(absl_log_internal_check_op)
+set_output_directory_for_target(absl_log_internal_message)
+set_output_directory_for_target(absl_log_initialize)
+set_output_directory_for_target(absl_log_globals)
+set_output_directory_for_target(absl_log_internal_proto)
+set_output_directory_for_target(absl_log_entry)
+set_output_directory_for_target(absl_vlog_config_internal)
+set_output_directory_for_target(absl_random_internal_pool_urbg)
+set_output_directory_for_target(absl_random_distributions)
+set_output_directory_for_target(absl_random_seed_sequences)
+set_output_directory_for_target(absl_random_internal_platform)
+set_output_directory_for_target(absl_random_internal_seed_material)
+set_output_directory_for_target(absl_random_internal_randen_slow)
+set_output_directory_for_target(absl_random_internal_randen_hwaes_impl)
+set_output_directory_for_target(absl_random_internal_randen_hwaes)
+set_output_directory_for_target(absl_random_internal_randen)
+set_output_directory_for_target(absl_random_seed_gen_exception)
+set_output_directory_for_target(absl_spinlock_wait)
+set_output_directory_for_target(absl_log_severity)
+set_output_directory_for_target(absl_raw_logging_internal)
+set_output_directory_for_target(absl_base)
+set_output_directory_for_target(absl_throw_delegate)
+set_output_directory_for_target(absl_malloc_internal)
+set_output_directory_for_target(absl_strerror)
+set_output_directory_for_target(zlib)
+set_output_directory_for_target(re2)
+set_output_directory_for_target(crypto)
+set_output_directory_for_target(ssl)
+set_output_directory_for_target(c-ares)
+set_output_directory_for_target(utf8_validity)
+set_output_directory_for_target(libprotobuf)
+set_output_directory_for_target(upb_mini_descriptor_lib)
+set_output_directory_for_target(upb_mini_table_lib)
+set_output_directory_for_target(upb_base_lib)
+set_output_directory_for_target(upb_textformat_lib)
+set_output_directory_for_target(grpc++_unsecure)
+set_output_directory_for_target(upb_message_lib)
+set_output_directory_for_target(grpc_unsecure)
+set_output_directory_for_target(upb_mem_lib)
+set_output_directory_for_target(upb_json_lib)
+set_output_directory_for_target(utf8_range_lib)
+set_output_directory_for_target(upb_reflection_lib)
+set_output_directory_for_target(upb_wire_lib)
+set_output_directory_for_target(gpr)
+set_output_directory_for_target(address_sorting)
+set_output_directory_for_target(upb_hash_lib)
+set_output_directory_for_target(grpc++)
+
+add_library(kmp_grpc_native STATIC
+        rpcnative.cpp
+        rpcnative.h
+)
+
+target_link_libraries(kmp_grpc_native
+        grpc
+        grpc_unsecure
+        grpc++
+        grpc++_unsecure
+        gpr
+)
+
+set_target_properties(kmp_grpc_native PROPERTIES
+        ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/output"
+        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/output"
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/output"
+)
+
+add_executable(kmp_grpc_test
+        test2.cpp
+)
+
+target_link_libraries(kmp_grpc_test
+        kmp_grpc_native
+        grpc
+        grpc_unsecure
+        grpc++
+        grpc++_unsecure
+        gpr
+)

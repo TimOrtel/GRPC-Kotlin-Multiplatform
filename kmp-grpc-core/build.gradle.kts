@@ -35,9 +35,17 @@ kotlin {
 
     jvm("jvm")
 
-    iosX64()
-    iosArm64()
-    iosSimulatorArm64()
+    listOf(
+        iosX64(),
+        iosArm64(),
+        iosSimulatorArm64()
+    ).forEach { nativeTarget ->
+        nativeTarget.compilations.getByName("main") {
+            cinterops {
+                create("kmp_grpc_native")
+            }
+        }
+    }
 
     applyDefaultHierarchyTemplate()
 
@@ -55,13 +63,8 @@ kotlin {
         }
 
         ios.deploymentTarget = "18.2"
-
-        val grpcVersion: String by project
-        val protobufVersion: String by project
-
-        pod("gRPC-ProtoRPC", version = grpcVersion, moduleName = "GRPCClient")
-        pod("Protobuf", version = protobufVersion, moduleName = "Protobuf")
     }
+
 
     sourceSets {
         all {

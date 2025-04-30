@@ -1,27 +1,23 @@
 package io.github.timortel.kmpgrpc.core.rpc
 
-import cocoapods.GRPCClient.*
 import io.github.timortel.kmpgrpc.core.*
-import io.github.timortel.kmpgrpc.core.internal.CallInterceptorWrapper
+import io.github.timortel.kmpgrpc.core.io.internal.CodedInputStreamImpl
 import io.github.timortel.kmpgrpc.core.message.Message
 import io.github.timortel.kmpgrpc.core.message.MessageDeserializer
+import kotlinx.cinterop.*
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.channels.ProducerScope
-import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.launch
+import io.github.timortel.kmpgrpc.native.*
 import kotlinx.coroutines.suspendCancellableCoroutine
-import platform.Foundation.NSData
-import platform.Foundation.NSError
-import platform.darwin.NSObject
-import platform.darwin.dispatch_queue_t
+import kotlinx.io.Buffer
+import kotlinx.io.RawSource
+import kotlinx.io.buffered
+import kotlinx.io.writeUByte
+import platform.posix.size_t
+import platform.posix.uint8_tVar
+import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 
 private const val GRPC_ERROR_DOMAIN = "io.grpc"
 
@@ -48,49 +44,109 @@ private const val INVALID_UNKNOWN_DESCRIPTION_2 = "UNKNOWN {grpc_message:\"\", g
 @Throws(StatusException::class, CancellationException::class)
 suspend fun <REQ : Message, RES : Message> unaryCallImplementation(
     channel: Channel,
-    callOptions: GRPCCallOptions,
+    metadata: Metadata,
     path: String,
     request: REQ,
     requestDeserializer: MessageDeserializer<REQ>,
     responseDeserializer: MessageDeserializer<RES>
 ): RES {
-    val methodDescriptor = MethodDescriptor(
-        fullMethodName = path,
-        methodType = MethodDescriptor.MethodType.UNARY
-    )
+    val requestData = request.serialize().toUByteArray()
 
-    return unaryResponseCallBaseImplementation(channel) {
-        suspendCancellableCoroutine { continuation ->
-            val handler = UnaryCallHandler(
-                responseDeserializer = responseDeserializer,
-                onComplete = continuation::resume,
-                onCompleteWithError = continuation::resumeWithException,
-            )
+    val context = create_client_context()
+    val stub = create_stub(channel.channel)
 
-            val call = GRPCCall2(
-                requestOptions = channel.buildRequestOptions(path),
-                responseHandler = handler,
-                callOptions = channel.applyToCallOptions(
-                    injectCallInterceptor(
-                        callOptions = callOptions,
-                        interceptor = channel.interceptor,
-                        methodDescriptor = methodDescriptor,
-                        requestDeserializer = requestDeserializer,
-                        responseDeserializer = responseDeserializer
-                    )
-                )
-            )
-
-            call.start()
-            call.receiveNextMessages(1u)
-
-            call.writeData(request.serializeNative())
-
-            call.finish()
-
-            continuation.invokeOnCancellation { call.cancel() }
-        }
+    val requestBuffer = if (requestData.isEmpty()) {
+        create_byte_buffer(null, 0u)
+    } else {
+        create_byte_buffer(requestData.usePinned { it.addressOf(0) }, requestData.size.convert())
     }
+
+    val responseBuffer = create_empty_byte_buffer()
+
+    return try {
+        val responseStatus: Status = suspendCancellableCoroutine { continuation ->
+            unary_rpc(
+                stub = stub,
+                client_context = context,
+                method_name = path,
+                request_buffer = requestBuffer,
+                response_buffer = responseBuffer,
+                data = StableRef.create(continuation).asCPointer(),
+                callback = staticCFunction { status, message, data ->
+                    println("Callback complete")
+                    val continuation = data!!.asStableRef<Continuation<Status>>().get()
+
+                    continuation.resume(
+                        Status(
+                            Code.getCodeForValue(status),
+                            message?.toKString().orEmpty(),
+                        )
+                    )
+                }
+            )
+
+            continuation.invokeOnCancellation {
+                cancel_call(context)
+            }
+        }
+
+        println("Reading status")
+
+        if (responseStatus.code != Code.OK) {
+            throw StatusException(
+                status = responseStatus,
+                cause = null
+            )
+        }
+
+        val responseBufferData = get_byte_buffer_data(responseBuffer)
+
+        println("Got response data")
+
+        try {
+            val responseDataPointer = get_byte_buffer_data_data(responseBufferData)
+            val responseDataSize = get_byte_buffer_data_size(responseBufferData)
+
+            if (responseDataSize == 0uL) {
+                responseDeserializer.deserialize(byteArrayOf())
+            } else if (responseDataPointer != null) {
+                val rawSource = MemoryRawSource(responseDataPointer, responseDataSize)
+
+                responseDeserializer.deserialize(CodedInputStreamImpl(rawSource.buffered()))
+            } else {
+                throw StatusException.internal("Received data but no memory data was given")
+            }
+        } finally {
+            destroy_byte_buffer_data(responseBufferData)
+        }
+    } finally {
+        println("Cleanup")
+        destroy_stub(stub)
+        destroy_byte_buffer(requestBuffer)
+        destroy_byte_buffer(responseBuffer)
+    }
+}
+
+private class MemoryRawSource(
+    val pointer: CPointer<uint8_tVar>,
+    val size: size_t
+) : RawSource {
+    var position = 0uL
+
+    override fun readAtMostTo(sink: Buffer, byteCount: Long): Long {
+        if (position >= size) return -1L
+
+        val actualReadCount = minOf(byteCount.toULong(), size - position)
+
+        for (i in 0uL until actualReadCount) {
+            sink.writeUByte(pointer[i.toInt()])
+        }
+
+        position += actualReadCount
+        return actualReadCount.toLong()
+    }
+
+    override fun close() = Unit
 }
 
 /**
@@ -110,40 +166,13 @@ suspend fun <REQ : Message, RES : Message> unaryCallImplementation(
 @OptIn(ExperimentalCoroutinesApi::class)
 fun <REQ : Message, RES : Message> serverSideStreamingCallImplementation(
     channel: Channel,
-    callOptions: GRPCCallOptions,
+    metadata: Metadata,
     path: String,
     request: REQ,
     requestDeserializer: MessageDeserializer<REQ>,
     responseDeserializer: MessageDeserializer<RES>
 ): Flow<RES> {
-    val methodDescriptor = MethodDescriptor(
-        fullMethodName = path,
-        methodType = MethodDescriptor.MethodType.SERVER_STREAMING
-    )
-
-    val responseFlow = callbackFlow {
-        val call = setupStreamingCall(
-            responseDeserializer = responseDeserializer,
-            channel = channel,
-            path = path,
-            callOptions = callOptions,
-            methodDescriptor = methodDescriptor,
-            requestDeserializer = requestDeserializer
-        )
-
-        call.writeData(request.serializeNative())
-
-        call.finish()
-
-        awaitClose {
-            call.cancel()
-        }
-    }
-
-    return streamingResponseCallBaseImplementation(
-        channel = channel,
-        responseFlow = responseFlow
-    )
+    TODO()
 }
 
 /**
@@ -164,58 +193,13 @@ fun <REQ : Message, RES : Message> serverSideStreamingCallImplementation(
  */
 suspend fun <REQ : Message, RES : Message> clientStreamingCallImplementation(
     channel: Channel,
-    callOptions: GRPCCallOptions,
+    metadata: Metadata,
     path: String,
     requests: Flow<REQ>,
     requestDeserializer: MessageDeserializer<REQ>,
     responseDeserializer: MessageDeserializer<RES>
 ): RES {
-    val methodDescriptor = MethodDescriptor(
-        fullMethodName = path,
-        methodType = MethodDescriptor.MethodType.CLIENT_STREAMING
-    )
-
-    return unaryResponseCallBaseImplementation(channel) {
-        coroutineScope {
-            val completableDeferred = CompletableDeferred<RES>()
-
-            val handler = UnaryCallHandler(
-                responseDeserializer = responseDeserializer,
-                onComplete = completableDeferred::complete,
-                onCompleteWithError = completableDeferred::completeExceptionally
-            )
-
-            val call = GRPCCall2(
-                requestOptions = channel.buildRequestOptions(path),
-                responseHandler = handler,
-                callOptions = channel.applyToCallOptions(
-                    injectCallInterceptor(
-                        callOptions = callOptions,
-                        interceptor = channel.interceptor,
-                        methodDescriptor = methodDescriptor,
-                        requestDeserializer = requestDeserializer,
-                        responseDeserializer = responseDeserializer
-                    )
-                )
-            )
-
-            call.start()
-
-            val sender = launch {
-                requests.collect { call.writeData(it.serializeNative()) }
-                call.finish()
-            }
-
-            val result = completableDeferred.await()
-
-            if (sender.isActive) {
-                sender.cancel("Response received from server before all messages have been sent.")
-                call.finish()
-            }
-
-            result
-        }
-    }
+    TODO()
 }
 
 /**
@@ -232,185 +216,12 @@ suspend fun <REQ : Message, RES : Message> clientStreamingCallImplementation(
  */
 fun <REQ : Message, RES : Message> bidiStreamingCallImplementation(
     channel: Channel,
-    callOptions: GRPCCallOptions,
+    metadata: Metadata,
     path: String,
     requests: Flow<REQ>,
     requestDeserializer: MessageDeserializer<REQ>,
     responseDeserializer: MessageDeserializer<RES>
 ): Flow<RES> {
-    val methodDescriptor = MethodDescriptor(
-        fullMethodName = path,
-        methodType = MethodDescriptor.MethodType.BIDI_STREAMING
-    )
-
-    val responseFlow = callbackFlow {
-        val call = setupStreamingCall(
-            responseDeserializer = responseDeserializer,
-            channel = channel,
-            path = path,
-            callOptions = callOptions,
-            methodDescriptor = methodDescriptor,
-            requestDeserializer = requestDeserializer
-        )
-
-        launch {
-            requests.collect { call.writeData(it.serializeNative()) }
-            call.finish()
-        }
-
-        awaitClose {
-            call.cancel()
-        }
-    }
-
-    return streamingResponseCallBaseImplementation(
-        channel = channel,
-        responseFlow = responseFlow
-    )
+    TODO()
 }
 
-/**
- * Sets up and initiates a streaming gRPC call, creating and returning a [GRPCCall2] instance.
- * This method configures the call with options, interceptors, and handlers to manage the response lifecycle.
- *
- * @return A [GRPCCall2] object representing the streaming gRPC call.
- */
-private fun <REQ : Message, RES : Message> ProducerScope<RES>.setupStreamingCall(
-    responseDeserializer: MessageDeserializer<RES>,
-    channel: Channel,
-    path: String,
-    callOptions: GRPCCallOptions,
-    methodDescriptor: MethodDescriptor,
-    requestDeserializer: MessageDeserializer<REQ>
-): GRPCCall2 {
-    val handler = StreamingCallHandler(
-        responseDeserializer = responseDeserializer,
-        onReceive = ::trySend,
-        onDone = { error ->
-            if (error != null) {
-                val exception = StatusException(error.asGrpcStatus, null)
-
-                close(exception)
-            } else {
-                close()
-            }
-        }
-    )
-
-    val call = GRPCCall2(
-        requestOptions = channel.buildRequestOptions(path),
-        responseHandler = handler,
-        callOptions = channel.applyToCallOptions(
-            injectCallInterceptor(
-                callOptions = callOptions,
-                interceptor = channel.interceptor,
-                methodDescriptor = methodDescriptor,
-                requestDeserializer = requestDeserializer,
-                responseDeserializer = responseDeserializer
-            )
-        )
-    )
-
-    call.start()
-
-    return call
-}
-
-private fun <REQ : Message, RESP : Message> injectCallInterceptor(
-    callOptions: GRPCCallOptions,
-    interceptor: CallInterceptor?,
-    methodDescriptor: MethodDescriptor,
-    requestDeserializer: MessageDeserializer<REQ>,
-    responseDeserializer: MessageDeserializer<RESP>
-): GRPCCallOptions {
-    return if (interceptor != null) {
-
-        val newCallOptions = callOptions.mutableCopy() as GRPCMutableCallOptions
-        newCallOptions.setInterceptorFactories(
-            listOf<GRPCInterceptorFactoryProtocol>(
-                InterceptorFactory(
-                    methodDescriptor = methodDescriptor,
-                    interceptor = interceptor,
-                    requestDeserializer = requestDeserializer,
-                    responseDeserializer = responseDeserializer
-                )
-            )
-        )
-
-        newCallOptions
-    } else callOptions
-}
-
-private class InterceptorFactory<REQ : Message, RES : Message>(
-    private val methodDescriptor: MethodDescriptor,
-    private val interceptor: CallInterceptor,
-    private val requestDeserializer: MessageDeserializer<REQ>,
-    private val responseDeserializer: MessageDeserializer<RES>
-) : GRPCInterceptorFactoryProtocol, NSObject() {
-    override fun createInterceptorWithManager(interceptorManager: GRPCInterceptorManager): GRPCInterceptor {
-        return CallInterceptorWrapper(
-            methodDescriptor = methodDescriptor,
-            interceptor = interceptor,
-            requestDeserializer = requestDeserializer,
-            responseDeserializer = responseDeserializer,
-            interceptorManager = interceptorManager,
-            dispatchQueue = interceptorManager.dispatchQueue
-        )
-    }
-}
-
-private class StreamingCallHandler<T : Message>(
-    private val responseDeserializer: MessageDeserializer<T>,
-    private val onReceive: (data: T) -> Unit,
-    private val onDone: (error: NSError?) -> Unit
-) :
-    NSObject(), GRPCResponseHandlerProtocol {
-
-    override fun dispatchQueue(): dispatch_queue_t = null
-
-    override fun didReceiveData(data: Any) = onReceive(responseDeserializer.deserialize(data as NSData))
-
-    override fun didCloseWithTrailingMetadata(trailingMetadata: Map<Any?, *>?, error: NSError?) {
-        onDone(error)
-    }
-}
-
-private class UnaryCallHandler<T : Message>(
-    private val responseDeserializer: MessageDeserializer<T>,
-    private val onComplete: (T) -> Unit,
-    private val onCompleteWithError: (Throwable) -> Unit
-) : NSObject(), GRPCResponseHandlerProtocol {
-
-    private var data: Any? = null
-
-    override fun dispatchQueue(): dispatch_queue_t = null
-
-    override fun didReceiveData(data: Any) {
-        this.data = data
-    }
-
-    override fun didCloseWithTrailingMetadata(trailingMetadata: Map<Any?, *>?, error: NSError?) {
-        // https://github.com/grpc/grpc/issues/39178
-        val isInvalidGrpcError = error != null && error.domain == GRPC_ERROR_DOMAIN && error.code == 2L
-                && (error.description.orEmpty().contains(INVALID_UNKNOWN_DESCRIPTION_1) ||
-                error.description.orEmpty().contains(INVALID_UNKNOWN_DESCRIPTION_2))
-
-        when {
-            error != null && !isInvalidGrpcError -> {
-                val exception =
-                    StatusException(error.asGrpcStatus, null)
-
-                onCompleteWithError(exception)
-            }
-
-            data != null -> {
-                onComplete(responseDeserializer.deserialize(data as NSData))
-            }
-
-            else -> {
-                val status = Status(Code.UNKNOWN, "Call closed without error and without a response")
-                onCompleteWithError(StatusException(status, null))
-            }
-        }
-    }
-}

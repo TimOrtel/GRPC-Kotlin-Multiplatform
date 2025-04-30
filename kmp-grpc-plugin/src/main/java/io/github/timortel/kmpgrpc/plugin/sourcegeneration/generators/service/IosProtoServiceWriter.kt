@@ -11,11 +11,10 @@ object IosProtoServiceWriter : IosJvmProtoServiceWriter() {
     override val channelConstructorModifiers: List<KModifier> = listOf(KModifier.ACTUAL)
     override val primaryConstructorModifiers: List<KModifier> = listOf(KModifier.PRIVATE, KModifier.ACTUAL)
 
-    private val GRPC_MUTABLE_CALL_OPTIONS = ClassName("cocoapods.GRPCClient", "GRPCMutableCallOptions")
-
-    override val callOptionsType: TypeName = ClassName("cocoapods.GRPCClient", "GRPCCallOptions")
+    private val callOptions = ClassName(PACKAGE_BASE, "CallOptions")
+    override val callOptionsType: TypeName = callOptions
     override val createEmptyCallOptionsCode: CodeBlock =
-        CodeBlock.of("%T()", GRPC_MUTABLE_CALL_OPTIONS)
+        CodeBlock.of("%T()", callOptions)
 
     private val iosStub = ClassName(PACKAGE_STUB, "IosStub")
 
@@ -30,19 +29,11 @@ object IosProtoServiceWriter : IosJvmProtoServiceWriter() {
         rpcImplementation: MemberName,
         requestParamName: String
     ) {
-        builder.apply {
-            addStatement(
-                "val callOptions = %N.mutableCopy() as %T",
-                Const.Service.CALL_OPTIONS_PROPERTY_NAME,
-                GRPC_MUTABLE_CALL_OPTIONS
-            )
-            addStatement("callOptions.setInitialMetadata(%N.entries.toMap())", Const.Service.RpcCall.PARAM_METADATA)
-        }
-
         builder.addStatement(
-            "return %M(%N, callOptions, %S, %N, %T.Companion, %T.Companion)",
+            "return %M(%N, %N, %S, %N, %T.Companion, %T.Companion)",
             rpcImplementation,
             Const.Service.CHANNEL_PROPERTY_NAME,
+            Const.Service.RpcCall.PARAM_METADATA,
             "/${rpc.file.`package`.orEmpty()}.${rpc.service.name}/${rpc.name}",
             requestParamName,
             rpc.sendType.resolve(),

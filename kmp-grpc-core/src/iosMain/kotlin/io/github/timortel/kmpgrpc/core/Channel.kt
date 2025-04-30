@@ -1,14 +1,11 @@
 package io.github.timortel.kmpgrpc.core
 
-import cocoapods.GRPCClient.*
 import io.github.timortel.kmpgrpc.core.internal.CallInterceptorChain
+import io.github.timortel.kmpgrpc.native.*
 
-/**
- * On ios the channel equivalent are the [GRPCCallOptions].
- */
 actual class Channel private constructor(
-    private val name: String,
-    private val port: Int,
+    internal val name: String,
+    internal val port: Int,
     private val usePlaintext: Boolean,
     /**
      * The interceptor associated with this channel, or null.
@@ -16,20 +13,7 @@ actual class Channel private constructor(
     val interceptor: CallInterceptor? = null
 ) : IosJsChannel() {
 
-    fun buildRequestOptions(path: String) = GRPCRequestOptions("$name:$port", path, safety = GRPCCallSafetyDefault)
-
-    /**
-     * Applies configuration of the channel to the given call options.
-     * If any mutations are performed, a new copy of call options is returned. The original call options
-     * are left unmodified.
-     */
-    fun applyToCallOptions(callOptions: GRPCCallOptions): GRPCCallOptions {
-        return if (usePlaintext) {
-            val newCallOptions = callOptions.mutableCopy() as GRPCMutableCallOptions
-            newCallOptions.setTransport(GRPCDefaultTransportImplList_.core_insecure)
-            newCallOptions
-        } else callOptions
-    }
+    internal val channel = create_insecure_channel("$name:$port")
 
     actual class Builder(private val name: String, private val port: Int) {
 
@@ -62,5 +46,9 @@ actual class Channel private constructor(
         }
 
         actual fun build(): Channel = Channel(name, port, usePlaintext, interceptor)
+    }
+
+    actual override fun shutdown() {
+        super.shutdown()
     }
 }
