@@ -1,3 +1,3 @@
 [submodule "kmp-grpc-native/third_party/grpc"]
 	path = kmp-grpc-native/third_party/grpc
-	url = git@github.com:grpc/grpc.git
+	url = https://github.com/grpc/grpc.git

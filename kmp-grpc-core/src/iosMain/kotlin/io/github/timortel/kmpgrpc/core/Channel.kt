@@ -1,7 +1,9 @@
 package io.github.timortel.kmpgrpc.core
 
 import io.github.timortel.kmpgrpc.core.internal.CallInterceptorChain
+import io.github.timortel.kmpgrpc.core.internal.createNativeChannelWithInterceptors
 import io.github.timortel.kmpgrpc.native.*
+import kotlinx.cinterop.CPointer
 
 actual class Channel private constructor(
     internal val name: String,
@@ -10,10 +12,22 @@ actual class Channel private constructor(
     /**
      * The interceptor associated with this channel, or null.
      */
-    val interceptor: CallInterceptor? = null
+    internal val interceptor: CallInterceptor? = null
 ) : IosJsChannel() {
 
-    internal val channel = create_insecure_channel("$name:$port")
+    internal val channel: CPointer<cnames.structs.grpc_channel>?
+
+    init {
+        val host = "$name:$port"
+
+        channel = if (interceptor != null) {
+            createNativeChannelWithInterceptors(host, interceptor)
+        } else {
+            create_insecure_channel(
+                host = host
+            )
+        }
+    }
 
     actual class Builder(private val name: String, private val port: Int) {
 

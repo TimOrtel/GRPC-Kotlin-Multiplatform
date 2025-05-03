@@ -21,21 +21,34 @@ int main() {
     auto stub = create_stub(channel);
     auto context = create_client_context();
 
-    auto request_data = create_byte_buffer(raw_bytes, sizeof(raw_bytes));
-    // auto request_data = create_empty_byte_buffer();
-    auto response_data = create_empty_byte_buffer();
+    auto call_data = create_call_data();
 
-    unary_rpc(
+    custom_rpc(
+        channel,
         context,
-        stub,
         "/io.github.timortel.kmpgrpc.test.TestService/emptyRpc",
-        request_data,
-        response_data,
+        call_data,
         &p,
-        [](int status, const char *message, void *data) -> const void {
-            std::cout << "callback" << std::endl;
-            static_cast<std::promise<int> *>(data)->set_value(3);
-        });
+        [](void *data, byte_buffer *buffer) {
+            std::cout << "Received message" << std::endl;
+        },
+        [](void *data) {
+            std::cout << "WRITING DONE" << std::endl;
+        },
+        [](void *data) {
+            std::cout << "METADATA RECEIVED" << std::endl;
+        },
+        [](void *data, call_status *status) {
+            std::cout << "CALL DONE" << std::endl;
+            static_cast<std::promise<int>*>(data)->set_value(3);
+        }
+    );
+
+    write_message(call_data, create_byte_buffer(nullptr, 0));
+
+    sleep(1);
+
+    signal_client_writing_end(call_data);
 
     future.wait();
     std::cout << "DONE" << std::endl;

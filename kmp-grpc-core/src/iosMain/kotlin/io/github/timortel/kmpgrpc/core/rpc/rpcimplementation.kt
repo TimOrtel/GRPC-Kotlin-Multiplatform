@@ -1,23 +1,23 @@
 package io.github.timortel.kmpgrpc.core.rpc
 
 import io.github.timortel.kmpgrpc.core.*
+import io.github.timortel.kmpgrpc.core.internal.getMetadataFromNativeMetadata
 import io.github.timortel.kmpgrpc.core.io.internal.CodedInputStreamImpl
 import io.github.timortel.kmpgrpc.core.message.Message
 import io.github.timortel.kmpgrpc.core.message.MessageDeserializer
-import kotlinx.cinterop.*
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
 import io.github.timortel.kmpgrpc.native.*
-import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.cinterop.*
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
 import kotlinx.io.Buffer
 import kotlinx.io.RawSource
 import kotlinx.io.buffered
 import kotlinx.io.writeUByte
 import platform.posix.size_t
 import platform.posix.uint8_tVar
-import kotlin.coroutines.Continuation
-import kotlin.coroutines.resume
+import kotlin.native.concurrent.Worker
+import kotlin.uuid.ExperimentalUuidApi
+import kotlinx.coroutines.channels.Channel as CoroutineChannel
 
 private const val GRPC_ERROR_DOMAIN = "io.grpc"
 
@@ -50,81 +50,14 @@ suspend fun <REQ : Message, RES : Message> unaryCallImplementation(
     requestDeserializer: MessageDeserializer<REQ>,
     responseDeserializer: MessageDeserializer<RES>
 ): RES {
-    val requestData = request.serialize().toUByteArray()
-
-    val context = create_client_context()
-    val stub = create_stub(channel.channel)
-
-    val requestBuffer = if (requestData.isEmpty()) {
-        create_byte_buffer(null, 0u)
-    } else {
-        create_byte_buffer(requestData.usePinned { it.addressOf(0) }, requestData.size.convert())
-    }
-
-    val responseBuffer = create_empty_byte_buffer()
-
-    return try {
-        val responseStatus: Status = suspendCancellableCoroutine { continuation ->
-            unary_rpc(
-                stub = stub,
-                client_context = context,
-                method_name = path,
-                request_buffer = requestBuffer,
-                response_buffer = responseBuffer,
-                data = StableRef.create(continuation).asCPointer(),
-                callback = staticCFunction { status, message, data ->
-                    println("Callback complete")
-                    val continuation = data!!.asStableRef<Continuation<Status>>().get()
-
-                    continuation.resume(
-                        Status(
-                            Code.getCodeForValue(status),
-                            message?.toKString().orEmpty(),
-                        )
-                    )
-                }
-            )
-
-            continuation.invokeOnCancellation {
-                cancel_call(context)
-            }
-        }
-
-        println("Reading status")
-
-        if (responseStatus.code != Code.OK) {
-            throw StatusException(
-                status = responseStatus,
-                cause = null
-            )
-        }
-
-        val responseBufferData = get_byte_buffer_data(responseBuffer)
-
-        println("Got response data")
-
-        try {
-            val responseDataPointer = get_byte_buffer_data_data(responseBufferData)
-            val responseDataSize = get_byte_buffer_data_size(responseBufferData)
-
-            if (responseDataSize == 0uL) {
-                responseDeserializer.deserialize(byteArrayOf())
-            } else if (responseDataPointer != null) {
-                val rawSource = MemoryRawSource(responseDataPointer, responseDataSize)
-
-                responseDeserializer.deserialize(CodedInputStreamImpl(rawSource.buffered()))
-            } else {
-                throw StatusException.internal("Received data but no memory data was given")
-            }
-        } finally {
-            destroy_byte_buffer_data(responseBufferData)
-        }
-    } finally {
-        println("Cleanup")
-        destroy_stub(stub)
-        destroy_byte_buffer(requestBuffer)
-        destroy_byte_buffer(responseBuffer)
-    }
+    return rpcImplementation(
+        channel,
+        metadata,
+        MethodDescriptor.MethodType.UNARY,
+        path,
+        flowOf(request),
+        responseDeserializer
+    ).single()
 }
 
 private class MemoryRawSource(
@@ -172,7 +105,14 @@ fun <REQ : Message, RES : Message> serverSideStreamingCallImplementation(
     requestDeserializer: MessageDeserializer<REQ>,
     responseDeserializer: MessageDeserializer<RES>
 ): Flow<RES> {
-    TODO()
+    return rpcImplementation(
+        channel,
+        metadata,
+        MethodDescriptor.MethodType.SERVER_STREAMING,
+        path,
+        flowOf(request),
+        responseDeserializer
+    )
 }
 
 /**
@@ -199,7 +139,14 @@ suspend fun <REQ : Message, RES : Message> clientStreamingCallImplementation(
     requestDeserializer: MessageDeserializer<REQ>,
     responseDeserializer: MessageDeserializer<RES>
 ): RES {
-    TODO()
+    return rpcImplementation(
+        channel,
+        metadata,
+        MethodDescriptor.MethodType.CLIENT_STREAMING,
+        path,
+        requests,
+        responseDeserializer
+    ).single()
 }
 
 /**
@@ -222,6 +169,183 @@ fun <REQ : Message, RES : Message> bidiStreamingCallImplementation(
     requestDeserializer: MessageDeserializer<REQ>,
     responseDeserializer: MessageDeserializer<RES>
 ): Flow<RES> {
-    TODO()
+    return rpcImplementation(
+        channel,
+        metadata,
+        MethodDescriptor.MethodType.BIDI_STREAMING,
+        path,
+        requests,
+        responseDeserializer
+    )
 }
 
+@OptIn(ExperimentalUuidApi::class)
+private fun <REQ : Message, RES : Message> rpcImplementation(
+    channel: Channel,
+    metadata: Metadata,
+    methodType: MethodDescriptor.MethodType,
+    path: String,
+    requests: Flow<REQ>,
+    responseDeserializer: MessageDeserializer<RES>
+): Flow<RES> {
+    val methodDescriptor = MethodDescriptor(fullMethodName = path, methodType = methodType)
+    val nativeMethodType = when (methodType) {
+        MethodDescriptor.MethodType.UNARY -> UNARY
+        MethodDescriptor.MethodType.SERVER_STREAMING -> SERVER_STREAMING
+        MethodDescriptor.MethodType.CLIENT_STREAMING -> CLIENT_STREAMING
+        MethodDescriptor.MethodType.BIDI_STREAMING -> BIDI_STREAMING
+    }
+
+    return channelFlow {
+        val actualMetadata = channel.interceptor?.onStart(methodDescriptor, metadata) ?: metadata
+
+        val context = create_client_context()
+        actualMetadata.entries.forEach { entry ->
+            client_context_add_metadata(context, entry.key, entry.value)
+        }
+
+        val callData = create_call_data()
+
+        try {
+            val contextData = CallContextData(
+                writeReadyChannel = CoroutineChannel(
+                    capacity = 1,
+                    onUndeliveredElement = {
+                        throw StatusException.internal("Write ready channel could not keep up!")
+                    }
+                ),
+                messageReceivedChannel = CoroutineChannel(
+                    capacity = CoroutineChannel.UNLIMITED
+                ),
+                responseDeserializer = responseDeserializer
+            )
+
+            rpc_impl(
+                channel = channel.channel,
+                client_context = context,
+                method_name = path,
+                call_data = callData,
+                type = nativeMethodType,
+                data = StableRef.create(contextData).asCPointer(),
+                on_message_received = staticCFunction { data, byteBuffer ->
+                    val callContextData = data!!.asStableRef<CallContextData<RES>>().get()
+
+                    val receivedMessage = readMessageFromByteBuffer(
+                        get_byte_buffer_data(byteBuffer),
+                        callContextData.responseDeserializer
+                    )
+                    callContextData.messageReceivedChannel.trySend(receivedMessage)
+                },
+                on_write_done = staticCFunction { data ->
+                    val callContextData = data!!.asStableRef<CallContextData<RES>>().get()
+
+                    // Write is done, so we can clean up the write buffer
+                    destroy_byte_buffer(callContextData.currentWriteBuffer)
+
+                    callContextData.writeReadyChannel.trySend(Unit)
+                },
+                on_initial_metadata_received = staticCFunction { data ->
+
+                },
+                on_done = staticCFunction { data, callStatus ->
+                    val callContextData = data!!.asStableRef<CallContextData<RES>>().get()
+                    callContextData.messageReceivedChannel.close()
+
+                    val nativeMessage = call_status_message(callStatus)
+                    val status = Status(
+                        code = Code.getCodeForValue(call_status_code(callStatus)),
+                        statusMessage = nativeMessage?.toKString().orEmpty()
+                    )
+
+                    if (nativeMessage != null) {
+                        nativeHeap.free(nativeMessage)
+                    }
+
+                    callContextData.callStatusCompletable.complete(status)
+                }
+            )
+
+            val writeJob = launch {
+                requests.collect { request ->
+                    val actualMessage = channel.interceptor?.onSendMessage(methodDescriptor, request) ?: request
+                    val data = actualMessage.serialize().toUByteArray()
+
+                    val requestBuffer = if (data.isEmpty()) {
+                        create_byte_buffer(null, 0u)
+                    } else {
+                        create_byte_buffer(data.usePinned { it.addressOf(0) }, data.size.convert())
+                    }
+
+                    // Wait for a write to be ready
+                    contextData.writeReadyChannel.receive()
+
+                    contextData.currentWriteBuffer = requestBuffer
+                    write_message(callData, requestBuffer)
+                }
+
+                signal_client_writing_end(callData)
+            }
+
+            // Initially, we are ready for the first send operation
+            contextData.writeReadyChannel.send(Unit)
+
+            contextData
+                .messageReceivedChannel
+                .receiveAsFlow()
+                .map { channel.interceptor?.onReceiveMessage(methodDescriptor, it) ?: it }
+                .collect { send(it) }
+
+            if (writeJob.isActive) {
+                writeJob.cancel("The call has been finalized")
+            }
+
+            val resultStatus = contextData.callStatusCompletable.await()
+
+            val nativeMetadata = client_context_get_trailing_metadata(context)
+
+            try {
+                val finalMetadata = getMetadataFromNativeMetadata(nativeMetadata)
+
+                val actualResultStatus =
+                    channel.interceptor?.onClose(methodDescriptor, resultStatus, Metadata.of(finalMetadata))
+                        ?.first
+                        ?: resultStatus
+
+                if (actualResultStatus.code != Code.OK) {
+                    throw StatusException(actualResultStatus, null)
+                }
+            } finally {
+                metadata_const_destroy(nativeMetadata)
+            }
+        } finally {
+            destroy_client_context(context)
+            destroy_call_data(callData)
+        }
+    }
+}
+
+private data class CallContextData<RES : Message>(
+    val writeReadyChannel: CoroutineChannel<Unit>,
+    val messageReceivedChannel: CoroutineChannel<RES>,
+    val responseDeserializer: MessageDeserializer<RES>,
+    var currentWriteBuffer: CValuesRef<cnames.structs.byte_buffer>? = null,
+    val callStatusCompletable: CompletableDeferred<Status> = CompletableDeferred()
+)
+
+private fun <RES : Message> readMessageFromByteBuffer(
+    byteBufferData: CPointer<cnames.structs.byte_buffer_data>?,
+    responseDeserializer: MessageDeserializer<RES>
+): RES {
+    val responseDataPointer = get_byte_buffer_data_data(byteBufferData)
+    val responseDataSize = get_byte_buffer_data_size(byteBufferData)
+
+    return if (responseDataSize == 0uL) {
+        responseDeserializer.deserialize(byteArrayOf())
+    } else if (responseDataPointer != null) {
+        val rawSource = MemoryRawSource(responseDataPointer, responseDataSize)
+
+        responseDeserializer.deserialize(CodedInputStreamImpl(rawSource.buffered()))
+    } else {
+        throw StatusException.internal("Received data but no memory data was given")
+    }
+}

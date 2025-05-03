@@ -15,38 +15,38 @@ import kotlin.time.Duration.Companion.seconds
 
 abstract class IosJvmRpcTest : RpcTest() {
 
-//    @Test
-//    fun testClientStream() = runTest {
-//        val content = "abc"
-//
-//        val message = simpleMessage { field1 = content }
-//        val response = stub
-//            .simpleClientStreamingRpc(
-//                flow {
-//                    emit(message)
-//                    emit(message)
-//                    emit(message)
-//                }
-//            )
-//
-//        assertEquals(content.repeat(3), response.field1)
-//    }
-//
-//    @Test
-//    fun testBidiStream() = runTest {
-//        val message = simpleMessage { field1 = "test message" }
-//        val responses = stub
-//            .bidiStreamingRpc(
-//                flow {
-//                    emit(message)
-//                    emit(message)
-//                    emit(message)
-//                }
-//            )
-//            .toList()
-//
-//        assertEquals(listOf(message, message, message), responses)
-//    }
+    @Test
+    fun testClientStream() = runTest {
+        val content = "abc"
+
+        val message = simpleMessage { field1 = content }
+        val response = stub
+            .simpleClientStreamingRpc(
+                flow {
+                    emit(message)
+                    emit(message)
+                    emit(message)
+                }
+            )
+
+        assertEquals(content.repeat(3), response.field1)
+    }
+
+    @Test
+    fun testBidiStream() = runTest {
+        val message = simpleMessage { field1 = "test message" }
+        val responses = stub
+            .bidiStreamingRpc(
+                flow {
+                    emit(message)
+                    emit(message)
+                    emit(message)
+                }
+            )
+            .toList()
+
+        assertEquals(listOf(message, message, message), responses)
+    }
 //
 //    @Test
 //    fun testCannotStartClientStreamingRpcOnCancelledChannel() = runTest {

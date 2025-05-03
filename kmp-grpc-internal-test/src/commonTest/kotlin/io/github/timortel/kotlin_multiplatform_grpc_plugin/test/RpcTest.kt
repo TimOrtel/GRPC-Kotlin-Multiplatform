@@ -66,32 +66,32 @@ abstract class RpcTest {
 //        assertEquals(message, response)
 //    }
 //
-//    @Test
-//    fun testStreamEmpty() = runTest {
-//        val message = emptyMessage { }
-//        val flow: Flow<EmptyMessage> = stub
-//            .emptyStream(message)
-//
-//        assertEquals(listOf(message, message, message), flow.toList())
-//    }
-//
-//    @Test
-//    fun testStreamSimple() = runTest {
-//        val message = simpleMessage { field1 = "Streaming test" }
-//        val flow: Flow<SimpleMessage> = stub
-//            .simpleStreamingRpc(message)
-//
-//        assertEquals(listOf(message, message, message), flow.toList())
-//    }
-//
-//    @Test
-//    fun testStreamEverything() = runTest {
-//        val message = createMessageWithAllTypes()
-//        val flow: Flow<MessageWithEverything> = stub
-//            .everythingStreamingRpc(message)
-//
-//        assertEquals(listOf(message, message, message), flow.toList())
-//    }
+    @Test
+    fun testStreamEmpty() = runTest {
+        val message = emptyMessage { }
+        val flow: Flow<EmptyMessage> = stub
+            .emptyStream(message)
+
+        assertEquals(listOf(message, message, message), flow.toList())
+    }
+
+    @Test
+    fun testStreamSimple() = runTest {
+        val message = simpleMessage { field1 = "Streaming test" }
+        val flow: Flow<SimpleMessage> = stub
+            .simpleStreamingRpc(message)
+
+        assertEquals(listOf(message, message, message), flow.toList())
+    }
+
+    @Test
+    fun testStreamEverything() = runTest {
+        val message = createMessageWithAllTypes()
+        val flow: Flow<MessageWithEverything> = stub
+            .everythingStreamingRpc(message)
+
+        assertEquals(listOf(message, message, message), flow.toList())
+    }
 //
 //    @Test
 //    fun testReceiveUnknownFields() = runTest {
