@@ -4,7 +4,7 @@ import io.github.timortel.kmpgrpc.core.CallOptions
 import io.github.timortel.kmpgrpc.core.Channel
 import kotlin.time.Duration
 
-interface JsStub<S : Stub<S>> {
+interface IosJsStub<S : Stub<S>> {
 
     val channel: Channel
     val callOptions: CallOptions

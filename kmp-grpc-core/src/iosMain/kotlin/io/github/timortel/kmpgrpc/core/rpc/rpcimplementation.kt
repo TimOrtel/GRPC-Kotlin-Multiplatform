@@ -1,6 +1,7 @@
 package io.github.timortel.kmpgrpc.core.rpc
 
 import io.github.timortel.kmpgrpc.core.*
+import io.github.timortel.kmpgrpc.core.internal.MemoryRawSource
 import io.github.timortel.kmpgrpc.core.internal.getMetadataFromNativeMetadata
 import io.github.timortel.kmpgrpc.core.io.internal.CodedInputStreamImpl
 import io.github.timortel.kmpgrpc.core.message.Message
@@ -8,14 +9,9 @@ import io.github.timortel.kmpgrpc.core.message.MessageDeserializer
 import io.github.timortel.kmpgrpc.native.*
 import kotlinx.cinterop.*
 import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
-import kotlinx.io.Buffer
-import kotlinx.io.RawSource
 import kotlinx.io.buffered
-import kotlinx.io.writeUByte
-import platform.posix.size_t
-import platform.posix.uint8_tVar
-import kotlin.native.concurrent.Worker
 import kotlin.uuid.ExperimentalUuidApi
 import kotlinx.coroutines.channels.Channel as CoroutineChannel
 
@@ -44,42 +40,21 @@ private const val INVALID_UNKNOWN_DESCRIPTION_2 = "UNKNOWN {grpc_message:\"\", g
 @Throws(StatusException::class, CancellationException::class)
 suspend fun <REQ : Message, RES : Message> unaryCallImplementation(
     channel: Channel,
-    metadata: Metadata,
+    callOptions: CallOptions,
     path: String,
     request: REQ,
-    requestDeserializer: MessageDeserializer<REQ>,
     responseDeserializer: MessageDeserializer<RES>
 ): RES {
-    return rpcImplementation(
-        channel,
-        metadata,
-        MethodDescriptor.MethodType.UNARY,
-        path,
-        flowOf(request),
-        responseDeserializer
-    ).single()
-}
-
-private class MemoryRawSource(
-    val pointer: CPointer<uint8_tVar>,
-    val size: size_t
-) : RawSource {
-    var position = 0uL
-
-    override fun readAtMostTo(sink: Buffer, byteCount: Long): Long {
-        if (position >= size) return -1L
-
-        val actualReadCount = minOf(byteCount.toULong(), size - position)
-
-        for (i in 0uL until actualReadCount) {
-            sink.writeUByte(pointer[i.toInt()])
-        }
-
-        position += actualReadCount
-        return actualReadCount.toLong()
+    return unaryResponseCallBaseImplementation(channel) {
+        rpcImplementation(
+            channel = channel,
+            callOptions = callOptions,
+            methodType = MethodDescriptor.MethodType.UNARY,
+            path = path,
+            requests = flowOf(request),
+            responseDeserializer = responseDeserializer
+        ).single()
     }
-
-    override fun close() = Unit
 }
 
 /**
@@ -99,19 +74,21 @@ private class MemoryRawSource(
 @OptIn(ExperimentalCoroutinesApi::class)
 fun <REQ : Message, RES : Message> serverSideStreamingCallImplementation(
     channel: Channel,
-    metadata: Metadata,
+    callOptions: CallOptions,
     path: String,
     request: REQ,
-    requestDeserializer: MessageDeserializer<REQ>,
     responseDeserializer: MessageDeserializer<RES>
 ): Flow<RES> {
-    return rpcImplementation(
-        channel,
-        metadata,
-        MethodDescriptor.MethodType.SERVER_STREAMING,
-        path,
-        flowOf(request),
-        responseDeserializer
+    return streamingResponseCallBaseImplementation(
+        channel = channel,
+        responseFlow = rpcImplementation(
+            channel = channel,
+            callOptions = callOptions,
+            methodType = MethodDescriptor.MethodType.SERVER_STREAMING,
+            path = path,
+            requests = flowOf(request),
+            responseDeserializer = responseDeserializer
+        )
     )
 }
 
@@ -133,20 +110,21 @@ fun <REQ : Message, RES : Message> serverSideStreamingCallImplementation(
  */
 suspend fun <REQ : Message, RES : Message> clientStreamingCallImplementation(
     channel: Channel,
-    metadata: Metadata,
+    callOptions: CallOptions,
     path: String,
     requests: Flow<REQ>,
-    requestDeserializer: MessageDeserializer<REQ>,
     responseDeserializer: MessageDeserializer<RES>
 ): RES {
-    return rpcImplementation(
-        channel,
-        metadata,
-        MethodDescriptor.MethodType.CLIENT_STREAMING,
-        path,
-        requests,
-        responseDeserializer
-    ).single()
+    return unaryResponseCallBaseImplementation(channel) {
+        rpcImplementation(
+            channel = channel,
+            callOptions = callOptions,
+            methodType = MethodDescriptor.MethodType.CLIENT_STREAMING,
+            path = path,
+            requests = requests,
+            responseDeserializer = responseDeserializer
+        ).single()
+    }
 }
 
 /**
@@ -163,26 +141,28 @@ suspend fun <REQ : Message, RES : Message> clientStreamingCallImplementation(
  */
 fun <REQ : Message, RES : Message> bidiStreamingCallImplementation(
     channel: Channel,
-    metadata: Metadata,
+    callOptions: CallOptions,
     path: String,
     requests: Flow<REQ>,
-    requestDeserializer: MessageDeserializer<REQ>,
     responseDeserializer: MessageDeserializer<RES>
 ): Flow<RES> {
-    return rpcImplementation(
-        channel,
-        metadata,
-        MethodDescriptor.MethodType.BIDI_STREAMING,
-        path,
-        requests,
-        responseDeserializer
+    return streamingResponseCallBaseImplementation(
+        channel = channel,
+        responseFlow = rpcImplementation(
+            channel = channel,
+            callOptions = callOptions,
+            methodType = MethodDescriptor.MethodType.BIDI_STREAMING,
+            path = path,
+            requests = requests,
+            responseDeserializer = responseDeserializer
+        )
     )
 }
 
 @OptIn(ExperimentalUuidApi::class)
 private fun <REQ : Message, RES : Message> rpcImplementation(
     channel: Channel,
-    metadata: Metadata,
+    callOptions: CallOptions,
     methodType: MethodDescriptor.MethodType,
     path: String,
     requests: Flow<REQ>,
@@ -196,7 +176,9 @@ private fun <REQ : Message, RES : Message> rpcImplementation(
         MethodDescriptor.MethodType.BIDI_STREAMING -> BIDI_STREAMING
     }
 
-    return channelFlow {
+    val metadata = callOptions.metadata
+
+    val rpcFlow = channelFlow {
         val actualMetadata = channel.interceptor?.onStart(methodDescriptor, metadata) ?: metadata
 
         val context = create_client_context()
@@ -248,6 +230,7 @@ private fun <REQ : Message, RES : Message> rpcImplementation(
 
                 },
                 on_done = staticCFunction { data, callStatus ->
+                    println("rpcImplementation - on_done")
                     val callContextData = data!!.asStableRef<CallContextData<RES>>().get()
                     callContextData.messageReceivedChannel.close()
 
@@ -262,6 +245,7 @@ private fun <REQ : Message, RES : Message> rpcImplementation(
                     }
 
                     callContextData.callStatusCompletable.complete(status)
+                    println("rpcImplementation - on_done complete")
                 }
             )
 
@@ -286,40 +270,78 @@ private fun <REQ : Message, RES : Message> rpcImplementation(
                 signal_client_writing_end(callData)
             }
 
+            val receiveMessagesJob = launch {
+                contextData
+                    .messageReceivedChannel
+                    .receiveAsFlow()
+                    .map { channel.interceptor?.onReceiveMessage(methodDescriptor, it) ?: it }
+                    .collect {
+                        println("rpcImplementation - Received message")
+                        send(it)
+                    }
+            }
+
+            val waitForDoneJob = launch {
+                val resultStatus = contextData.callStatusCompletable.await()
+                println("rpcImplementation - done received")
+
+
+                val nativeMetadata = client_context_get_trailing_metadata(context)
+
+                try {
+                    val finalMetadata = getMetadataFromNativeMetadata(nativeMetadata)
+
+                    val actualResultStatus =
+                        channel.interceptor?.onClose(methodDescriptor, resultStatus, Metadata.of(finalMetadata))
+                            ?.first
+                            ?: resultStatus
+
+                    if (actualResultStatus.code != Code.OK) {
+                        throw StatusException(actualResultStatus, null)
+                    }
+                } finally {
+                    println("rpcImplementation - closing call")
+
+                    metadata_const_destroy(nativeMetadata)
+
+                    close()
+                }
+            }
+
             // Initially, we are ready for the first send operation
             contextData.writeReadyChannel.send(Unit)
 
-            contextData
-                .messageReceivedChannel
-                .receiveAsFlow()
-                .map { channel.interceptor?.onReceiveMessage(methodDescriptor, it) ?: it }
-                .collect { send(it) }
+            awaitClose {
+                println("rpcImplementation - closing")
 
-            if (writeJob.isActive) {
-                writeJob.cancel("The call has been finalized")
+                val message = "The call has been finalized"
+
+                writeJob.cancel(message)
+                receiveMessagesJob.cancel(message)
+                waitForDoneJob.cancel(message)
+
+                cancel_call(context)
             }
 
-            val resultStatus = contextData.callStatusCompletable.await()
-
-            val nativeMetadata = client_context_get_trailing_metadata(context)
-
-            try {
-                val finalMetadata = getMetadataFromNativeMetadata(nativeMetadata)
-
-                val actualResultStatus =
-                    channel.interceptor?.onClose(methodDescriptor, resultStatus, Metadata.of(finalMetadata))
-                        ?.first
-                        ?: resultStatus
-
-                if (actualResultStatus.code != Code.OK) {
-                    throw StatusException(actualResultStatus, null)
-                }
-            } finally {
-                metadata_const_destroy(nativeMetadata)
-            }
+            println("rpcImplementation - precleanup")
         } finally {
+            println("rpcImplementation - cleanup")
             destroy_client_context(context)
             destroy_call_data(callData)
+        }
+    }
+
+    return flow {
+        if (callOptions.deadlineAfter != null) {
+            try {
+                withTimeout(callOptions.deadlineAfter) {
+                    emitAll(rpcFlow)
+                }
+            } catch (e: TimeoutCancellationException) {
+                throw StatusException.requestTimeout(callOptions.deadlineAfter, e)
+            }
+        } else {
+            emitAll(rpcFlow)
         }
     }
 }

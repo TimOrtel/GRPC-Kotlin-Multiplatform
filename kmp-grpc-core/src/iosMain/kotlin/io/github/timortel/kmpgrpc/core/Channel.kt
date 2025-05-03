@@ -12,7 +12,7 @@ actual class Channel private constructor(
     /**
      * The interceptor associated with this channel, or null.
      */
-    internal val interceptor: CallInterceptor? = null
+    internal val interceptor: CallInterceptor? = null,
 ) : IosJsChannel() {
 
     internal val channel: CPointer<cnames.structs.grpc_channel>?

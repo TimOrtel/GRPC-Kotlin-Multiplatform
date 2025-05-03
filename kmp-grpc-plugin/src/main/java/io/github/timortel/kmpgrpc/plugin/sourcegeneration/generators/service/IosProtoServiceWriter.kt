@@ -11,12 +11,8 @@ object IosProtoServiceWriter : IosJvmProtoServiceWriter() {
     override val channelConstructorModifiers: List<KModifier> = listOf(KModifier.ACTUAL)
     override val primaryConstructorModifiers: List<KModifier> = listOf(KModifier.PRIVATE, KModifier.ACTUAL)
 
-    private val callOptions = ClassName(PACKAGE_BASE, "CallOptions")
-    override val callOptionsType: TypeName = callOptions
-    override val createEmptyCallOptionsCode: CodeBlock =
-        CodeBlock.of("%T()", callOptions)
-
-    private val iosStub = ClassName(PACKAGE_STUB, "IosStub")
+    override val callOptionsType: TypeName = iosJsCallOptions
+    override val createEmptyCallOptionsCode: CodeBlock = CodeBlock.of("%T()", callOptionsType)
 
     override val unaryCallMemberName: MemberName = MemberName(PACKAGE_RPC, "unaryCallImplementation")
     override val clientStreamingCallMemberName: MemberName = MemberName(PACKAGE_RPC, "clientStreamingCallImplementation")
@@ -30,13 +26,13 @@ object IosProtoServiceWriter : IosJvmProtoServiceWriter() {
         requestParamName: String
     ) {
         builder.addStatement(
-            "return %M(%N, %N, %S, %N, %T.Companion, %T.Companion)",
+            "return %M(%N, %N + %N, %S, %N, %T.Companion)",
             rpcImplementation,
             Const.Service.CHANNEL_PROPERTY_NAME,
+            Const.Service.CALL_OPTIONS_PROPERTY_NAME,
             Const.Service.RpcCall.PARAM_METADATA,
             "/${rpc.file.`package`.orEmpty()}.${rpc.service.name}/${rpc.name}",
             requestParamName,
-            rpc.sendType.resolve(),
             rpc.returnType.resolve()
         )
     }
@@ -49,6 +45,6 @@ object IosProtoServiceWriter : IosJvmProtoServiceWriter() {
         service: ProtoService
     ) {
         builder.superclass(kmStub.parameterizedBy(service.className))
-        builder.addSuperinterface(iosStub.parameterizedBy(service.className))
+        builder.addSuperinterface(iosJsStub.parameterizedBy(service.className))
     }
 }

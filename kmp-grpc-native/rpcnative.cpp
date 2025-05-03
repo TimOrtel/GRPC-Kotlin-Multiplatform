@@ -146,12 +146,12 @@ public:
 
     void Intercept(InterceptorBatchMethods *methods) override {
         if (methods->
-            QueryInterceptionHookPoint(InterceptionHookPoints::PRE_RECV_INITIAL_METADATA)) {
+            QueryInterceptionHookPoint(InterceptionHookPoints::POST_RECV_INITIAL_METADATA)) {
             if (const auto pairs = methods->GetRecvInitialMetadata(); pairs != nullptr) {
                 const method_descriptor method_descriptor = {
                     info_->method(), static_cast<enum method_type>(info_->type())
                 };
-                
+
                 on_receive_initial_metadata_(data_, method_descriptor, new metadata(pairs));
             }
         }
@@ -169,7 +169,7 @@ class KmpGrpcInterceptorFactory : public ClientInterceptorFactoryInterface {
 public:
     explicit KmpGrpcInterceptorFactory(
         void *data, const OnReceiveInitialMetadata on_receive_initial_metadata): on_receive_initial_metadata_(
-        on_receive_initial_metadata), data_(data) {
+            on_receive_initial_metadata), data_(data) {
     }
 
 
@@ -283,20 +283,20 @@ void rpc_impl(const grpc_channel *channel, const client_context *client_context,
     cout << "Init call" << endl;
 
     call_data->call = make_unique<CustomReactor>(channel, client_context, rpc_method,
-                                                      [on_message_received, data](ByteBuffer *buffer) -> void {
-                                                          auto bb = byte_buffer(buffer);
-                                                          on_message_received(data, &bb);
-                                                      },
-                                                      [data, on_write_done] {
-                                                          on_write_done(data);
-                                                      },
-                                                      [data, on_initial_metadata_received] {
-                                                          on_initial_metadata_received(data);
-                                                      },
-                                                      [data, on_done](Status status) {
-                                                          auto cs = call_status(&status);
-                                                          on_done(data, &cs);
-                                                      }
+                                                 [on_message_received, data](ByteBuffer *buffer) -> void {
+                                                     auto bb = byte_buffer(buffer);
+                                                     on_message_received(data, &bb);
+                                                 },
+                                                 [data, on_write_done] {
+                                                     on_write_done(data);
+                                                 },
+                                                 [data, on_initial_metadata_received] {
+                                                     on_initial_metadata_received(data);
+                                                 },
+                                                 [data, on_done](Status status) {
+                                                     auto cs = call_status(&status);
+                                                     on_done(data, &cs);
+                                                 }
     );
 }
 

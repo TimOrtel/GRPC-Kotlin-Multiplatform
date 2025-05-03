@@ -11,7 +11,7 @@ object JsProtoServiceWriter : ActualProtoServiceWriter() {
     override val channelConstructorModifiers: List<KModifier> = listOf(KModifier.ACTUAL)
     override val primaryConstructorModifiers: List<KModifier> = listOf(KModifier.PRIVATE, KModifier.ACTUAL)
 
-    override val callOptionsType: TypeName = ClassName(PACKAGE_BASE, "CallOptions")
+    override val callOptionsType: TypeName = iosJsCallOptions
     override val createEmptyCallOptionsCode: CodeBlock = CodeBlock.of("%T()", callOptionsType)
 
     private val unaryCallImpl = MemberName(PACKAGE_RPC, "unaryCallImplementation")
@@ -62,8 +62,7 @@ object JsProtoServiceWriter : ActualProtoServiceWriter() {
             superclass(kmStub.parameterizedBy(service.className))
 
             addSuperinterface(
-                ClassName(PACKAGE_STUB, "JsStub")
-                    .parameterizedBy(service.className)
+                iosJsStub.parameterizedBy(service.className)
             )
         }
     }

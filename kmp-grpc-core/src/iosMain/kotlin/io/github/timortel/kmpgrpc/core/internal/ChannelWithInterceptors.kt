@@ -22,6 +22,7 @@ internal fun createNativeChannelWithInterceptors(
         host = host,
         callback_data = StableRef.create(interceptor).asCPointer(),
         on_receive_initial_metadata = staticCFunction { data, methodDescriptor, metadata ->
+            println("on_receive_initial_metadata()")
             try {
                 val interceptor = data!!.asStableRef<CallInterceptor>().get()
 
@@ -44,9 +45,12 @@ internal fun createNativeChannelWithInterceptors(
                 if (originalMetadata !== newMetadata) {
                     updateNativeMetadata(metadata, originalMetadata, newMetadata)
                 }
+
+                println("on_receive_initial_metadata() - pre3")
             } finally {
                 metadata_destroy(metadata)
             }
+            println("on_receive_initial_metadata() - done")
         }
     )
 }
