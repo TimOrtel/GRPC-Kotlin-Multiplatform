@@ -179,16 +179,18 @@ private fun <REQ : Message, RES : Message> rpcImplementation(
     val metadata = callOptions.metadata
 
     val rpcFlow = channelFlow {
-        val actualMetadata = channel.interceptor?.onStart(methodDescriptor, metadata) ?: metadata
-
         val context = create_client_context()
-        actualMetadata.entries.forEach { entry ->
-            client_context_add_metadata(context, entry.key, entry.value)
-        }
-
         val callData = create_call_data()
 
         try {
+            channel.registerRpc()
+
+            val actualMetadata = channel.interceptor?.onStart(methodDescriptor, metadata) ?: metadata
+
+            actualMetadata.entries.forEach { entry ->
+                client_context_add_metadata(context, entry.key, entry.value)
+            }
+
             val contextData = CallContextData(
                 writeReadyChannel = CoroutineChannel(
                     capacity = 1,
@@ -328,6 +330,8 @@ private fun <REQ : Message, RES : Message> rpcImplementation(
             println("rpcImplementation - cleanup")
             destroy_client_context(context)
             destroy_call_data(callData)
+
+            channel.unregisterRpc()
         }
     }
 

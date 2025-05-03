@@ -49,8 +49,7 @@ actual class Channel private constructor(
         }
     }
 
-    actual override fun shutdown() {
-        super.shutdown()
+    override fun cleanupResources() {
         client.close()
     }
 }

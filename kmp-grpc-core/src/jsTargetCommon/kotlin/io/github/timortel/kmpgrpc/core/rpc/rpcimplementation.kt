@@ -84,15 +84,17 @@ private fun <Request : Message, Response : Message> grpcImplementation(
     val metadata = callOptions.metadata
 
     return flow {
-        val actualHeaders = channel.interceptors.foldRight(metadata) { interceptor, currentMetadata ->
-            interceptor.onStart(methodDescriptor, currentMetadata)
-        }
-
-        val actualRequest = channel.interceptors.foldRight(request) { interceptor, currentRequest ->
-            interceptor.onSendMessage(methodDescriptor, currentRequest)
-        }
+        channel.registerRpc()
 
         try {
+            val actualHeaders = channel.interceptors.foldRight(metadata) { interceptor, currentMetadata ->
+                interceptor.onStart(methodDescriptor, currentMetadata)
+            }
+
+            val actualRequest = channel.interceptors.foldRight(request) { interceptor, currentRequest ->
+                interceptor.onSendMessage(methodDescriptor, currentRequest)
+            }
+
             channel.client
                 .preparePost(channel.connectionString + path) {
                     header("Content-Type", "application/grpc-web+proto")
@@ -158,6 +160,8 @@ private fun <Request : Message, Response : Message> grpcImplementation(
                 ),
                 cause = t
             )
+        } finally {
+            channel.unregisterRpc()
         }
     }
 }

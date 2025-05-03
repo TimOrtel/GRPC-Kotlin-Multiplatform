@@ -62,7 +62,7 @@ actual class Channel private constructor(
         actual fun build(): Channel = Channel(name, port, usePlaintext, interceptor)
     }
 
-    actual override fun shutdown() {
-        super.shutdown()
+    override fun cleanupResources() {
+        destroy_channel(channel)
     }
 }

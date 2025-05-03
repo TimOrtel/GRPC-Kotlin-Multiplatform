@@ -32,11 +32,14 @@ actual class Channel private constructor(val channel: ManagedChannel) {
         actual fun build(): Channel = Channel(impl.build())
     }
 
-    actual fun shutdown() {
+    actual val isTerminated: Boolean
+        get() = channel.isTerminated
+
+    actual suspend fun shutdown() {
         channel.shutdown()
     }
 
-    actual fun shutdownNow() {
+    actual suspend fun shutdownNow() {
         channel.shutdownNow()
     }
 }
