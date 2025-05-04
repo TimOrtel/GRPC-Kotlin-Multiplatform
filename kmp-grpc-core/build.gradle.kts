@@ -50,6 +50,7 @@ kotlin {
         it.compilations.getByName("main") {
             cinterops {
                 create("kmp_grpc_native")
+                create("kmp_grpc_native_rust")
             }
         }
     }
@@ -80,6 +81,7 @@ kotlin {
             dependencies {
                 implementation(kotlin("test-common"))
                 implementation(kotlin("test-annotations-common"))
+                implementation(libs.kotlinx.coroutines.test)
             }
         }
 
