@@ -1,6 +1,9 @@
 @file:OptIn(ExperimentalWasmDsl::class)
 
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeCompilation
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
+import org.jetbrains.kotlin.konan.target.linker
 
 plugins {
     id("com.android.library")
@@ -35,12 +38,16 @@ kotlin {
 
     jvm("jvm")
 
-    listOf(
-        iosX64(),
-        iosArm64(),
-        iosSimulatorArm64()
-    ).forEach { nativeTarget ->
-        nativeTarget.compilations.getByName("main") {
+//    iosX64()
+    iosArm64()
+    iosSimulatorArm64()
+
+//    macosArm64()
+//    macosX64()
+
+    targets.filterIsInstance<KotlinNativeTarget>().forEach {
+        println(it.targetName)
+        it.compilations.getByName("main") {
             cinterops {
                 create("kmp_grpc_native")
             }
@@ -52,19 +59,6 @@ kotlin {
     compilerOptions {
         freeCompilerArgs.add("-Xexpect-actual-classes")
     }
-
-    cocoapods {
-        version = "1.0"
-        summary = "GRPC Kotlin Multiplatform Implementation"
-        homepage = "https://github.com/TimOrtel/GRPC-Kotlin-Multiplatform"
-
-        framework {
-            baseName = "GRPCKotlinMultiplatform"
-        }
-
-        ios.deploymentTarget = "18.2"
-    }
-
 
     sourceSets {
         all {
@@ -119,7 +113,7 @@ kotlin {
             dependsOn(androidJvmCommon)
         }
 
-        iosMain {
+        nativeMain {
             dependsOn(iosJsCommon)
             dependsOn(iosJvmCommon)
         }

@@ -24,7 +24,7 @@ kotlin {
         browser()
     }
     jvm("jvm")
-    iosX64()
+//    iosX64()
     iosArm64()
     iosSimulatorArm64()
 
@@ -90,7 +90,7 @@ kmpGrpc {
     jvm()
     android()
     js()
-    ios()
+    native()
 
     includeWellKnownTypes = true
 

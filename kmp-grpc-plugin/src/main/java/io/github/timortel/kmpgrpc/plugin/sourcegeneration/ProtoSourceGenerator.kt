@@ -59,7 +59,7 @@ object ProtoSourceGenerator {
             JsProtoProjectWriter.writeProject(project, wasmJsFolder)
         }
 
-        if (shouldGenerateTargetMap[KmpGrpcExtension.IOS] == true) {
+        if (shouldGenerateTargetMap[KmpGrpcExtension.NATIVE] == true) {
             IosProtoProjectWriter.writeProject(project, iosOutputDir)
         }
     }

@@ -9,7 +9,7 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-abstract class IosJvmInterceptorTest : InterceptorTest() {
+abstract class NativeJvmInterceptorTest : InterceptorTest() {
 
     /**
      * Tests that the happens-before behavior is not violated for client side streaming calls

@@ -78,7 +78,7 @@ kotlin {
             }
         }
 
-        val iosJvmTest by creating {
+        val nativeJvmTest by creating {
             dependsOn(commonTest.get())
         }
 
@@ -98,14 +98,14 @@ kotlin {
             dependsOn(jsTestTargetCommon)
         }
 
-        iosTest {
+        nativeTest {
             dependsOn(serializationTest)
-            dependsOn(iosJvmTest)
+            dependsOn(nativeJvmTest)
         }
 
         jvmTest {
             dependsOn(serializationTest)
-            dependsOn(iosJvmTest)
+            dependsOn(nativeJvmTest)
 
             dependencies {
                 runtimeOnly(libs.grpc.netty)
@@ -142,7 +142,7 @@ kmpGrpc {
     android()
     js()
     wasmjs()
-    ios()
+    native()
 
     includeWellKnownTypes = true
 
