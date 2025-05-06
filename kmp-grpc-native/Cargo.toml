@@ -1,5 +1,5 @@
 [package]
-name = "kmp-grpc-native-rust"
+name = "kmp-grpc-native"
 version = "0.1.0"
 edition = "2024"
 

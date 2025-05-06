@@ -2,7 +2,7 @@ package io.github.timortel.kmpgrpc.core
 
 import io.github.timortel.kmpgrpc.core.internal.CallInterceptorChain
 import io.github.timortel.kmpgrpc.core.internal.EmptyCallInterceptor
-import io.github.timortel.kmpgrpc.nativerust.*
+import io.github.timortel.kmpgrpc.native.*
 import kotlinx.cinterop.CPointer
 
 actual class Channel private constructor(

@@ -50,7 +50,6 @@ kotlin {
         it.compilations.getByName("main") {
             cinterops {
                 create("kmp_grpc_native")
-                create("kmp_grpc_native_rust")
             }
         }
     }
@@ -167,7 +166,7 @@ android {
     }
 }
 
-kotlin.targets.withType(org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget::class.java) {
+kotlin.targets.withType(KotlinNativeTarget::class.java) {
     binaries.all {
         binaryOptions["memoryModel"] = "experimental"
     }

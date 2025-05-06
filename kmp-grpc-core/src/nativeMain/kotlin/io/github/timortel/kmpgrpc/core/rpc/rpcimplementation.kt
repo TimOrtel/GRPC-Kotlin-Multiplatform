@@ -5,22 +5,13 @@ import io.github.timortel.kmpgrpc.core.internal.MemoryRawSource
 import io.github.timortel.kmpgrpc.core.io.internal.CodedInputStreamImpl
 import io.github.timortel.kmpgrpc.core.message.Message
 import io.github.timortel.kmpgrpc.core.message.MessageDeserializer
-import io.github.timortel.kmpgrpc.native.BIDI_STREAMING
-import io.github.timortel.kmpgrpc.native.CLIENT_STREAMING
-import io.github.timortel.kmpgrpc.native.SERVER_STREAMING
-import io.github.timortel.kmpgrpc.native.UNARY
-import io.github.timortel.kmpgrpc.nativerust.*
+import io.github.timortel.kmpgrpc.native.*
 import kotlinx.cinterop.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
 import kotlinx.io.buffered
 import kotlinx.coroutines.channels.Channel as CoroutineChannel
-
-private const val GRPC_ERROR_DOMAIN = "io.grpc"
-
-private const val INVALID_UNKNOWN_DESCRIPTION_1 = "UNKNOWN {grpc_status:0, grpc_message:\"\"}"
-private const val INVALID_UNKNOWN_DESCRIPTION_2 = "UNKNOWN {grpc_message:\"\", grpc_status:0}"
 
 /**
  * Executes a unary gRPC call using the provided channel and settings.
