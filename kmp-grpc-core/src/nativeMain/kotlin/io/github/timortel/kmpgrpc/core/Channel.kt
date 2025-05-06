@@ -1,8 +1,7 @@
 package io.github.timortel.kmpgrpc.core
 
 import io.github.timortel.kmpgrpc.core.internal.CallInterceptorChain
-import io.github.timortel.kmpgrpc.core.internal.createNativeChannelWithInterceptors
-import io.github.timortel.kmpgrpc.native.*
+import io.github.timortel.kmpgrpc.nativerust.*
 import kotlinx.cinterop.CPointer
 
 actual class Channel private constructor(
@@ -15,17 +14,14 @@ actual class Channel private constructor(
     internal val interceptor: CallInterceptor? = null,
 ) : IosJsChannel() {
 
-    internal val channel: CPointer<cnames.structs.grpc_channel>?
+    internal val channel: CPointer<cnames.structs.RustChannel>?
 
     init {
-        val host = "$name:$port"
+        val host = (if (usePlaintext) "http://" else "https://") + "$name:$port"
 
-        channel = if (interceptor != null) {
-            createNativeChannelWithInterceptors(host, interceptor)
-        } else {
-            create_insecure_channel(
-                host = host
-            )
+        channel = channel_create(host)
+        if (channel == null) {
+            throw IllegalArgumentException("$host is not a valid uri.")
         }
     }
 
@@ -63,6 +59,6 @@ actual class Channel private constructor(
     }
 
     override fun cleanupResources() {
-        destroy_channel(channel)
+        channel_free(channel)
     }
 }

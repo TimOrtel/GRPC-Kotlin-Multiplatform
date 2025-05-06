@@ -2,17 +2,19 @@ package io.github.timortel.kmpgrpc.core.rpc
 
 import io.github.timortel.kmpgrpc.core.*
 import io.github.timortel.kmpgrpc.core.internal.MemoryRawSource
-import io.github.timortel.kmpgrpc.core.internal.getMetadataFromNativeMetadata
 import io.github.timortel.kmpgrpc.core.io.internal.CodedInputStreamImpl
 import io.github.timortel.kmpgrpc.core.message.Message
 import io.github.timortel.kmpgrpc.core.message.MessageDeserializer
-import io.github.timortel.kmpgrpc.native.*
+import io.github.timortel.kmpgrpc.native.BIDI_STREAMING
+import io.github.timortel.kmpgrpc.native.CLIENT_STREAMING
+import io.github.timortel.kmpgrpc.native.SERVER_STREAMING
+import io.github.timortel.kmpgrpc.native.UNARY
+import io.github.timortel.kmpgrpc.nativerust.*
 import kotlinx.cinterop.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
 import kotlinx.io.buffered
-import kotlin.uuid.ExperimentalUuidApi
 import kotlinx.coroutines.channels.Channel as CoroutineChannel
 
 private const val GRPC_ERROR_DOMAIN = "io.grpc"
@@ -159,7 +161,6 @@ fun <REQ : Message, RES : Message> bidiStreamingCallImplementation(
     )
 }
 
-@OptIn(ExperimentalUuidApi::class)
 private fun <REQ : Message, RES : Message> rpcImplementation(
     channel: Channel,
     callOptions: CallOptions,
@@ -179,104 +180,38 @@ private fun <REQ : Message, RES : Message> rpcImplementation(
     val metadata = callOptions.metadata
 
     val rpcFlow = channelFlow {
-        val context = create_client_context()
-        val callData = create_call_data()
+        channel.registerRpc()
+
+        val contextData = CallContextData(responseDeserializer)
+        val requestChannel = request_channel_create()
+
+        val callContextData = StableRef.create(contextData)
 
         try {
-            channel.registerRpc()
+//            val actualMetadata = channel.interceptor?.onStart(methodDescriptor, metadata) ?: metadata
+//
+//            actualMetadata.entries.forEach { entry ->
+//                client_context_add_metadata(context, entry.key, entry.value)
+//            }
 
-            val actualMetadata = channel.interceptor?.onStart(methodDescriptor, metadata) ?: metadata
-
-            actualMetadata.entries.forEach { entry ->
-                client_context_add_metadata(context, entry.key, entry.value)
-            }
-
-            val contextData = CallContextData(
-                writeReadyChannel = CoroutineChannel(
-                    capacity = 1,
-                    onUndeliveredElement = {
-                        throw StatusException.internal("Write ready channel could not keep up!")
-                    }
-                ),
-                messageReceivedChannel = CoroutineChannel(
-                    capacity = CoroutineChannel.UNLIMITED
-                ),
-                responseDeserializer = responseDeserializer
-            )
-
-            rpc_impl(
-                channel = channel.channel,
-                client_context = context,
-                method_name = path,
-                call_data = callData,
-                type = nativeMethodType,
-                data = StableRef.create(contextData).asCPointer(),
-                on_message_received = staticCFunction { data, byteBuffer ->
-                    val callContextData = data!!.asStableRef<CallContextData<RES>>().get()
-
-                    val receivedMessage = readMessageFromByteBuffer(
-                        get_byte_buffer_data(byteBuffer),
-                        callContextData.responseDeserializer
-                    )
-                    callContextData.messageReceivedChannel.trySend(receivedMessage)
-                },
-                on_write_done = staticCFunction { data ->
-                    val callContextData = data!!.asStableRef<CallContextData<RES>>().get()
-
-                    // Write is done, so we can clean up the write buffer
-                    destroy_byte_buffer(callContextData.currentWriteBuffer)
-
-                    callContextData.writeReadyChannel.trySend(Unit)
-                },
-                on_initial_metadata_received = staticCFunction { data ->
-
-                },
-                on_done = staticCFunction { data, callStatus ->
-                    println("rpcImplementation - on_done")
-                    val callContextData = data!!.asStableRef<CallContextData<RES>>().get()
-                    callContextData.messageReceivedChannel.close()
-
-                    val nativeMessage = call_status_message(callStatus)
-                    val status = Status(
-                        code = Code.getCodeForValue(call_status_code(callStatus)),
-                        statusMessage = nativeMessage?.toKString().orEmpty()
-                    )
-
-                    if (nativeMessage != null) {
-                        nativeHeap.free(nativeMessage)
-                    }
-
-                    callContextData.callStatusCompletable.complete(status)
-                    println("rpcImplementation - on_done complete")
-                }
-            )
-
-            val writeJob = launch {
-                requests.collect { request ->
-                    val actualMessage = channel.interceptor?.onSendMessage(methodDescriptor, request) ?: request
-                    val data = actualMessage.serialize().toUByteArray()
-
-                    val requestBuffer = if (data.isEmpty()) {
-                        create_byte_buffer(null, 0u)
-                    } else {
-                        create_byte_buffer(data.usePinned { it.addressOf(0) }, data.size.convert())
-                    }
-
-                    // Wait for a write to be ready
-                    contextData.writeReadyChannel.receive()
-
-                    contextData.currentWriteBuffer = requestBuffer
-                    write_message(callData, requestBuffer)
+            val sendJob = launch {
+                requests.collect { req ->
+                    contextData.onMessageWrittenChannel.receive()
+                    println("Sending")
+                    request_channel_send(requestChannel, StableRef.create(req).asCPointer())
                 }
 
-                signal_client_writing_end(callData)
+                // When done, still wait for the writing to have been completed, then close
+                contextData.onMessageWrittenChannel.receive()
+
+                request_channel_signal_end(requestChannel)
             }
 
             val receiveMessagesJob = launch {
                 contextData
-                    .messageReceivedChannel
+                    .messageReceiveChannel
                     .receiveAsFlow()
-                    .map { channel.interceptor?.onReceiveMessage(methodDescriptor, it) ?: it }
+//                    .map { channel.interceptor?.onReceiveMessage(methodDescriptor, it) ?: it }
                     .collect {
                         println("rpcImplementation - Received message")
                         send(it)
@@ -287,51 +222,132 @@ private fun <REQ : Message, RES : Message> rpcImplementation(
                 val resultStatus = contextData.callStatusCompletable.await()
                 println("rpcImplementation - done received")
 
-
-                val nativeMetadata = client_context_get_trailing_metadata(context)
+//                val nativeMetadata = client_context_get_trailing_metadata(context)
 
                 try {
-                    val finalMetadata = getMetadataFromNativeMetadata(nativeMetadata)
+//                    val finalMetadata = getMetadataFromNativeMetadata(nativeMetadata)
+//
+//                    val actualResultStatus =
+//                        channel.interceptor?.onClose(methodDescriptor, resultStatus, Metadata.of(finalMetadata))
+//                            ?.first
+//                            ?: resultStatus
 
-                    val actualResultStatus =
-                        channel.interceptor?.onClose(methodDescriptor, resultStatus, Metadata.of(finalMetadata))
-                            ?.first
-                            ?: resultStatus
-
-                    if (actualResultStatus.code != Code.OK) {
-                        throw StatusException(actualResultStatus, null)
-                    }
+//                    if (actualResultStatus.code != Code.OK) {
+//                        throw StatusException(actualResultStatus, null)
+//                    }
                 } finally {
                     println("rpcImplementation - closing call")
 
-                    metadata_const_destroy(nativeMetadata)
+//                    metadata_const_destroy(nativeMetadata)
 
                     close()
                 }
             }
 
-            // Initially, we are ready for the first send operation
-            contextData.writeReadyChannel.send(Unit)
+            rpc_implementation(
+                channel = channel.channel,
+                path = path,
+                request_channel = requestChannel,
+                user_data = callContextData.asCPointer(),
+                serialize_request = staticCFunction { message ->
+                    println("serialize_request - start")
+                    val messageRef = message!!.asStableRef<Message>()
+                    try {
+                        val msg = messageRef.get()
+
+                        if (msg.requiredSize == 0) {
+                            c_byte_array_create(
+                                data = null,
+                                ptr = null,
+                                len = 0uL,
+                                free = staticCFunction { _ ->
+                                    println("MESSAGE WRITTEN")
+                                }
+                            )
+                        } else {
+                            val array = msg.serialize().toUByteArray()
+
+                            val pinnedArray = array.pin()
+                            println("serialize_request - pinned array")
+
+                            c_byte_array_create(
+                                data = StableRef.create(pinnedArray).asCPointer(),
+                                ptr = pinnedArray.addressOf(0),
+                                len = array.size.toULong(),
+                                free = staticCFunction { data ->
+                                    val ref = data!!.asStableRef<Pinned<UByteArray>>()
+                                    ref.get().unpin()
+                                    ref.dispose()
+                                }
+                            )
+                        }
+                    } finally {
+                        messageRef.dispose()
+                    }
+
+                },
+                deserialize_response = staticCFunction { data, ptr, length ->
+                    val context = data!!.asStableRef<CallContextData<RES>>().get()
+                    val messageDeserializer = context.deserializer
+
+                    println("Received message")
+                    val message = if (ptr != null) {
+                        val source = MemoryRawSource(ptr, length)
+
+                        messageDeserializer.deserialize(CodedInputStreamImpl(source.buffered()))
+                    } else {
+                        messageDeserializer.deserialize(byteArrayOf())
+                    }
+
+                    StableRef.create(message).asCPointer()
+                },
+                on_message_received = staticCFunction { data, message ->
+                    println("Received message")
+                    val data = data!!.asStableRef<CallContextData<RES>>().get()
+
+                    val msg = message!!.asStableRef<Message>()
+
+                    @Suppress("UNCHECKED_CAST")
+                    data.messageReceiveChannel.trySend(msg.get() as RES)
+                    msg.dispose()
+                },
+                on_message_written = staticCFunction { data ->
+                    val data = data!!.asStableRef<CallContextData<RES>>().get()
+                    data.onMessageWrittenChannel.trySend(Unit)
+                },
+                on_initial_metadata_received = staticCFunction { data, initialMetadata ->
+                    val data = data!!.asStableRef<CallContextData<RES>>().get()
+
+                },
+                on_done = staticCFunction { data, code, message, metadata, trailers ->
+                    val data = data!!.asStableRef<CallContextData<RES>>().get()
+
+                    val status = Status(
+                        code = Code.getCodeForValue(code),
+                        statusMessage = message?.toKString().orEmpty()
+                    )
+
+                    data.callStatusCompletable.complete(status)
+                }
+            )
+
+            // Allow first send
+            contextData.onMessageWrittenChannel.send(Unit)
 
             awaitClose {
-                println("rpcImplementation - closing")
+                println("DONE")
 
                 val message = "The call has been finalized"
 
-                writeJob.cancel(message)
+                contextData.close()
+                sendJob.cancel(message)
                 receiveMessagesJob.cancel(message)
                 waitForDoneJob.cancel(message)
-
-                cancel_call(context)
             }
-
-            println("rpcImplementation - precleanup")
         } finally {
-            println("rpcImplementation - cleanup")
-            destroy_client_context(context)
-            destroy_call_data(callData)
-
             channel.unregisterRpc()
+            request_channel_free(requestChannel)
+            callContextData.dispose()
         }
     }
 
@@ -351,27 +367,15 @@ private fun <REQ : Message, RES : Message> rpcImplementation(
 }
 
 private data class CallContextData<RES : Message>(
-    val writeReadyChannel: CoroutineChannel<Unit>,
-    val messageReceivedChannel: CoroutineChannel<RES>,
-    val responseDeserializer: MessageDeserializer<RES>,
-    var currentWriteBuffer: CValuesRef<cnames.structs.byte_buffer>? = null,
-    val callStatusCompletable: CompletableDeferred<Status> = CompletableDeferred()
-)
-
-private fun <RES : Message> readMessageFromByteBuffer(
-    byteBufferData: CPointer<cnames.structs.byte_buffer_data>?,
-    responseDeserializer: MessageDeserializer<RES>
-): RES {
-    val responseDataPointer = get_byte_buffer_data_data(byteBufferData)
-    val responseDataSize = get_byte_buffer_data_size(byteBufferData)
-
-    return if (responseDataSize == 0uL) {
-        responseDeserializer.deserialize(byteArrayOf())
-    } else if (responseDataPointer != null) {
-        val rawSource = MemoryRawSource(responseDataPointer, responseDataSize)
-
-        responseDeserializer.deserialize(CodedInputStreamImpl(rawSource.buffered()))
-    } else {
-        throw StatusException.internal("Received data but no memory data was given")
+    val deserializer: MessageDeserializer<RES>,
+    val messageReceiveChannel: CoroutineChannel<RES> = CoroutineChannel(capacity = CoroutineChannel.UNLIMITED),
+    // Only capacity of 1 is needed, as only 1 write will happen and then we wait for this channel to fire
+    val onMessageWrittenChannel: CoroutineChannel<Unit> = CoroutineChannel(capacity = 1),
+    val callStatusCompletable: CompletableDeferred<Status> = CompletableDeferred(),
+    val initialMetadataCompletable: CompletableDeferred<Metadata> = CompletableDeferred()
+) {
+    fun close() {
+        messageReceiveChannel.close()
+        onMessageWrittenChannel.close()
     }
 }
