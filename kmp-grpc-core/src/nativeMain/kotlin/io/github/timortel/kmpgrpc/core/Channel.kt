@@ -1,6 +1,7 @@
 package io.github.timortel.kmpgrpc.core
 
 import io.github.timortel.kmpgrpc.core.internal.CallInterceptorChain
+import io.github.timortel.kmpgrpc.core.internal.EmptyCallInterceptor
 import io.github.timortel.kmpgrpc.nativerust.*
 import kotlinx.cinterop.CPointer
 
@@ -11,7 +12,7 @@ actual class Channel private constructor(
     /**
      * The interceptor associated with this channel, or null.
      */
-    internal val interceptor: CallInterceptor? = null,
+    internal val interceptor: CallInterceptor,
 ) : IosJsChannel() {
 
     internal val channel: CPointer<cnames.structs.RustChannel>?
@@ -29,7 +30,7 @@ actual class Channel private constructor(
 
         private var usePlaintext = false
 
-        private var interceptor: CallInterceptor? = null
+        private var interceptor: CallInterceptor = EmptyCallInterceptor
 
         actual companion object {
             actual fun forAddress(

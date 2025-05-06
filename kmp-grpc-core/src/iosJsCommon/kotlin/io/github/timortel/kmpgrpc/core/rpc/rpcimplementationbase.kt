@@ -1,6 +1,9 @@
 package io.github.timortel.kmpgrpc.core.rpc
 
+import io.github.timortel.kmpgrpc.core.Code
 import io.github.timortel.kmpgrpc.core.IosJsChannel
+import io.github.timortel.kmpgrpc.core.Metadata
+import io.github.timortel.kmpgrpc.core.Status
 import io.github.timortel.kmpgrpc.core.StatusException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
@@ -11,6 +14,9 @@ import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
+
+private const val KEY_GRPC_STATUS = "grpc-status"
+private const val KEY_GRPC_MESSAGE = "grpc-message"
 
 /**
  * Executes a gRPC call with a non-streaming response while handling channel shutdowns.
@@ -78,4 +84,34 @@ internal fun <RESP> streamingResponseCallBaseImplementation(
             }
         }
     }
+}
+
+internal fun extractStatusFromMetadataAndVerify(metadata: Metadata) {
+    return extractStatusFromMetadataAndVerify(metadata) { it }
+}
+
+internal fun extractStatusFromMetadataAndVerify(metadata: Metadata, runInterceptors: (Status) -> Status) {
+    val status = extractStatusFromMetadata(metadata)
+    if (status != null) {
+        val finalStatus = runInterceptors(status)
+
+        if (finalStatus.code != Code.OK) {
+            throw StatusException(
+                status = finalStatus,
+                cause = null
+            )
+        }
+    }
+}
+
+private fun extractStatusFromMetadata(metadata: Metadata): Status? {
+    val rawStatus = metadata[KEY_GRPC_STATUS]
+
+    return if (rawStatus != null && rawStatus.toIntOrNull() != null) {
+        val code = Code.getCodeForValue(rawStatus.toInt())
+        Status(
+            code = code,
+            statusMessage = metadata[KEY_GRPC_MESSAGE].orEmpty()
+        )
+    } else null
 }

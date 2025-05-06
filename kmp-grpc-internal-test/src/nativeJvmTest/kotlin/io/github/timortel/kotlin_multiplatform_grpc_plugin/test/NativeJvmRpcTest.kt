@@ -47,132 +47,136 @@ abstract class NativeJvmRpcTest : RpcTest() {
 
         assertEquals(listOf(message, message, message), responses)
     }
-//
-//    @Test
-//    fun testCannotStartClientStreamingRpcOnCancelledChannel() = runTest {
-//        val message = cancellationMessage {}
-//
-//        val channel = channel
-//        channel.shutdown()
-//
-//        assertFailsWithUnavailableOrCancelledStatus {
-//            CancellationServiceStub(channel)
-//                .respondAfter10SecClientStreaming(
-//                    flow {
-//                        emit(message)
-//                        emit(message)
-//                        emit(message)
-//                    }
-//                )
-//        }
-//    }
-//
-//    @Test
-//    fun testCannotStartBidiStreamingRpcOnCancelledChannel() = runTest {
-//        val message = cancellationMessage {}
-//
-//        val channel = channel
-//        channel.shutdown()
-//
-//        assertFailsWithUnavailableOrCancelledStatus {
-//            CancellationServiceStub(channel)
-//                .pingPong(
-//                    flow {
-//                        emit(message)
-//                        emit(message)
-//                        emit(message)
-//                    }
-//                )
-//                .toList()
-//        }
-//    }
-//
-//    @Test
-//    fun testClientStreamingRpcIsCancelledImmediatelyOnImmediateShutdown() = runTest {
-//        val message = cancellationMessage {}
-//
-//        val channel = channel
-//
-//        coroutineScope {
-//            launch {
-//                delay(1000)
-//                channel.shutdownNow()
-//            }
-//
-//            assertFailsWithUnavailableOrCancelledStatus {
-//                CancellationServiceStub(channel)
-//                    .respondAfter10SecClientStreaming(
-//                        flow {
-//                            emit(message)
-//                            emit(message)
-//                            emit(message)
-//                        }
-//                    )
-//            }
-//        }
-//    }
-//
-//    @Test
-//    fun testBidiStreamingRpcIsCancelledImmediatelyOnImmediateShutdown() = runTest {
-//        val message = cancellationMessage {}
-//
-//        val channel = channel
-//
-//        coroutineScope {
-//            launch {
-//                delay(1000)
-//                channel.shutdownNow()
-//            }
-//
-//            assertFailsWithUnavailableOrCancelledStatus {
-//                CancellationServiceStub(channel)
-//                    .pingPong(
-//                        flow {
-//                            emit(message)
-//                            emit(message)
-//                            emit(message)
-//                        }
-//                    )
-//                    .toList()
-//            }
-//        }
-//    }
-//
-//    @Test
-//    fun testClientStreamingDeadlineTriggered() = runTest {
-//        assertFailsWithTimeoutStatus {
-//            withContext(Dispatchers.Default) {
-//                stub
-//                    .withDeadlineAfter(200.milliseconds)
-//                    .simpleClientStreamingRpc(flow { delay(1.seconds) })
-//            }
-//        }
-//    }
-//
-//    @Test
-//    fun testClientStreamingDeadlineNotTriggered() = runTest {
-//        stub
-//            .withDeadlineAfter(1.seconds)
-//            .simpleClientStreamingRpc(flowOf(simpleMessage {  }))
-//    }
-//
-//    @Test
-//    fun testBidiStreamingDeadlineTriggered() = runTest {
-//        assertFailsWithTimeoutStatus {
-//            withContext(Dispatchers.Default) {
-//                stub
-//                    .withDeadlineAfter(200.milliseconds)
-//                    .bidiStreamingRpc(flow { delay(1.seconds) })
-//                    .toList()
-//            }
-//        }
-//    }
-//
-//    @Test
-//    fun testBidiStreamingDeadlineNotTriggered() = runTest {
-//        stub
-//            .withDeadlineAfter(200.milliseconds)
-//            .bidiStreamingRpc(flowOf(simpleMessage {  }))
-//            .toList()
-//    }
+
+    @Test
+    fun testCannotStartClientStreamingRpcOnCancelledChannel() = runTest {
+        val message = cancellationMessage {}
+
+        val channel = channel
+        channel.shutdown()
+
+        assertFailsWithUnavailableOrCancelledStatus {
+            CancellationServiceStub(channel)
+                .respondAfter10SecClientStreaming(
+                    flow {
+                        emit(message)
+                        emit(message)
+                        emit(message)
+                    }
+                )
+        }
+    }
+
+    @Test
+    fun testCannotStartBidiStreamingRpcOnCancelledChannel() = runTest {
+        val message = cancellationMessage {}
+
+        val channel = channel
+        channel.shutdown()
+
+        assertFailsWithUnavailableOrCancelledStatus {
+            CancellationServiceStub(channel)
+                .pingPong(
+                    flow {
+                        emit(message)
+                        emit(message)
+                        emit(message)
+                    }
+                )
+                .toList()
+        }
+    }
+
+    @Test
+    fun testClientStreamingRpcIsCancelledImmediatelyOnImmediateShutdown() = runTest {
+        val message = cancellationMessage {}
+
+        val channel = channel
+
+        coroutineScope {
+            launch {
+                delay(1000)
+                channel.shutdownNow()
+            }
+
+            assertFailsWithUnavailableOrCancelledStatus {
+                CancellationServiceStub(channel)
+                    .respondAfter10SecClientStreaming(
+                        flow {
+                            emit(message)
+                            emit(message)
+                            emit(message)
+                        }
+                    )
+            }
+        }
+    }
+
+    @Test
+    fun testBidiStreamingRpcIsCancelledImmediatelyOnImmediateShutdown() = runTest {
+        val message = cancellationMessage {}
+
+        val channel = channel
+
+        coroutineScope {
+            launch {
+                delay(1000)
+                channel.shutdownNow()
+            }
+
+            assertFailsWithUnavailableOrCancelledStatus {
+                CancellationServiceStub(channel)
+                    .pingPong(
+                        flow {
+                            emit(message)
+                            emit(message)
+                            emit(message)
+                        }
+                    )
+                    .toList()
+            }
+        }
+    }
+
+    @Test
+    fun testClientStreamingDeadlineTriggered() = runTest {
+        assertFailsWithTimeoutStatus {
+            withContext(Dispatchers.Default) {
+                stub
+                    .withDeadlineAfter(200.milliseconds)
+                    .simpleClientStreamingRpc(flow { delay(1.seconds) })
+            }
+        }
+    }
+
+    @Test
+    fun testClientStreamingDeadlineNotTriggered() = runTest {
+        withContext(Dispatchers.Default) {
+            stub
+                .withDeadlineAfter(1.seconds)
+                .simpleClientStreamingRpc(flowOf(simpleMessage {  }))
+        }
+    }
+
+    @Test
+    fun testBidiStreamingDeadlineTriggered() = runTest {
+        assertFailsWithTimeoutStatus {
+            withContext(Dispatchers.Default) {
+                stub
+                    .withDeadlineAfter(200.milliseconds)
+                    .bidiStreamingRpc(flow { delay(1.seconds) })
+                    .toList()
+            }
+        }
+    }
+
+    @Test
+    fun testBidiStreamingDeadlineNotTriggered() = runTest {
+        withContext(Dispatchers.Default) {
+            stub
+                .withDeadlineAfter(200.milliseconds)
+                .bidiStreamingRpc(flowOf(simpleMessage {  }))
+                .toList()
+        }
+    }
 }

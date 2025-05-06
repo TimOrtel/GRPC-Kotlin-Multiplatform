@@ -1,6 +1,7 @@
 use crate::rawpointer::RawPtr;
 use bytes::{Buf, BufMut};
 use std::os::raw::c_void;
+use std::ptr::null_mut;
 use std::slice::from_raw_parts;
 use tonic::codec::{DecodeBuf, EncodeBuf};
 use tonic::{
@@ -109,7 +110,7 @@ impl Decoder for RawDecoder {
 
     fn decode(&mut self, src: &mut DecodeBuf<'_>) -> Result<Option<Self::Item>, Self::Error> {
         if !src.has_remaining() {
-            return Ok(None);
+            return Ok(Some(RawPtr(self.1(self.0.0, null_mut(), 0))));
         }
 
         let ba = src.copy_to_bytes(src.remaining());
