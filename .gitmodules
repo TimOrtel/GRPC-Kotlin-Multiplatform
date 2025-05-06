@@ -1,3 +1,0 @@
-[submodule "kmp-grpc-native/third_party/grpc"]
-	path = kmp-grpc-native/third_party/grpc
-	url = https://github.com/grpc/grpc.git
