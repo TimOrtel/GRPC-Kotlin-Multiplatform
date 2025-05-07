@@ -1,9 +1,8 @@
 @file:OptIn(ExperimentalWasmDsl::class)
 
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
-import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
-import org.jetbrains.kotlin.konan.target.linker
+import org.jetbrains.kotlin.gradle.tasks.CInteropProcess
 
 plugins {
     id("com.android.library")
@@ -170,6 +169,41 @@ kotlin.targets.withType(KotlinNativeTarget::class.java) {
     binaries.all {
         binaryOptions["memoryModel"] = "experimental"
     }
+}
+
+val genNativeHeadersTask = tasks.register("genNativeHeadersFromRust", Exec::class.java) {
+    workingDir = project.layout.projectDirectory.dir("../kmp-grpc-native/").asFile
+
+    commandLine = listOf("./genheaders.sh")
+}
+
+tasks.withType<CInteropProcess>().configureEach {
+    dependsOn(genNativeHeadersTask.get())
+}
+
+val genNativeLicenseTextsTask = tasks.register("genNativeLicenseTexts", Exec::class.java) {
+    workingDir = project.layout.projectDirectory.dir("../kmp-grpc-native/").asFile
+
+    commandLine = listOf("./genlicensetexts.sh")
+}
+
+// Make sure the license texts are included
+kotlin.targets.withType<KotlinNativeTarget>().configureEach {
+    val zipTasks = tasks
+        .withType<Zip>()
+        .filter { zipTask -> zipTask.name.contains(name) && zipTask.name.contains("Klib") && zipTask.name.contains("kmp_grpc_native") }
+
+    if (zipTasks.isEmpty())
+        throw IllegalStateException("Could not inject license file into Klib. Has the gradle layout changed?")
+
+    zipTasks
+        .forEach { zipTask ->
+            zipTask.dependsOn(genNativeLicenseTextsTask.get())
+
+            zipTask.from(layout.projectDirectory.file("../kmp-grpc-native/THIRD_PARTY_LICENSES.html")) {
+                into("META-INF")
+            }
+        }
 }
 
 tasks.withType<org.gradle.jvm.tasks.Jar>().configureEach {
