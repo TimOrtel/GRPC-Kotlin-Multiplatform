@@ -1,2 +1,3 @@
 #!/usr/bin/env bash
-cbindgen --config cbindgen.toml --crate kmp-grpc-native --lang c --output rpcnative.h
+mkdir -p include
+cbindgen --config cbindgen.toml --crate kmp-grpc-native --lang c --output include/rpcnative.h

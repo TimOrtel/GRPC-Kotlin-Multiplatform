@@ -9,7 +9,6 @@ plugins {
     kotlin("multiplatform")
     kotlin("native.cocoapods")
     id("maven-publish")
-    id("io.github.timortel.pod-build-workaround") version "1.0"
 }
 
 group = "io.github.timortel"
@@ -172,6 +171,14 @@ kotlin.targets.withType(KotlinNativeTarget::class.java) {
 }
 
 val genNativeHeadersTask = tasks.register("genNativeHeadersFromRust", Exec::class.java) {
+    inputs.files(fileTree("../kmp-grpc-native/") {
+        include("src/**/*.rs")
+        include("genheaders.sh")
+        include("cbindgen.toml")
+    })
+
+    outputs.dir("../kmp-grpc-native/include")
+
     workingDir = project.layout.projectDirectory.dir("../kmp-grpc-native/").asFile
 
     commandLine = listOf("./genheaders.sh")
@@ -182,6 +189,16 @@ tasks.withType<CInteropProcess>().configureEach {
 }
 
 val genNativeLicenseTextsTask = tasks.register("genNativeLicenseTexts", Exec::class.java) {
+    inputs.files(fileTree("../kmp-grpc-native/") {
+        include("about.hbs")
+        include("about.toml")
+        include("Cargo.toml")
+        include("Cargo.lock")
+        include("genlicensetexts.sh")
+    })
+
+    outputs.file("../kmp-grpc-native/THIRD_PARTY_LICENSES.html")
+
     workingDir = project.layout.projectDirectory.dir("../kmp-grpc-native/").asFile
 
     commandLine = listOf("./genlicensetexts.sh")

@@ -3,7 +3,6 @@ plugins {
     kotlin("multiplatform")
     kotlin("native.cocoapods")
     id("maven-publish")
-    id("io.github.timortel.pod-build-workaround") version "1.0"
 
     id("io.github.timortel.kmpgrpc.plugin")
 }
