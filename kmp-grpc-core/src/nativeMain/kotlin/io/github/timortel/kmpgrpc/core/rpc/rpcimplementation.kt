@@ -272,7 +272,9 @@ private fun <REQ : Message, RES : Message> rpcImplementation(
                     }
                 },
                 deserialize_response = staticCFunction { data, ptr, length ->
-                    val context = data!!.asStableRef<CallContextData<RES>>().get()
+                    if (data == null) return@staticCFunction null
+
+                    val context = data.asStableRef<CallContextData<RES>>().get()
                     val messageDeserializer = context.deserializer
 
                     val message = if (length > 0uL && ptr != null) {
@@ -286,7 +288,9 @@ private fun <REQ : Message, RES : Message> rpcImplementation(
                     StableRef.create(message).asCPointer()
                 },
                 on_message_received = staticCFunction { data, message ->
-                    val data = data!!.asStableRef<CallContextData<RES>>().get()
+                    if (data == null) return@staticCFunction
+
+                    val data = data.asStableRef<CallContextData<RES>>().get()
 
                     val msg = message!!.asStableRef<Message>()
 
@@ -298,12 +302,16 @@ private fun <REQ : Message, RES : Message> rpcImplementation(
                     }
                 },
                 on_message_written = staticCFunction { data ->
-                    val data = data!!.asStableRef<CallContextData<RES>>().get()
+                    if (data == null) return@staticCFunction
+
+                    val data = data.asStableRef<CallContextData<RES>>().get()
                     data.onMessageWrittenChannel.trySend(Unit)
                 },
                 on_initial_metadata_received = staticCFunction { data, initialMetadata ->
+                    if (data == null) return@staticCFunction
+
                     try {
-                        val data = data!!.asStableRef<CallContextData<RES>>().get()
+                        val data = data.asStableRef<CallContextData<RES>>().get()
 
                         data.initialMetadataCompletable.complete(convertRustMetadata(initialMetadata))
                     } finally {
@@ -311,8 +319,10 @@ private fun <REQ : Message, RES : Message> rpcImplementation(
                     }
                 },
                 on_done = staticCFunction { data, code, message, metadata, trailers ->
+                    if (data == null) return@staticCFunction
+
                     try {
-                        val data = data!!.asStableRef<CallContextData<RES>>().get()
+                        val data = data.asStableRef<CallContextData<RES>>().get()
 
                         val status = Status(
                             code = Code.getCodeForValue(code),
@@ -346,14 +356,17 @@ private fun <REQ : Message, RES : Message> rpcImplementation(
                 waitForInitialMetadataDeferred.cancel(message)
 
                 rpc_task_abort(taskHandle)
+                println("Cancelling call - end")
             }
         } finally {
+            println("Cleaning up rpc - start")
             channel.unregisterRpc()
 
             request_channel_free(requestChannel)
             metadata_free(callMetadata)
 
             callContextData.dispose()
+            println("Cleaning up rpc - end")
         }
     }
 

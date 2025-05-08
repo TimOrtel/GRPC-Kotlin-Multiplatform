@@ -57,12 +57,14 @@ abstract class ChannelTest : ServerTest {
         assertFalse("By default, a channel is not terminated") { channel.isTerminated }
 
         val rpcJob = launch {
+            println("Starting rpc")
             assertFailsWith<StatusException> { stub.unaryDelayed(simpleMessage { }) }
         }
 
         // The shutdownNow must not wait for the RPC to finish
         withContext(Dispatchers.Default) {
             withTimeout(100.milliseconds) {
+                println("Shutting down")
                 channel.shutdownNow()
 
                 rpcJob.join()

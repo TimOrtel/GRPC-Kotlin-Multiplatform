@@ -61,4 +61,10 @@ actual class Channel private constructor(
     override fun cleanupResources() {
         channel_free(channel)
     }
+
+    companion object {
+        init {
+            init(true)
+        }
+    }
 }

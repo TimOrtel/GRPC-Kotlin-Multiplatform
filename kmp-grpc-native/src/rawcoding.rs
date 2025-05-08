@@ -3,6 +3,7 @@ use bytes::{Buf, BufMut};
 use std::os::raw::c_void;
 use std::ptr::null_mut;
 use std::slice::from_raw_parts;
+use log::trace;
 use tonic::codec::{DecodeBuf, EncodeBuf};
 use tonic::{
     Status,
@@ -79,9 +80,11 @@ impl Encoder for RawEncoder {
     type Error = Status;
 
     fn encode(&mut self, item: Self::Item, dst: &mut EncodeBuf<'_>) -> Result<(), Self::Error> {
+        trace!("encode()");
         let ba = unsafe { Box::from_raw((self.encode_message)(item.0)) };
 
         if ba.len == 0 {
+            trace!("encode() - empty array");
             self.on_message_written.call();
             return Ok(());
         }
@@ -91,6 +94,8 @@ impl Encoder for RawEncoder {
         }
         
         self.on_message_written.call();
+
+        trace!("encode() - done");
 
         Ok(())
     }
@@ -103,13 +108,19 @@ impl Decoder for RawDecoder {
     type Error = Status;
 
     fn decode(&mut self, src: &mut DecodeBuf<'_>) -> Result<Option<Self::Item>, Self::Error> {
+        trace!("decode()");
         if !src.has_remaining() {
+            trace!("decode() - empty message received");
             return Ok(Some(RawPtr(self.1(self.0.0, null_mut(), 0))));
         }
-
+        
         let ba = src.copy_to_bytes(src.remaining());
 
+        trace!("decode() - copied bytes");
+
         let message = self.1(self.0.0, ba.as_ptr(), ba.len());
+
+        trace!("decode() - returning with message");
 
         Ok(Some(RawPtr(message)))
     }
@@ -122,6 +133,8 @@ pub extern "C" fn c_byte_array_create(
     len: usize,
     free: FreeCByteArray,
 ) -> *mut CByteArray {
+    trace!("c_byte_array_create()");
+
     Box::into_raw(Box::new(CByteArray {
         data: RawPtr(data),
         ptr,
@@ -132,6 +145,8 @@ pub extern "C" fn c_byte_array_create(
 
 #[unsafe(no_mangle)]
 pub extern "C" fn c_byte_array_free(ptr: *mut CByteArray) {
+    trace!("c_byte_array_free() - ptr: {:p}", ptr);
+
     if ptr.is_null() {
         return;
     }
