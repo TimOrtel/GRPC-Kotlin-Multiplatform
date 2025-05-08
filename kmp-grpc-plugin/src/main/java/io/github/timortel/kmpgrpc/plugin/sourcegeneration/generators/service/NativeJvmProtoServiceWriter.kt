@@ -5,7 +5,7 @@ import com.squareup.kotlinpoet.MemberName
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.Const
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.service.ProtoRpc
 
-abstract class IosJvmProtoServiceWriter : ActualProtoServiceWriter() {
+abstract class NativeJvmProtoServiceWriter : ActualProtoServiceWriter() {
     abstract val unaryCallMemberName: MemberName
     abstract val clientStreamingCallMemberName: MemberName
     abstract val serverStreamingCallMemberName: MemberName

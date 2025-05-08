@@ -6,7 +6,7 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.*
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.service.ProtoRpc
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.service.ProtoService
 
-object IosProtoServiceWriter : IosJvmProtoServiceWriter() {
+object NativeProtoServiceWriter : NativeJvmProtoServiceWriter() {
 
     override val channelConstructorModifiers: List<KModifier> = listOf(KModifier.ACTUAL)
     override val primaryConstructorModifiers: List<KModifier> = listOf(KModifier.PRIVATE, KModifier.ACTUAL)

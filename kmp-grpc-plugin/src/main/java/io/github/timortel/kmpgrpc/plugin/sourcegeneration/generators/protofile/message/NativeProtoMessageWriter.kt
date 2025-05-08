@@ -2,7 +2,7 @@ package io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.
 
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.SourceTarget
 
-object IosProtoMessageWriter : IosJvmProtoMessageWriteBase() {
+object NativeProtoMessageWriter : NativeJvmProtoMessageWriteBase() {
 
-    override val target: SourceTarget = SourceTarget.Ios
+    override val target: SourceTarget = SourceTarget.Native
 }
