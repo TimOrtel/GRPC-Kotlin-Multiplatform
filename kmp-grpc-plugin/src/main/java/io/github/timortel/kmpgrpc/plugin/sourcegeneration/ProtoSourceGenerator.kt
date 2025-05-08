@@ -4,7 +4,7 @@ import io.github.timortel.kmpgrpc.anltr.Protobuf3Lexer
 import io.github.timortel.kmpgrpc.anltr.Protobuf3Parser
 import io.github.timortel.kmpgrpc.plugin.KmpGrpcExtension
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.project.CommonProtoProjectWriter
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.project.IosProtoProjectWriter
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.project.NativeProtoProjectWriter
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.project.JsProtoProjectWriter
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.project.JvmProtoProjectWriter
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoProject
@@ -59,8 +59,8 @@ object ProtoSourceGenerator {
             JsProtoProjectWriter.writeProject(project, wasmJsFolder)
         }
 
-        if (shouldGenerateTargetMap[KmpGrpcExtension.IOS] == true) {
-            IosProtoProjectWriter.writeProject(project, iosOutputDir)
+        if (shouldGenerateTargetMap[KmpGrpcExtension.NATIVE] == true) {
+            NativeProtoProjectWriter.writeProject(project, iosOutputDir)
         }
     }
 

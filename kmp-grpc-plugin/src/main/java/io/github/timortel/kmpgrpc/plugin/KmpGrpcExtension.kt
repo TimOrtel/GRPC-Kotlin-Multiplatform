@@ -14,9 +14,9 @@ open class KmpGrpcExtension @Inject constructor(objects: ObjectFactory) {
         internal const val JVM = "jvm"
         internal const val JS = "js"
         internal const val WASMJS = "wasmjs"
-        internal const val IOS = "ios"
+        internal const val NATIVE = "native"
 
-        internal val targets = listOf(COMMON, JVM, JS, WASMJS, IOS)
+        internal val targets = listOf(COMMON, JVM, JS, WASMJS, NATIVE)
     }
 
     /**
@@ -57,7 +57,7 @@ open class KmpGrpcExtension @Inject constructor(objects: ObjectFactory) {
         targetSourcesMap.put(WASMJS, targets)
     }
 
-    fun ios(targets: List<String> = listOf("iosMain")) {
-        targetSourcesMap.put(IOS, targets)
+    fun native(targets: List<String> = listOf("nativeMain")) {
+        targetSourcesMap.put(NATIVE, targets)
     }
 }

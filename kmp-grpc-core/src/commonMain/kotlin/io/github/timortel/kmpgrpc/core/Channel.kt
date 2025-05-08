@@ -31,10 +31,19 @@ expect class Channel {
     }
 
     /**
+     * True after either [shutdown] or [shutdownNow] have been called, this channel has no running RPCs and its
+     * resources have been cleaned up.
+     */
+    val isTerminated: Boolean
+
+    /**
      * Initiates an orderly shutdown of the gRPC channel. After this method is called, no new calls can be started
      * using the channel. However, existing calls will continue until they are completed or canceled.
+     *
+     * Suspends until [isTerminated] is true. If the calling coroutine is canceled before this call returns,
+     * memory leaks are possible.
      */
-    fun shutdown()
+    suspend fun shutdown()
 
     /**
      * Initiates a forceful shutdown of the gRPC channel. After invoking this method, no new calls
@@ -43,6 +52,9 @@ expect class Channel {
      * This method is used to terminate the channel abruptly, without waiting for ongoing calls
      * to complete gracefully. It should be used with caution, as it can interrupt active
      * operations and cause incomplete responses.
+     *
+     * Suspends until [isTerminated] is true. If the calling coroutine is canceled before this call returns,
+     * memory leaks are possible.
      */
-    fun shutdownNow()
+    suspend fun shutdownNow()
 }

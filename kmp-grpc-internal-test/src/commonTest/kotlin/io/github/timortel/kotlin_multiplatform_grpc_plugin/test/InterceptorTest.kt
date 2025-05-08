@@ -10,10 +10,7 @@ import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
 import kotlin.test.*
 
-abstract class InterceptorTest {
-
-    abstract val address: String
-    abstract val port: Int
+abstract class InterceptorTest : ServerTest {
 
     abstract val isJavaScript: Boolean
 

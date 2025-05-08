@@ -14,7 +14,7 @@ interface CodedOutputStream {
 
     fun writeBool(fieldNumber: Int, value: Boolean)
 
-    fun writeBoolArray(fieldNumber: Int, value: List<Boolean>, tag: UInt)
+    fun writeBoolArray(fieldNumber: Int, values: List<Boolean>, tag: UInt)
 
     fun writeBoolNoTag(value: Boolean)
 

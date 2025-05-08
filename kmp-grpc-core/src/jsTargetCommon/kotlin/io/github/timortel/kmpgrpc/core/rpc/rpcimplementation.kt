@@ -19,8 +19,7 @@ import kotlinx.io.readString
 import kotlin.time.DurationUnit
 import kotlin.time.ExperimentalTime
 
-private const val KEY_GRPC_STATUS = "grpc-status"
-private const val KEY_GRPC_MESSAGE = "grpc-message"
+
 
 /**
  * Executes the unary given unary call using Ktor.
@@ -84,15 +83,17 @@ private fun <Request : Message, Response : Message> grpcImplementation(
     val metadata = callOptions.metadata
 
     return flow {
-        val actualHeaders = channel.interceptors.foldRight(metadata) { interceptor, currentMetadata ->
-            interceptor.onStart(methodDescriptor, currentMetadata)
-        }
-
-        val actualRequest = channel.interceptors.foldRight(request) { interceptor, currentRequest ->
-            interceptor.onSendMessage(methodDescriptor, currentRequest)
-        }
+        channel.registerRpc()
 
         try {
+            val actualHeaders = channel.interceptors.foldRight(metadata) { interceptor, currentMetadata ->
+                interceptor.onStart(methodDescriptor, currentMetadata)
+            }
+
+            val actualRequest = channel.interceptors.foldRight(request) { interceptor, currentRequest ->
+                interceptor.onSendMessage(methodDescriptor, currentRequest)
+            }
+
             channel.client
                 .preparePost(channel.connectionString + path) {
                     header("Content-Type", "application/grpc-web+proto")
@@ -128,10 +129,7 @@ private fun <Request : Message, Response : Message> grpcImplementation(
                         interceptor.onReceiveHeaders(methodDescriptor, metadata)
                     }
 
-                    extractStatusFromMetadataAndVerify(
-                        metadata = finalMetadata,
-                        runInterceptors = { it }
-                    )
+                    extractStatusFromMetadataAndVerify(metadata = finalMetadata)
 
                     readResponse(
                         channel = response.bodyAsChannel(),
@@ -158,6 +156,8 @@ private fun <Request : Message, Response : Message> grpcImplementation(
                 ),
                 cause = t
             )
+        } finally {
+            channel.unregisterRpc()
         }
     }
 }
@@ -205,32 +205,6 @@ private suspend fun <T : Message> FlowCollector<T>.readResponse(
             )
         }
     }
-}
-
-private fun extractStatusFromMetadataAndVerify(metadata: Metadata, runInterceptors: (Status) -> Status) {
-    val status = extractStatusFromMetadata(metadata)
-    if (status != null) {
-        val finalStatus = runInterceptors(status)
-
-        if (finalStatus.code != Code.OK) {
-            throw StatusException(
-                status = finalStatus,
-                cause = null
-            )
-        }
-    }
-}
-
-private fun extractStatusFromMetadata(metadata: Metadata): Status? {
-    val rawStatus = metadata[KEY_GRPC_STATUS]
-
-    return if (rawStatus != null && rawStatus.toIntOrNull() != null) {
-        val code = Code.getCodeForValue(rawStatus.toInt())
-        Status(
-            code = code,
-            statusMessage = metadata[KEY_GRPC_MESSAGE].orEmpty()
-        )
-    } else null
 }
 
 private fun encodeMessageFrame(message: Message): ByteArray {

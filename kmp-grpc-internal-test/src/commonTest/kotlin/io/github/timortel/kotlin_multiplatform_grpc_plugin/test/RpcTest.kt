@@ -17,10 +17,7 @@ import kotlin.test.assertFailsWith
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
-abstract class RpcTest {
-
-    abstract val address: String
-    abstract val port: Int
+abstract class RpcTest : ServerTest {
 
     protected val channel: Channel
         get() = Channel.Builder
@@ -245,16 +242,18 @@ abstract class RpcTest {
             withContext(Dispatchers.Default) {
                 stub
                     .withDeadlineAfter(200.milliseconds)
-                    .unaryDelayed(simpleMessage {  })
+                    .unaryDelayed(simpleMessage { })
             }
         }
     }
 
     @Test
     fun testUnaryDeadlineNotTriggered() = runTest {
-        stub
-            .withDeadlineAfter(1.seconds)
-            .simpleRpc(simpleMessage { field1 = "Test" })
+        withContext(Dispatchers.Default) {
+            stub
+                .withDeadlineAfter(1.seconds)
+                .simpleRpc(simpleMessage { field1 = "Test" })
+        }
     }
 
     @Test
@@ -265,7 +264,7 @@ abstract class RpcTest {
             withContext(Dispatchers.Default) {
                 stub
                     .withDeadlineAfter(200.milliseconds)
-                    .serverStreamingDelayed(simpleMessage {  })
+                    .serverStreamingDelayed(simpleMessage { })
                     .toList(received)
             }
         }
@@ -275,19 +274,21 @@ abstract class RpcTest {
 
     @Test
     fun testServerStreamingDeadlineNotTriggered() = runTest {
-        val received = stub
-            .withDeadlineAfter(1.seconds)
-            .serverStreamingDelayed(simpleMessage {  })
-            .toList()
+        withContext(Dispatchers.Default) {
+            val received = stub
+                .withDeadlineAfter(1.seconds)
+                .serverStreamingDelayed(simpleMessage { })
+                .toList()
 
-        assertEquals(2, received.size, "Expected to have received 2 messages.")
+            assertEquals(2, received.size, "Expected to have received 2 messages.")
+        }
     }
 
     @Test
     fun testUnimplementedRpcThrowsStatusException() = runTest {
         assertFailsWithCode(listOf(Code.UNIMPLEMENTED)) {
             stub
-                .unaryUnimplemented(simpleMessage {  })
+                .unaryUnimplemented(simpleMessage { })
         }
     }
 
@@ -302,7 +303,11 @@ abstract class RpcTest {
     protected inline fun assertFailsWithCode(codes: List<Code>, block: () -> Unit) {
         val exception = assertFailsWith<StatusException> { block() }
 
-        assertContains(codes, exception.status.code, "Expected to fail with $codes status. statusMessage=${exception.status.statusMessage}")
+        assertContains(
+            codes,
+            exception.status.code,
+            "Expected to fail with $codes status. statusMessage=${exception.status.statusMessage}"
+        )
     }
 }
 

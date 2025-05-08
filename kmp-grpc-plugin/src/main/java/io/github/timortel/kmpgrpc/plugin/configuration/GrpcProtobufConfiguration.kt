@@ -72,7 +72,7 @@ object GrpcProtobufConfiguration {
                     )
                 }
 
-                targetSourceMap[KmpGrpcExtension.IOS].orEmpty().forEach {
+                targetSourceMap[KmpGrpcExtension.NATIVE].orEmpty().forEach {
                     kotlinExtension.sourceSets.findByName(it)?.kotlin?.srcDir(
                         GenerateKmpGrpcSourcesTask.getIOSOutputFolder(
                             project

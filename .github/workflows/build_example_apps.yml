@@ -44,18 +44,6 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Cache Lib Cocoapods Synthetic Build
-        uses: actions/cache@v4
-        with:
-          path: kmp-grpc-core/build/cocoapods/synthetic
-          key: lib-cocoapods-synthetic-${{ runner.os }}-${{ hashFiles('kmp-grpc-core/gradle.properties') }}
-
-      - name: Cache Example Common Cocoapods Synthetic Build
-        uses: actions/cache@v4
-        with:
-          path: example/common/build/cocoapods/synthetic
-          key: example-common-cocoapods-synthetic-${{ runner.os }}-${{ hashFiles('kmp-grpc-core/gradle.properties') }}
-
       - name: Publish revision to maven local
         run:
           ./gradlew :kmp-grpc-plugin:publishToMavenLocal :kmp-grpc-core:publishToMavenLocal
@@ -63,14 +51,9 @@ jobs:
       - name: Build common module
         run: |
           cd example
-          ./gradlew common:build common:podspec common:generateDummyFramework
-
-      - name: Install CocoaPods dependencies
-        run: |
-          cd example/iosApp
-          pod install
+          ./gradlew common:build
 
       - name: Build iOS app
         run: |
           cd example/iosApp
-          xcodebuild -workspace iosApp.xcworkspace -scheme iosApp -sdk iphonesimulator -configuration Debug CLANG_CXX_LANGUAGE_STANDARD=c++17 LLVM_TARGET_TRIPLE_OS_VERSION=ios15.6
+          xcodebuild -project iosApp.xcodeproj -scheme iosApp -sdk iphonesimulator -configuration Debug LLVM_TARGET_TRIPLE_OS_VERSION=ios15.6

@@ -43,7 +43,6 @@ fun wireFormatForType(dataType: DataType, isPacked: Boolean): WireFormat {
         DataType.FIXED64, DataType.SFIXED64, DataType.DOUBLE -> WireFormat.FIXED64
         DataType.BYTES, DataType.STRING, DataType.MESSAGE -> WireFormat.LENGTH_DELIMITED
         DataType.GROUP -> WireFormat.START_GROUP
-        else -> throw IllegalArgumentException("DataType $dataType unknown.")
     }
 }
 

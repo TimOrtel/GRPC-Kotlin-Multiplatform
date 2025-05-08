@@ -8,7 +8,7 @@ actual class Channel private constructor(
     private val port: Int,
     private val usePlainText: Boolean,
     internal val interceptors: List<CallInterceptor>,
-) : IosJsChannel() {
+) : NativeJsChannel() {
 
     @Suppress("HttpUrlsUsage")
     val connectionString = (if (usePlainText) "http://" else "https://") + "$name:$port"
@@ -49,8 +49,7 @@ actual class Channel private constructor(
         }
     }
 
-    actual override fun shutdown() {
-        super.shutdown()
+    override fun cleanupResources() {
         client.close()
     }
 }

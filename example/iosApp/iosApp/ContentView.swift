@@ -1,5 +1,5 @@
 import SwiftUI
-import common
+import Common
 
 struct ContentView: View {
     @State private var hostName: String = ""

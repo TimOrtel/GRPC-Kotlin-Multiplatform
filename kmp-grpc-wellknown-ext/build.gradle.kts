@@ -3,7 +3,6 @@ plugins {
     kotlin("multiplatform")
     kotlin("native.cocoapods")
     id("maven-publish")
-    id("io.github.timortel.pod-build-workaround") version "1.0"
 
     id("io.github.timortel.kmpgrpc.plugin")
 }
@@ -17,18 +16,9 @@ repositories {
 }
 
 kotlin {
-    androidTarget("android") {
-        publishLibraryVariants("release", "debug")
-    }
-    js(IR) {
-        browser()
-    }
-    jvm("jvm")
-    iosX64()
-    iosArm64()
-    iosSimulatorArm64()
-
     applyDefaultHierarchyTemplate()
+
+    setupTargets(project)
 
     compilerOptions {
         freeCompilerArgs.add("-Xexpect-actual-classes")
@@ -90,7 +80,7 @@ kmpGrpc {
     jvm()
     android()
     js()
-    ios()
+    native()
 
     includeWellKnownTypes = true
 

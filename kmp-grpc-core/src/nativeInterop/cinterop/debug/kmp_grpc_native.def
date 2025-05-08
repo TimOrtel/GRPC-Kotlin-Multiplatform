@@ -1,0 +1,24 @@
+headers = include/rpcnative.h
+compilerOpts = -I../kmp-grpc-native/
+package = io.github.timortel.kmpgrpc.native
+staticLibraries = libkmp_grpc_native.a
+
+# apple
+libraryPaths.ios_arm64 = ../kmp-grpc-native/target/aarch64-apple-ios/debug
+libraryPaths.ios_simulator_arm64 = ../kmp-grpc-native/target/aarch64-apple-ios-sim/debug
+libraryPaths.macos_arm64 = ../kmp-grpc-native/target/aarch64-apple-darwin/debug
+libraryPaths.macos_x64 = ../kmp-grpc-native/target/x86_64-apple-darwin/debug
+libraryPaths.ios_x64 = ../kmp-grpc-native/target/x86_64-apple-ios/debug
+
+# linux
+libraryPaths.linux_x64 = ../kmp-grpc-native/target/x86_64-unknown-linux-gnu/debug
+libraryPaths.linux_arm64 = ../kmp-grpc-native/target/aarch64-unknown-linux-gnu/debug
+
+# android
+libraryPaths.android_arm32 = ../kmp-grpc-native/target/armv7-linux-androideabi/debug
+libraryPaths.android_arm64 = ../kmp-grpc-native/target/aarch64-linux-android/debug
+libraryPaths.android_x86 = ../kmp-grpc-native/target/i686-linux-android/debug
+libraryPaths.android_x64 = ../kmp-grpc-native/target/x86_64-linux-android/debug
+
+# windows
+libraryPaths.mingw_x64 = ../kmp-grpc-native/target/x86_64-pc-windows-gnu/debug
