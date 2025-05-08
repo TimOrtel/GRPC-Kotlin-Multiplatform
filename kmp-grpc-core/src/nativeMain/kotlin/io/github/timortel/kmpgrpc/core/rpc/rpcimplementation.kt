@@ -21,10 +21,9 @@ import kotlinx.coroutines.channels.Channel as CoroutineChannel
  * necessary channel settings and interceptor applications. It also supports cancellation handling.
  *
  * @param channel The gRPC channel used to execute the call.
- * @param callOptions Options for configuring the behavior of the call, such as deadlines or metadata.
+ * @param callOptions The gRPC call options used to configure the call.
  * @param path The full method path of the gRPC service being invoked.
  * @param request The request message to be sent to the server.
- * @param requestDeserializer A deserializer to help parse serialized request objects into a protocol buffer message.
  * @param responseDeserializer A deserializer to parse serialized response data into the appropriate protocol buffer object.
  * @return The response message from the server as an instance of the specified type.
  * @throws StatusException If the gRPC call encounters an error or the server returns a failure status.
@@ -57,10 +56,9 @@ suspend fun <REQ : Message, RES : Message> unaryCallImplementation(
  * @param REQ The type of the request message, which must extend [Message].
  * @param RES The type of the response message, which must extend [Message].
  * @param channel The gRPC [Channel] used for the call.
- * @param callOptions The [GRPCCallOptions] containing call configuration settings and options.
+ * @param callOptions The gRPC call options used to configure the call.
  * @param path The full method name of the server-side streaming gRPC endpoint.
  * @param request The request message to send to the server.
- * @param requestDeserializer The [MessageDeserializer] responsible for deserializing the request message.
  * @param responseDeserializer The [MessageDeserializer] responsible for deserializing the response messages.
  * @return A [Flow] of response messages from the server, where each emitted item represents a message from the stream.
  */
@@ -92,10 +90,9 @@ fun <REQ : Message, RES : Message> serverSideStreamingCallImplementation(
  * @param REQ The type of the request messages being streamed to the server. Must extend [Message].
  * @param RES The type of the single response message received from the server. Must extend [Message].
  * @param channel The gRPC [Channel] used to communicate with the server.
- * @param callOptions The gRPC call options ([GRPCCallOptions]) used to configure the call.
+ * @param callOptions The gRPC call options used to configure the call.
  * @param path The fully qualified path of the gRPC method being called.
  * @param requests A [Flow] emitting the request messages to be sent as part of the stream.
- * @param requestDeserializer The deserializer used to deserialize the requests sent to the server.
  * @param responseDeserializer The deserializer used to deserialize the response received from the server.
  * @return The single response from the server of type [RES].
  * @throws StatusException If the call fails due to a gRPC status-related error.
@@ -125,10 +122,9 @@ suspend fun <REQ : Message, RES : Message> clientStreamingCallImplementation(
  * It also supports cancellation handling.
  *
  * @param channel The gRPC communication channel used to establish the call.
- * @param callOptions The configuration options for the gRPC call, including timeout and metadata.
+ * @param callOptions The gRPC call options used to configure the call.
  * @param path The fully qualified path of the gRPC method being called.
  * @param requests A flow emitting the request messages to be sent to the server.
- * @param requestDeserializer A deserializer for the request messages to handle serialization details.
  * @param responseDeserializer A deserializer for the response messages to handle deserialization details.
  * @return A flow of response messages received from the server.
  */
@@ -152,6 +148,9 @@ fun <REQ : Message, RES : Message> bidiStreamingCallImplementation(
     )
 }
 
+/**
+ * rpc implementation that delegates the heavy lifting to rust/tonic.
+ */
 @OptIn(ExperimentalCoroutinesApi::class)
 private fun <REQ : Message, RES : Message> rpcImplementation(
     channel: Channel,
@@ -195,7 +194,6 @@ private fun <REQ : Message, RES : Message> rpcImplementation(
                     .receiveAsFlow()
                     .map { channel.interceptor.onReceiveMessage(methodDescriptor, it) }
                     .collect {
-                        println("rpcImplementation - Received message")
                         send(it)
                     }
             }
@@ -219,7 +217,7 @@ private fun <REQ : Message, RES : Message> rpcImplementation(
                 }
 
                 try {
-                    // Get the initial metadata, or empty if we did not receive any
+                    // Get the initial metadata or empty if we did not receive any
                     val initialMetadata = try {
                         waitForInitialMetadataDeferred.getCompleted()
                     } catch (_: IllegalStateException) {
@@ -227,8 +225,8 @@ private fun <REQ : Message, RES : Message> rpcImplementation(
                     }
 
                     val finalMetadata = initialMetadata + resultStatus.trailers
-                    extractStatusFromMetadataAndVerify(finalMetadata) {
-                        channel.interceptor.onClose(methodDescriptor, it, finalMetadata).first
+                    extractStatusFromMetadataAndVerify(finalMetadata) { statusFromMetadata ->
+                        channel.interceptor.onClose(methodDescriptor, statusFromMetadata, finalMetadata).first
                     }
                 } finally {
                     close()
@@ -277,7 +275,6 @@ private fun <REQ : Message, RES : Message> rpcImplementation(
                     val context = data!!.asStableRef<CallContextData<RES>>().get()
                     val messageDeserializer = context.deserializer
 
-                    println("Received message")
                     val message = if (length > 0uL && ptr != null) {
                         val source = MemoryRawSource(ptr, length)
 
@@ -289,7 +286,6 @@ private fun <REQ : Message, RES : Message> rpcImplementation(
                     StableRef.create(message).asCPointer()
                 },
                 on_message_received = staticCFunction { data, message ->
-                    println("Received message")
                     val data = data!!.asStableRef<CallContextData<RES>>().get()
 
                     val msg = message!!.asStableRef<Message>()
@@ -318,28 +314,21 @@ private fun <REQ : Message, RES : Message> rpcImplementation(
                     try {
                         val data = data!!.asStableRef<CallContextData<RES>>().get()
 
-                        println("on done")
-
                         val status = Status(
                             code = Code.getCodeForValue(code),
                             statusMessage = message?.toKString().orEmpty()
                         )
 
-                        println("Converting rust data - start")
                         data.callStatusCompletable.complete(
                             CallCompletionData(
                                 status = status,
                                 trailers = convertRustMetadata(trailers)
                             )
                         )
-                        println("Converting rust data - end")
                     } finally {
-                        println("on done - free string")
                         string_free(message)
-                        println("on done - free metadata")
                         metadata_free(metadata)
                         metadata_free(trailers)
-                        println("on done - free done")
                     }
                 }
             )
@@ -348,8 +337,6 @@ private fun <REQ : Message, RES : Message> rpcImplementation(
             contextData.onMessageWrittenChannel.send(Unit)
 
             awaitClose {
-                println("DONE")
-
                 val message = "The call has been finalized"
 
                 contextData.close()
@@ -361,16 +348,12 @@ private fun <REQ : Message, RES : Message> rpcImplementation(
                 rpc_task_abort(taskHandle)
             }
         } finally {
-            println("CALL DONE - cleanup")
             channel.unregisterRpc()
 
             request_channel_free(requestChannel)
-            println("CALL DONE - free metadata")
             metadata_free(callMetadata)
-            println("CALL DONE - free metadata done")
 
             callContextData.dispose()
-            println("CALL DONE - free call context data done")
         }
     }
 

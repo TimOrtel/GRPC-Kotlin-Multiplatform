@@ -79,9 +79,7 @@ impl Encoder for RawEncoder {
     type Error = Status;
 
     fn encode(&mut self, item: Self::Item, dst: &mut EncodeBuf<'_>) -> Result<(), Self::Error> {
-        println!("encode");
         let ba = unsafe { Box::from_raw((self.encode_message)(item.0)) };
-        println!("encode - have byte array {}", ba.len);
 
         if ba.len == 0 {
             self.on_message_written.call();
@@ -91,11 +89,7 @@ impl Encoder for RawEncoder {
         unsafe {
             dst.put_slice(from_raw_parts(ba.ptr, ba.len));
         }
-
-        println!("encode - put slice");
-
-        println!("encode - freeing");
-
+        
         self.on_message_written.call();
 
         Ok(())
@@ -128,8 +122,6 @@ pub extern "C" fn c_byte_array_create(
     len: usize,
     free: FreeCByteArray,
 ) -> *mut CByteArray {
-    println!("c_byte_array_create");
-
     Box::into_raw(Box::new(CByteArray {
         data: RawPtr(data),
         ptr,

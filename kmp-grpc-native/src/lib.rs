@@ -162,16 +162,13 @@ pub unsafe extern "C" fn rpc_implementation(
             );
         };
 
-        println!("rpc_implementation - create path = {}", path);
         let path = PathAndQuery::from_maybe_shared(path).unwrap();
 
         let mut grpc = Grpc::new(channel.unwrap()._channel.clone());
         if let Err(err) = grpc.ready().await {
             on_done_error(user_data, err.to_string().as_str());
         }
-
-        println!("rpc_implementation - call");
-
+        
         let mut request_stream: Request<ReceiverStream<RawPtr>> =
             if let Some(channel) = request_channel {
                 if let Some(receiver) = channel._receiver.take() {
@@ -202,9 +199,7 @@ pub unsafe extern "C" fn rpc_implementation(
                 }
             }
         }
-
-        println!("rpc_implementation - receive request stream");
-
+        
         let result = grpc
             .streaming(
                 request_stream,
@@ -220,9 +215,7 @@ pub unsafe extern "C" fn rpc_implementation(
                 },
             )
             .await;
-
-        println!("rpc_implementation - result");
-
+        
         match result {
             Ok(response) => {
                 let (metadata, mut body, _) = response.into_parts();
@@ -238,17 +231,14 @@ pub unsafe extern "C" fn rpc_implementation(
                     match body.next().await {
                         Some(result) => match result {
                             Ok(message) => {
-                                println!("rpc_implementation - on message received");
                                 on_message_received(user_data, message);
                             }
                             Err(status) => {
-                                println!("rpc_implementation - on status received - {}", status);
                                 on_done_status(status, None);
                                 return;
                             }
                         },
                         None => {
-                            println!("rpc_implementation - server stream done");
                             break;
                         }
                     }
@@ -262,17 +252,11 @@ pub unsafe extern "C" fn rpc_implementation(
                 };
             }
             Err(status) => {
-                println!("rpc_implementation - error: {}", status);
-
                 on_done_status(status, None);
             }
         }
-
-        println!("rpc_implementation - done");
     });
-
-    println!("rpc_implementation - returning");
-
+    
     Box::into_raw(Box::new(RpcTask { _handle: handle }))
 }
 
