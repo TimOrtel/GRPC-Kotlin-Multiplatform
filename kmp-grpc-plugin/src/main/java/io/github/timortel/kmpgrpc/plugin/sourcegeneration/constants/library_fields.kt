@@ -8,8 +8,8 @@ val kmMetadata = ClassName(PACKAGE_BASE, "Metadata")
 val kmStub = ClassName(PACKAGE_STUB, "Stub")
 val kmChannel = ClassName(PACKAGE_BASE, "Channel")
 
-val iosJsStub = ClassName(PACKAGE_STUB, "IosJsStub")
-val iosJsCallOptions = ClassName(PACKAGE_BASE, "CallOptions")
+val nativeJsStub = ClassName(PACKAGE_STUB, "NativeJsStub")
+val nativeJsCallOptions = ClassName(PACKAGE_BASE, "CallOptions")
 
 val MessageDeserializer = ClassName(PACKAGE_MESSAGE, "MessageDeserializer")
 val MessageCompanion = ClassName(PACKAGE_MESSAGE, "MessageCompanion")

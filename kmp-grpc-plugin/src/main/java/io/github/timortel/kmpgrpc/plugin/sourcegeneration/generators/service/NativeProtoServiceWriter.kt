@@ -11,7 +11,7 @@ object NativeProtoServiceWriter : NativeJvmProtoServiceWriter() {
     override val channelConstructorModifiers: List<KModifier> = listOf(KModifier.ACTUAL)
     override val primaryConstructorModifiers: List<KModifier> = listOf(KModifier.PRIVATE, KModifier.ACTUAL)
 
-    override val callOptionsType: TypeName = iosJsCallOptions
+    override val callOptionsType: TypeName = nativeJsCallOptions
     override val createEmptyCallOptionsCode: CodeBlock = CodeBlock.of("%T()", callOptionsType)
 
     override val unaryCallMemberName: MemberName = MemberName(PACKAGE_RPC, "unaryCallImplementation")
@@ -45,6 +45,6 @@ object NativeProtoServiceWriter : NativeJvmProtoServiceWriter() {
         service: ProtoService
     ) {
         builder.superclass(kmStub.parameterizedBy(service.className))
-        builder.addSuperinterface(iosJsStub.parameterizedBy(service.className))
+        builder.addSuperinterface(nativeJsStub.parameterizedBy(service.className))
     }
 }
