@@ -44,9 +44,17 @@ jobs:
       - name: Run tests in plugin module
         run: ./gradlew :kmp-grpc-internal-test:allTests --info -Pio.github.timortel.kmp-grpc.internal.native.targets=othersTest
 
+      - name: Upload JUnit Test Results
+        if: success() || failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Test Results
+          if-no-files-found: error
+          path: kmp-grpc-internal-test/build/test-results/**/*.xml
+
       - name: Report Test Results
         uses: dorny/test-reporter@v2
-        if: always()
+        if: success() || failure()
         with:
           name: Tests
           path: 'kmp-grpc-internal-test/build/test-results/**/*.xml'
@@ -93,6 +101,14 @@ jobs:
 
       - name: Run tests in plugin module
         run: ./gradlew :kmp-grpc-internal-test:allTests --info -Pio.github.timortel.kmp-grpc.internal.native.targets=appleTest
+
+      - name: Upload JUnit Test Results
+        if: success() || failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Test Results
+          if-no-files-found: error
+          path: kmp-grpc-internal-test/build/test-results/**/*.xml
 
       - name: Report Test Results
         uses: dorny/test-reporter@v2
