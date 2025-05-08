@@ -71,13 +71,7 @@ kotlin {
             }
         }
 
-        val iosJvmCommon by creating {
-            dependsOn(commonMain.get())
-        }
-
         val androidJvmCommon by creating {
-            dependsOn(iosJvmCommon)
-
             dependencies {
                 api(libs.grpc.stub)
                 api(libs.grpc.protobuf.lite)
@@ -85,7 +79,7 @@ kotlin {
             }
         }
 
-        val iosJsCommon by creating {
+        val nativeJsCommon by creating {
             dependsOn(commonMain.get())
         }
 
@@ -102,12 +96,11 @@ kotlin {
         }
 
         nativeMain {
-            dependsOn(iosJsCommon)
-            dependsOn(iosJvmCommon)
+            dependsOn(nativeJsCommon)
         }
 
         val jsTargetCommon by creating {
-            dependsOn(iosJsCommon)
+            dependsOn(nativeJsCommon)
             dependsOn(commonMain.get())
 
             dependencies {
