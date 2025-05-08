@@ -61,4 +61,4 @@ jobs:
       - name: Build iOS app
         run: |
           cd example/iosApp
-          xcodebuild -workspace iosApp.xcworkspace -scheme iosApp -sdk iphonesimulator -configuration Debug CLANG_CXX_LANGUAGE_STANDARD=c++17 LLVM_TARGET_TRIPLE_OS_VERSION=ios15.6
+          xcodebuild -project iosApp.xcodeproj -scheme iosApp -sdk iphonesimulator -configuration Debug LLVM_TARGET_TRIPLE_OS_VERSION=ios15.6
