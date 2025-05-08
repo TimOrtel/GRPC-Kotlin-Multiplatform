@@ -13,7 +13,7 @@ import kotlin.test.assertEquals
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
-abstract class NativeJvmRpcTest : RpcTest() {
+abstract class NativeJvmRpcTest : RpcTest(), ServerTestImpl {
 
     @Test
     fun testClientStream() = runTest {

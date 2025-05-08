@@ -1,9 +1,4 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.test
 
-class NativeInterceptorTest : NativeJvmInterceptorTest() {
-    override val address: String = "localhost"
-    override val port: Int = 17888
+class NativeInterceptorTest : NativeJvmInterceptorTest()
 
-    override val isJavaScript: Boolean
-        get() = false
-}

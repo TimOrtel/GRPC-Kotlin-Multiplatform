@@ -51,12 +51,7 @@ jobs:
       - name: Build common module
         run: |
           cd example
-          ./gradlew common:build common:podspec common:generateDummyFramework
-
-      - name: Install CocoaPods dependencies
-        run: |
-          cd example/iosApp
-          pod install
+          ./gradlew common:build
 
       - name: Build iOS app
         run: |

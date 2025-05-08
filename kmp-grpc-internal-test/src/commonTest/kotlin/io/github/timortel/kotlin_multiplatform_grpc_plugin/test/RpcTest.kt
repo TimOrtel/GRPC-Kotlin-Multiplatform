@@ -17,10 +17,7 @@ import kotlin.test.assertFailsWith
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
-abstract class RpcTest {
-
-    abstract val address: String
-    abstract val port: Int
+abstract class RpcTest : ServerTest {
 
     protected val channel: Channel
         get() = Channel.Builder
