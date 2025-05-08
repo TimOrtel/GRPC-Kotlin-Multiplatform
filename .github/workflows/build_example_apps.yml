@@ -44,18 +44,6 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Cache Lib Cocoapods Synthetic Build
-        uses: actions/cache@v4
-        with:
-          path: kmp-grpc-core/build/cocoapods/synthetic
-          key: lib-cocoapods-synthetic-${{ runner.os }}-${{ hashFiles('kmp-grpc-core/gradle.properties') }}
-
-      - name: Cache Example Common Cocoapods Synthetic Build
-        uses: actions/cache@v4
-        with:
-          path: example/common/build/cocoapods/synthetic
-          key: example-common-cocoapods-synthetic-${{ runner.os }}-${{ hashFiles('kmp-grpc-core/gradle.properties') }}
-
       - name: Publish revision to maven local
         run:
           ./gradlew :kmp-grpc-plugin:publishToMavenLocal :kmp-grpc-core:publishToMavenLocal

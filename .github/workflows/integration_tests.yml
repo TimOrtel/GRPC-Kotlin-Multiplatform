@@ -74,12 +74,6 @@ jobs:
           nohup ./gradlew :kmp-grpc-internal-test:test-server:run &
           echo $! > gradle_pid.txt
 
-      - name: Cache Lib Cocoapods Synthetic Build
-        uses: actions/cache@v4
-        with:
-          path: kmp-grpc-core/build/cocoapods/synthetic
-          key: lib-cocoapods-synthetic-${{ runner.os }}-${{ hashFiles('kmp-grpc-core/gradle.properties') }}
-
       - name: Wait for test-server to be healthy
         timeout-minutes: 10
         run: |

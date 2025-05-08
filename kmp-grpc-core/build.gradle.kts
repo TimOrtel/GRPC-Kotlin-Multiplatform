@@ -171,7 +171,14 @@ val compileNativeCodeTask = tasks.register("compileNativeCode", Exec::class.java
 
     workingDir = project.layout.projectDirectory.dir("../kmp-grpc-native/").asFile
 
-    commandLine = listOf("./compile.sh")
+    val profile = if (compileNativeLibAsRelease) "release" else "dev"
+    val targetGroup = when (project.getTargetGroup()) {
+        TargetGroup.ALL -> "all"
+        TargetGroup.APPLE_TEST -> "apple_test"
+        TargetGroup.OTHERS_TEST -> "other_test"
+    }
+
+    commandLine = listOf("./compile.sh", profile, targetGroup)
 }
 
 val genNativeHeadersTask = tasks.register("genNativeHeadersFromRust", Exec::class.java) {
@@ -210,14 +217,7 @@ val genNativeLicenseTextsTask = tasks.register("genNativeLicenseTexts", Exec::cl
 
     workingDir = project.layout.projectDirectory.dir("../kmp-grpc-native/").asFile
 
-    val profile = if (compileNativeLibAsRelease) "release" else "dev"
-    val targetGroup = when (project.getTargetGroup()) {
-        TargetGroup.ALL -> "all"
-        TargetGroup.APPLE_TEST -> "apple_test"
-        TargetGroup.OTHERS_TEST -> "other_test"
-    }
-
-    commandLine = listOf("./genlicensetexts.sh", profile, targetGroup)
+    commandLine = listOf("./genlicensetexts.sh")
 }
 
 val kotlinToRustTargets = mapOf(
