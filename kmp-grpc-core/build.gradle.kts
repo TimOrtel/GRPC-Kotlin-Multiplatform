@@ -231,21 +231,36 @@ val kotlinToRustTargets = mapOf(
 
 // Make sure the license texts are included
 kotlin.targets.withType<KotlinNativeTarget>().configureEach {
-    val zipTasks = tasks
+    val zipRustKlibTasks = tasks
         .withType<Zip>()
         .filter { zipTask -> zipTask.name.contains(name) && zipTask.name.contains("Klib") && zipTask.name.contains("kmp_grpc_native") }
 
-    if (zipTasks.isEmpty())
-        throw IllegalStateException("Could not inject license file into Klib. No corresponging zip task found for target $name. Has the gradle layout changed?")
+    val zipGeneralLibKlibTasks = tasks
+        .withType<Zip>()
+        .filter { zipTask -> zipTask.name == "${name}Klib" }
+
+
+    if (zipRustKlibTasks.isEmpty())
+        throw IllegalStateException("Could not inject license file into rust Klib. No corresponging zip task found for target $name. Has the gradle layout changed?")
+
+    if (zipGeneralLibKlibTasks.isEmpty())
+        throw IllegalStateException("Could not inject license file into general Klib. No corresponging zip task found for target $name. Has the gradle layout changed?")
 
     val rustTarget = kotlinToRustTargets[name]
         ?: throw IllegalStateException("Could not find corresponding rust target for native target $name.")
 
-    zipTasks
+    zipRustKlibTasks
         .forEach { zipTask ->
             zipTask.dependsOn(genNativeLicenseTextsTask.get())
 
             zipTask.from(layout.projectDirectory.file("../kmp-grpc-native/target/$rustTarget/THIRD_PARTY_LICENSES.html")) {
+                into("META-INF")
+            }
+        }
+
+    zipGeneralLibKlibTasks
+        .forEach { zipTask ->
+            zipTask.from(layout.projectDirectory.file("../THIRD_PARTY_LICENSES.txt")) {
                 into("META-INF")
             }
         }
