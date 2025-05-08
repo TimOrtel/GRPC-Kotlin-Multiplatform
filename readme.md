@@ -300,13 +300,13 @@ See an example implementation of an Android app and an iOS app in the `example` 
 - Support all proto data types
 
 ## Building locally
-Run the following Gradle commands:
+To build the native targets locally, you will need to have rust installed on your local machine. Once setup, you can run the following Gradle commands:
 1. To build the library `gradle kmp-grpc-core:publishToMavenLocal`
 2. To build the plugin `gradle kmp-grpc-plugin:publishToMavenLocal`
 
 ## Contributing
 Feel free to implement improvements, bug fixes and features and create a pull request.
-Please send all pull requests to the develop branch, as the master always holds the code for the latest version.
+Please send all pull requests to the `develop` branch, as the `master` branch always holds the code for the latest version.
 
 ## Implementation details
 
