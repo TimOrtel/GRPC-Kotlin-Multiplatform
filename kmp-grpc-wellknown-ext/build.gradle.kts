@@ -16,18 +16,9 @@ repositories {
 }
 
 kotlin {
-    androidTarget("android") {
-        publishLibraryVariants("release", "debug")
-    }
-    js(IR) {
-        browser()
-    }
-    jvm("jvm")
-//    iosX64()
-    iosArm64()
-    iosSimulatorArm64()
-
     applyDefaultHierarchyTemplate()
+
+    setupTargets(project)
 
     compilerOptions {
         freeCompilerArgs.add("-Xexpect-actual-classes")

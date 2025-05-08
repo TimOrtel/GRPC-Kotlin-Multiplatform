@@ -19,40 +19,29 @@ repositories {
     google()
 }
 
+val compileNativeLibAsReleaseProperty = "io.github.timortel.kmp-grpc.internal.native.release"
+val compileNativeLibAsRelease = if (project.hasProperty(compileNativeLibAsReleaseProperty)) {
+    project.property(compileNativeLibAsReleaseProperty).toString() == "true"
+} else false
+
 kotlin {
-    androidTarget("android") {
-        publishLibraryVariants("release", "debug")
-    }
+    applyDefaultHierarchyTemplate()
 
-    js(IR) {
-        browser()
-        nodejs()
-    }
-
-    wasmJs {
-        browser()
-        nodejs()
-    }
-
-    jvm("jvm")
-
-//    iosX64()
-    iosArm64()
-    iosSimulatorArm64()
-
-//    macosArm64()
-//    macosX64()
+    setupTargets(project)
 
     targets.filterIsInstance<KotlinNativeTarget>().forEach {
-        println(it.targetName)
         it.compilations.getByName("main") {
             cinterops {
-                create("kmp_grpc_native")
+                create("kmp_grpc_native") {
+                    definitionFile = if (compileNativeLibAsRelease) {
+                        layout.projectDirectory.file("src/nativeInterop/cinterop/release/$name.def")
+                    } else {
+                        layout.projectDirectory.file("src/nativeInterop/cinterop/debug/$name.def")
+                    }
+                }
             }
         }
     }
-
-    applyDefaultHierarchyTemplate()
 
     compilerOptions {
         freeCompilerArgs.add("-Xexpect-actual-classes")
@@ -170,6 +159,21 @@ kotlin.targets.withType(KotlinNativeTarget::class.java) {
     }
 }
 
+val compileNativeCodeTask = tasks.register("compileNativeCode", Exec::class.java) {
+    inputs.files(fileTree("../kmp-grpc-native/") {
+        include("src/**/*.rs")
+        include("Cargo.lock")
+        include("Cargo.toml")
+        include("compile.sh")
+    })
+
+    outputs.dir("../kmp-grpc-native/target")
+
+    workingDir = project.layout.projectDirectory.dir("../kmp-grpc-native/").asFile
+
+    commandLine = listOf("./compile.sh")
+}
+
 val genNativeHeadersTask = tasks.register("genNativeHeadersFromRust", Exec::class.java) {
     inputs.files(fileTree("../kmp-grpc-native/") {
         include("src/**/*.rs")
@@ -186,6 +190,7 @@ val genNativeHeadersTask = tasks.register("genNativeHeadersFromRust", Exec::clas
 
 tasks.withType<CInteropProcess>().configureEach {
     dependsOn(genNativeHeadersTask.get())
+    dependsOn(compileNativeCodeTask.get())
 }
 
 val genNativeLicenseTextsTask = tasks.register("genNativeLicenseTexts", Exec::class.java) {
@@ -197,12 +202,37 @@ val genNativeLicenseTextsTask = tasks.register("genNativeLicenseTexts", Exec::cl
         include("genlicensetexts.sh")
     })
 
-    outputs.file("../kmp-grpc-native/THIRD_PARTY_LICENSES.html")
+    outputs.files(
+        fileTree("../kmp-grpc-native/target") {
+            include("**/*.html")
+        }
+    )
 
     workingDir = project.layout.projectDirectory.dir("../kmp-grpc-native/").asFile
 
-    commandLine = listOf("./genlicensetexts.sh")
+    val profile = if (compileNativeLibAsRelease) "release" else "dev"
+    val targetGroup = when (project.getTargetGroup()) {
+        TargetGroup.ALL -> "all"
+        TargetGroup.APPLE_TEST -> "apple_test"
+        TargetGroup.OTHERS_TEST -> "other_test"
+    }
+
+    commandLine = listOf("./genlicensetexts.sh", profile, targetGroup)
 }
+
+val kotlinToRustTargets = mapOf(
+    "linuxX64" to "x86_64-unknown-linux-gnu",
+    "linuxArm64" to "aarch64-unknown-linux-gnu",
+
+    "iosX64" to "x86_64-apple-ios",
+    "iosArm64" to "aarch64-apple-ios",
+    "iosSimulatorArm64" to "aarch64-apple-ios-sim",
+
+    "macosArm64" to "aarch64-apple-darwin",
+    "macosX64" to "x86_64-apple-darwin",
+
+    "mingwX64" to "x86_64-pc-windows-gnu"
+)
 
 // Make sure the license texts are included
 kotlin.targets.withType<KotlinNativeTarget>().configureEach {
@@ -211,13 +241,16 @@ kotlin.targets.withType<KotlinNativeTarget>().configureEach {
         .filter { zipTask -> zipTask.name.contains(name) && zipTask.name.contains("Klib") && zipTask.name.contains("kmp_grpc_native") }
 
     if (zipTasks.isEmpty())
-        throw IllegalStateException("Could not inject license file into Klib. Has the gradle layout changed?")
+        throw IllegalStateException("Could not inject license file into Klib. No corresponging zip task found for target $name. Has the gradle layout changed?")
+
+    val rustTarget = kotlinToRustTargets[name]
+        ?: throw IllegalStateException("Could not find corresponding rust target for native target $name.")
 
     zipTasks
         .forEach { zipTask ->
             zipTask.dependsOn(genNativeLicenseTextsTask.get())
 
-            zipTask.from(layout.projectDirectory.file("../kmp-grpc-native/THIRD_PARTY_LICENSES.html")) {
+            zipTask.from(layout.projectDirectory.file("../kmp-grpc-native/target/$rustTarget/THIRD_PARTY_LICENSES.html")) {
                 into("META-INF")
             }
         }

@@ -1,6 +1,0 @@
-headers = rpcnative.h
-compilerOpts = -I../kmp-grpc-native/
-package = io.github.timortel.kmpgrpc.native
-staticLibraries = libkmp_grpc_native.a
-libraryPaths.ios_arm64 = ../kmp-grpc-native/target/aarch64-apple-ios/debug
-libraryPaths.ios_simulator_arm64 = ../kmp-grpc-native/target/aarch64-apple-ios-sim/debug

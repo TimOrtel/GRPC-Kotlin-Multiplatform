@@ -1,10 +1,8 @@
 package io.github.timortel.kmpgrpc.core.message
 
-import io.github.timortel.kmpgrpc.core.common
 import io.github.timortel.kmpgrpc.core.io.CodedInputStream
 import io.github.timortel.kmpgrpc.core.io.internal.CodedInputStreamImpl
 import kotlinx.io.Buffer
-import platform.Foundation.NSData
 
 actual interface MessageDeserializer<T : Message> {
 
@@ -17,8 +15,4 @@ actual interface MessageDeserializer<T : Message> {
     }
 
     actual fun deserialize(stream: CodedInputStream): T
-
-    fun deserialize(`data`: NSData): T {
-        return deserialize(data.common)
-    }
 }

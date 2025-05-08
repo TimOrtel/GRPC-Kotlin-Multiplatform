@@ -7,7 +7,7 @@ import io.github.timortel.kmpgrpc.test.*
 class NativeSerializationTest : SerializationTest() {
 
     private fun <T : Message> serializeImpl(msg: T, deserializer: MessageDeserializer<T>): T {
-        return deserializer.deserialize(msg.serializeNative())
+        return deserializer.deserialize(msg.serialize())
     }
 
     override fun serialize(message: LongMessage): LongMessage =
