@@ -44,6 +44,14 @@ jobs:
       - name: Run tests in plugin module
         run: ./gradlew :kmp-grpc-internal-test:allTests --info -Pio.github.timortel.kmp-grpc.internal.native.targets=othersTest
 
+      - name: Report Test Results
+        uses: dorny/test-reporter@v2
+        if: always()
+        with:
+          name: Tests
+          path: 'kmp-grpc-internal-test/build/test-results/**/*.xml'
+          reporter: java-junit
+
       - name: Kill test-server
         run: |
           PID=$(cat gradle_pid.txt)
@@ -85,6 +93,14 @@ jobs:
 
       - name: Run tests in plugin module
         run: ./gradlew :kmp-grpc-internal-test:allTests --info -Pio.github.timortel.kmp-grpc.internal.native.targets=appleTest
+
+      - name: Report Test Results
+        uses: dorny/test-reporter@v2
+        if: always()
+        with:
+          name: Tests
+          path: 'kmp-grpc-internal-test/build/test-results/**/*.xml'
+          reporter: java-junit
 
       - name: Kill test-server
         run: |
