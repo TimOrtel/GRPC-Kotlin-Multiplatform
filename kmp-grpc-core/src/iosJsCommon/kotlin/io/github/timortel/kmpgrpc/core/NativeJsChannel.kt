@@ -11,7 +11,7 @@ import kotlinx.coroutines.sync.withLock
  *
  * This class provides mechanisms to manage the lifecycle of a channel, including shutdown functionality.
  */
-abstract class IosJsChannel {
+abstract class NativeJsChannel {
 
     private val cleanupMutex = Mutex()
 

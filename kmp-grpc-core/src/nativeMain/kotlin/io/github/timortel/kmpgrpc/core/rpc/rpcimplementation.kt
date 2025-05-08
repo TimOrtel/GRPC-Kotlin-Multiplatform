@@ -45,7 +45,7 @@ suspend fun <REQ : Message, RES : Message> unaryCallImplementation(
             path = path,
             requests = flowOf(request),
             responseDeserializer = responseDeserializer
-        ).single()
+        ).singleOrStatus()
     }
 }
 
@@ -113,7 +113,7 @@ suspend fun <REQ : Message, RES : Message> clientStreamingCallImplementation(
             path = path,
             requests = requests,
             responseDeserializer = responseDeserializer
-        ).single()
+        ).singleOrStatus()
     }
 }
 

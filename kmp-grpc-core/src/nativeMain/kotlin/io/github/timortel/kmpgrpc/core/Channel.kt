@@ -13,7 +13,7 @@ actual class Channel private constructor(
      * The interceptor associated with this channel, or null.
      */
     internal val interceptor: CallInterceptor,
-) : IosJsChannel() {
+) : NativeJsChannel() {
 
     internal val channel: CPointer<cnames.structs.RustChannel>?
 

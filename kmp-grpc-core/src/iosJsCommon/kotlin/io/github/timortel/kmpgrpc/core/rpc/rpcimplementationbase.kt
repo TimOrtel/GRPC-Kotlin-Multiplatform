@@ -1,7 +1,7 @@
 package io.github.timortel.kmpgrpc.core.rpc
 
 import io.github.timortel.kmpgrpc.core.Code
-import io.github.timortel.kmpgrpc.core.IosJsChannel
+import io.github.timortel.kmpgrpc.core.NativeJsChannel
 import io.github.timortel.kmpgrpc.core.Metadata
 import io.github.timortel.kmpgrpc.core.Status
 import io.github.timortel.kmpgrpc.core.StatusException
@@ -23,7 +23,7 @@ private const val KEY_GRPC_MESSAGE = "grpc-message"
  */
 @Throws(StatusException::class, CancellationException::class)
 internal suspend fun <RESP> unaryResponseCallBaseImplementation(
-    channel: IosJsChannel,
+    channel: NativeJsChannel,
     performCall: suspend () -> RESP
 ): RESP {
     if (channel.isShutdown) throw StatusException.UnavailableDueToShutdown
@@ -58,7 +58,7 @@ internal suspend fun <RESP> unaryResponseCallBaseImplementation(
  * @return a flow that executes a server side streaming gRPC call operation while handling channel shutdowns.
  */
 internal fun <RESP> streamingResponseCallBaseImplementation(
-    channel: IosJsChannel,
+    channel: NativeJsChannel,
     responseFlow: Flow<RESP>
 ): Flow<RESP> {
     return channelFlow {
