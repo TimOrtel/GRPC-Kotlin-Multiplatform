@@ -28,11 +28,12 @@ fun KotlinMultiplatformExtension.setupTargets(project: Project) {
     val includeAppleTest = targetsTarget == TargetGroup.APPLE_TEST
     val includeOthersTest = targetsTarget == TargetGroup.OTHERS_TEST
 
-    if (includeAllTargets || includeOthersTest) {
-        androidTarget("android") {
-            publishLibraryVariants("release", "debug")
-        }
+    // Android always has to be included.
+    androidTarget("android") {
+        publishLibraryVariants("release", "debug")
+    }
 
+    if (includeAllTargets || includeOthersTest) {
         js(IR) {
             browser()
             nodejs()
