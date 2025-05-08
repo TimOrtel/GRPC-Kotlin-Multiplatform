@@ -50,7 +50,6 @@ actual class Channel private constructor(
                 else CallInterceptorChain(interceptors.toList())
 
             interceptor = when (val interceptor = interceptor) {
-                null -> newInterceptorsInterceptor
                 is CallInterceptorChain -> interceptor + newInterceptorsInterceptor
                 else -> CallInterceptorChain(listOf(interceptor) + interceptors.toList())
             }

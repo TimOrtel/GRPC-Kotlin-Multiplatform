@@ -72,6 +72,8 @@ kotlin {
         }
 
         val androidJvmCommon by creating {
+            dependsOn(commonMain.get())
+
             dependencies {
                 api(libs.grpc.stub)
                 api(libs.grpc.protobuf.lite)
