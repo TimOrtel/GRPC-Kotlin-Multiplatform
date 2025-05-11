@@ -202,9 +202,13 @@ abstract class RpcTest : ServerTest {
                 channel.shutdownNow()
             }
 
-            assertFailsWithUnavailableOrCancelledStatus {
-                CancellationServiceStub(channel)
-                    .respondAfter10Sec(message)
+            withContext(Dispatchers.Default) {
+                withTimeout(1100) {
+                    assertFailsWithUnavailableOrCancelledStatus {
+                        CancellationServiceStub(channel)
+                            .respondAfter10Sec(message)
+                    }
+                }
             }
         }
     }

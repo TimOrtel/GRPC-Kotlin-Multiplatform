@@ -3,16 +3,17 @@ mod rawpointer;
 
 use crate::rawcoding::{DecodeMessage, EncodeMessage, RawBytesCodec, RpcOnMessageWrittenInternal};
 use crate::rawpointer::RawPtr;
+use env_logger::Target;
+use log::{LevelFilter, trace};
 use once_cell::sync::Lazy;
 use std::ffi::{CStr, CString};
 use std::os::raw::{c_char, c_void};
 use std::ptr::null_mut;
 use std::str::FromStr;
-use env_logger::Target;
-use log::{trace, LevelFilter};
 use tokio::runtime::Runtime;
 use tokio::sync::mpsc::Receiver;
 use tokio::sync::mpsc::Sender;
+use tokio::sync::watch;
 use tonic::client::Grpc;
 use tonic::codegen::http::uri::PathAndQuery;
 use tonic::codegen::tokio_stream::StreamExt;
@@ -66,7 +67,7 @@ impl RequestChannel {
  * Holds the actual channel implementation in Rust
  */
 pub struct RustChannel {
-    _channel: Channel,
+    _channel: Option<Channel>,
 }
 
 /**
@@ -74,12 +75,17 @@ pub struct RustChannel {
  */
 pub struct RpcTask {
     _handle: tokio::task::JoinHandle<()>,
+    _sender: watch::Sender<bool>,
 }
 
 #[unsafe(no_mangle)]
 pub extern "C" fn init(enable_trace_logs: bool) {
     env_logger::Builder::new()
-        .filter_level(if enable_trace_logs {LevelFilter::Trace} else {LevelFilter::Info})
+        .filter_level(if enable_trace_logs {
+            LevelFilter::Trace
+        } else {
+            LevelFilter::Info
+        })
         .target(Target::Stdout)
         .init();
 }
@@ -102,6 +108,8 @@ pub unsafe extern "C" fn rpc_implementation(
     on_done: RpcOnDone,
 ) -> *mut RpcTask {
     trace!("rpc_implementation()");
+
+    let (shutdown_tx, mut shutdown_rx) = watch::channel(false);
 
     let on_done = move |user_data: RawPtr,
                         status: i32,
@@ -137,10 +145,21 @@ pub unsafe extern "C" fn rpc_implementation(
         );
     };
 
+    // These must be closed in Kotlin code
     let user_data = RawPtr(user_data);
-    let request_channel = unsafe { request_channel.as_mut() };
     let channel = unsafe { channel.as_mut() };
-    let metadata = unsafe { metadata.as_mut() };
+
+    // These will be closed by rust
+    let request_receiver = unsafe {
+        match request_channel.as_mut().and_then(|rc| rc._receiver.take()) {
+            Some(rc) => rc,
+            None => {
+                on_done_error(user_data, "no request channel provided");
+                return null_mut();
+            }
+        }
+    };
+    let metadata = unsafe { Box::from_raw(metadata) };
 
     let path = unsafe {
         match CStr::from_ptr(path).to_str() {
@@ -186,57 +205,60 @@ pub unsafe extern "C" fn rpc_implementation(
 
         let path = PathAndQuery::from_maybe_shared(path).unwrap();
 
-        let _channel = match channel {
-            Some(channel) => channel._channel.clone(),
+        trace!("rpc_implementation() - decoded path");
+
+        let _channel = match channel.and_then(|c| c._channel.clone()) {
+            Some(channel) => { channel }
             None => {
                 on_done_error(user_data, "no channel");
                 return;
             }
         };
 
+        trace!("rpc_implementation() - _channel present");
+
+        if shutdown_rx.borrow().clone() {
+            on_done_status(Status::new(Code::Internal, "shutdown"), None);
+            return;
+        }
+
         let mut grpc = Grpc::new(_channel);
         if let Err(err) = grpc.ready().await {
             on_done_error(user_data, err.to_string().as_str());
         }
 
+        trace!("rpc_implementation() - grpc is ready");
+
+        if shutdown_rx.borrow().clone() {
+            on_done_status(Status::new(Code::Internal, "shutdown"), None);
+            return;
+        }
+
         trace!("rpc_implementation() - creating request stream");
 
-        let mut request_stream: Request<ReceiverStream<RawPtr>> =
-            if let Some(channel) = request_channel {
-                if let Some(receiver) = channel._receiver.take() {
-                    ReceiverStream::new(receiver).into_streaming_request()
-                } else {
-                    on_done_status(Status::new(Code::Internal, "no receiver channel"), None);
-                    return;
-                }
-            } else {
-                on_done_status(Status::new(Code::Internal, "no request channel"), None);
-                return;
-            };
+        let mut request_stream: Request<ReceiverStream<RawPtr>> = ReceiverStream::new(request_receiver).into_streaming_request();
 
         trace!("rpc_implementation() - created request stream");
 
         // Insert the metadata
-        if let Some(metadata) = metadata {
-            trace!("rpc_implementation() - inserting metadata");
+        trace!("rpc_implementation() - inserting metadata");
 
-            let md = metadata._metadata.clone();
-            let target = request_stream.metadata_mut();
+        let md = metadata._metadata.clone();
+        let target = request_stream.metadata_mut();
 
-            for key in md.keys() {
-                match key {
-                    KeyRef::Ascii(ascii_key) => {
-                        if let Some(value) = md.get(ascii_key) {
-                            target.insert(ascii_key, value.clone());
-                        }
+        for key in md.keys() {
+            match key {
+                KeyRef::Ascii(ascii_key) => {
+                    if let Some(value) = md.get(ascii_key) {
+                        target.insert(ascii_key, value.clone());
                     }
-                    // TODO: implement binary metadata
-                    KeyRef::Binary(_) => {}
                 }
+                // TODO: implement binary metadata
+                KeyRef::Binary(_) => {}
             }
-
-            trace!("rpc_implementation() - inserted metadata");
         }
+
+        trace!("rpc_implementation() - inserted metadata");
 
         trace!("rpc_implementation() - call grpc.streaming");
 
@@ -270,38 +292,54 @@ pub unsafe extern "C" fn rpc_implementation(
                         _metadata: metadata,
                     })),
                 );
-                
-                loop {
-                    match body.next().await {
-                        Some(result) => match result {
-                            Ok(message) => {
-                                trace!("rpc_implementation() - body.next() returned message");
 
-                                on_message_received(user_data, message);
+                tokio::select! {
+                    _= async {
+                        trace!("rpc_implementation() - starting to read body");
+
+                        loop {
+                            match body.next().await {
+                                Some(result) => match result {
+                                    Ok(message) => {
+                                        trace!("rpc_implementation() - body.next() returned message");
+
+                                        on_message_received(user_data, message);
+                                    }
+                                    Err(status) => {
+                                        trace!("rpc_implementation() - body.next() returned status error");
+
+                                        on_done_status(status, None);
+                                        return;
+                                    }
+                                },
+                                None => {
+                                    trace!("rpc_implementation() - body.next() returned None");
+
+                                    break;
+                                }
                             }
-                            Err(status) => {
-                                trace!("rpc_implementation() - body.next() returned status error");
-
-                                on_done_status(status, None);
-                                return;
-                            }
-                        },
-                        None => {
-                            trace!("rpc_implementation() - body.next() returned None");
-
-                            break;
                         }
+
+                        trace!("rpc_implementation() - finalizing rpc");
+
+                        match body.trailers().await {
+                            Ok(trailers) => on_done_impl(0, "", MetadataMap::new(), trailers),
+                            Err(status) => {
+                                on_done_status(status, None);
+                            }
+                        };
+                    } => {
+                        trace!("rpc_implementation() - stream ended normally.");
+                        drop(body);
+                    }
+
+                    _ = async { shutdown_rx.changed().await } => {
+                        trace!("rpc_implementation() - shutdown_rx.changed() returned. Dropping body!");
+                        drop(body);
+
+                        on_done_status(Status::new(Code::Internal, "shutdown"), None);
                     }
                 }
-
-                trace!("rpc_implementation() - finalizing rpc");
-
-                match body.trailers().await {
-                    Ok(trailers) => on_done_impl(0, "", MetadataMap::new(), trailers),
-                    Err(status) => {
-                        on_done_status(status, None);
-                    }
-                };
             }
             Err(status) => {
                 trace!("rpc_implementation() - grpc.streaming ERROR");
@@ -313,7 +351,10 @@ pub unsafe extern "C" fn rpc_implementation(
 
     trace!("rpc_implementation() - returning with handle");
 
-    Box::into_raw(Box::new(RpcTask { _handle: handle }))
+    Box::into_raw(Box::new(RpcTask {
+        _handle: handle,
+        _sender: shutdown_tx,
+    }))
 }
 
 /**
@@ -336,7 +377,7 @@ pub extern "C" fn channel_create(host: *const c_char) -> *mut RustChannel {
 
     match Channel::from_shared(host) {
         Ok(endpoint) => Box::into_raw(Box::new(RustChannel {
-            _channel: endpoint.connect_lazy(),
+            _channel: Some(endpoint.connect_lazy()),
         })),
         Err(_) => null_mut(),
     }
@@ -350,6 +391,10 @@ pub extern "C" fn channel_free(channel: *mut RustChannel) {
         return;
     }
     unsafe {
+        if let Some(channel) = channel.as_mut() {
+            channel._channel.take();
+        }
+
         drop(Box::from_raw(channel));
     }
 }
@@ -384,14 +429,19 @@ pub extern "C" fn request_channel_free(ptr: *mut RequestChannel) {
  */
 #[unsafe(no_mangle)]
 pub extern "C" fn request_channel_send(ptr: *mut RequestChannel, value: *mut c_void) {
-    trace!("request_channel_send() with ptr: {:p}, value: {:p}", ptr, value);
+    trace!(
+        "request_channel_send() with ptr: {:p}, value: {:p}",
+        ptr, value
+    );
 
     unsafe {
-        if let Some(channel) = ptr.as_mut() {
-            trace!("request_channel_send() - has channel");
-            if let Some(sender) = channel._sender.as_ref() {
-                trace!("request_channel_send() - has sender");
-                sender.blocking_send(RawPtr(value)).unwrap();
+        if let Some(sender) = ptr.as_mut().and_then(|rc| rc._sender.as_ref()) {
+            trace!("request_channel_send() - has sender");
+            match sender.try_send(RawPtr(value)) {
+                Ok(_) => {}
+                Err(_) => {
+                    trace!("request_channel_send() - could not send message");
+                }
             }
         }
     }
@@ -464,7 +514,10 @@ pub extern "C" fn metadata_iterate(
     data: *mut c_void,
     block: extern "C" fn(data: *mut c_void, key: *const c_char, value: *const c_char),
 ) {
-    trace!("metadata_iterate() with metadata: {:p}, data: {:p}", metadata, data);
+    trace!(
+        "metadata_iterate() with metadata: {:p}, data: {:p}",
+        metadata, data
+    );
 
     if metadata.is_null() {
         return;
@@ -518,11 +571,17 @@ pub extern "C" fn rpc_task_abort(task: *mut RpcTask) {
     }
 
     unsafe {
-        let mut t = Box::from_raw(task);
-        t.as_mut()._handle.abort();
+        let mut task_box = Box::from_raw(task);
+
+        match task_box.as_mut()._sender.send(true) {
+            Ok(_) => {}
+            Err(_) => {
+                trace!("rpc_task_abort() - failed to send shutdown signal");
+            }
+        }
 
         trace!("rpc_task_abort() - aborted task");
 
-        drop(t)
+        drop(task_box)
     }
 }

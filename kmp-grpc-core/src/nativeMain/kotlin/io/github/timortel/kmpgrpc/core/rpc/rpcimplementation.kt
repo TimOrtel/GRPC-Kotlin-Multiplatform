@@ -175,17 +175,19 @@ private fun <REQ : Message, RES : Message> rpcImplementation(
 
         try {
             val sendJob = launch {
-                requests
-                    .map { channel.interceptor.onSendMessage(methodDescriptor, it) }
-                    .collect { req ->
-                        contextData.onMessageWrittenChannel.receive()
-                        request_channel_send(requestChannel, StableRef.create(req).asCPointer())
-                    }
+                try {
+                    requests
+                        .map { channel.interceptor.onSendMessage(methodDescriptor, it) }
+                        .collect { req ->
+                            contextData.onMessageWrittenChannel.receive()
+                            request_channel_send(requestChannel, StableRef.create(req).asCPointer())
+                        }
 
-                // When done, still wait for the writing to have been completed, then close
-                contextData.onMessageWrittenChannel.receive()
-
-                request_channel_signal_end(requestChannel)
+                    // When done, still wait for the writing to have been completed, then close
+                    contextData.onMessageWrittenChannel.receive()
+                } finally {
+                    request_channel_signal_end(requestChannel)
+                }
             }
 
             val receiveMessagesJob = launch {
@@ -320,16 +322,15 @@ private fun <REQ : Message, RES : Message> rpcImplementation(
                 },
                 on_done = staticCFunction { data, code, message, metadata, trailers ->
                     if (data == null) return@staticCFunction
+                    val dataRef = data.asStableRef<CallContextData<RES>>()
 
                     try {
-                        val data = data.asStableRef<CallContextData<RES>>().get()
-
                         val status = Status(
                             code = Code.getCodeForValue(code),
                             statusMessage = message?.toKString().orEmpty()
                         )
 
-                        data.callStatusCompletable.complete(
+                        dataRef.get().callStatusCompletable.complete(
                             CallCompletionData(
                                 status = status,
                                 trailers = convertRustMetadata(trailers)
@@ -339,6 +340,13 @@ private fun <REQ : Message, RES : Message> rpcImplementation(
                         string_free(message)
                         metadata_free(metadata)
                         metadata_free(trailers)
+
+                        // Try to unregisterRpc in any case.
+                        try {
+                            dataRef.get().channel.unregisterRpc()
+                        } finally {
+                            dataRef.dispose()
+                        }
                     }
                 }
             )
@@ -359,14 +367,7 @@ private fun <REQ : Message, RES : Message> rpcImplementation(
                 println("Cancelling call - end")
             }
         } finally {
-            println("Cleaning up rpc - start")
-            channel.unregisterRpc()
-
             request_channel_free(requestChannel)
-            metadata_free(callMetadata)
-
-            callContextData.dispose()
-            println("Cleaning up rpc - end")
         }
     }
 
@@ -391,7 +392,7 @@ private data class CallContextData<RES : Message>(
     // Only capacity of 1 is needed, as only 1 write will happen and then we wait for this channel to fire
     val onMessageWrittenChannel: CoroutineChannel<Unit> = CoroutineChannel(capacity = 1),
     val callStatusCompletable: CompletableDeferred<CallCompletionData> = CompletableDeferred(),
-    val initialMetadataCompletable: CompletableDeferred<Metadata> = CompletableDeferred()
+    val initialMetadataCompletable: CompletableDeferred<Metadata> = CompletableDeferred(),
 ) {
     fun close() {
         messageReceiveChannel.close()
