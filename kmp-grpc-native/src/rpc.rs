@@ -1,7 +1,6 @@
 use crate::cinterop::*;
 use crate::rawcoding::{DecodeMessage, EncodeMessage, RawBytesCodec, RpcOnMessageWrittenInternal};
 use crate::rawpointer::RawPtr;
-use crate::rpc::RpcFinalization::Trailers;
 use crate::rpc::RpcResult::{Cancelled, WithResult};
 use env_logger::Target;
 use log::{LevelFilter, trace};
@@ -214,20 +213,21 @@ unsafe fn create_rpc_future(
             );
         };
 
-        let on_done_with_result = move |result: RpcFinalization| match result {
-            Trailers(trailers) => {
-                on_done_impl(-1, "", MetadataMap::new(), trailers);
-            }
-            RpcFinalization::Status(status) => on_done_impl(
+        let on_done_with_status = move |status: Status| {
+            on_done_impl(
                 i32::from(status.code()),
                 status.message(),
                 status.metadata().clone(),
                 None,
-            ),
+            );
+        };
+
+        let on_done_with_trailers = move |trailers: Option<MetadataMap>| {
+            on_done_impl(-1, "", MetadataMap::new(), trailers);
         };
 
         let on_done_cancelled = |reason: String| {
-            on_done_with_result(RpcFinalization::Status(Status::cancelled(reason)))
+            on_done_with_status(Status::cancelled(reason))
         };
 
         let on_done_error = |message: String| {
@@ -250,15 +250,18 @@ unsafe fn create_rpc_future(
             r = async {
                 match build_and_wait_for_grpc(channel).await {
                     Ok(mut grpc) => {
-                        grpc.streaming(request_stream, path, codec)
-                            .await
-                            .map_err(|err| err.to_string())
+                        match grpc.streaming(request_stream, path, codec)
+                            .await {
+                            Ok(response) => Ok(WithResult(response)),
+                            Err(status) => Ok(RpcResult::Status(status))
+                        }
+
                     }
                     Err(err) => { Err(err) }
                 }
             } => {
                 trace!("rpc_implementation() - grpc.streaming returned");
-                r.map(|response| { WithResult(response)})
+                r
             }
 
             _ = async { shutdown_rx.changed().await } => {
@@ -278,6 +281,11 @@ unsafe fn create_rpc_future(
 
                     body
                 }
+                RpcResult::Status(status) => {
+                    trace!("rpc_implementation() - grpc.streaming returned STATUS with code {}", i32::from(status.code()));
+                    on_done_with_status(status);
+                    return;
+                }
                 Cancelled(message) => {
                     trace!("rpc_implementation() - grpc.streaming returned CANCELLED");
                     on_done_cancelled(message);
@@ -285,6 +293,8 @@ unsafe fn create_rpc_future(
                 }
             },
             Err(str) => {
+                trace!("rpc_implementation() - grpc.streaming returned error");
+
                 on_done_error(str);
                 return;
             }
@@ -292,7 +302,7 @@ unsafe fn create_rpc_future(
 
         // Read rpc body
 
-        let call_result = tokio::select! {
+        let call_result: RpcResult<Option<MetadataMap>> = tokio::select! {
             rpc_result = async {
                 loop {
                     match body.next().await {
@@ -305,7 +315,7 @@ unsafe fn create_rpc_future(
                             Err(status) => {
                                 trace!("rpc_implementation() - body.next() returned status error");
 
-                                return WithResult(RpcFinalization::Status(status));
+                                return RpcResult::Status(status);
                             }
                         },
                         None => {
@@ -319,8 +329,8 @@ unsafe fn create_rpc_future(
                 trace!("rpc_implementation() - finalizing rpc");
 
                 match body.trailers().await {
-                    Ok(trailers) => WithResult(Trailers(trailers)),
-                    Err(status) => { WithResult(RpcFinalization::Status(status)) }
+                    Ok(trailers) => WithResult(trailers),
+                    Err(status) => { RpcResult::Status(status) }
                 }
             } => {
                 trace!("rpc_implementation() - body.trailers() returned");
@@ -342,7 +352,10 @@ unsafe fn create_rpc_future(
 
         match call_result {
             WithResult(result) => {
-                on_done_with_result(result);
+                on_done_with_trailers(result);
+            }
+            RpcResult::Status(status) => {
+                on_done_with_status(status);
             }
             Cancelled(reason) => {
                 on_done_cancelled(reason);
@@ -387,10 +400,6 @@ fn insert_custom_metadata(custom_metadata: Box<RustMetadata>, target: &mut Metad
 
 enum RpcResult<R> {
     WithResult(R),
-    Cancelled(String),
-}
-
-enum RpcFinalization {
-    Trailers(Option<MetadataMap>),
     Status(Status),
+    Cancelled(String),
 }

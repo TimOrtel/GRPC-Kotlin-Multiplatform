@@ -1,5 +1,6 @@
 package io.github.timortel.kmpgrpc.core.rpc
 
+import cnames.structs.RustMetadata
 import io.github.timortel.kmpgrpc.core.*
 import io.github.timortel.kmpgrpc.core.internal.MemoryRawSource
 import io.github.timortel.kmpgrpc.core.io.internal.CodedInputStreamImpl
@@ -214,7 +215,7 @@ private fun <REQ : Message, RES : Message> rpcImplementation(
             val waitForDoneJob = launch {
                 val resultStatus = contextData.callStatusCompletable.await()
 
-                if (resultStatus.status.code != Code.OK) {
+                if (resultStatus.status != null && resultStatus.status.code != Code.OK) {
                     throw StatusException(resultStatus.status, null)
                 }
 
@@ -325,10 +326,15 @@ private fun <REQ : Message, RES : Message> rpcImplementation(
                     val dataRef = data.asStableRef<CallContextData<RES>>()
 
                     try {
-                        val status = Status(
-                            code = Code.getCodeForValue(code),
-                            statusMessage = message?.toKString().orEmpty()
-                        )
+                        val status: Status? = if (code == -1) {
+                            // This means we finalized with trailers. Read status from trailers.
+                            null
+                        } else {
+                            Status(
+                                code = Code.getCodeForValue(code),
+                                statusMessage = message?.toKString().orEmpty()
+                            )
+                        }
 
                         dataRef.get().callStatusCompletable.complete(
                             CallCompletionData(
@@ -402,18 +408,21 @@ private data class CallContextData<RES : Message>(
 }
 
 private data class CallCompletionData(
-    val status: Status,
+    /**
+     * A value of null means that the status should be read from trailers
+     */
+    val status: Status?,
     val trailers: Metadata
 )
 
-private fun createRustMetadata(metadata: Metadata): CPointer<cnames.structs.RustMetadata>? {
+private fun createRustMetadata(metadata: Metadata): CPointer<RustMetadata>? {
     return memScoped {
         val cStrings = metadata.entries.flatMap { (key, value) -> listOf(key, value) }.map { it.cstr.ptr }
         metadata_create((cStrings + null).toCValues())
     }
 }
 
-private fun convertRustMetadata(rustMetadata: CPointer<cnames.structs.RustMetadata>?): Metadata {
+private fun convertRustMetadata(rustMetadata: CPointer<RustMetadata>?): Metadata {
     val map = buildMap {
         val ref: StableRef<MutableMap<String, String>> = StableRef.create(this)
 
