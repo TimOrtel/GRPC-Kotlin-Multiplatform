@@ -39,7 +39,7 @@ type RpcOnMessageReceived = extern "C" fn(user_data: *mut c_void, message: *mut 
 type RpcOnInitialMetadataReceived =
 extern "C" fn(user_data: *mut c_void, metadata: *mut RustMetadata);
 
-type RpcOnMessageWritten = extern "C" fn(user_data: *mut c_void);
+pub(crate) type RpcOnMessageWritten = extern "C" fn(user_data: *mut c_void);
 
 #[unsafe(no_mangle)]
 pub extern "C" fn init(enable_trace_logs: bool) {
@@ -72,8 +72,103 @@ pub unsafe extern "C" fn rpc_implementation(
 ) -> *mut RpcTask {
     trace!("rpc_implementation()");
 
-    let (shutdown_tx, mut shutdown_rx) = watch::channel(false);
+    let (shutdown_tx, shutdown_rx) = watch::channel(false);
 
+    let on_done_error: fn(RawPtr, &str, RpcOnDone) = |user_data: RawPtr, err_str: &str, on_done: RpcOnDone| {
+        trace!("rpc_implementation() - on_done_error()");
+
+        on_done(
+            user_data.0,
+            i32::from(Code::Internal),
+            CString::new(err_str).unwrap().into_raw(),
+            null_mut(),
+            null_mut(),
+        );
+    };
+
+    // These must be closed in Kotlin code
+    let user_data = RawPtr(user_data);
+    let channel = unsafe { channel.as_mut() };
+
+    // These will be closed by rust
+    let request_receiver: Receiver<RawPtr> = unsafe {
+        match request_channel.as_mut().and_then(|rc| rc._receiver.take()) {
+            Some(rc) => rc,
+            None => {
+                on_done_error(user_data, "no request channel provided", on_done);
+                return null_mut();
+            }
+        }
+    };
+    let metadata = unsafe { Box::from_raw(metadata) };
+
+    let path = unsafe {
+        match CStr::from_ptr(path)
+            .to_str()
+            .map_err(|e| e.to_string().to_string())
+            .and_then(|s| PathAndQuery::from_maybe_shared(s).map_err(|e| e.to_string().to_string()))
+        {
+            Ok(path_and_query) => path_and_query,
+            Err(err) => {
+                on_done_error(user_data, err.as_str(), on_done);
+                return null_mut();
+            }
+        }
+    };
+
+    let codec = RawBytesCodec {
+        user_data,
+        encode: serialize_request,
+        decode: deserialize_response,
+        on_message_written: RpcOnMessageWrittenInternal {
+            on_message_written,
+            user_data,
+        },
+    };
+
+    let native_channel = match channel.and_then(|c| c._channel.clone()) {
+        Some(c) => { c }
+        None => {
+            on_done_error(user_data, "no channel provided", on_done);
+            return null_mut();
+        }
+    };
+
+    let handle = unsafe {
+        create_rpc_future(
+            codec,
+            shutdown_rx,
+            on_done,
+            on_message_received,
+            on_initial_metadata_received,
+            user_data,
+            native_channel,
+            request_receiver,
+            metadata,
+            path,
+        )
+    };
+
+    trace!("rpc_implementation() - returning with handle");
+
+    Box::into_raw(Box::new(RpcTask {
+        _handle: handle,
+        _sender: shutdown_tx,
+    }))
+}
+
+unsafe fn create_rpc_future(
+    codec: RawBytesCodec,
+    mut shutdown_rx: watch::Receiver<bool>,
+    on_done: RpcOnDone,
+    on_message_received: RpcOnMessageReceived,
+    on_initial_metadata_received: RpcOnInitialMetadataReceived,
+    user_data: RawPtr,
+    channel: Channel,
+    request_receiver: Receiver<RawPtr>,
+    metadata: Box<RustMetadata>,
+    path: PathAndQuery,
+) -> JoinHandle<()> {
     let on_done = move |user_data: RawPtr,
                         status: i32,
                         message: *const c_char,
@@ -96,101 +191,6 @@ pub unsafe extern "C" fn rpc_implementation(
         on_initial_metadata_received(user_data.0, metadata)
     };
 
-    let on_done_error = move |user_data: RawPtr, err_str: &str| {
-        trace!("rpc_implementation() - on_done_error()");
-
-        on_done(
-            user_data,
-            i32::from(Code::Internal),
-            CString::new(err_str).unwrap().into_raw(),
-            null_mut(),
-            null_mut(),
-        );
-    };
-
-    // These must be closed in Kotlin code
-    let user_data = RawPtr(user_data);
-    let channel = unsafe { channel.as_mut() };
-
-    // These will be closed by rust
-    let request_receiver: Receiver<RawPtr> = unsafe {
-        match request_channel.as_mut().and_then(|rc| rc._receiver.take()) {
-            Some(rc) => rc,
-            None => {
-                on_done_error(user_data, "no request channel provided");
-                return null_mut();
-            }
-        }
-    };
-    let metadata = unsafe { Box::from_raw(metadata) };
-
-    let path = unsafe {
-        match CStr::from_ptr(path)
-            .to_str()
-            .map_err(|e| e.to_string().as_str())
-            .and_then(|s| PathAndQuery::from_maybe_shared(s).map_err(|e| e.to_string().as_str()))
-        {
-            Ok(path_and_query) => path_and_query,
-            Err(err) => {
-                on_done_error(user_data, err);
-                return null_mut();
-            }
-        }
-    };
-
-    let codec = RawBytesCodec {
-        user_data,
-        encode: serialize_request,
-        decode: deserialize_response,
-        on_message_written: RpcOnMessageWrittenInternal {
-            on_message_written,
-            user_data,
-        },
-    };
-
-    let native_channel = match channel.and_then(|c| c._channel.clone()) {
-        Some(c) => { c }
-        None => {
-            on_done_error(user_data, "no channel provided");
-            return null_mut();
-        }
-    };
-
-    let handle = create_rpc_future(
-        codec,
-        shutdown_rx,
-        on_done,
-        on_message_received,
-        on_initial_metadata_received,
-        on_done_error,
-        user_data,
-        native_channel,
-        request_receiver,
-        metadata,
-        path
-    );
-
-    trace!("rpc_implementation() - returning with handle");
-
-    Box::into_raw(Box::new(RpcTask {
-        _handle: handle,
-        _sender: shutdown_tx,
-    }))
-}
-
-unsafe fn create_rpc_future(
-    codec: RawBytesCodec,
-    shutdown_rx: watch::Receiver<bool>,
-    on_done: fn(RawPtr, i32, *const c_char, *mut RustMetadata, *mut RustMetadata),
-    on_message_received: fn(RawPtr, RawPtr),
-    on_initial_metadata_received: fn(RawPtr, *mut RustMetadata),
-    on_done_error: fn(RawPtr, &str),
-    user_data: RawPtr,
-    channel: Channel,
-    request_receiver: Receiver<RawPtr>,
-    metadata: Box<RustMetadata>,
-    path: PathAndQuery,
-) -> JoinHandle<()> {
     TOKIO_RT.spawn(async move {
         trace!("rpc_implementation() - enter future");
 
@@ -226,88 +226,129 @@ unsafe fn create_rpc_future(
             ),
         };
 
+        let on_done_cancelled = |reason: String| {
+            on_done_with_result(RpcFinalization::Status(Status::cancelled(reason)))
+        };
+
+        let on_done_error = |message: String| {
+            on_done_impl(
+                i32::from(Code::Internal),
+                message.as_str(),
+                MetadataMap::new(),
+                None,
+            );
+        };
+
         let mut request_stream: Request<ReceiverStream<RawPtr>> =
             ReceiverStream::new(request_receiver).into_streaming_request();
 
         insert_custom_metadata(metadata, request_stream.metadata_mut());
 
-        let call_result = perform_and_handle_call(
-            codec,
-            user_data,
-            on_message_received,
-            on_initial_metadata_received,
-            channel,
-            request_stream,
-            path,
-            shutdown_rx,
-        )
-            .await;
+        // Start request
 
-        match call_result {
-            Ok(rpc_result) => match rpc_result {
-                WithResult(result) => {
-                    on_done_with_result(result);
+        let start_streaming_result: Result<RpcResult<Response<Streaming<RawPtr>>>, String> = tokio::select! {
+            r = async {
+                match build_and_wait_for_grpc(channel).await {
+                    Ok(mut grpc) => {
+                        grpc.streaming(request_stream, path, codec)
+                            .await
+                            .map_err(|err| err.to_string())
+                    }
+                    Err(err) => { Err(err) }
                 }
-                Cancelled(reason) => {
-                    on_done_with_result(RpcFinalization::Status(Status::cancelled(reason)));
+            } => {
+                trace!("rpc_implementation() - grpc.streaming returned");
+                r.map(|response| { WithResult(response)})
+            }
+
+            _ = async { shutdown_rx.changed().await } => {
+                trace!("rpc_implementation() - shutdown_rx.changed() returned. Stop waiting for grpc.streaming");
+                Ok(Cancelled("rpc cancelled while waiting for grpc.streaming".to_string()))
+            }
+        };
+
+        let mut body = match start_streaming_result {
+            Ok(rpc_result) => match rpc_result {
+                WithResult(response) => {
+                    let (metadata, body, _) = response.into_parts();
+
+                    on_initial_metadata_received(user_data, Box::into_raw(Box::new(RustMetadata {
+                        _metadata: metadata,
+                    })));
+
+                    body
+                }
+                Cancelled(message) => {
+                    trace!("rpc_implementation() - grpc.streaming returned CANCELLED");
+                    on_done_cancelled(message);
+                    return;
                 }
             },
-            Err(err) => {
-                on_done_error(user_data, err.as_str());
+            Err(str) => {
+                on_done_error(str);
+                return;
+            }
+        };
+
+        // Read rpc body
+
+        let call_result = tokio::select! {
+            rpc_result = async {
+                loop {
+                    match body.next().await {
+                        Some(result) => match result {
+                            Ok(message) => {
+                                trace!("rpc_implementation() - body.next() returned message");
+
+                                on_message_received(user_data, message);
+                            }
+                            Err(status) => {
+                                trace!("rpc_implementation() - body.next() returned status error");
+
+                                return WithResult(RpcFinalization::Status(status));
+                            }
+                        },
+                        None => {
+                            trace!("rpc_implementation() - body.next() returned None");
+
+                            break;
+                        }
+                    }
+                }
+
+                trace!("rpc_implementation() - finalizing rpc");
+
+                match body.trailers().await {
+                    Ok(trailers) => WithResult(Trailers(trailers)),
+                    Err(status) => { WithResult(RpcFinalization::Status(status)) }
+                }
+            } => {
+                trace!("rpc_implementation() - body.trailers() returned");
+                drop(body);
+
+                rpc_result
+            }
+
+            _ = async { shutdown_rx.changed().await } => {
+                trace!("rpc_implementation() - shutdown_rx.changed() returned. Stop waiting for body/trailers reading.");
+
+                drop(body);
+
+                Cancelled("rpc cancelled while waiting for grpc.streaming".to_string())
+            }
+        };
+
+        // Finalization
+
+        match call_result {
+            WithResult(result) => {
+                on_done_with_result(result);
+            }
+            Cancelled(reason) => {
+                on_done_cancelled(reason);
             }
         }
     })
-}
-
-async unsafe fn perform_and_handle_call(
-    codec: RawBytesCodec,
-    user_data: RawPtr,
-    on_message_received: fn(RawPtr, RawPtr),
-    on_initial_metadata_received: fn(RawPtr, *mut RustMetadata),
-    channel: Channel,
-    request_stream: Request<ReceiverStream<RawPtr>>,
-    path: PathAndQuery,
-    mut shutdown_rx: watch::Receiver<bool>,
-) -> Result<RpcResult<RpcFinalization>, String> {
-    let start_streaming_result: Result<RpcResult<Response<Streaming<RawPtr>>>, String> = tokio::select! {
-        r = async {
-            match build_and_wait_for_grpc(channel).await {
-                Ok(mut grpc) => {
-                    grpc.streaming(request_stream, path, codec)
-                        .await
-                        .map_err(|err| err.to_string())
-                }
-                Err(err) => { Err(err) }
-            }
-        } => {
-            trace!("rpc_implementation() - grpc.streaming returned");
-            r.map(|response| { WithResult(response)})
-        }
-
-        _ = async { shutdown_rx.changed().await } => {
-            trace!("rpc_implementation() - shutdown_rx.changed() returned. Stop waiting for grpc.streaming");
-            Ok(Cancelled("rpc cancelled while waiting for grpc.streaming".to_string()))
-        }
-    };
-
-    match start_streaming_result {
-        Ok(rpc_result) => match rpc_result {
-            WithResult(response) => {
-                let (metadata, body, _) = response.into_parts();
-
-                on_initial_metadata_received(user_data, Box::into_raw(Box::new(RustMetadata {
-                    _metadata: metadata,
-                })));
-
-                Ok(read_response_body(user_data, body, shutdown_rx, on_message_received).await)
-            }
-            Cancelled(message) => {
-                trace!("rpc_implementation() - grpc.streaming returned CANCELLED");
-                Ok(Cancelled(message))
-            }
-        },
-        Err(str) => Err(str),
-    }
 }
 
 async fn build_and_wait_for_grpc(
@@ -320,64 +361,6 @@ async fn build_and_wait_for_grpc(
         Err(err) => {
             trace!("rpc_implementation() - grpc.ready() failed");
             Err(err.to_string())
-        }
-    }
-}
-
-/**
- * Reads the response body until either the reading completed or the shutdown event is sent.
- */
-async fn read_response_body(
-    user_data: RawPtr,
-    mut body: Streaming<RawPtr>,
-    mut shutdown_rx: watch::Receiver<bool>,
-    on_message_received: fn(RawPtr, RawPtr),
-) -> RpcResult<RpcFinalization> {
-    trace!("rpc_implementation() - starting to read body");
-
-    tokio::select! {
-        rpc_result = async {
-            loop {
-                match body.next().await {
-                    Some(result) => match result {
-                        Ok(message) => {
-                            trace!("rpc_implementation() - body.next() returned message");
-
-                            on_message_received(user_data, message);
-                        }
-                        Err(status) => {
-                            trace!("rpc_implementation() - body.next() returned status error");
-
-                            return WithResult(RpcFinalization::Status(status));
-                        }
-                    },
-                    None => {
-                        trace!("rpc_implementation() - body.next() returned None");
-
-                        break;
-                    }
-                }
-            }
-
-            trace!("rpc_implementation() - finalizing rpc");
-
-            match body.trailers().await {
-                Ok(trailers) => WithResult(Trailers(trailers)),
-                Err(status) => { WithResult(RpcFinalization::Status(status)) }
-            }
-        } => {
-            trace!("rpc_implementation() - body.trailers() returned");
-            drop(body);
-
-            rpc_result
-        }
-
-        _ = async { shutdown_rx.changed().await } => {
-            trace!("rpc_implementation() - shutdown_rx.changed() returned. Stop waiting for body/trailers reading.");
-
-            drop(body);
-
-            Cancelled("rpc cancelled while waiting for grpc.streaming".to_string())
         }
     }
 }

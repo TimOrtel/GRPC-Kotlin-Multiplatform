@@ -9,7 +9,7 @@ use tonic::{
     Status,
     codec::{Codec, Decoder, Encoder},
 };
-use crate::RpcOnMessageWritten;
+use crate::rpc::RpcOnMessageWritten;
 
 pub type FreeCByteArray = extern "C" fn(*mut c_void);
 

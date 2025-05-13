@@ -167,7 +167,7 @@ private fun <REQ : Message, RES : Message> rpcImplementation(
 
         val actualMetadata = channel.interceptor.onStart(methodDescriptor, callOptions.metadata)
 
-        val contextData = CallContextData(responseDeserializer)
+        val contextData = CallContextData(responseDeserializer, channel)
         val requestChannel = request_channel_create()
         val callMetadata = createRustMetadata(actualMetadata)
 
@@ -388,6 +388,7 @@ private fun <REQ : Message, RES : Message> rpcImplementation(
 
 private data class CallContextData<RES : Message>(
     val deserializer: MessageDeserializer<RES>,
+    val channel: Channel,
     val messageReceiveChannel: CoroutineChannel<RES> = CoroutineChannel(capacity = CoroutineChannel.UNLIMITED),
     // Only capacity of 1 is needed, as only 1 write will happen and then we wait for this channel to fire
     val onMessageWrittenChannel: CoroutineChannel<Unit> = CoroutineChannel(capacity = 1),
