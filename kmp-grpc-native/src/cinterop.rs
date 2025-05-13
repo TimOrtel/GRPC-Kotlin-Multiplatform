@@ -166,11 +166,11 @@ pub extern "C" fn request_channel_send(ptr: *mut RequestChannel, value: *mut c_v
  */
 #[unsafe(no_mangle)]
 pub extern "C" fn request_channel_signal_end(ptr: *mut RequestChannel) {
-    trace!("request_channel_send() with ptr: {:p}", ptr);
+    trace!("request_channel_signal_end() with ptr: {:p}", ptr);
 
     unsafe {
         if let Some(channel) = ptr.as_mut() {
-            trace!("request_channel_send() - has channel");
+            trace!("request_channel_signal_end() - has channel");
 
             channel.close_sender()
         }

@@ -176,209 +176,206 @@ private fun <REQ : Message, RES : Message> rpcImplementation(
 
         val callContextData = StableRef.create(contextData)
 
-        try {
-            val sendJob = launch {
-                try {
-                    requests
-                        .map { channel.interceptor.onSendMessage(methodDescriptor, it) }
-                        .collect { req ->
-                            while (true) {
-                                val sendResult =
-                                    request_channel_send(requestChannel, StableRef.create(req).asCPointer())
+        val sendJob = launch {
+            try {
+                requests
+                    .map { channel.interceptor.onSendMessage(methodDescriptor, it) }
+                    .collect { req ->
+                        while (true) {
+                            val sendResult =
+                                request_channel_send(requestChannel, StableRef.create(req).asCPointer())
 
-                                when (sendResult) {
-                                    Ok -> break
-                                    Closed, NoSender -> return@collect
-                                    Full -> {
-                                        // The buffer is full, give some time to write and try again
-                                        delay(5)
-                                    }
-
-                                    else -> throw IllegalStateException("Unknown send result $sendResult")
+                            when (sendResult) {
+                                Ok -> break
+                                Closed, NoSender -> {
+                                    return@collect
                                 }
+
+                                Full -> {
+                                    // The buffer is full, give some time to write and try again
+                                    delay(5)
+                                }
+
+                                else -> throw IllegalStateException("Unknown send result $sendResult")
                             }
                         }
-                } finally {
-                    request_channel_signal_end(requestChannel)
-                }
-            }
-
-            val receiveMessagesJob = launch {
-                contextData
-                    .messageReceiveChannel
-                    .receiveAsFlow()
-                    .map { channel.interceptor.onReceiveMessage(methodDescriptor, it) }
-                    .collect {
-                        send(it)
                     }
+            } finally {
+                request_channel_signal_end(requestChannel)
+                request_channel_free(requestChannel)
             }
+        }
 
-            val waitForInitialMetadataDeferred = async {
-                val initialMetadata = contextData.initialMetadataCompletable.await()
-
-                val metadata = channel.interceptor.onReceiveHeaders(methodDescriptor, initialMetadata)
-
-                // Check that status is ok, otherwise throw
-                extractStatusFromMetadataAndVerify(metadata)
-
-                metadata
-            }
-
-            val waitForDoneJob = launch {
-                val resultStatus = contextData.callStatusCompletable.await()
-
-                if (resultStatus.status != null && resultStatus.status.code != Code.OK) {
-                    throw StatusException(resultStatus.status, null)
+        val receiveMessagesJob = launch {
+            contextData
+                .messageReceiveChannel
+                .receiveAsFlow()
+                .map { channel.interceptor.onReceiveMessage(methodDescriptor, it) }
+                .collect {
+                    send(it)
                 }
+        }
+
+        val waitForInitialMetadataDeferred = async {
+            val initialMetadata = contextData.initialMetadataCompletable.await()
+
+            val metadata = channel.interceptor.onReceiveHeaders(methodDescriptor, initialMetadata)
+
+            // Check that status is ok, otherwise throw
+            extractStatusFromMetadataAndVerify(metadata)
+
+            metadata
+        }
+
+        val waitForDoneJob = launch {
+            val resultStatus = contextData.callStatusCompletable.await()
+
+            if (resultStatus.status != null && resultStatus.status.code != Code.OK) {
+                throw StatusException(resultStatus.status, null)
+            }
+
+            try {
+                // Get the initial metadata or empty if we did not receive any
+                val initialMetadata = try {
+                    waitForInitialMetadataDeferred.getCompleted()
+                } catch (_: IllegalStateException) {
+                    Metadata.empty()
+                }
+
+                val finalMetadata = initialMetadata + resultStatus.trailers
+                extractStatusFromMetadataAndVerify(finalMetadata) { statusFromMetadata ->
+                    channel.interceptor.onClose(methodDescriptor, statusFromMetadata, finalMetadata).first
+                }
+            } finally {
+                close()
+            }
+        }
+
+        val taskHandle = rpc_implementation(
+            channel = channel.channel,
+            path = path,
+            metadata = callMetadata,
+            request_channel = requestChannel,
+            user_data = callContextData.asCPointer(),
+            serialize_request = staticCFunction { message ->
+                val messageRef = message!!.asStableRef<Message>()
+                try {
+                    val msg = messageRef.get()
+
+                    if (msg.requiredSize == 0) {
+                        c_byte_array_create(
+                            data = null,
+                            ptr = null,
+                            len = 0uL,
+                            free = staticCFunction { _ -> }
+                        )
+                    } else {
+                        val array = msg.serialize().toUByteArray()
+
+                        val pinnedArray = array.pin()
+
+                        c_byte_array_create(
+                            data = StableRef.create(pinnedArray).asCPointer(),
+                            ptr = pinnedArray.addressOf(0),
+                            len = array.size.toULong(),
+                            free = staticCFunction { data ->
+                                val ref = data!!.asStableRef<Pinned<UByteArray>>()
+                                ref.get().unpin()
+                                ref.dispose()
+                            }
+                        )
+                    }
+                } finally {
+                    messageRef.dispose()
+                }
+            },
+            deserialize_response = staticCFunction { data, ptr, length ->
+                if (data == null) return@staticCFunction null
+
+                val context = data.asStableRef<CallContextData<RES>>().get()
+                val messageDeserializer = context.deserializer
+
+                val message = if (length > 0uL && ptr != null) {
+                    val source = MemoryRawSource(ptr, length)
+
+                    messageDeserializer.deserialize(CodedInputStreamImpl(source.buffered()))
+                } else {
+                    messageDeserializer.deserialize(byteArrayOf())
+                }
+
+                StableRef.create(message).asCPointer()
+            },
+            on_message_received = staticCFunction { data, message ->
+                if (data == null) return@staticCFunction
+
+                val data = data.asStableRef<CallContextData<RES>>().get()
+
+                val msg = message!!.asStableRef<Message>()
 
                 try {
-                    // Get the initial metadata or empty if we did not receive any
-                    val initialMetadata = try {
-                        waitForInitialMetadataDeferred.getCompleted()
-                    } catch (_: IllegalStateException) {
-                        Metadata.empty()
-                    }
-
-                    val finalMetadata = initialMetadata + resultStatus.trailers
-                    extractStatusFromMetadataAndVerify(finalMetadata) { statusFromMetadata ->
-                        channel.interceptor.onClose(methodDescriptor, statusFromMetadata, finalMetadata).first
-                    }
+                    @Suppress("UNCHECKED_CAST")
+                    data.messageReceiveChannel.trySend(msg.get() as RES)
                 } finally {
-                    close()
+                    msg.dispose()
                 }
-            }
+            },
+            on_initial_metadata_received = staticCFunction { data, initialMetadata ->
+                if (data == null) return@staticCFunction
 
-            val taskHandle = rpc_implementation(
-                channel = channel.channel,
-                path = path,
-                metadata = callMetadata,
-                request_channel = requestChannel,
-                user_data = callContextData.asCPointer(),
-                serialize_request = staticCFunction { message ->
-                    val messageRef = message!!.asStableRef<Message>()
-                    try {
-                        val msg = messageRef.get()
-
-                        if (msg.requiredSize == 0) {
-                            c_byte_array_create(
-                                data = null,
-                                ptr = null,
-                                len = 0uL,
-                                free = staticCFunction { _ -> }
-                            )
-                        } else {
-                            val array = msg.serialize().toUByteArray()
-
-                            val pinnedArray = array.pin()
-
-                            c_byte_array_create(
-                                data = StableRef.create(pinnedArray).asCPointer(),
-                                ptr = pinnedArray.addressOf(0),
-                                len = array.size.toULong(),
-                                free = staticCFunction { data ->
-                                    val ref = data!!.asStableRef<Pinned<UByteArray>>()
-                                    ref.get().unpin()
-                                    ref.dispose()
-                                }
-                            )
-                        }
-                    } finally {
-                        messageRef.dispose()
-                    }
-                },
-                deserialize_response = staticCFunction { data, ptr, length ->
-                    if (data == null) return@staticCFunction null
-
-                    val context = data.asStableRef<CallContextData<RES>>().get()
-                    val messageDeserializer = context.deserializer
-
-                    val message = if (length > 0uL && ptr != null) {
-                        val source = MemoryRawSource(ptr, length)
-
-                        messageDeserializer.deserialize(CodedInputStreamImpl(source.buffered()))
-                    } else {
-                        messageDeserializer.deserialize(byteArrayOf())
-                    }
-
-                    StableRef.create(message).asCPointer()
-                },
-                on_message_received = staticCFunction { data, message ->
-                    if (data == null) return@staticCFunction
-
+                try {
                     val data = data.asStableRef<CallContextData<RES>>().get()
 
-                    val msg = message!!.asStableRef<Message>()
+                    data.initialMetadataCompletable.complete(convertRustMetadata(initialMetadata))
+                } finally {
+                    metadata_free(initialMetadata)
+                }
+            },
+            on_done = staticCFunction { data, code, message, metadata, trailers ->
+                if (data == null) return@staticCFunction
+                val dataRef = data.asStableRef<CallContextData<RES>>()
 
-                    try {
-                        @Suppress("UNCHECKED_CAST")
-                        data.messageReceiveChannel.trySend(msg.get() as RES)
-                    } finally {
-                        msg.dispose()
-                    }
-                },
-                on_initial_metadata_received = staticCFunction { data, initialMetadata ->
-                    if (data == null) return@staticCFunction
-
-                    try {
-                        val data = data.asStableRef<CallContextData<RES>>().get()
-
-                        data.initialMetadataCompletable.complete(convertRustMetadata(initialMetadata))
-                    } finally {
-                        metadata_free(initialMetadata)
-                    }
-                },
-                on_done = staticCFunction { data, code, message, metadata, trailers ->
-                    if (data == null) return@staticCFunction
-                    val dataRef = data.asStableRef<CallContextData<RES>>()
-
-                    try {
-                        val status: Status? = if (code == -1) {
-                            // This means we finalized with trailers. Read status from trailers.
-                            null
-                        } else {
-                            Status(
-                                code = Code.getCodeForValue(code),
-                                statusMessage = message?.toKString().orEmpty()
-                            )
-                        }
-
-                        dataRef.get().callStatusCompletable.complete(
-                            CallCompletionData(
-                                status = status,
-                                trailers = convertRustMetadata(trailers)
-                            )
+                try {
+                    val status: Status? = if (code == -1) {
+                        // This means we finalized with trailers. Read status from trailers.
+                        null
+                    } else {
+                        Status(
+                            code = Code.getCodeForValue(code),
+                            statusMessage = message?.toKString().orEmpty()
                         )
-                    } finally {
-                        string_free(message)
-                        metadata_free(metadata)
-                        metadata_free(trailers)
+                    }
 
-                        // Try to unregisterRpc in any case.
-                        try {
-                            dataRef.get().channel.unregisterRpc()
-                        } finally {
-                            dataRef.dispose()
-                        }
+                    dataRef.get().callStatusCompletable.complete(
+                        CallCompletionData(
+                            status = status,
+                            trailers = convertRustMetadata(trailers)
+                        )
+                    )
+                } finally {
+                    string_free(message)
+                    metadata_free(metadata)
+                    metadata_free(trailers)
+
+                    // Try to unregisterRpc in any case.
+                    try {
+                        dataRef.get().channel.unregisterRpc()
+                    } finally {
+                        dataRef.dispose()
                     }
                 }
-            )
-
-            awaitClose {
-                request_channel_signal_end(requestChannel)
-
-                val message = "The call has been finalized"
-
-                contextData.close()
-                sendJob.cancel(message)
-                receiveMessagesJob.cancel(message)
-                waitForDoneJob.cancel(message)
-                waitForInitialMetadataDeferred.cancel(message)
-
-                rpc_task_abort(taskHandle)
-                println("Cancelling call - end")
             }
-        } finally {
-            request_channel_free(requestChannel)
+        )
+
+        awaitClose {
+            val message = "The call has been finalized"
+
+            contextData.close()
+            sendJob.cancel(message)
+            receiveMessagesJob.cancel(message)
+            waitForDoneJob.cancel(message)
+            waitForInitialMetadataDeferred.cancel(message)
+
+            rpc_task_abort(taskHandle)
         }
     }
 
