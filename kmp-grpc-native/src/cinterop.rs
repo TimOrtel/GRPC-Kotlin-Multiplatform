@@ -1,14 +1,15 @@
+use crate::rawpointer::RawPtr;
+use crate::rpc::TOKIO_RT;
+use log::trace;
 use std::ffi::{CStr, CString};
 use std::os::raw::{c_char, c_void};
 use std::ptr::null_mut;
 use std::str::FromStr;
-use log::trace;
 use tokio::sync::mpsc::{Receiver, Sender};
+use tokio::sync::mpsc::error::TrySendError;
 use tokio::sync::watch;
 use tonic::metadata::{MetadataKey, MetadataMap, MetadataValue};
 use tonic::transport::Channel;
-use crate::rawpointer::RawPtr;
-use crate::rpc::TOKIO_RT;
 
 /**
  * Holds the channel used to send messages into the RPC.
@@ -113,24 +114,48 @@ pub extern "C" fn request_channel_free(ptr: *mut RequestChannel) {
     }
 }
 
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub enum RequestChannelResult {
+    Ok = 0,
+    Full = 1,
+    Closed = 2,
+    NoSender = 3,
+}
+
 /**
  * Send a message through a RPC. The value should be a stable reference to a Message.
  */
 #[unsafe(no_mangle)]
-pub extern "C" fn request_channel_send(ptr: *mut RequestChannel, value: *mut c_void) {
+pub extern "C" fn request_channel_send(ptr: *mut RequestChannel, value: *mut c_void) -> RequestChannelResult {
     trace!(
         "request_channel_send() with ptr: {:p}, value: {:p}",
         ptr, value
     );
 
     unsafe {
-        if let Some(sender) = ptr.as_mut().and_then(|rc| rc._sender.as_ref()) {
-            trace!("request_channel_send() - has sender");
-            match sender.try_send(RawPtr(value)) {
-                Ok(_) => {}
-                Err(_) => {
-                    trace!("request_channel_send() - could not send message");
+        match ptr.as_mut().and_then(|rc| rc._sender.as_ref()) {
+            Some(sender) => {
+                trace!("request_channel_send() - has sender");
+                match sender.try_send(RawPtr(value)) {
+                    Ok(_) => RequestChannelResult::Ok,
+                    Err(err) => {
+                        match err {
+                            TrySendError::Full(_) => {
+                                trace!("request_channel_send() - could not send message -> full");
+                                RequestChannelResult::Full
+                            }
+                            TrySendError::Closed(_) => {
+                                trace!("request_channel_send() - could not send message -> closed");
+                                RequestChannelResult::Closed
+                            }
+                        }
+                    }
                 }
+            }
+            None => {
+                trace!("request_channel_send() - no sender");
+                RequestChannelResult::NoSender
             }
         }
     }

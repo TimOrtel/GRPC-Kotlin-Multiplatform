@@ -47,7 +47,7 @@ abstract class ChannelTest : ServerTest {
     }
 
     @Test
-    fun testChannelShutdownNowDoesNotWaitUntilRpcsAreFinished() = runTest {
+    fun testChannelShutdownCancelsAllRpcs() = runTest {
         val channel = Channel.Builder.forAddress(address, port)
             .usePlaintext()
             .build()

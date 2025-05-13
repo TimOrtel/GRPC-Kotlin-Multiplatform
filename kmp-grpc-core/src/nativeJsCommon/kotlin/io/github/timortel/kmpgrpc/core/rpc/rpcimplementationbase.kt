@@ -26,7 +26,7 @@ internal suspend fun <RESP> unaryResponseCallBaseImplementation(
     channel: NativeJsChannel,
     performCall: suspend () -> RESP
 ): RESP {
-    if (channel.isShutdown) throw StatusException.UnavailableDueToShutdown
+    if (channel.isShutdown.value) throw StatusException.UnavailableDueToShutdown
 
     return coroutineScope {
         val waitForCancellationJob = launch {
@@ -36,6 +36,8 @@ internal suspend fun <RESP> unaryResponseCallBaseImplementation(
         }
 
         val responseDeferred = async {
+            if (channel.isShutdown.value) throw StatusException.UnavailableDueToShutdown
+
             performCall()
         }
 
@@ -63,7 +65,7 @@ internal fun <RESP> streamingResponseCallBaseImplementation(
 ): Flow<RESP> {
     return channelFlow {
         val emitJob = launch {
-            if (channel.isShutdown) throw StatusException.UnavailableDueToShutdown
+            if (channel.isShutdown.value) throw StatusException.UnavailableDueToShutdown
 
             responseFlow.collect(::send)
         }

@@ -1,5 +1,5 @@
 use crate::cinterop::*;
-use crate::rawcoding::{DecodeMessage, EncodeMessage, RawBytesCodec, RpcOnMessageWrittenInternal};
+use crate::rawcoding::{DecodeMessage, EncodeMessage, RawBytesCodec};
 use crate::rawpointer::RawPtr;
 use crate::rpc::RpcResult::{Cancelled, WithResult};
 use env_logger::Target;
@@ -38,8 +38,6 @@ type RpcOnMessageReceived = extern "C" fn(user_data: *mut c_void, message: *mut 
 type RpcOnInitialMetadataReceived =
 extern "C" fn(user_data: *mut c_void, metadata: *mut RustMetadata);
 
-pub(crate) type RpcOnMessageWritten = extern "C" fn(user_data: *mut c_void);
-
 #[unsafe(no_mangle)]
 pub extern "C" fn init(enable_trace_logs: bool) {
     env_logger::Builder::new()
@@ -65,7 +63,6 @@ pub unsafe extern "C" fn rpc_implementation(
     serialize_request: EncodeMessage,
     deserialize_response: DecodeMessage,
     on_message_received: RpcOnMessageReceived,
-    on_message_written: RpcOnMessageWritten,
     on_initial_metadata_received: RpcOnInitialMetadataReceived,
     on_done: RpcOnDone,
 ) -> *mut RpcTask {
@@ -119,10 +116,6 @@ pub unsafe extern "C" fn rpc_implementation(
         user_data,
         encode: serialize_request,
         decode: deserialize_response,
-        on_message_written: RpcOnMessageWrittenInternal {
-            on_message_written,
-            user_data,
-        },
     };
 
     let native_channel = match channel.and_then(|c| c._channel.clone()) {
@@ -266,6 +259,7 @@ unsafe fn create_rpc_future(
 
             _ = async { shutdown_rx.changed().await } => {
                 trace!("rpc_implementation() - shutdown_rx.changed() returned. Stop waiting for grpc.streaming");
+
                 Ok(Cancelled("rpc cancelled while waiting for grpc.streaming".to_string()))
             }
         };

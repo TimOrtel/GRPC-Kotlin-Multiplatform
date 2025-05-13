@@ -9,7 +9,6 @@ use tonic::{
     Status,
     codec::{Codec, Decoder, Encoder},
 };
-use crate::rpc::RpcOnMessageWritten;
 
 pub type FreeCByteArray = extern "C" fn(*mut c_void);
 
@@ -23,31 +22,10 @@ pub struct CByteArray {
 pub type EncodeMessage = extern "C" fn(*mut c_void) -> *mut CByteArray;
 pub type DecodeMessage = extern "C" fn(*mut c_void, ptr: *const u8, len: usize) -> *mut c_void;
 
-pub struct RpcOnMessageWrittenInternal {
-    pub(crate) on_message_written: RpcOnMessageWritten,
-    pub(crate) user_data: RawPtr,
-}
-
-impl RpcOnMessageWrittenInternal {
-    fn call(&self) {
-        (self.on_message_written)(self.user_data.0);
-    }
-}
-
-impl Clone for RpcOnMessageWrittenInternal {
-    fn clone(&self) -> Self {
-        RpcOnMessageWrittenInternal {
-            on_message_written: self.on_message_written,
-            user_data: self.user_data,
-        }
-    }
-}
-
 #[derive(Clone)]
 pub(crate) struct RawBytesCodec {
     pub(crate) encode: EncodeMessage,
     pub(crate) decode: DecodeMessage,
-    pub(crate) on_message_written: RpcOnMessageWrittenInternal,
     pub(crate) user_data: RawPtr,
 }
 
@@ -61,7 +39,6 @@ impl Codec for RawBytesCodec {
     fn encoder(&mut self) -> Self::Encoder {
         RawEncoder {
             encode_message: self.encode,
-            on_message_written: self.on_message_written.clone()
         }
     }
 
@@ -72,7 +49,6 @@ impl Codec for RawBytesCodec {
 
 pub(crate) struct RawEncoder {
     pub(crate) encode_message: EncodeMessage,
-    pub(crate) on_message_written: RpcOnMessageWrittenInternal
 }
 
 impl Encoder for RawEncoder {
@@ -85,7 +61,6 @@ impl Encoder for RawEncoder {
 
         if ba.len == 0 {
             trace!("encode() - empty array");
-            self.on_message_written.call();
             return Ok(());
         }
 
@@ -93,7 +68,6 @@ impl Encoder for RawEncoder {
             dst.put_slice(from_raw_parts(ba.ptr, ba.len));
         }
         
-        self.on_message_written.call();
 
         trace!("encode() - done");
 

@@ -164,6 +164,8 @@ private fun <REQ : Message, RES : Message> rpcImplementation(
     val methodDescriptor = MethodDescriptor(fullMethodName = path, methodType = methodType)
 
     val rpcFlow = channelFlow {
+        if (channel.isShutdown.value) throw StatusException.CancelledDueToShutdown
+
         channel.registerRpc()
 
         val actualMetadata = channel.interceptor.onStart(methodDescriptor, callOptions.metadata)
@@ -180,12 +182,22 @@ private fun <REQ : Message, RES : Message> rpcImplementation(
                     requests
                         .map { channel.interceptor.onSendMessage(methodDescriptor, it) }
                         .collect { req ->
-                            contextData.onMessageWrittenChannel.receive()
-                            request_channel_send(requestChannel, StableRef.create(req).asCPointer())
-                        }
+                            while (true) {
+                                val sendResult =
+                                    request_channel_send(requestChannel, StableRef.create(req).asCPointer())
 
-                    // When done, still wait for the writing to have been completed, then close
-                    contextData.onMessageWrittenChannel.receive()
+                                when (sendResult) {
+                                    Ok -> break
+                                    Closed, NoSender -> return@collect
+                                    Full -> {
+                                        // The buffer is full, give some time to write and try again
+                                        delay(5)
+                                    }
+
+                                    else -> throw IllegalStateException("Unknown send result $sendResult")
+                                }
+                            }
+                        }
                 } finally {
                     request_channel_signal_end(requestChannel)
                 }
@@ -304,12 +316,6 @@ private fun <REQ : Message, RES : Message> rpcImplementation(
                         msg.dispose()
                     }
                 },
-                on_message_written = staticCFunction { data ->
-                    if (data == null) return@staticCFunction
-
-                    val data = data.asStableRef<CallContextData<RES>>().get()
-                    data.onMessageWrittenChannel.trySend(Unit)
-                },
                 on_initial_metadata_received = staticCFunction { data, initialMetadata ->
                     if (data == null) return@staticCFunction
 
@@ -357,10 +363,9 @@ private fun <REQ : Message, RES : Message> rpcImplementation(
                 }
             )
 
-            // Allow first send
-            contextData.onMessageWrittenChannel.send(Unit)
-
             awaitClose {
+                request_channel_signal_end(requestChannel)
+
                 val message = "The call has been finalized"
 
                 contextData.close()
@@ -396,14 +401,11 @@ private data class CallContextData<RES : Message>(
     val deserializer: MessageDeserializer<RES>,
     val channel: Channel,
     val messageReceiveChannel: CoroutineChannel<RES> = CoroutineChannel(capacity = CoroutineChannel.UNLIMITED),
-    // Only capacity of 1 is needed, as only 1 write will happen and then we wait for this channel to fire
-    val onMessageWrittenChannel: CoroutineChannel<Unit> = CoroutineChannel(capacity = 1),
     val callStatusCompletable: CompletableDeferred<CallCompletionData> = CompletableDeferred(),
     val initialMetadataCompletable: CompletableDeferred<Metadata> = CompletableDeferred(),
 ) {
     fun close() {
         messageReceiveChannel.close()
-        onMessageWrittenChannel.close()
     }
 }
 

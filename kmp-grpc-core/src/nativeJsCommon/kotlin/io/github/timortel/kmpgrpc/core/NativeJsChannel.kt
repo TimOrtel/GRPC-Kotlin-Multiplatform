@@ -17,17 +17,17 @@ abstract class NativeJsChannel {
 
     internal val isShutdownImmediately = MutableStateFlow(false)
 
-    internal var isShutdown: Boolean = false
+    internal val isShutdown = MutableStateFlow(false)
 
     private val activeRpcs = MutableStateFlow(0)
 
     internal var hasCleanedUpResources = false
 
     val isTerminated: Boolean
-        get() = isShutdown && activeRpcs.value == 0 && hasCleanedUpResources
+        get() = isShutdown.value && activeRpcs.value == 0 && hasCleanedUpResources
 
     open suspend fun shutdown() {
-        isShutdown = true
+        isShutdown.value = true
 
         cleanupMutex.withLock {
             activeRpcs.first { it == 0 }
