@@ -47,6 +47,7 @@ import io.github.timortel.kmpgrpc.composeexample.shared.Communication
 import io.github.timortel.kmpgrpc.composeexample.shared.numMessage
 import io.github.timortel.kmpgrpc.core.Channel
 import io.github.timortel.kmpgrpc.core.StatusException
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -545,7 +546,7 @@ fun rememberCommunicationStub(host: String, port: Int): Communication.Communicat
 
     DisposableEffect(channel) {
         onDispose {
-            runBlocking {
+            GlobalScope.launch {
                 channel.shutdownNow()
             }
         }
