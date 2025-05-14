@@ -64,7 +64,7 @@ actual class Channel private constructor(
 
     companion object {
         init {
-            init(true)
+            init(ENABLE_TRACE_LOGGING)
         }
     }
 }

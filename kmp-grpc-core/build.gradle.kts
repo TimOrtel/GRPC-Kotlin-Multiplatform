@@ -9,6 +9,7 @@ plugins {
     kotlin("multiplatform")
     kotlin("native.cocoapods")
     id("maven-publish")
+    id("com.github.gmazzo.buildconfig") version libs.versions.buildConfigPlugin.get()
 }
 
 group = "io.github.timortel"
@@ -146,6 +147,17 @@ android {
             res.srcDirs("src/androidMain/res")
         }
     }
+}
+
+buildConfig {
+    packageName("io.github.timortel.kmpgrpc.core")
+
+    useKotlinOutput {
+        internalVisibility = true
+        topLevelConstants = true
+    }
+
+    buildConfigField("Boolean", "ENABLE_TRACE_LOGGING", "${!compileNativeLibAsRelease}")
 }
 
 kotlin.targets.withType(KotlinNativeTarget::class.java) {

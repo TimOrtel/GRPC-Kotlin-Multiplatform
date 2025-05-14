@@ -67,7 +67,7 @@ pub extern "C" fn channel_create(host: *const c_char) -> *mut RustChannel {
 
     match Channel::from_shared(host) {
         Ok(endpoint) => Box::into_raw(Box::new(RustChannel {
-            _channel: Some(endpoint.connect_lazy()),
+            _channel: Some(endpoint.connect_lazy().clone()),
         })),
         Err(_) => null_mut(),
     }

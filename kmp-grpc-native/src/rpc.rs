@@ -12,7 +12,7 @@ use tokio::runtime::Runtime;
 use tokio::sync::mpsc::Receiver;
 use tokio::sync::watch;
 use tokio::task::JoinHandle;
-use tonic::client::Grpc;
+use tonic::client::{Grpc};
 use tonic::codegen::http::uri::PathAndQuery;
 use tonic::codegen::tokio_stream::StreamExt;
 use tonic::codegen::tokio_stream::wrappers::ReceiverStream;
@@ -361,12 +361,14 @@ unsafe fn create_rpc_future(
 async fn build_and_wait_for_grpc(
     channel: Channel,
 ) -> Result<Grpc<Channel>, String> {
+    trace!("build_and_wait_for_grpc()");
     let mut grpc = Grpc::new(channel);
-
+    trace!("build_and_wait_for_grpc() - grpc.new() returned");
+    
     match grpc.ready().await {
         Ok(_) => Ok(grpc),
         Err(err) => {
-            trace!("rpc_implementation() - grpc.ready() failed");
+            trace!("build_and_wait_for_grpc() - grpc.ready() failed");
             Err(err.to_string())
         }
     }
