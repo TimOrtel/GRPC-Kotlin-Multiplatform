@@ -12,7 +12,6 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
-    alias(libs.plugins.cocoapods)
     alias(libs.plugins.kmpGrpcPlugin)
 }
 
@@ -29,10 +28,20 @@ kotlin {
         }
     }
 
-    iosX64()
-    iosArm64()
-    iosSimulatorArm64()
-    
+    listOf(
+        iosX64(),
+        iosArm64(),
+        iosSimulatorArm64()
+    ).forEach {
+        it.binaries {
+            framework {
+                isStatic = true
+                baseName = "composeApp"
+            }
+        }
+    }
+
+
     jvm("desktop")
 
     @OptIn(ExperimentalWasmDsl::class)
@@ -55,26 +64,9 @@ kotlin {
         binaries.executable()
     }
 
-    cocoapods {
-        version = "1.0"
-        summary = "gRPC KMP Compose Example Compose Code"
-        homepage = "https://github.com/TimOrtel/GRPC-Kotlin-Multiplatform"
-
-        podfile = project.file("../iosApp/Podfile")
-
-        framework {
-            baseName = "composeApp"
-            isStatic = true
-
-            transitiveExport = true
-        }
-
-        ios.deploymentTarget = "18.2"
-    }
-
     sourceSets {
         val desktopMain by getting
-        
+
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)

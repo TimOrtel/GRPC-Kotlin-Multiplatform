@@ -18,3 +18,5 @@ captures
 **/xcshareddata/WorkspaceSettings.xcsettings
 iosApp/Pods
 iosApp/iosApp.xcworkspace
+*.xcuserstate
+iosApp/iosApp.xcodeproj/xcuserdata
