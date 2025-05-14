@@ -8,6 +8,9 @@ val kmMetadata = ClassName(PACKAGE_BASE, "Metadata")
 val kmStub = ClassName(PACKAGE_STUB, "Stub")
 val kmChannel = ClassName(PACKAGE_BASE, "Channel")
 
+val nativeJsStub = ClassName(PACKAGE_STUB, "NativeJsStub")
+val nativeJsCallOptions = ClassName(PACKAGE_BASE, "CallOptions")
+
 val MessageDeserializer = ClassName(PACKAGE_MESSAGE, "MessageDeserializer")
 val MessageCompanion = ClassName(PACKAGE_MESSAGE, "MessageCompanion")
 
@@ -30,3 +33,6 @@ val computeEnumSize = dataSize.member("computeEnumSize")
 val computeEnumSizeNoTag = dataSize.member("computeEnumSizeNoTag")
 val computeTagSize = dataSize.member("computeTagSize")
 val computeInt32SizeNoTag = dataSize.member("computeInt32SizeNoTag")
+val WireFormatMakeTag = MemberName(PACKAGE_IO, "wireFormatMakeTag")
+val WireFormatForType = MemberName(PACKAGE_IO, "wireFormatForType")
+val DataType = ClassName(PACKAGE_MESSAGE, "DataType")

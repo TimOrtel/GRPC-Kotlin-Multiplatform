@@ -3,7 +3,7 @@ package io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.
 import com.squareup.kotlinpoet.TypeName
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.SourceTarget
 
-object JvmProtoMessageWriter : IosJvmProtoMessageWriteBase() {
+object JvmProtoMessageWriter : NativeJvmProtoMessageWriteBase() {
 
     override val additionalSuperinterfaces: List<TypeName> = listOf()
 
