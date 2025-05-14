@@ -159,7 +159,7 @@ kmpGrpc {
     jvm(listOf("desktopMain"))
     wasmjs()
     android()
-    ios()
+    native()
 
     protoSourceFolders = project.files("../proto")
 }

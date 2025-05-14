@@ -53,6 +53,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.runBlocking
 
 const val TAG_BUTTON_BACK = "TAG_BUTTON_BACK"
 
@@ -544,7 +545,9 @@ fun rememberCommunicationStub(host: String, port: Int): Communication.Communicat
 
     DisposableEffect(channel) {
         onDispose {
-            channel.shutdownNow()
+            runBlocking {
+                channel.shutdownNow()
+            }
         }
     }
 
