@@ -4,6 +4,9 @@ import io.github.timortel.kmpgrpc.core.internal.CallInterceptorChain
 import io.github.timortel.kmpgrpc.core.internal.EmptyCallInterceptor
 import io.github.timortel.kmpgrpc.native.*
 import kotlinx.cinterop.CPointer
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.newSingleThreadContext
 
 actual class Channel private constructor(
     internal val name: String,
@@ -14,6 +17,9 @@ actual class Channel private constructor(
      */
     internal val interceptor: CallInterceptor,
 ) : NativeJsChannel() {
+
+    @OptIn(DelicateCoroutinesApi::class, ExperimentalCoroutinesApi::class)
+    internal val context = newSingleThreadContext("channel executor")
 
     internal val channel: CPointer<cnames.structs.RustChannel>?
 
@@ -60,6 +66,7 @@ actual class Channel private constructor(
 
     override fun cleanupResources() {
         channel_free(channel)
+        context.close()
     }
 
     companion object {

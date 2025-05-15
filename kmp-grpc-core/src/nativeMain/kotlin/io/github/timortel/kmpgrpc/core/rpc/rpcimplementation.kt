@@ -377,7 +377,7 @@ private fun <REQ : Message, RES : Message> rpcImplementation(
 
             rpc_task_abort(taskHandle)
         }
-    }
+    }.flowOn(channel.context)
 
     return flow {
         if (callOptions.deadlineAfter != null) {
