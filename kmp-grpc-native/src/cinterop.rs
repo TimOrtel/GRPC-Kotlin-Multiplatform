@@ -36,7 +36,7 @@ impl RequestChannel {
  * Holds the actual channel implementation in Rust
  */
 pub struct RustChannel {
-    pub _channel: Option<Channel>,
+    pub _channel: Channel,
 }
 
 /**
@@ -54,6 +54,8 @@ pub struct RpcTask {
 pub extern "C" fn channel_create(host: *const c_char) -> *mut RustChannel {
     trace!("channel_create()");
 
+    let _guard = TOKIO_RT.enter();
+    
     let host = unsafe {
         match CStr::from_ptr(host).to_str() {
             Ok(str) => str.to_string(),
@@ -63,11 +65,9 @@ pub extern "C" fn channel_create(host: *const c_char) -> *mut RustChannel {
         }
     };
 
-    let _guard = TOKIO_RT.enter();
-
     match Channel::from_shared(host) {
         Ok(endpoint) => Box::into_raw(Box::new(RustChannel {
-            _channel: Some(endpoint.connect_lazy().clone()),
+            _channel: endpoint.connect_lazy(),
         })),
         Err(_) => null_mut(),
     }
@@ -81,10 +81,6 @@ pub extern "C" fn channel_free(channel: *mut RustChannel) {
         return;
     }
     unsafe {
-        if let Some(channel) = channel.as_mut() {
-            channel._channel.take();
-        }
-
         drop(Box::from_raw(channel));
     }
 }

@@ -118,7 +118,7 @@ pub unsafe extern "C" fn rpc_implementation(
         decode: deserialize_response,
     };
 
-    let native_channel = match channel.and_then(|c| c._channel.clone()) {
+    let native_channel = match channel.map(|c| c._channel.clone()) {
         Some(c) => { c }
         None => {
             on_done_error(user_data, "no channel provided", on_done);

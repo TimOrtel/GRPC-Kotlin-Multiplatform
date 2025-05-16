@@ -36,7 +36,7 @@ abstract class NativeJvmInterceptorTest : InterceptorTest(), ServerTestImpl {
                 emit(message)
             })
 
-        assertEquals(InterceptorLifecycleStatus.CLOSED, interceptor.lifecycleStatus)
+        assertEquals(InterceptorLifecycleStatus.CLOSED, interceptor.lifecycleStatus.value)
     }
 
     /**
@@ -62,6 +62,6 @@ abstract class NativeJvmInterceptorTest : InterceptorTest(), ServerTestImpl {
             })
             .toList()
 
-        assertEquals(InterceptorLifecycleStatus.CLOSED, interceptor.lifecycleStatus)
+        assertEquals(InterceptorLifecycleStatus.CLOSED, interceptor.lifecycleStatus.value)
     }
 }
