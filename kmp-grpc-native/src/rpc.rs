@@ -20,6 +20,7 @@ use tonic::metadata::{KeyRef, MetadataMap};
 use tonic::transport::Channel;
 use tonic::{Code, IntoStreamingRequest, Request, Response, Status, Streaming};
 
+/// cbindgen:ignore
 pub static TOKIO_RT: Lazy<Runtime> = Lazy::new(|| {
     tokio::runtime::Builder::new_multi_thread()
         .enable_all()
