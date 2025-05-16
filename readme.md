@@ -9,7 +9,7 @@
 ![badge][badge-ios]
 
 # gRPC Kotlin Multiplatform
-This projects implements client-side gRPC for Android, JVM, iOS, JavaScript and WASM.
+This projects implements client-side gRPC for Android, JVM, Native (including iOS), JavaScript and WASM.
 
 ## Table of contents
 - [Features](#features)
@@ -23,12 +23,12 @@ This projects implements client-side gRPC for Android, JVM, iOS, JavaScript and 
 
 ## Features
 ### Supported rpc types:
-|                    | JVM/Android | iOS | JavaScript (Browser + NodeJs)) | WasmJs (Browser + NodeJs)) |
-|--------------------|-------------|-----|--------------------------------|----------------------------|
-| `Unary`            | ✅           | ✅   | ✅                              | ✅                          |
-| `Client-streaming` | ✅           | ✅   | ❌                              | ❌                          |
-| `Server-streaming` | ✅           | ✅   | ✅                              | ✅                          |
-| `Bidi-streaming`   | ✅           | ✅   | ❌                              | ❌                          |
+|                    | JVM/Android | Native (including iOS) | JavaScript (Browser + NodeJs)) | WasmJs (Browser + NodeJs)) |
+|--------------------|-------------|------------------------|--------------------------------|----------------------------|
+| `Unary`            | ✅           | ✅                      | ✅                              | ✅                          |
+| `Client-streaming` | ✅           | ✅                      | ❌                              | ❌                          |
+| `Server-streaming` | ✅           | ✅                      | ✅                              | ✅                          |
+| `Bidi-streaming`   | ✅           | ✅                      | ❌                              | ❌                          |
 
 ### Supported proto types:
 | Proto Type   | Kotlin Type  |
@@ -266,9 +266,6 @@ plugins {
 
     //...
     id("io.github.timortel.kmpgrpc.plugin") version "<latest version>"
-
-    // Required when targeting iOS
-    kotlin("native.cocoapods")
 }
 ```
 
@@ -279,24 +276,13 @@ repositories {
     mavenCentral()
 }
 
-kotlin {
-    // For iOS support, configure cocoapods
-    cocoapods {
-        summary = "..."
-        homepage = "..."
-        ios.deploymentTarget = //...
-    }
-    
-    // ...
-}
-
 kmpGrpc {
     // declare the targets you need.
     common() // required
     jvm()
     androidMain()
     js()
-    ios()
+    native() // for native targets like iOS
 
     // Optional: if the protobuf well known types should be included
     // https://protobuf.dev/reference/protobuf/google.protobuf/
@@ -307,12 +293,6 @@ kmpGrpc {
 }
 ```
 
-### iOS setup
-This library is using Cocoapods, so please refer to the [Kotlin Multiplatform Documentation](https://kotlinlang.org/docs/native-cocoapods.html) on how to set up your iOS app with a Kotlin Multiplatform project, or refer to the example iOS app in the `example` folder.
-When you build your app, you might encounter compilation errors of multiple Pods. This is because the gRPC Pod required C++17 to be enabled:
-1. In Xcode, double-click on the `Pods` project and for project `Pods` go to `Build Settings`. Search for `C++ Language Dialect` and set it to `C++17`. 
-2. You can now build the app.
-
 ## Example Implementation
 See an example implementation of an Android app and an iOS app in the `example` folder. 
 
@@ -320,19 +300,21 @@ See an example implementation of an Android app and an iOS app in the `example` 
 - Support all proto data types
 
 ## Building locally
-Run the following Gradle commands:
+To build the native targets locally, you will need to have rust installed on your local machine. Once setup, you can run the following Gradle commands:
 1. To build the library `gradle kmp-grpc-core:publishToMavenLocal`
 2. To build the plugin `gradle kmp-grpc-plugin:publishToMavenLocal`
 
+By default, kmp-grpc-core prints trace logs. To deactivate, build the library with `-Pio.github.timortel.kmp-grpc.internal.native.release=true`.
+
 ## Contributing
 Feel free to implement improvements, bug fixes and features and create a pull request.
-Please send all pull requests to the develop branch, as the master always holds the code for the latest version.
+Please send all pull requests to the `develop` branch, as the `master` branch always holds the code for the latest version.
 
 ## Implementation details
 
 ### How does it work internally?
 The plugin generates kotlin code for all provided proto files. No `protoc` is needed. The networking code is handled
-by the native gRPC implementations for JVM and iOS. For all JavaScript targets, the requests are handled by [ktor](https://github.com/ktorio/ktor).
+by gRPC for JVM and by [tonic](https://github.com/hyperium/tonic) for all native targets. For JavaScript, the requests are handled by [ktor](https://github.com/ktorio/ktor).
 
 ## License
 Copyright 2025 Tim Ortel

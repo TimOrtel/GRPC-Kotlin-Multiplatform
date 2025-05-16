@@ -2,7 +2,6 @@ rootProject.name = "grpc-kmp"
 
 pluginManagement {
     includeBuild("kmp-grpc-plugin")
-    includeBuild("pod-build-workaround")
 
     repositories {
         gradlePluginPortal()
@@ -16,7 +15,6 @@ pluginManagement {
 
         id("com.google.protobuf")
         id("io.github.timortel.kmpgrpc.plugin") version "0.5.0" apply false
-        id("io.github.timortel.pod-build-workaround") version "1.0" apply false
     }
 }
 

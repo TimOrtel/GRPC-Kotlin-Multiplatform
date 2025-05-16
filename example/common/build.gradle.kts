@@ -3,7 +3,6 @@ val libVersion = "0.5.0"
 plugins {
     kotlin("multiplatform")
     id("com.android.library")
-    kotlin("native.cocoapods")
 
     id("io.github.timortel.kmpgrpc.plugin") version "0.5.0"
 }
@@ -28,9 +27,16 @@ kotlin {
         browser()
     }
 
-    iosX64()
-    iosArm64()
-    iosSimulatorArm64()
+    listOf(
+        iosArm64(),
+        iosSimulatorArm64(),
+        iosX64()
+    ).forEach {
+        it.binaries.framework {
+            baseName = "Common"
+            isStatic = true
+        }
+    }
 
     sourceSets {
         commonMain {
@@ -40,23 +46,6 @@ kotlin {
             }
         }
     }
-
-    cocoapods {
-        version = "1.0"
-        summary = "gRPC KMP Example Common"
-        homepage = "https://github.com/TimOrtel/GRPC-Kotlin-Multiplatform"
-
-        podfile = project.file("../iosApp/Podfile")
-
-        framework {
-            baseName = "common"
-            isStatic = true
-
-            transitiveExport = true
-        }
-
-        ios.deploymentTarget = "18.2"
-    }
 }
 
 kmpGrpc {
@@ -64,7 +53,7 @@ kmpGrpc {
     jvm()
     android()
     js()
-    ios()
+    native()
 
     protoSourceFolders = project.files("../protos/src/main/proto")
 }

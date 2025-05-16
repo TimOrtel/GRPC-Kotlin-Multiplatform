@@ -3,9 +3,7 @@ package io.github.timortel.kmpgrpc.plugin.configuration
 import io.github.timortel.kmpgrpc.plugin.VERSION
 import org.gradle.api.Project
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
-import org.jetbrains.kotlin.gradle.plugin.cocoapods.CocoapodsExtension
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
-import replacePodBuildWithCustomPodBuildTask
 
 object ProjectSetupConfiguration {
     fun configure(project: Project) {
@@ -35,15 +33,6 @@ object ProjectSetupConfiguration {
                     freeCompilerArgs.get() + listOf("-Xexpect-actual-classes")
                 )
             }
-
-            val cocoapodsExtension = kotlinExtension.extensions.findByType(CocoapodsExtension::class.java)
-
-            cocoapodsExtension?.apply {
-                pod("gRPC-ProtoRPC", moduleName = "GRPCClient")
-                pod("Protobuf")
-            }
-
-            project.replacePodBuildWithCustomPodBuildTask()
         }
     }
 }
