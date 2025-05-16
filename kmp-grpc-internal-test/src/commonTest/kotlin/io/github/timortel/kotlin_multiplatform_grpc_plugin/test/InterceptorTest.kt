@@ -5,7 +5,9 @@ import io.github.timortel.kmpgrpc.core.message.Message
 import io.github.timortel.kmpgrpc.test.InterceptorMessage
 import io.github.timortel.kmpgrpc.test.InterceptorServiceStub
 import io.github.timortel.kmpgrpc.test.interceptorMessage
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
 import kotlin.test.*
@@ -123,7 +125,7 @@ abstract class InterceptorTest : ServerTest {
         InterceptorServiceStub(channel)
             .send(InterceptorMessage(a = 1))
 
-        assertEquals(InterceptorLifecycleStatus.CLOSED, interceptor.lifecycleStatus)
+        assertEquals(InterceptorLifecycleStatus.CLOSED, interceptor.lifecycleStatus.value)
     }
 
     /**
@@ -143,7 +145,7 @@ abstract class InterceptorTest : ServerTest {
             .receiveStream(InterceptorMessage(a = 1))
             .toList()
 
-        assertEquals(InterceptorLifecycleStatus.CLOSED, interceptor.lifecycleStatus)
+        assertEquals(InterceptorLifecycleStatus.CLOSED, interceptor.lifecycleStatus.value)
     }
 
     @Test
@@ -214,49 +216,46 @@ abstract class InterceptorTest : ServerTest {
         val isJs: Boolean
     ) : CallInterceptor {
 
-        var lifecycleStatus: InterceptorLifecycleStatus = InterceptorLifecycleStatus.INIT
+        val lifecycleStatus: MutableStateFlow<InterceptorLifecycleStatus> = MutableStateFlow(InterceptorLifecycleStatus.INIT)
 
         override fun onStart(methodDescriptor: MethodDescriptor, metadata: Metadata): Metadata {
-            if (lifecycleStatus == InterceptorLifecycleStatus.INIT) lifecycleStatus = InterceptorLifecycleStatus.STARTED
-            else throw IllegalStateException()
+            lifecycleStatus.update { lifecycleStatus ->
+                if (lifecycleStatus == InterceptorLifecycleStatus.INIT) InterceptorLifecycleStatus.STARTED
+                else throw IllegalStateException()
+            }
 
             return super.onStart(methodDescriptor, metadata)
         }
 
         override fun <T : Message> onSendMessage(methodDescriptor: MethodDescriptor, message: T): T {
-            when {
-                lifecycleStatus == InterceptorLifecycleStatus.STARTED -> lifecycleStatus =
-                    InterceptorLifecycleStatus.SENT_MESSAGE
-
-                isClientStream && lifecycleStatus == InterceptorLifecycleStatus.SENT_MESSAGE -> {}
-
-                else -> throw IllegalStateException()
+            lifecycleStatus.update { lifecycleStatus ->
+                when {
+                    lifecycleStatus == InterceptorLifecycleStatus.STARTED -> InterceptorLifecycleStatus.SENT_MESSAGE
+                    isClientStream && lifecycleStatus == InterceptorLifecycleStatus.SENT_MESSAGE -> lifecycleStatus
+                    else -> throw IllegalStateException()
+                }
             }
 
             return super.onSendMessage(methodDescriptor, message)
         }
 
         override fun onReceiveHeaders(methodDescriptor: MethodDescriptor, metadata: Metadata): Metadata {
-            if (lifecycleStatus == InterceptorLifecycleStatus.SENT_MESSAGE) lifecycleStatus =
-                InterceptorLifecycleStatus.RECEIVED_HEADERS
-            else throw IllegalStateException()
-
+            lifecycleStatus.update { lifecycleStatus ->
+                if (lifecycleStatus == InterceptorLifecycleStatus.SENT_MESSAGE) InterceptorLifecycleStatus.RECEIVED_HEADERS
+                else throw IllegalStateException()
+            }
             return super.onReceiveHeaders(methodDescriptor, metadata)
         }
 
         override fun <T : Message> onReceiveMessage(methodDescriptor: MethodDescriptor, message: T): T {
-            when {
-                isJs && isServerStream && lifecycleStatus == InterceptorLifecycleStatus.SENT_MESSAGE -> {
-                    lifecycleStatus = InterceptorLifecycleStatus.RECEIVED_MESSAGE
+            lifecycleStatus.update { lifecycleStatus ->
+                when {
+                    isJs && isServerStream && lifecycleStatus == InterceptorLifecycleStatus.SENT_MESSAGE -> InterceptorLifecycleStatus.RECEIVED_MESSAGE
+                    lifecycleStatus == InterceptorLifecycleStatus.RECEIVED_HEADERS -> InterceptorLifecycleStatus.RECEIVED_MESSAGE
+                    isServerStream && lifecycleStatus == InterceptorLifecycleStatus.RECEIVED_MESSAGE -> lifecycleStatus
+
+                    else -> throw IllegalStateException()
                 }
-
-                lifecycleStatus == InterceptorLifecycleStatus.RECEIVED_HEADERS -> {
-                    lifecycleStatus = InterceptorLifecycleStatus.RECEIVED_MESSAGE
-                }
-
-                isServerStream && lifecycleStatus == InterceptorLifecycleStatus.RECEIVED_MESSAGE -> {}
-
-                else -> throw IllegalStateException()
             }
 
             return super.onReceiveMessage(methodDescriptor, message)
@@ -267,10 +266,10 @@ abstract class InterceptorTest : ServerTest {
             status: Status,
             metadata: Metadata
         ): Pair<Status, Metadata> {
-            if (lifecycleStatus == InterceptorLifecycleStatus.RECEIVED_MESSAGE) lifecycleStatus =
-                InterceptorLifecycleStatus.CLOSED
-            else throw IllegalStateException(lifecycleStatus.toString())
-
+            lifecycleStatus.update { lifecycleStatus ->
+                if (lifecycleStatus == InterceptorLifecycleStatus.RECEIVED_MESSAGE) InterceptorLifecycleStatus.CLOSED
+                else throw IllegalStateException(lifecycleStatus.toString())
+            }
             return super.onClose(methodDescriptor, status, metadata)
         }
     }
