@@ -18,8 +18,11 @@ actual class Channel private constructor(
     internal val interceptor: CallInterceptor,
 ) : NativeJsChannel() {
 
+    /*
+    grpc.ready().await throws a Segfault when we do not execute all rpcs on the same thread.
+     */
     @OptIn(DelicateCoroutinesApi::class, ExperimentalCoroutinesApi::class)
-    internal val context = newSingleThreadContext("channel executor")
+    internal val context = newSingleThreadContext("native channel executor - $name:$port")
 
     internal val channel: CPointer<cnames.structs.RustChannel>?
 

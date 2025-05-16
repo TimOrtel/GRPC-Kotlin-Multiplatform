@@ -196,14 +196,14 @@ abstract class RpcTest : ServerTest {
         coroutineScope {
             launch {
                 withContext(Dispatchers.Default) {
-                    delay(1000)
+                    delay(200)
                 }
 
                 channel.shutdownNow()
             }
 
             withContext(Dispatchers.Default) {
-                withTimeout(1100) {
+                withTimeout(400) {
                     assertFailsWithUnavailableOrCancelledStatus {
                         CancellationServiceStub(channel)
                             .respondAfter10Sec(message)
