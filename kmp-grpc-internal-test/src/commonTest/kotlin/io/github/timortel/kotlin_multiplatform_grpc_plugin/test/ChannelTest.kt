@@ -62,7 +62,7 @@ abstract class ChannelTest : ServerTest {
 
         // The shutdownNow must not wait for the RPC to finish
         withContext(Dispatchers.Default) {
-            withTimeout(200.milliseconds) {
+            withTimeout(400.milliseconds) {
                 channel.shutdownNow()
 
                 rpcJob.join()

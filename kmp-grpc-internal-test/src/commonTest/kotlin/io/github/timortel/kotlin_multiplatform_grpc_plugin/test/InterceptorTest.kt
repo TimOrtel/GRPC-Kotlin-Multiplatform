@@ -232,6 +232,8 @@ abstract class InterceptorTest : ServerTest {
                 when {
                     lifecycleStatus == InterceptorLifecycleStatus.STARTED -> InterceptorLifecycleStatus.SENT_MESSAGE
                     isClientStream && lifecycleStatus == InterceptorLifecycleStatus.SENT_MESSAGE -> lifecycleStatus
+                    isClientStream && isServerStream && lifecycleStatus == InterceptorLifecycleStatus.RECEIVED_MESSAGE -> lifecycleStatus
+
                     else -> throw IllegalStateException()
                 }
             }
