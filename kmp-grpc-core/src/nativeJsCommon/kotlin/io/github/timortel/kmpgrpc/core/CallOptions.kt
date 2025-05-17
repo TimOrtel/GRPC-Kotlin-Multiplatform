@@ -1,5 +1,6 @@
 package io.github.timortel.kmpgrpc.core
 
+import io.github.timortel.kmpgrpc.core.metadata.Metadata
 import kotlin.time.Duration
 
 /**

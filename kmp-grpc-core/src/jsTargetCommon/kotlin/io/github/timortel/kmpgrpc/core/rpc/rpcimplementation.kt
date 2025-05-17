@@ -3,6 +3,8 @@ package io.github.timortel.kmpgrpc.core.rpc
 import io.github.timortel.kmpgrpc.core.*
 import io.github.timortel.kmpgrpc.core.message.Message
 import io.github.timortel.kmpgrpc.core.message.MessageDeserializer
+import io.github.timortel.kmpgrpc.core.metadata.Entry
+import io.github.timortel.kmpgrpc.core.metadata.Metadata
 import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -18,7 +20,6 @@ import kotlinx.io.readByteArray
 import kotlinx.io.readString
 import kotlin.time.DurationUnit
 import kotlin.time.ExperimentalTime
-
 
 
 /**
@@ -100,7 +101,10 @@ private fun <Request : Message, Response : Message> grpcImplementation(
                     header("X-Grpc-Web", "1")
 
                     actualHeaders.entries.forEach { entry ->
-                        header(entry.key, entry.value)
+                        when (entry) {
+                            is Entry.Ascii -> header(entry.key.name, entry.values)
+                            is Entry.Binary -> header(entry.key.name, entry.values)
+                        }
                     }
 
                     if (callOptions.deadlineAfter != null) {

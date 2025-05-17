@@ -2,6 +2,7 @@ package io.github.timortel.kotlin_multiplatform_grpc_plugin.test
 
 import io.github.timortel.kmpgrpc.core.*
 import io.github.timortel.kmpgrpc.core.message.Message
+import io.github.timortel.kmpgrpc.core.metadata.Metadata
 import io.github.timortel.kmpgrpc.test.InterceptorMessage
 import io.github.timortel.kmpgrpc.test.InterceptorServiceStub
 import io.github.timortel.kmpgrpc.test.interceptorMessage

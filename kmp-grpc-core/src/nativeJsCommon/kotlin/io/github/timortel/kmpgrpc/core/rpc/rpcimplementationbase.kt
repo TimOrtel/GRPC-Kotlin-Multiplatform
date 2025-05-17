@@ -2,7 +2,7 @@ package io.github.timortel.kmpgrpc.core.rpc
 
 import io.github.timortel.kmpgrpc.core.Code
 import io.github.timortel.kmpgrpc.core.NativeJsChannel
-import io.github.timortel.kmpgrpc.core.Metadata
+import io.github.timortel.kmpgrpc.core.metadata.Metadata
 import io.github.timortel.kmpgrpc.core.Status
 import io.github.timortel.kmpgrpc.core.StatusException
 import kotlinx.coroutines.CancellationException

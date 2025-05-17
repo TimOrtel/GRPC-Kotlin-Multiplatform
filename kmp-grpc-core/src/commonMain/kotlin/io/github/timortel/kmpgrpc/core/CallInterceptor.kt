@@ -1,6 +1,7 @@
 package io.github.timortel.kmpgrpc.core
 
 import io.github.timortel.kmpgrpc.core.message.Message
+import io.github.timortel.kmpgrpc.core.metadata.Metadata
 
 /**
  * Base interface for intercepting calls.

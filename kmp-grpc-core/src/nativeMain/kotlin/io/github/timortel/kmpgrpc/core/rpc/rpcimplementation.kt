@@ -6,6 +6,7 @@ import io.github.timortel.kmpgrpc.core.internal.MemoryRawSource
 import io.github.timortel.kmpgrpc.core.io.internal.CodedInputStreamImpl
 import io.github.timortel.kmpgrpc.core.message.Message
 import io.github.timortel.kmpgrpc.core.message.MessageDeserializer
+import io.github.timortel.kmpgrpc.core.metadata.Metadata
 import io.github.timortel.kmpgrpc.native.*
 import kotlinx.cinterop.*
 import kotlinx.coroutines.*

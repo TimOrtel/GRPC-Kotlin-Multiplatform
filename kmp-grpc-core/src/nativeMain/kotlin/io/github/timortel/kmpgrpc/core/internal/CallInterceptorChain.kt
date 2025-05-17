@@ -1,7 +1,7 @@
 package io.github.timortel.kmpgrpc.core.internal
 
 import io.github.timortel.kmpgrpc.core.CallInterceptor
-import io.github.timortel.kmpgrpc.core.Metadata
+import io.github.timortel.kmpgrpc.core.metadata.Metadata
 import io.github.timortel.kmpgrpc.core.MethodDescriptor
 import io.github.timortel.kmpgrpc.core.Status
 import io.github.timortel.kmpgrpc.core.message.Message
