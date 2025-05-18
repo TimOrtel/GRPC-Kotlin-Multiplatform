@@ -6,6 +6,8 @@ import io.github.timortel.kmpgrpc.core.internal.MemoryRawSource
 import io.github.timortel.kmpgrpc.core.io.internal.CodedInputStreamImpl
 import io.github.timortel.kmpgrpc.core.message.Message
 import io.github.timortel.kmpgrpc.core.message.MessageDeserializer
+import io.github.timortel.kmpgrpc.core.metadata.Entry
+import io.github.timortel.kmpgrpc.core.metadata.Key
 import io.github.timortel.kmpgrpc.core.metadata.Metadata
 import io.github.timortel.kmpgrpc.native.*
 import kotlinx.cinterop.*
@@ -417,29 +419,87 @@ private data class CallCompletionData(
 
 private fun createRustMetadata(metadata: Metadata): CPointer<RustMetadata>? {
     return memScoped {
-        val cStrings = metadata.entries.flatMap { (key, value) -> listOf(key, value) }.map { it.cstr.ptr }
-        metadata_create((cStrings + null).toCValues())
+        val asciiCStrings = metadata.entries
+            .filterIsInstance<Entry.Ascii>()
+            .flatMap { (key, values) ->
+                values.flatMap { value -> listOf(key.name, value) }
+            }
+            .map { it.cstr.ptr } + null
+
+        val binaryEntries = metadata.entries
+            .filterIsInstance<Entry.Binary>()
+
+        val metadata = if (binaryEntries.isNotEmpty()) {
+            val binaryCStrings = binaryEntries
+                // For each value we need a key
+                .flatMap { entry -> entry.values.map { entry.key.name } }
+                .map { it.cstr.ptr } + null
+
+            val binaryByteArrays: List<Pinned<UByteArray>> = binaryEntries
+                .flatMap { entry -> entry.values.map { it.toUByteArray().pin() } }
+
+            val binaryPointers: CValues<CPointerVar<UByteVar>> =
+                binaryByteArrays.map { if (it.get().isEmpty()) null else it.addressOf(0) }.toCValues()
+
+            val binarySizesPinned: Pinned<ULongArray> =
+                binaryByteArrays.map { it.get().size.toULong() }.toULongArray().pin()
+            val binarySizes: CPointer<ULongVar> = binarySizesPinned.addressOf(0)
+
+            val metadata = metadata_create(
+                ascii_entries = asciiCStrings.toCValues(),
+                binary_keys = binaryCStrings.toCValues(),
+                binary_ptrs = binaryPointers,
+                binary_sizes = cValuesOf(binarySizes)
+            )
+
+            // Cleanup
+            binaryByteArrays.forEach { it.unpin() }
+            binarySizesPinned.unpin()
+
+            metadata
+        } else {
+            metadata_create(asciiCStrings.toCValues(), null, null, null)
+        }
+
+        metadata
     }
 }
 
 private fun convertRustMetadata(rustMetadata: CPointer<RustMetadata>?): Metadata {
-    val map = buildMap {
-        val ref: StableRef<MutableMap<String, String>> = StableRef.create(this)
+    val entries = buildList {
+        val ref: StableRef<MutableList<Entry<*>>> = StableRef.create(this)
 
         try {
             metadata_iterate(
                 metadata = rustMetadata,
                 data = ref.asCPointer(),
-                block = staticCFunction { data, key, value ->
+                block_ascii = staticCFunction { data, key, value ->
                     try {
                         val keyString = key?.toKString() ?: return@staticCFunction
                         val valueString = value?.toKString() ?: return@staticCFunction
 
-                        val map = data!!.asStableRef<MutableMap<String, String>>().get()
-                        map[keyString] = valueString
+                        val list = data!!.asStableRef<MutableList<Entry<*>>>().get()
+                        list += Entry.Ascii(Key.AsciiKey(keyString), setOf(valueString))
                     } finally {
                         string_free(key)
                         string_free(value)
+                    }
+                },
+                block_binary = staticCFunction { data, key, valuePtr, valueSize ->
+                    try {
+                        val keyString = key?.toKString() ?: return@staticCFunction
+                        val array = if(valueSize == 0uL || valuePtr == null) {
+                            byteArrayOf()
+                        } else {
+                            ByteArray(valueSize.toInt()) { i ->
+                                valuePtr[i].toByte()
+                            }
+                        }
+
+                        val list = data!!.asStableRef<MutableList<Entry<*>>>().get()
+                        list += Entry.Binary(Key.BinaryKey(keyString), setOf(array))
+                    } finally {
+                        string_free(key)
                     }
                 }
             )
@@ -448,5 +508,5 @@ private fun convertRustMetadata(rustMetadata: CPointer<RustMetadata>?): Metadata
         }
     }
 
-    return Metadata.of(map)
+    return Metadata.of(entries)
 }

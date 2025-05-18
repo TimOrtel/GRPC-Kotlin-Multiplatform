@@ -78,6 +78,9 @@ class Metadata private constructor(
      */
     val keys: Set<Key<*>> = asciiMap.keys + binaryMap.keys
 
+    /**
+     * A list of all entries in this metadata instance.
+     */
     val entries: List<Entry<*>>
         get() = asciiMap.entries.map { Entry.Ascii(it.first, it.second) } +
                 binaryMap.entries.map { Entry.Binary(it.first, it.second) }
