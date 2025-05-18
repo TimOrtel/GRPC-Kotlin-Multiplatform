@@ -18,6 +18,14 @@ class Metadata private constructor(
     companion object {
 
         /**
+         * Creates a `Metadata` instance from the provided vararg entries.
+         *
+         * @param entries the entries to be included in the metadata.
+         * @return a new `Metadata` instance containing the provided entries.
+         */
+        fun of(vararg entries: Entry<*>): Metadata = of(entries.toList())
+
+        /**
          * Constructs a `Metadata` instance from a list of key-value pairs.
          *
          * @param entries a list of key-value pairs.
