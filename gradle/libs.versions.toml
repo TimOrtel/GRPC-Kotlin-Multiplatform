@@ -28,6 +28,7 @@ mockk = "1.13.17"
 
 [libraries]
 antlr = { group = "org.antlr", name = "antlr4", version.ref = "antlr" }
+antlr-runtime = { group = "org.antlr", name = "antlr4-runtime", version.ref = "antlr" }
 
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
