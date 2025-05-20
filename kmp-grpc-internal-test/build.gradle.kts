@@ -4,7 +4,6 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 plugins {
     id("com.android.library")
     kotlin("multiplatform")
-    kotlin("native.cocoapods")
 
     id("io.github.timortel.kmpgrpc.plugin") version libs.versions.grpcKotlinMultiplatform.get()
 }
@@ -19,12 +18,6 @@ kotlin {
     applyDefaultHierarchyTemplate()
 
     setupTargets(project)
-
-    cocoapods {
-        summary = "GRPC Kotlin Multiplatform test library"
-        homepage = "https://github.com/TimOrtel/GRPC-Kotlin-Multiplatform"
-        ios.deploymentTarget = "14.1"
-    }
 
     compilerOptions {
         freeCompilerArgs.add("-Xexpect-actual-classes")
