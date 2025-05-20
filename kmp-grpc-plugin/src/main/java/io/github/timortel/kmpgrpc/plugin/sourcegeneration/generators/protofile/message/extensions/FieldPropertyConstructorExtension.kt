@@ -1,5 +1,6 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions
 
+import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.LIST
 import com.squareup.kotlinpoet.MAP
@@ -25,7 +26,16 @@ object FieldPropertyConstructorExtension : MessageWriterExtension {
                         ParameterSpec
                             .builder(field.attributeName, type)
                             .apply {
-                                if (!isActual) defaultValue(field.type.defaultValue())
+                                if (!isActual) {
+                                    defaultValue(
+                                        // If the field needs a isSet property, then the constructor must pass null by default
+                                        if (field.needsIsSetProperty) {
+                                            CodeBlock.of("null")
+                                        } else {
+                                            field.type.defaultValue()
+                                        }
+                                    )
+                                }
                             }
                             .build()
                     )
