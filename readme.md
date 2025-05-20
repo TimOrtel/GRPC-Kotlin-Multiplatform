@@ -232,10 +232,10 @@ val loggingInterceptor = object : CallInterceptor {
     override fun onClose(
         methodDescriptor: MethodDescriptor,
         status: Status,
-        metadata: Metadata
+        trailers: Metadata
     ): Pair<Status, Metadata> {
         println("Call closed ${methodDescriptor.fullMethodName}")
-        return super.onClose(methodDescriptor, status, metadata)
+        return super.onClose(methodDescriptor, status, trailers)
     }
 }
 

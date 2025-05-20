@@ -1,13 +1,20 @@
 package io.github.timortel.kmpgrpc.core.metadata
 
 /**
- * Key representation in [Metadata].
+ * Key representation in [Metadata]. To create an instance of a `Key`, either [AsciiKey] or [BinaryKey] can be used.
  */
 sealed interface Key<T> {
 
     companion object {
         internal const val BINARY_KEY_SUFFIX = "-bin"
 
+        /**
+         * Creates a Key instance based on the provided name. If the name ends with "-bin",
+         * a BinaryKey is returned. Otherwise, an AsciiKey is returned.
+         *
+         * @param name The name of the key. Determines the type of key to be returned.
+         * @return A Key instance, either BinaryKey or AsciiKey, based on the format of the name.
+         */
         fun fromName(name: String): Key<*> {
             return if (name.endsWith(BINARY_KEY_SUFFIX)) {
                 BinaryKey(name)

@@ -4,7 +4,10 @@ import kotlin.collections.emptyMap
 
 /**
  * Metadata allows you to pass key-value pairs to your requests, for example, authentication metadata.
- * Instances of [Metadata] are immutable. A key may have multiple values associated with it.
+ * Instances of `Metadata` are immutable. A key may have multiple values associated with it.
+ *
+ * To access entries, use instances of [Key].
+ *
  * Please refer to [the official metadata documentation](https://grpc.io/docs/what-is-grpc/core-concepts/#metadata).
  */
 class Metadata private constructor(
@@ -79,14 +82,14 @@ class Metadata private constructor(
     val keys: Set<Key<*>> = asciiMap.keys + binaryMap.keys
 
     /**
-     * A list of all entries in this metadata instance.
+     * A list of all entries in this `Metadata` instance.
      */
     val entries: List<Entry<*>>
         get() = asciiMap.entries.map { Entry.Ascii(it.first, it.second) } +
                 binaryMap.entries.map { Entry.Binary(it.first, it.second) }
 
     /**
-     * Retrieves the last value associated with the specified key from the metadata.
+     * Retrieves the last value associated with the specified key from this `Metadata` instance.
      *
      * @param key the key whose associated value is to be retrieved.
      * @return the value associated with the specified key, or null if the key is not present in the metadata.
@@ -98,7 +101,7 @@ class Metadata private constructor(
     }
 
     /**
-     * Retrieves all values associated with the specified key from the metadata.
+     * Retrieves all values associated with the specified key from this `Metadata` instance.
      *
      * @param key the key whose associated values are to be retrieved.
      * @return a set of values associated with the specified key, or an empty set if the key is not present.
@@ -117,6 +120,12 @@ class Metadata private constructor(
      */
     operator fun plus(other: Metadata): Metadata = Metadata(asciiMap + other.asciiMap, binaryMap + other.binaryMap)
 
+    /**
+     * Removes the specified key and its associated values from this `Metadata` instance.
+     *
+     * @param key the key to be removed, which can be an `AsciiKey` or `BinaryKey`.
+     * @return a new `Metadata` instance with the specified key removed.
+     */
     operator fun <T> minus(key: Key<T>): Metadata = when (key) {
         is Key.AsciiKey -> Metadata(asciiMap - key, binaryMap)
         is Key.BinaryKey -> Metadata(asciiMap, binaryMap - key)
@@ -124,6 +133,7 @@ class Metadata private constructor(
 
     /**
      * Adds a new key-value pair to the existing metadata and returns a new `Metadata` instance with the updated entries.
+     * If the given key is already present, the value will be appended to the existing entry.
      *
      * @param key the key of the entry to be added.
      * @param value the value of the entry to be added.
@@ -136,6 +146,7 @@ class Metadata private constructor(
 
     /**
      * Creates a new `Metadata` instance by adding the provided key-value pair to the existing metadata.
+     * If the given key is already present, the value will be appended to the existing entry.
      *
      * @param entry a key-value pair to be added to the metadata.
      * @return a new `Metadata` instance containing the additional key-value pair.
