@@ -140,7 +140,7 @@ private fun <Request : Message, Response : Message> grpcImplementation(
                     }
 
                     val finalHeaders = channel.interceptors.fold(headers) { currentHeaders, interceptor ->
-                        interceptor.onReceiveHeaders(methodDescriptor, metadata)
+                        interceptor.onReceiveHeaders(methodDescriptor, currentHeaders)
                     }
 
                     extractStatusFromMetadataAndVerify(metadata = finalHeaders)
@@ -234,18 +234,20 @@ private fun encodeMessageFrame(message: Message): ByteArray {
 }
 
 private fun decodeHeaders(headers: Headers): Metadata {
+    println("decodeHeaders $headers")
     val entries = headers.entries().map { (key, values) ->
+        val valuesSplit = values.flatMap { it.split(", ") }
         when (val key = Key.fromName(key)) {
             is Key.AsciiKey -> {
-                values.forEach { println(it) }
-                Entry.Ascii(key, values.toSet())
+                Entry.Ascii(key, valuesSplit.toSet())
             }
             is Key.BinaryKey -> {
-                val valuesSplit = values.flatMap { it.split(", ") }
                 Entry.Binary(key, valuesSplit.map { base64.decode(it) }.toSet())
             }
         }
     }
+
+    println("decodeHeaders() - entries: $entries")
 
     return Metadata.of(entries)
 }

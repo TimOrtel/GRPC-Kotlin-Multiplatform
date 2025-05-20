@@ -8,7 +8,7 @@ package io.github.timortel.kmpgrpc.core.metadata
  * @param V the type of values associated with the keys.
  * @property impl the internal map storing keys and their associated lists of values.
  */
-internal class MultiMap<K, V>(
+internal data class MultiMap<K, V>(
     private val impl: Map<K, Set<V>> = emptyMap()
 ) {
 

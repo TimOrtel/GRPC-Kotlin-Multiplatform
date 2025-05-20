@@ -91,6 +91,7 @@ abstract class MetadataTest : ServerTest {
 
         val interceptor = object : CallInterceptor {
             override fun onReceiveHeaders(methodDescriptor: MethodDescriptor, metadata: Metadata): Metadata {
+                println("onReceiveHeaders() $metadata")
                 headers.value = metadata
                 return metadata
             }

@@ -160,4 +160,26 @@ class Metadata private constructor(
      * @return a new `Metadata` instance containing the combined key-value pairs from the current metadata and the provided list.
      */
     fun <T> withEntries(entries: List<Entry<*>>): Metadata = this + of(entries)
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || this::class != other::class) return false
+
+        other as Metadata
+
+        if (asciiMap != other.asciiMap) return false
+        if (binaryMap != other.binaryMap) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = asciiMap.hashCode()
+        result = 31 * result + binaryMap.hashCode()
+        return result
+    }
+
+    override fun toString(): String {
+        return "Metadata(entries=$entries)"
+    }
 }
