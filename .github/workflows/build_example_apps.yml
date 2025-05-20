@@ -1,4 +1,4 @@
-name: Build Native Integration Example Android and iOS Apps
+name: Build Example Android and iOS Apps
 
 on:
   push:

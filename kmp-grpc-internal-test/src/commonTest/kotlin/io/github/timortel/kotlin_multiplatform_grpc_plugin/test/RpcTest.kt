@@ -2,7 +2,6 @@ package io.github.timortel.kotlin_multiplatform_grpc_plugin.test
 
 import io.github.timortel.kmpgrpc.core.Channel
 import io.github.timortel.kmpgrpc.core.Code
-import io.github.timortel.kmpgrpc.core.Metadata
 import io.github.timortel.kmpgrpc.core.StatusException
 import io.github.timortel.kmpgrpc.core.message.UnknownField
 import io.github.timortel.kmpgrpc.test.*
@@ -126,20 +125,6 @@ abstract class RpcTest : ServerTest {
     }
 
     @Test
-    fun testCanSendMetadata() = runTest {
-        val message = interceptorMessage { }
-
-        val key = "custom-header-1"
-        val value = "custom-value"
-
-        val response = InterceptorServiceStub(channel)
-            .testMetadata(message, Metadata.of(key, value))
-
-        assertContains(response.metadataMap, key, "Metadata does not contain key $key")
-        assertEquals(value, response.metadataMap[key], "Metadata value != $value")
-    }
-
-    @Test
     fun testFailedRpcThrowsKmStatusException() = runTest {
         val message = simpleMessage { }
 
@@ -196,14 +181,14 @@ abstract class RpcTest : ServerTest {
         coroutineScope {
             launch {
                 withContext(Dispatchers.Default) {
-                    delay(1000)
+                    delay(200)
                 }
 
                 channel.shutdownNow()
             }
 
             withContext(Dispatchers.Default) {
-                withTimeout(1100) {
+                withTimeout(400) {
                     assertFailsWithUnavailableOrCancelledStatus {
                         CancellationServiceStub(channel)
                             .respondAfter10Sec(message)

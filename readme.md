@@ -232,10 +232,10 @@ val loggingInterceptor = object : CallInterceptor {
     override fun onClose(
         methodDescriptor: MethodDescriptor,
         status: Status,
-        metadata: Metadata
+        trailers: Metadata
     ): Pair<Status, Metadata> {
         println("Call closed ${methodDescriptor.fullMethodName}")
-        return super.onClose(methodDescriptor, status, metadata)
+        return super.onClose(methodDescriptor, status, trailers)
     }
 }
 
@@ -303,6 +303,8 @@ See an example implementation of an Android app and an iOS app in the `example` 
 To build the native targets locally, you will need to have rust installed on your local machine. Once setup, you can run the following Gradle commands:
 1. To build the library `gradle kmp-grpc-core:publishToMavenLocal`
 2. To build the plugin `gradle kmp-grpc-plugin:publishToMavenLocal`
+
+By default, kmp-grpc-core prints trace logs. To deactivate, build the library with `-Pio.github.timortel.kmp-grpc.internal.native.release=true`.
 
 ## Contributing
 Feel free to implement improvements, bug fixes and features and create a pull request.

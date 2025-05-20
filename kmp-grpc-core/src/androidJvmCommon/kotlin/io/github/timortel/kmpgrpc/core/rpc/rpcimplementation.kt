@@ -1,6 +1,7 @@
 package io.github.timortel.kmpgrpc.core.rpc
 
 import io.github.timortel.kmpgrpc.core.*
+import io.github.timortel.kmpgrpc.core.metadata.Metadata
 import io.grpc.CallOptions
 import io.grpc.MethodDescriptor
 import io.grpc.StatusException
