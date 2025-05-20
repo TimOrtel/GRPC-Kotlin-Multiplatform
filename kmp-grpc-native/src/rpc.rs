@@ -384,12 +384,12 @@ fn insert_custom_metadata(custom_metadata: Box<RustMetadata>, target: &mut Metad
         match key {
             KeyRef::Ascii(ascii_key) => {
                 for value in md.get_all(ascii_key) {
-                    target.insert(ascii_key, value.clone());
+                    target.append(ascii_key, value.clone());
                 }
             }
             KeyRef::Binary(bin_key) => {
                 for value in md.get_all_bin(bin_key) {
-                    target.insert_bin(bin_key, value.clone());
+                    target.append_bin(bin_key, value.clone());
                 }
             }
         }

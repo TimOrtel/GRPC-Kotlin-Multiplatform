@@ -103,15 +103,14 @@ private fun <Request : Message, Response : Message> grpcImplementation(
 
             channel.client
                 .preparePost(channel.connectionString + path) {
-                    header("Content-Type", "application/grpc-web+proto")
+                    header(HttpHeaders.ContentType, "application/grpc-web+proto")
                     header("X-Grpc-Web", "1")
 
                     actualHeaders.entries.forEach { entry ->
                         when (entry) {
                             is Entry.Ascii -> {
-                                entry.values.forEach {
-                                    header(entry.key.name, it)
-                                }
+                                val value = entry.values.joinToString()
+                                header(entry.key.name, value)
                             }
 
                             is Entry.Binary -> {
@@ -131,14 +130,7 @@ private fun <Request : Message, Response : Message> grpcImplementation(
                     setBody(encodeMessageFrame(actualRequest))
                 }
                 .execute { response ->
-                    val responseMetadata = Metadata.of(
-                        response.headers.entries().map { (key, values) ->
-                            when (val key = Key.fromName(key)) {
-                                is Key.AsciiKey -> Entry.Ascii(key, values.toSet())
-                                is Key.BinaryKey -> Entry.Binary(key, values.map { base64.decode(it) }.toSet())
-                            }
-                        }
-                    )
+                    val headers = decodeHeaders(response.headers)
 
                     if (!response.status.isSuccess()) {
                         throw StatusException(
@@ -147,11 +139,11 @@ private fun <Request : Message, Response : Message> grpcImplementation(
                         )
                     }
 
-                    val finalMetadata = channel.interceptors.fold(responseMetadata) { currentMetadata, interceptor ->
+                    val finalHeaders = channel.interceptors.fold(headers) { currentHeaders, interceptor ->
                         interceptor.onReceiveHeaders(methodDescriptor, metadata)
                     }
 
-                    extractStatusFromMetadataAndVerify(metadata = finalMetadata)
+                    extractStatusFromMetadataAndVerify(metadata = finalHeaders)
 
                     readResponse(
                         channel = response.bodyAsChannel(),
@@ -239,6 +231,23 @@ private fun encodeMessageFrame(message: Message): ByteArray {
     sink.write(data)
 
     return sink.readByteArray()
+}
+
+private fun decodeHeaders(headers: Headers): Metadata {
+    val entries = headers.entries().map { (key, values) ->
+        when (val key = Key.fromName(key)) {
+            is Key.AsciiKey -> {
+                values.forEach { println(it) }
+                Entry.Ascii(key, values.toSet())
+            }
+            is Key.BinaryKey -> {
+                val valuesSplit = values.flatMap { it.split(", ") }
+                Entry.Binary(key, valuesSplit.map { base64.decode(it) }.toSet())
+            }
+        }
+    }
+
+    return Metadata.of(entries)
 }
 
 private fun decodeHeadersFrame(source: Source): Metadata {

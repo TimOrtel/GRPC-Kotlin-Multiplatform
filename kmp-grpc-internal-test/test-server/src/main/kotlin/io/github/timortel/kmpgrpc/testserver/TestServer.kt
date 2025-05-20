@@ -120,7 +120,7 @@ object TestServer {
                     }
 
                     override fun pingPong(requests: Flow<CancellationMessage>): Flow<CancellationResponse> {
-                        return requests.map { cancellationResponse {  } }
+                        return requests.map { cancellationResponse { } }
                     }
                 }
             )
@@ -153,6 +153,10 @@ object TestServer {
                     override fun bidiStream(requests: Flow<InterceptorMessage>): Flow<InterceptorMessage> {
                         return requests
                     }
+
+                    override suspend fun testReceiveMetadata(request: InterceptorMessage): InterceptorMessage {
+                        return request
+                    }
                 }
             )
             .intercept(
@@ -164,16 +168,43 @@ object TestServer {
                     ): ServerCall.Listener<ReqT> {
                         val map = buildMap<String, String> {
                             headers.keys().orEmpty().forEach { key ->
-                                put(key, headers.get(Metadata.Key.of(key, Metadata.ASCII_STRING_MARSHALLER)).orEmpty())
+                                val values = if (key.endsWith("-bin")) {
+                                    headers.getAll(Metadata.Key.of(key, Metadata.BINARY_BYTE_MARSHALLER))
+                                        ?.toList()
+                                        .orEmpty()
+                                        .joinToString { it.decodeToString() }
+                                } else {
+                                    val headers = headers.getAll(Metadata.Key.of(key, Metadata.ASCII_STRING_MARSHALLER))
+                                    headers?.toList().orEmpty()
+                                        .joinToString()
+                                }
+
+                                put(key, values)
                             }
                         }
 
                         val context = Context.current().withValue(metadataKey, map)
-                        return Contexts.interceptCall(context, call, headers, next)
+                        return Contexts.interceptCall(context, CustomResponseCall(call!!), headers, next)
                     }
                 }
             )
             .build()
             .start()
+    }
+
+    private class CustomResponseCall<R, S>(delegate: ServerCall<R, S>) :
+        ForwardingServerCall.SimpleForwardingServerCall<R, S>(delegate) {
+
+        override fun sendHeaders(headers: Metadata) {
+            val asciiKey = Metadata.Key.of("custom-header-1", Metadata.ASCII_STRING_MARSHALLER)
+            headers.put(asciiKey, "value1")
+            headers.put(asciiKey, "value2")
+
+            val binaryKey = Metadata.Key.of("custom-header-1-bin", Metadata.BINARY_BYTE_MARSHALLER)
+            headers.put(binaryKey, "value1".encodeToByteArray())
+            headers.put(binaryKey, "value2".encodeToByteArray())
+
+            super.sendHeaders(headers)
+        }
     }
 }

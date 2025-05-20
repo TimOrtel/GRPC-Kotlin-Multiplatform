@@ -42,12 +42,12 @@ interface CallInterceptor {
     /**
      * Intercept closing the call.
      * @param status the status received for this call. Potentially modified by previous [CallInterceptor]s.
-     * @param metadata the trailing headers received by the server. Potentially modified by previous [CallInterceptor]s.
+     * @param trailers the trailing headers received by the server. Potentially modified by previous [CallInterceptor]s.
      * @return the status and metadata that should be forwarded.
      */
     fun onClose(
         methodDescriptor: MethodDescriptor,
         status: Status,
-        metadata: Metadata
-    ): Pair<Status, Metadata> = status to metadata
+        trailers: Metadata
+    ): Pair<Status, Metadata> = status to trailers
 }

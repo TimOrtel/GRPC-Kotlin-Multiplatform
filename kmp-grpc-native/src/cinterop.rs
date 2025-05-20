@@ -178,14 +178,14 @@ pub extern "C" fn request_channel_signal_end(ptr: *mut RequestChannel) {
  * Construct a new metadata object.
  * For the ascii pairs: Expects a string array where the key and value are always next to each other. The array must be null terminated.
  * For the binary pairs: binary_keys is a null terminated array of the key names. binary_ptrs is not null terminated but must have the same size as binary_keys.
- * binary_sizes must have the same size as binary_ptrs, and gives the amount of bytes in each byte array of binary_ptrs.
+ * binary_sizes must have the same size as binary_ptrs and give the number of bytes in each byte array of binary_ptrs.
  */
 #[unsafe(no_mangle)]
 pub extern "C" fn metadata_create(
     ascii_entries: *const *const c_char,
     binary_keys: *const *const c_char,
     binary_ptrs: *const *const u8,
-    binary_sizes: *const *const usize,
+    binary_sizes: *const usize,
 ) -> *mut RustMetadata {
     trace!("metadata_create()");
 
@@ -209,9 +209,9 @@ pub extern "C" fn metadata_create(
                 }
             };
 
-            if let Ok(key) = AsciiMetadataKey::from_str(key) {
-                if let Ok(value) = AsciiMetadataValue::from_str(value) {
-                    map.insert(key, value);
+            if let Ok(ascii_key) = AsciiMetadataKey::from_str(key) {
+                if let Ok(ascii_value) = AsciiMetadataValue::from_str(value) {
+                    map.append(ascii_key.clone(), ascii_value);
                 }
             }
 
@@ -235,11 +235,11 @@ pub extern "C" fn metadata_create(
 
                 if let Ok(key) = BinaryMetadataKey::from_str(key) {
                     let data_ptr = *binary_ptrs.add(j);
-                    let size_ptr = *binary_sizes.add(j);
+                    let size = *binary_sizes.add(j);
 
                     if !data_ptr.is_null() {
-                        let data_slice = std::slice::from_raw_parts(data_ptr, *size_ptr);
-                        map.insert_bin(key, BinaryMetadataValue::from_bytes(data_slice));
+                        let data_slice = std::slice::from_raw_parts(data_ptr, size);
+                        map.append_bin(key, BinaryMetadataValue::from_bytes(data_slice));
                     }
                 }
 

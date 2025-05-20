@@ -449,7 +449,7 @@ private fun createRustMetadata(metadata: Metadata): CPointer<RustMetadata>? {
                 ascii_entries = asciiCStrings.toCValues(),
                 binary_keys = binaryCStrings.toCValues(),
                 binary_ptrs = binaryPointers,
-                binary_sizes = cValuesOf(binarySizes)
+                binary_sizes = binarySizes
             )
 
             // Cleanup

@@ -14,8 +14,10 @@ message MetadataMessage {
 
 service InterceptorService {
   rpc send(InterceptorMessage) returns (InterceptorMessage);
-  rpc testMetadata(InterceptorMessage) returns (MetadataMessage);
   rpc receiveStream(InterceptorMessage) returns (stream InterceptorMessage);
   rpc clientStream (stream InterceptorMessage) returns (InterceptorMessage);
   rpc bidiStream (stream InterceptorMessage) returns (stream InterceptorMessage);
+
+  rpc testMetadata(InterceptorMessage) returns (MetadataMessage);
+  rpc testReceiveMetadata(InterceptorMessage) returns(InterceptorMessage);
 }

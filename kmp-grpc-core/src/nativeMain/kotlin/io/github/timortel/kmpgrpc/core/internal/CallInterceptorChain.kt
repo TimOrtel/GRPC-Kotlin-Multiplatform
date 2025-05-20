@@ -53,13 +53,13 @@ internal class CallInterceptorChain(
     override fun onClose(
         methodDescriptor: MethodDescriptor,
         status: Status,
-        metadata: Metadata
+        trailers: Metadata
     ): Pair<Status, Metadata> {
-        return callInterceptors.fold(status to metadata) { (currentStatus, currentMetadata), interceptor ->
+        return callInterceptors.fold(status to trailers) { (currentStatus, currentMetadata), interceptor ->
             interceptor.onClose(
                 methodDescriptor = methodDescriptor,
                 status = currentStatus,
-                metadata = currentMetadata
+                trailers = currentMetadata
             )
         }
     }
