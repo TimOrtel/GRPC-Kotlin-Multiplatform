@@ -2,6 +2,8 @@ package io.github.timortel.kotlin_multiplatform_grpc_plugin.test
 
 import io.github.timortel.kmpgrpc.core.*
 import io.github.timortel.kmpgrpc.core.message.Message
+import io.github.timortel.kmpgrpc.core.metadata.Key
+import io.github.timortel.kmpgrpc.core.metadata.Metadata
 import io.github.timortel.kmpgrpc.test.InterceptorMessage
 import io.github.timortel.kmpgrpc.test.InterceptorServiceStub
 import io.github.timortel.kmpgrpc.test.interceptorMessage
@@ -155,7 +157,7 @@ abstract class InterceptorTest : ServerTest {
 
         val interceptor = object : CallInterceptor {
             override fun onStart(methodDescriptor: MethodDescriptor, metadata: Metadata): Metadata {
-                return super.onStart(methodDescriptor, metadata.withEntry(key, value))
+                return super.onStart(methodDescriptor, metadata.withEntry(Key.AsciiKey(key), value))
             }
         }
 
@@ -180,9 +182,9 @@ abstract class InterceptorTest : ServerTest {
             override fun onClose(
                 methodDescriptor: MethodDescriptor,
                 status: Status,
-                metadata: Metadata
+                trailers: Metadata
             ): Pair<Status, Metadata> {
-                return super.onClose(methodDescriptor, Status(Code.UNKNOWN, message), metadata)
+                return super.onClose(methodDescriptor, Status(Code.UNKNOWN, message), trailers)
             }
         }
 
@@ -266,13 +268,13 @@ abstract class InterceptorTest : ServerTest {
         override fun onClose(
             methodDescriptor: MethodDescriptor,
             status: Status,
-            metadata: Metadata
+            trailers: Metadata
         ): Pair<Status, Metadata> {
             lifecycleStatus.update { lifecycleStatus ->
                 if (lifecycleStatus == InterceptorLifecycleStatus.RECEIVED_MESSAGE) InterceptorLifecycleStatus.CLOSED
                 else throw IllegalStateException(lifecycleStatus.toString())
             }
-            return super.onClose(methodDescriptor, status, metadata)
+            return super.onClose(methodDescriptor, status, trailers)
         }
     }
 }

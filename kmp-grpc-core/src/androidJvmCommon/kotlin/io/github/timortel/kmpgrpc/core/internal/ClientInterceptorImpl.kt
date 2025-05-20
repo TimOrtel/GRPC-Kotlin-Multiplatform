@@ -66,7 +66,7 @@ internal class ClientInterceptorImpl(private val impl: CallInterceptor) : Client
                                     code = Code.getCodeForValue(status.code.value()),
                                     statusMessage = status.description.orEmpty()
                                 ),
-                                metadata = trailers.kmMetadata
+                                trailers = trailers.kmMetadata
                             )
 
                             super.onClose(newStatus.jvmStatus, newTrailers.jvmMetadata)

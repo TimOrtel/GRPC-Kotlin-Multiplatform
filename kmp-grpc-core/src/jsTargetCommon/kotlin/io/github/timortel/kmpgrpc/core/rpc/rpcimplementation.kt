@@ -1,8 +1,13 @@
+@file:OptIn(ExperimentalEncodingApi::class)
+
 package io.github.timortel.kmpgrpc.core.rpc
 
 import io.github.timortel.kmpgrpc.core.*
 import io.github.timortel.kmpgrpc.core.message.Message
 import io.github.timortel.kmpgrpc.core.message.MessageDeserializer
+import io.github.timortel.kmpgrpc.core.metadata.Entry
+import io.github.timortel.kmpgrpc.core.metadata.Key
+import io.github.timortel.kmpgrpc.core.metadata.Metadata
 import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -16,10 +21,12 @@ import kotlinx.io.Buffer
 import kotlinx.io.Source
 import kotlinx.io.readByteArray
 import kotlinx.io.readString
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.time.DurationUnit
 import kotlin.time.ExperimentalTime
 
-
+private val base64 = Base64.withPadding(Base64.PaddingOption.PRESENT_OPTIONAL)
 
 /**
  * Executes the unary given unary call using Ktor.
@@ -96,11 +103,22 @@ private fun <Request : Message, Response : Message> grpcImplementation(
 
             channel.client
                 .preparePost(channel.connectionString + path) {
-                    header("Content-Type", "application/grpc-web+proto")
+                    header(HttpHeaders.ContentType, "application/grpc-web+proto")
                     header("X-Grpc-Web", "1")
 
                     actualHeaders.entries.forEach { entry ->
-                        header(entry.key, entry.value)
+                        when (entry) {
+                            is Entry.Ascii -> {
+                                val value = entry.values.joinToString()
+                                header(entry.key.name, value)
+                            }
+
+                            is Entry.Binary -> {
+                                entry.values.forEach {
+                                    header(entry.key.name, base64.encode(it))
+                                }
+                            }
+                        }
                     }
 
                     if (callOptions.deadlineAfter != null) {
@@ -112,11 +130,7 @@ private fun <Request : Message, Response : Message> grpcImplementation(
                     setBody(encodeMessageFrame(actualRequest))
                 }
                 .execute { response ->
-                    val responseMetadata = Metadata.of(
-                        response.headers.entries().associate { (key, value) ->
-                            key to value.joinToString()
-                        }
-                    )
+                    val headers = decodeHeaders(response.headers)
 
                     if (!response.status.isSuccess()) {
                         throw StatusException(
@@ -125,11 +139,11 @@ private fun <Request : Message, Response : Message> grpcImplementation(
                         )
                     }
 
-                    val finalMetadata = channel.interceptors.fold(responseMetadata) { currentMetadata, interceptor ->
-                        interceptor.onReceiveHeaders(methodDescriptor, metadata)
+                    val finalHeaders = channel.interceptors.fold(headers) { currentHeaders, interceptor ->
+                        interceptor.onReceiveHeaders(methodDescriptor, currentHeaders)
                     }
 
-                    extractStatusFromMetadataAndVerify(metadata = finalMetadata)
+                    extractStatusFromMetadataAndVerify(metadata = finalHeaders)
 
                     readResponse(
                         channel = response.bodyAsChannel(),
@@ -219,17 +233,46 @@ private fun encodeMessageFrame(message: Message): ByteArray {
     return sink.readByteArray()
 }
 
+private fun decodeHeaders(headers: Headers): Metadata {
+    println("decodeHeaders $headers")
+    val entries = headers.entries().map { (key, values) ->
+        val valuesSplit = values.flatMap { it.split(", ") }
+        when (val key = Key.fromName(key)) {
+            is Key.AsciiKey -> {
+                Entry.Ascii(key, valuesSplit.toSet())
+            }
+            is Key.BinaryKey -> {
+                Entry.Binary(key, valuesSplit.map { base64.decode(it) }.toSet())
+            }
+        }
+    }
+
+    println("decodeHeaders() - entries: $entries")
+
+    return Metadata.of(entries)
+}
+
 private fun decodeHeadersFrame(source: Source): Metadata {
     val metadataString = source.readString()
 
     val entries = metadataString
         .split("\r\n")
         .filter { entry -> entry.isNotBlank() && entry.count { it == ':' } == 1 }
-        .associate { metadataEntry ->
-            val key = metadataEntry.substringBefore(':')
+        .map { metadataEntry ->
+            val keyName = metadataEntry.substringBefore(':')
             val value = metadataEntry.substringAfter(':')
 
-            key to value
+            when (val key = Key.fromName(keyName)) {
+                is Key.AsciiKey -> {
+                    Entry.Ascii(key, setOf(value))
+                }
+
+                is Key.BinaryKey -> {
+                    val decodedValue = Base64.decode(value)
+
+                    Entry.Binary(key, setOf(decodedValue))
+                }
+            }
         }
 
     return Metadata.of(entries)
