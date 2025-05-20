@@ -21,7 +21,7 @@ fun <T : Message> Any.Companion.wrap(message: T, typeUrlPrefix: String = DEFAULT
  * @param deserializer typically the companion object of [T].
  * @return a message of type [T]
  */
-inline fun <T : Message, DES : MessageDeserializer<T>> Any.unwrap(deserializer: DES): T {
+fun <T : Message, DES : MessageDeserializer<T>> Any.unwrap(deserializer: DES): T {
     return deserializer.deserialize(value)
 }
 
