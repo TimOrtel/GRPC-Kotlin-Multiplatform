@@ -40,7 +40,7 @@ class RequiredSizePropertyExtension : BaseSerializationExtension() {
                     when {
                         field.cardinality == ProtoFieldCardinality.Optional || (field.type.isMessage && field.cardinality != ProtoFieldCardinality.Repeated) -> {
                             add("if·(%N)·{·", field.isSetProperty.attributeName)
-                            add(getCodeForRequiredSizeForScalarAttributeC(field))
+                            add(getCodeForRequiredSizeForScalarAttributeC(field, field.cardinality == ProtoFieldCardinality.Optional))
                             add("}·else·{·0·}")
                         }
 
@@ -48,7 +48,7 @@ class RequiredSizePropertyExtension : BaseSerializationExtension() {
                             add("if·(")
                             add(field.type.isDefaultValueCode(field.attributeName, false))
                             add(")·0·else·{ ")
-                            add(getCodeForRequiredSizeForScalarAttributeC(field))
+                            add(getCodeForRequiredSizeForScalarAttributeC(field, isOptional = false))
                             add(" }")
                         }
 
@@ -143,11 +143,14 @@ class RequiredSizePropertyExtension : BaseSerializationExtension() {
     }
 
     companion object {
-        fun getCodeForRequiredSizeForScalarAttributeC(field: ProtoRegularField): CodeBlock {
+        fun getCodeForRequiredSizeForScalarAttributeC(field: ProtoRegularField, isOptional: Boolean): CodeBlock {
             return when (val type = field.type) {
                 is ProtoType.NonDeclType -> {
+                    // For optional fields, 'this' is needed as otherwise the constructor parameter is accessed, which is nullable
+                    val formatString = if (isOptional) "%M(%L, this.%N)" else "%M(%L, %N)"
+
                     CodeBlock.of(
-                        "%M(%L, %N)",
+                        formatString,
                         getComputeDataTypeSizeMember(type, true),
                         field.number,
                         field.attributeName

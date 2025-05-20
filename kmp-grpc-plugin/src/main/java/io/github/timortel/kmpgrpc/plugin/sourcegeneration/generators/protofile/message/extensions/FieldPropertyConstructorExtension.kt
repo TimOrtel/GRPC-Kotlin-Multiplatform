@@ -18,7 +18,7 @@ object FieldPropertyConstructorExtension : MessageWriterExtension {
         message.fields.forEach { field ->
             when (field.cardinality) {
                 is ProtoFieldCardinality.Singular -> {
-                    val type = if (field.type.isMessage) field.type.resolve().copy(nullable = true)
+                    val type = if (field.needsIsSetProperty) field.type.resolve().copy(nullable = true)
                     else field.type.resolve()
 
                     builder.addParameter(

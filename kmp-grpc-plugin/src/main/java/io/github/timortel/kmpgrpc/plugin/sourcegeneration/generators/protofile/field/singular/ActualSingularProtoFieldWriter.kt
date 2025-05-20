@@ -9,8 +9,16 @@ object ActualSingularProtoFieldWriter : SingularProtoFieldWriter() {
     override val attrs: List<KModifier> = listOf(KModifier.ACTUAL)
 
     override fun PropertySpec.Builder.modifyProperty(field: ProtoMessageField) {
-        if (field.type is ProtoType.DefType && field.type.isMessage) {
-            initializer("%N ?: %T()", field.attributeName, field.type.resolve())
+        if (field.needsIsSetProperty) {
+            initializer(
+                CodeBlock
+                    .builder()
+                    .apply {
+                        add("%N ?: ", field.attributeName)
+                        add(field.defaultValue(messageDefaultValue = ProtoType.MessageDefaultValue.EMPTY))
+                    }
+                    .build()
+            )
         } else {
             initializer(field.attributeName)
         }
