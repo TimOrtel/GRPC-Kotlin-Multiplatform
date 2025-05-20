@@ -1,4 +1,4 @@
-name: Gradle Plugin Tests
+name: Core-Lib Tests
 
 on:
   push:
