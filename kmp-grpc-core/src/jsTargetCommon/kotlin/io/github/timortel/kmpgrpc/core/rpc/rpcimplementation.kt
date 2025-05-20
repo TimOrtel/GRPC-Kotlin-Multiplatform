@@ -234,7 +234,6 @@ private fun encodeMessageFrame(message: Message): ByteArray {
 }
 
 private fun decodeHeaders(headers: Headers): Metadata {
-    println("decodeHeaders $headers")
     val entries = headers.entries().map { (key, values) ->
         val valuesSplit = values.flatMap { it.split(", ") }
         when (val key = Key.fromName(key)) {
@@ -246,8 +245,6 @@ private fun decodeHeaders(headers: Headers): Metadata {
             }
         }
     }
-
-    println("decodeHeaders() - entries: $entries")
 
     return Metadata.of(entries)
 }
