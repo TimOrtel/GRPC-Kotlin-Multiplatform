@@ -110,6 +110,7 @@ tasks.withType<Jar>().all {
     dependsOn("generateGrammarSource")
 }
 
-tasks.javadoc {
-    excludes.add("**/generated-src/**")
+tasks.withType<Javadoc> {
+    exclude("**/Protobuf3Lexer.java")
+    exclude("**/Protobuf3Parser.java")
 }
