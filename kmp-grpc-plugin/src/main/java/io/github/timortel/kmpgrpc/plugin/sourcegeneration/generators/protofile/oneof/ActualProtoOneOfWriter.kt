@@ -52,7 +52,8 @@ abstract class ActualProtoOneOfWriter : ProtoOneOfWriter(true) {
                 .initializer(
                     when (childClassType) {
                         is ChildClassType.Normal -> RequiredSizePropertyExtension.getCodeForRequiredSizeForScalarAttributeC(
-                            childClassType.field
+                            childClassType.field,
+                            isOptional = false
                         )
 
                         ChildClassType.NotSet -> CodeBlock.of("0")
