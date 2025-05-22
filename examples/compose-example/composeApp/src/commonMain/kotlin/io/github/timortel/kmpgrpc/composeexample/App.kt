@@ -47,6 +47,7 @@ import io.github.timortel.kmpgrpc.composeexample.shared.Communication
 import io.github.timortel.kmpgrpc.composeexample.shared.numMessage
 import io.github.timortel.kmpgrpc.core.Channel
 import io.github.timortel.kmpgrpc.core.StatusException
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
@@ -537,6 +538,7 @@ private fun NumPad(modifier: Modifier, enabled: Boolean, onNumberEntered: (Int) 
     }
 }
 
+@OptIn(DelicateCoroutinesApi::class)
 @Composable
 fun rememberCommunicationStub(host: String, port: Int): Communication.CommunicationServiceStub {
     val channel = remember {
