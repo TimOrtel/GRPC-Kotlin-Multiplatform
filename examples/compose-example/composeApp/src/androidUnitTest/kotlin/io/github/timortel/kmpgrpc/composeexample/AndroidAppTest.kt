@@ -13,7 +13,10 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 class AndroidAppTest : AppTest() {
 
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val testDispatcher = UnconfinedTestDispatcher()
+
     @OptIn(ExperimentalCoroutinesApi::class, ExperimentalTestApi::class)
     override fun runComposeTest(block: ComposeUiTest.() -> Unit) =
-        runComposeUiTest(UnconfinedTestDispatcher()) { block() }
+        runComposeUiTest(testDispatcher) { block() }
 }

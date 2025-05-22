@@ -34,7 +34,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -49,11 +48,12 @@ import io.github.timortel.kmpgrpc.core.Channel
 import io.github.timortel.kmpgrpc.core.StatusException
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.channels.Channel as CoroutineChannel
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.takeWhile
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.time.Duration.Companion.seconds
 
 const val TAG_BUTTON_BACK = "TAG_BUTTON_BACK"
@@ -95,7 +95,10 @@ private sealed class Destination(val name: String, val description: String, val 
 }
 
 @Composable
-fun App(modifier: Modifier, supportClientStreaming: Boolean = true) {
+fun App(
+    modifier: Modifier,
+    supportClientStreaming: Boolean = true
+) {
     var currentDestination: Destination by remember { mutableStateOf(Destination.Home) }
 
     var host: String by remember { mutableStateOf("") }
@@ -247,8 +250,8 @@ private fun UnaryDestination(modifier: Modifier, host: String, port: Int, onNavi
                     stub
                         .withDeadlineAfter(2.seconds)
                         .squareNumber(
-                        numMessage { value = num }
-                    ).value.toString()
+                            numMessage { value = num }
+                        ).value.toString()
                 } catch (e: StatusException) {
                     e.status.toString()
                 }
@@ -270,23 +273,19 @@ private fun ClientStreamingDestination(modifier: Modifier, host: String, port: I
 
     var serverResponse: String by remember { mutableStateOf("No response") }
 
-    val sendFlow = remember { MutableSharedFlow<Int?>() }
-
     var isSendingStreamOpen by remember { mutableStateOf(true) }
 
-    LaunchedEffect(stub) {
-        while (true) {
-            // Wait for ready
-            snapshotFlow { isSendingStreamOpen }.first { it }
+    var sendChannel = remember { CoroutineChannel<Int>() }
 
-            serverResponse = try {
-                stub.finalAverage(
-                    requests = sendFlow.takeWhile { it != null }.map { numMessage { value = it } }
-                ).value.toString()
-            } catch (e: StatusException) {
-                e.printStackTrace()
-                e.status.toString()
-            }
+    LaunchedEffect(stub, sendChannel) {
+        serverResponse = try {
+            println("Start")
+            stub.finalAverage(
+                requests = sendChannel.receiveAsFlow().map { numMessage { value = it } }
+            ).value.toString()
+        } catch (e: StatusException) {
+            e.printStackTrace()
+            e.status.toString()
         }
     }
 
@@ -297,7 +296,7 @@ private fun ClientStreamingDestination(modifier: Modifier, host: String, port: I
         onNavigateBack = onNavigateBack,
         onNumberEntered = { num ->
             scope.launch {
-                sendFlow.emit(num)
+                sendChannel.send(num)
             }
         }
     ) {
@@ -305,10 +304,9 @@ private fun ClientStreamingDestination(modifier: Modifier, host: String, port: I
             modifier = Modifier.fillMaxWidth().testTag(TAG_OPEN_CLOSE_SENDING_FLOW),
             onClick = {
                 if (isSendingStreamOpen) {
-                    scope.launch {
-                        sendFlow.emit(null)
-                    }
+                    sendChannel.close()
                 } else {
+                    sendChannel = CoroutineChannel()
                     serverResponse = "No response"
                 }
 
@@ -384,21 +382,17 @@ private fun BidiStreamingDestination(modifier: Modifier, host: String, port: Int
     var serverResponse: String by remember { mutableStateOf("No response") }
     var enteredNum: Int? by remember { mutableStateOf(null) }
 
-    val sendFlow = remember { MutableSharedFlow<Int?>() }
+    var sendChannel = remember { CoroutineChannel<Int>() }
 
-    LaunchedEffect(stub) {
-        while (true) {
-            try {
-                stub.runningAverage(
-                    requests = sendFlow.takeWhile { it != null }.map { numMessage { value = it } }
-                )
-                    .map { it.value }
-                    .collect { serverResponse = it.toString() }
-            } catch (e: StatusException) {
-                e.status.toString()
-            }
-
-            serverResponse = "No response"
+    LaunchedEffect(stub, sendChannel) {
+        try {
+            stub.runningAverage(
+                requests = sendChannel.receiveAsFlow().map { numMessage { value = it } }
+            )
+                .map { it.value }
+                .collect { serverResponse = it.toString() }
+        } catch (e: StatusException) {
+            e.status.toString()
         }
     }
 
@@ -409,16 +403,17 @@ private fun BidiStreamingDestination(modifier: Modifier, host: String, port: Int
         onNavigateBack = onNavigateBack,
         onNumberEntered = { num ->
             scope.launch {
-                sendFlow.emit(num)
+                sendChannel.send(num)
             }
         }
     ) {
         Button(
             modifier = Modifier.fillMaxWidth(),
             onClick = {
-                scope.launch {
-                    sendFlow.emit(null)
-                }
+                sendChannel.close()
+                sendChannel = CoroutineChannel()
+
+                serverResponse = "No response"
             }
         ) {
             Text("Restart")
