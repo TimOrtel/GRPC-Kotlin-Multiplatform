@@ -82,16 +82,6 @@ publishing {
     repositories {
         mavenLocal()
     }
-
-    publications {
-        create<MavenPublication>("maven") {
-            from(project.components["java"])
-            groupId = project.group as String
-            version = project.version as String
-
-            artifactId = "kmp-grpc-plugin"
-        }
-    }
 }
 
 tasks.test.configure {
