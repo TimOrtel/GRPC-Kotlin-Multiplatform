@@ -241,7 +241,7 @@ class SerializationFunctionExtension : BaseSerializationExtension() {
             streamParam: String,
             performIsFieldSetCheck: Boolean
         ): CodeBlock {
-            return when (val type = field.type) {
+            val serializationCodeBlock = when (val type = field.type) {
                 is ProtoType.NonDeclType -> {
                     val functionName = getWriteScalarFunctionName(type)
 
@@ -257,23 +257,12 @@ class SerializationFunctionExtension : BaseSerializationExtension() {
                 is ProtoType.DefType -> {
                     when (type.declType) {
                         ProtoType.DefType.DeclarationType.MESSAGE -> {
-                            CodeBlock.builder().apply {
-                                if (performIsFieldSetCheck && field is ProtoMessageField) {
-                                    beginControlFlow(
-                                        "if (%N)",
-                                        field.isSetProperty.attributeName
-                                    )
-                                }
-
-                                addStatement(
-                                    "%N.writeMessage(%L, %N)",
-                                    streamParam,
-                                    field.number,
-                                    field.attributeName
-                                )
-
-                                if (performIsFieldSetCheck) endControlFlow()
-                            }.build()
+                            CodeBlock.of(
+                                "%N.writeMessage(%L, %N)",
+                                streamParam,
+                                field.number,
+                                field.attributeName
+                            )
                         }
 
                         ProtoType.DefType.DeclarationType.ENUM -> {
@@ -287,6 +276,19 @@ class SerializationFunctionExtension : BaseSerializationExtension() {
                         }
                     }
                 }
+            }
+
+            return if (performIsFieldSetCheck && field is ProtoMessageField) {
+                CodeBlock.builder()
+                    .beginControlFlow(
+                        "if (%N)",
+                        field.isSetProperty.attributeName
+                    )
+                    .add(serializationCodeBlock)
+                    .endControlFlow()
+                    .build()
+            } else {
+                serializationCodeBlock
             }
         }
 
