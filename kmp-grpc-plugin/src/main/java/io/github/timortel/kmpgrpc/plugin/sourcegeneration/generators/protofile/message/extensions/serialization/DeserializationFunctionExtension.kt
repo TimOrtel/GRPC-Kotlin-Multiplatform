@@ -66,15 +66,19 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
             message.fields.forEach { field ->
                 when (field.cardinality) {
                     is ProtoFieldCardinality.Singular -> {
-                        val type = if (field.type.isMessage)
+                        val type = if (field.needsIsSetProperty)
                             field.type.resolve().copy(nullable = true)
                         else field.type.resolve()
+
+                        val defaultValue = if (field.needsIsSetProperty) {
+                            CodeBlock.of("null")
+                        } else field.type.defaultValue()
 
                         addVariable(
                             field.attributeName,
                             type,
                             true,
-                            field.type.defaultValue()
+                            defaultValue
                         )
                     }
 

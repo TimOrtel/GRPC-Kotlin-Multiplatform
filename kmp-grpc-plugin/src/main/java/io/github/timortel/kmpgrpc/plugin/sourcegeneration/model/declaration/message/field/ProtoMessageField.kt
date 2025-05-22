@@ -12,6 +12,7 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.Prot
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoMessage
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.ProtoMessageProperty
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType.MessageDefaultValue
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.capitalize
 import org.antlr.v4.runtime.ParserRuleContext
 
@@ -66,9 +67,9 @@ data class ProtoMessageField(
         type.parent = ProtoType.Parent.MessageField(this)
     }
 
-    fun defaultValue(): CodeBlock {
+    fun defaultValue(messageDefaultValue: MessageDefaultValue = MessageDefaultValue.NULL): CodeBlock {
         return when (cardinality) {
-            ProtoFieldCardinality.Implicit, ProtoFieldCardinality.Optional -> type.defaultValue()
+            ProtoFieldCardinality.Implicit, ProtoFieldCardinality.Optional -> type.defaultValue(messageDefaultValue)
             ProtoFieldCardinality.Repeated -> CodeBlock.of("emptyList()")
         }
     }

@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package io.github.timortel.kmpgrpc.test;
+
+option java_multiple_files = true;
+
+message OptionalScalarFields {
+  optional double field1 = 1;
+  optional float field2 = 2;
+  optional int32 field3 = 3;
+  optional int64 field4 = 4;
+  optional uint32 field5 = 5;
+  optional uint64 field6 = 6;
+  optional sint32 field7 = 7;
+  optional sint64 field8 = 8;
+  optional fixed32 field9 = 9;
+  optional fixed64 field10 = 10;
+  optional sfixed32 field11 = 11;
+  optional sfixed64 field12 = 12;
+  optional bool field13 = 13;
+  optional string field14 = 14;
+  optional bytes field15 = 15;
+}
