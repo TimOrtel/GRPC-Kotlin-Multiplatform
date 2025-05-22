@@ -44,17 +44,22 @@ kotlin {
         }
     }
 
+    targets
+        .withType<KotlinNativeTarget>()
+        .flatMap { target -> target.compilations.toList().flatMap { it.allKotlinSourceSets } }
+        .distinct()
+        .filter { it != sourceSets.commonMain.get() && it != sourceSets.commonTest.get() }
+        .forEach { sourceSet ->
+            sourceSet.languageSettings {
+                optIn("kotlinx.cinterop.ExperimentalForeignApi")
+            }
+        }
+
     compilerOptions {
         freeCompilerArgs.add("-Xexpect-actual-classes")
     }
 
     sourceSets {
-        all {
-            languageSettings {
-                optIn("kotlinx.cinterop.ExperimentalForeignApi")
-            }
-        }
-
         commonMain {
             dependencies {
                 implementation(kotlin("stdlib-common"))
@@ -159,12 +164,6 @@ buildConfig {
     }
 
     buildConfigField("Boolean", "ENABLE_TRACE_LOGGING", "${!compileNativeLibAsRelease}")
-}
-
-kotlin.targets.withType(KotlinNativeTarget::class.java) {
-    binaries.all {
-        binaryOptions["memoryModel"] = "experimental"
-    }
 }
 
 val compileNativeCodeTask = tasks.register("compileNativeCode", Exec::class.java) {
