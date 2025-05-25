@@ -3,11 +3,11 @@ name: Well known Extensions Tests
 on:
   push:
     branches:
-      - master
+      - main
       - develop
   pull_request:
     branches:
-      - master
+      - main
       - develop
 
 jobs:

@@ -308,7 +308,7 @@ By default, kmp-grpc-core prints trace logs. To deactivate, build the library wi
 
 ## Contributing
 Feel free to implement improvements, bug fixes and features and create a pull request.
-Please send all pull requests to the `develop` branch, as the `master` branch always holds the code for the latest version.
+Please send all pull requests to the `develop` branch, as the `main` branch always holds the code for the latest version.
 
 ## Implementation details
 
