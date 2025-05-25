@@ -36,3 +36,5 @@ test-outputs
 
 .kotlin
 playground
+
+.DS_Store

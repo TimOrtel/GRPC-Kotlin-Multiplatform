@@ -1,5 +1,3 @@
-val libVersion = "0.5.0"
-
 plugins {
     kotlin("multiplatform")
     id("com.android.library")

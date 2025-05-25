@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package io.github.timortel.kmpgrpc.composeexample.shared;
+
+message NumMessage {
+  int32 value = 1;
+}
+
+service CommunicationService {
+  rpc squareNumber (NumMessage) returns (NumMessage);
+  rpc countdown (NumMessage) returns (stream NumMessage);
+  rpc finalAverage (stream NumMessage) returns (NumMessage);
+  rpc runningAverage (stream NumMessage) returns (stream NumMessage);
+
+  rpc emptyRpc (NumMessage) returns (NumMessage);
+}

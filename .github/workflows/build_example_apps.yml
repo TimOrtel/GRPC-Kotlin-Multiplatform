@@ -29,7 +29,7 @@ jobs:
 
       - name: Build Android app
         run: |
-          cd example
+          cd examples/native-integration
           ./gradlew android:assembleDebug
 
   build-ios:
@@ -50,10 +50,10 @@ jobs:
 
       - name: Build common module
         run: |
-          cd example
+          cd examples/native-integration
           ./gradlew common:build
 
       - name: Build iOS app
         run: |
-          cd example/iosApp
+          cd examples/native-integration/iosApp
           xcodebuild -project iosApp.xcodeproj -scheme iosApp -sdk iphonesimulator -configuration Debug LLVM_TARGET_TRIPLE_OS_VERSION=ios15.6
