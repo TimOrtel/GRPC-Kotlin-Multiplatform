@@ -1,7 +1,6 @@
 plugins {
     id("com.android.library")
     kotlin("multiplatform")
-    kotlin("native.cocoapods")
     id("maven-publish")
 
     id("io.github.timortel.kmpgrpc.plugin")
@@ -22,18 +21,6 @@ kotlin {
 
     compilerOptions {
         freeCompilerArgs.add("-Xexpect-actual-classes")
-    }
-
-    cocoapods {
-        version = "1.0"
-        summary = "GRPC Kotlin Multiplatform Implementation"
-        homepage = "https://github.com/TimOrtel/GRPC-Kotlin-Multiplatform"
-
-        framework {
-            baseName = "GRPCKotlinMultiplatformWellKnownExt"
-        }
-
-        ios.deploymentTarget = "18.2"
     }
 
     sourceSets {
