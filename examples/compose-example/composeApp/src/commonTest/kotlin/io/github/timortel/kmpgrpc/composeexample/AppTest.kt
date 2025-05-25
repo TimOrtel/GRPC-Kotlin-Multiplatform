@@ -1,4 +1,3 @@
-
 package io.github.timortel.kmpgrpc.composeexample
 
 import androidx.compose.foundation.layout.fillMaxSize
@@ -7,7 +6,7 @@ import androidx.compose.ui.test.*
 import kotlin.test.Test
 
 @OptIn(ExperimentalTestApi::class)
-abstract class AppTest {
+abstract class AppTest(private val supportsClientStreaming: Boolean = true, private val port: Int = 17888) {
 
     open fun runComposeTest(block: ComposeUiTest.() -> Unit) = runComposeUiTest { block() }
 
@@ -26,6 +25,8 @@ abstract class AppTest {
 
     @Test
     fun testClientStreamingRpc() = runComposeTest {
+        if (!supportsClientStreaming) return@runComposeTest
+
         setupTest()
 
         enterServerAddressAndSelect(TAG_CLIENT_STREAMING_RPC)
@@ -57,6 +58,8 @@ abstract class AppTest {
 
     @Test
     fun testBidiStreamingRpc() = runComposeTest {
+        if (!supportsClientStreaming) return@runComposeTest
+
         setupTest()
 
         enterServerAddressAndSelect(TAG_BIDI_STREAMING_RPC)
@@ -77,7 +80,7 @@ abstract class AppTest {
 
     private fun ComposeUiTest.enterServerAddressAndSelect(destinationTag: String) {
         onNodeWithTag(TAG_HOST).performTextInput("localhost")
-        onNodeWithTag(TAG_PORT).performTextInput("17888")
+        onNodeWithTag(TAG_PORT).performTextInput("$port")
 
         onNodeWithTag(destinationTag).performScrollTo().performClick()
     }

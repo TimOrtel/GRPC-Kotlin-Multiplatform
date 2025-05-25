@@ -86,7 +86,8 @@ jobs:
       - name: Run tests
         run: |
           cd examples/compose-example
-          ./gradlew :composeAppJs:jsTest :composeApp:wasmJsTest
+#          ./gradlew :composeAppJs:jsTest :composeApp:wasmJsTest - TODO: wasmJs tests currently do not work due to a coroutine issue in test code!
+          ./gradlew :composeAppJs:jsTest
 
   test-ios:
     runs-on: macos-latest

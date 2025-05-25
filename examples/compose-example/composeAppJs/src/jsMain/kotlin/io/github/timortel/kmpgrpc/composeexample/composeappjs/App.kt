@@ -287,6 +287,7 @@ fun NumPad(enabled: Boolean, onNumberEntered: (Int) -> Unit) {
     }
 }
 
+@OptIn(DelicateCoroutinesApi::class)
 @Composable
 fun rememberCommunicationStub(host: String, port: Int): Communication.CommunicationServiceStub {
     val channel = remember {
@@ -295,7 +296,9 @@ fun rememberCommunicationStub(host: String, port: Int): Communication.Communicat
 
     DisposableEffect(channel) {
         onDispose {
-            channel.shutdownNow()
+            GlobalScope.launch {
+                channel.shutdownNow()
+            }
         }
     }
 
