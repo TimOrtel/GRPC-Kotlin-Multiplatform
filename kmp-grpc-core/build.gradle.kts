@@ -10,6 +10,7 @@ plugins {
     kotlin("native.cocoapods")
     id("maven-publish")
     id("com.github.gmazzo.buildconfig") version libs.versions.buildConfigPlugin.get()
+    signing
 }
 
 group = "io.github.timortel"
@@ -20,9 +21,9 @@ repositories {
     google()
 }
 
-val compileNativeLibAsReleaseProperty = "io.github.timortel.kmp-grpc.internal.native.release"
-val compileNativeLibAsRelease = if (project.hasProperty(compileNativeLibAsReleaseProperty)) {
-    project.property(compileNativeLibAsReleaseProperty).toString() == "true"
+val buildAsReleaseProperty = "io.github.timortel.kmp-grpc.internal.native.release"
+val buildAsRelease = if (project.hasProperty(buildAsReleaseProperty)) {
+    project.property(buildAsReleaseProperty).toString() == "true"
 } else false
 
 kotlin {
@@ -34,7 +35,7 @@ kotlin {
         it.compilations.getByName("main") {
             cinterops {
                 create("kmp_grpc_native") {
-                    definitionFile = if (compileNativeLibAsRelease) {
+                    definitionFile = if (buildAsRelease) {
                         layout.projectDirectory.file("src/nativeInterop/cinterop/release/$name.def")
                     } else {
                         layout.projectDirectory.file("src/nativeInterop/cinterop/debug/$name.def")
@@ -163,7 +164,7 @@ buildConfig {
         topLevelConstants = true
     }
 
-    buildConfigField("Boolean", "ENABLE_TRACE_LOGGING", "${!compileNativeLibAsRelease}")
+    buildConfigField("Boolean", "ENABLE_TRACE_LOGGING", "${!buildAsRelease}")
 }
 
 val compileNativeCodeTask = tasks.register("compileNativeCode", Exec::class.java) {
@@ -178,7 +179,7 @@ val compileNativeCodeTask = tasks.register("compileNativeCode", Exec::class.java
 
     workingDir = project.layout.projectDirectory.dir("../kmp-grpc-native/").asFile
 
-    val profile = if (compileNativeLibAsRelease) "release" else "dev"
+    val profile = if (buildAsRelease) "release" else "dev"
     val targetGroup = when (project.getTargetGroup()) {
         TargetGroup.ALL -> "all"
         TargetGroup.APPLE_TEST -> "apple_test"
@@ -284,4 +285,10 @@ tasks.withType<org.gradle.jvm.tasks.Jar>().configureEach {
     }
 
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
+}
+
+if (buildAsRelease) {
+    signing {
+        sign(publishing.publications)
+    }
 }

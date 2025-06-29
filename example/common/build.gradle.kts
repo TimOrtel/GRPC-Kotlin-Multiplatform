@@ -1,10 +1,10 @@
-val libVersion = "0.5.0"
+val libVersion = "1.0.0"
 
 plugins {
     kotlin("multiplatform")
     id("com.android.library")
 
-    id("io.github.timortel.kmpgrpc.plugin") version "0.5.0"
+    id("io.github.timortel.kmpgrpc.plugin") version "1.0.0"
 }
 
 group = "io.github.timortel.kmpgrpc.example.common"
