@@ -52,7 +52,7 @@ grpc-netty-shaded = { group = "io.grpc", name = "grpc-netty-shaded", version.ref
 ktor-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 
 squareup-kotlinpoet = { group = "com.squareup", name = "kotlinpoet", version = "1.16.0" }
-squareup-okio = { module = "com.squareup.okio:okio", version.ref = "okio"}
+squareup-okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
 
 kotlin-gradle-plugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
 android-gradle-plugin = { group = "com.android.tools.build", name = "gradle", version.ref = "androidGradlePlugin" }
