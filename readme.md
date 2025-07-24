@@ -276,11 +276,17 @@ repositories {
     mavenCentral()
 }
 
+kotlin {
+    // add this so it can work on iOS
+    applyDefaultHierarchyTemplate()
+    // your other setup
+}
+
 kmpGrpc {
     // declare the targets you need.
     common() // required
     jvm()
-    androidMain()
+    android()
     js()
     native() // for native targets like iOS
 
