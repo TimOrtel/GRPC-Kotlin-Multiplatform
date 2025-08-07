@@ -13,6 +13,10 @@ import kotlin.time.Duration
  * @property cause The underlying throwable that caused this exception, or `null` if no cause is available.
  */
 class StatusException internal constructor(val status: Status, override val cause: Throwable?) : RuntimeException(cause) {
+
+    override val message: String
+        get() = status.toString()
+
     companion object {
         /**
          * Used by both iOS and JavaScript implementations.

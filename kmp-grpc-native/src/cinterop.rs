@@ -74,7 +74,7 @@ pub extern "C" fn channel_create(host: *const c_char, use_plaintext: bool) -> *m
             if use_plaintext {
                 Some(x)
             } else {
-                x.tls_config(ClientTlsConfig::new()).ok()
+                x.tls_config(ClientTlsConfig::new().with_webpki_roots()).ok()
             }
         })
     {
