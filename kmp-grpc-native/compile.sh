@@ -35,10 +35,21 @@ for target in "${selected_targets[@]}"; do
 done
 
 # Build an array of --target flags
-target_flags=()
+target_flags_apple=()
 for target in "${selected_targets[@]}"; do
-    target_flags+=(--target "$target")
+    if [[ " ${targets_apple_test[@]} " =~ " ${target} " ]]; then
+        target_flags_apple+=(--target "$target")
+    fi
 done
 
-# Run cargo build with all targets
-cargo build "${target_flags[@]}" --profile "${profile}"
+# Run cargo build with all macOS supported targets
+cargo build "${target_flags_apple[@]}" --profile "${profile}"
+
+# Run cargo build with all non-natively-macOS supported targets
+# This is required because tls-aws-lc needs to be built for each platform
+for target in "${selected_targets[@]}"; do
+    if [[ ! " ${targets_apple_test[@]} " =~ " ${target} " ]]; then
+        # running cross build for all targets at once throws an error, so a loop is used instead.
+        cross build --target "$target" --profile "${profile}"
+    fi
+done
