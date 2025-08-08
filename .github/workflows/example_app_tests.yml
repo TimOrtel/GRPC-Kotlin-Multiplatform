@@ -84,9 +84,9 @@ jobs:
         run: docker run -d --rm --name envoy --network host -v $(pwd)/kmp-grpc-internal-test/envoy.yml:/etc/envoy/envoy.yaml -p 8082:8082 envoyproxy/envoy-dev:latest
 
       - name: Run tests
+        # ./gradlew :composeAppJs:jsTest :composeApp:wasmJsTest - TODO: wasmJs tests currently do not work due to a coroutine issue in test code!
         run: |
           cd examples/compose-example
-#          ./gradlew :composeAppJs:jsTest :composeApp:wasmJsTest - TODO: wasmJs tests currently do not work due to a coroutine issue in test code!
           ./gradlew :composeAppJs:jsTest
 
   test-ios:
@@ -103,7 +103,7 @@ jobs:
 
       - name: Publish revision to maven local
         run:
-          ./gradlew :kmp-grpc-plugin:publishToMavenLocal :kmp-grpc-core:publishToMavenLocal
+          ./gradlew :kmp-grpc-plugin:publishToMavenLocal :kmp-grpc-core:publishToMavenLocal -Pio.github.timortel.kmp-grpc.internal.native.targets=appleTest
 
       - name: Install grpcurl
         run: brew install grpcurl
@@ -126,4 +126,4 @@ jobs:
       - name: Run tests
         run: |
           cd examples/compose-example
-          ./gradlew :composeApp:iosSimulatorArm64Test
+          ./gradlew :composeApp:iosSimulatorArm64Test -PappleTargetsOnly=true
