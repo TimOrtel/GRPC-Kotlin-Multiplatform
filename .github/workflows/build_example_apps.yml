@@ -51,7 +51,7 @@ jobs:
       - name: Build common module
         run: |
           cd examples/native-integration
-          ./gradlew common:build
+          ./gradlew common:build -PappleTargetsOnly=true
 
       - name: Build iOS app
         run: |

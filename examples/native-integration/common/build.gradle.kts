@@ -1,10 +1,17 @@
 val libVersion = "1.0.0"
 
+val appleTargetsOnlyProperty = "appleTargetsOnly"
+val appleTargetsOnly = if (project.hasProperty(appleTargetsOnlyProperty)) {
+    project.property(appleTargetsOnlyProperty).toString() == "true"
+} else false
+
 plugins {
     kotlin("multiplatform")
-    id("com.android.library")
-
     id("io.github.timortel.kmpgrpc.plugin") version "1.0.0"
+}
+
+if (!appleTargetsOnly) {
+    plugins.apply("com.android.library")
 }
 
 group = "io.github.timortel.kmpgrpc.example.common"
@@ -19,12 +26,14 @@ repositories {
 kotlin {
     applyDefaultHierarchyTemplate()
 
-    jvm("jvm")
-    androidTarget()
+    if (!appleTargetsOnly) {
+        jvm("jvm")
+        androidTarget()
 
-    js(IR) {
-        useCommonJs()
-        browser()
+        js(IR) {
+            useCommonJs()
+            browser()
+        }
     }
 
     listOf(
@@ -58,12 +67,14 @@ kmpGrpc {
     protoSourceFolders = project.files("../protos/src/main/proto")
 }
 
-android {
-    compileSdk = 35
-    namespace = "io.github.timortel.grpc_multiplaform.example.common"
+if (!appleTargetsOnly) {
+    extensions.configure<com.android.build.gradle.LibraryExtension>("android") {
+        compileSdk = 35
+        namespace = "io.github.timortel.grpc_multiplaform.example.common"
 
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        compileOptions {
+            sourceCompatibility = JavaVersion.VERSION_17
+            targetCompatibility = JavaVersion.VERSION_17
+        }
     }
 }
