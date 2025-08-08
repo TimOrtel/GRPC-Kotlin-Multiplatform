@@ -67,13 +67,12 @@ fun KotlinMultiplatformExtension.setupTargets(project: Project) {
 fun Project.setupTestsTask() {
     val targetsTarget = project.getTargetGroup()
 
-    val includeAppleTest = targetsTarget == TargetGroup.APPLE_TEST
-    val includeOthersTest = targetsTarget == TargetGroup.OTHERS_TEST
+    val includeAppleTest = targetsTarget == TargetGroup.APPLE_TEST || targetsTarget == TargetGroup.ALL
+    val includeOthersTest = targetsTarget == TargetGroup.OTHERS_TEST || targetsTarget == TargetGroup.ALL
 
     if (includeAppleTest) {
         project.tasks.register("appleTest") {
             dependsOn("iosX64Test")
-            dependsOn("iosArm64Test")
             dependsOn("iosSimulatorArm64Test")
             dependsOn("macosArm64Test")
             dependsOn("macosX64Test")
