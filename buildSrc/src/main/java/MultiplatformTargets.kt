@@ -86,7 +86,6 @@ fun Project.setupTestsTask() {
             dependsOn("wasmJsTest")
             dependsOn("jvmTest")
             dependsOn("linuxX64Test")
-            dependsOn("linuxArm64Test")
         }
     }
 }

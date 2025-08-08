@@ -7,7 +7,6 @@ import org.jetbrains.kotlin.gradle.tasks.CInteropProcess
 plugins {
     id("com.android.library")
     kotlin("multiplatform")
-    kotlin("native.cocoapods")
     id("maven-publish")
     id("com.github.gmazzo.buildconfig") version libs.versions.buildConfigPlugin.get()
     signing
