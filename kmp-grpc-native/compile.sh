@@ -33,42 +33,35 @@ if [[ "$target_group" != "apple_test" ]]; then
 fi
 
 # For non apple targets, install cross if on mac
-if [[ ("$target_group" == "all" || "$target_group" == "other_test") && "$(uname)" == "Darwin" ]]; then
+if [[ "$target_group" == "all" || "$target_group" == "other_test" ]]; then
     cargo install cross --git https://github.com/cross-rs/cross
 fi
 
-targets_cargo_build=()
-if [[ include_apple_test_targets ]]; then
-  for target in "${targets_apple_test[@]}"; do
-      rustup target add "$target"
-      targets_cargo_build+=(--target "$target")
-  done
-fi
-
-if [[ include_others_test_targets && "$(uname)" == "Linux" ]]; then
-  for target in "${targets_others_test[@]}"; do
-      rustup target add "$target"
-      targets_cargo_build+=(--target "$target")
-  done
-fi
-
-# Run cargo build with all targets supposed to run with cargo build
-cargo build "${targets_cargo_build[@]}" --profile "${profile}"
-
 if [[ "$(uname)" == "Darwin" ]]; then
-  # Run cargo build with all non-natively-macOS supported targets
-  # This is required because tls-aws-lc needs to be built for each platform
-  if [[ "$target_group" == "all" || "$target_group" == "other_test" ]]; then
-      for target in "${targets_others_test[@]}"; do
-          # running cross build for all targets at once throws an error, so a loop is used instead.
-          cross build --target "$target" --profile "${profile}"
-      done
+  targets_cargo_build=()
+  if [[ include_apple_test_targets ]]; then
+    for target in "${targets_apple_test[@]}"; do
+        rustup target add "$target"
+        targets_cargo_build+=(--target "$target")
+    done
   fi
 
-  if [[ "$target_group" == "all" ]]; then
-      for target in "${targets_other[@]}"; do
-          # running cross build for all targets at once throws an error, so a loop is used instead.
-          cross build --target "$target" --profile "${profile}"
-      done
-  fi
+  # Run cargo build with all targets supposed to run with cargo build
+  cargo build "${targets_cargo_build[@]}" --profile "${profile}"
+fi
+
+# Run cross build with all other targets
+# This is required because circle needs to be built for each platform
+if [[ "$target_group" == "all" || "$target_group" == "other_test" ]]; then
+    for target in "${targets_others_test[@]}"; do
+        # running cross build for all targets at once throws an error, so a loop is used instead.
+        cross build --target "$target" --profile "${profile}"
+    done
+fi
+
+if [[ "$target_group" == "all" ]]; then
+    for target in "${targets_other[@]}"; do
+        # running cross build for all targets at once throws an error, so a loop is used instead.
+        cross build --target "$target" --profile "${profile}"
+    done
 fi
