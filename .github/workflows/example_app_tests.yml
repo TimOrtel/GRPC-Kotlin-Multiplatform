@@ -84,9 +84,9 @@ jobs:
         run: docker run -d --rm --name envoy --network host -v $(pwd)/kmp-grpc-internal-test/envoy.yml:/etc/envoy/envoy.yaml -p 8082:8082 envoyproxy/envoy-dev:latest
 
       - name: Run tests
+        # ./gradlew :composeAppJs:jsTest :composeApp:wasmJsTest - TODO: wasmJs tests currently do not work due to a coroutine issue in test code!
         run: |
           cd examples/compose-example
-#          ./gradlew :composeAppJs:jsTest :composeApp:wasmJsTest - TODO: wasmJs tests currently do not work due to a coroutine issue in test code!
           ./gradlew :composeAppJs:jsTest
 
   test-ios:
