@@ -8,31 +8,23 @@ targets_apple_test=("aarch64-apple-darwin" "aarch64-apple-ios" "aarch64-apple-io
 targets_others_test=("x86_64-unknown-linux-gnu" "aarch64-unknown-linux-gnu")
 targets_other=("x86_64-pc-windows-gnu")
 
-case "$target_group" in
-  apple_test)
-    selected_targets=("${targets_apple_test[@]}")
-    ;;
-  other_test)
-    selected_targets=("${targets_others_test[@]}")
-    ;;
-  all)
-    selected_targets=(
-      "${targets_apple_test[@]}"
-      "${targets_others_test[@]}"
-      "${targets_other[@]}"
-    )
-    ;;
-  *)
+if [[ "$target_group" != "all" && "$target_group" != "other_test" && "$target_group" != "apple_test" ]]; then
     echo "Invalid target group: '$target_group'. Use 'all', 'apple_test', or 'other_test'."
     exit 1
-    ;;
-esac
+fi
 
-# Ensure all selected targets are installed
-for target in "${selected_targets[@]}"; do
-    echo "Adding Rust target: $target"
-    rustup target add "$target"
-done
+# Ensure all selected targets are installed for apple targets
+if [[ "$target_group" != "apple_test" ]]; then
+  for target in "${targets_apple_test[@]}"; do
+      echo "Adding Rust target: $target"
+      rustup target add "$target"
+  done
+fi
+
+# For non apple targets, install cross
+if [[ "$target_group" == "all" || "$target_group" == "other_test" ]]; then
+    cargo install cross --git https://github.com/cross-rs/cross
+fi
 
 # Build an array of --target flags
 target_flags_apple=()
@@ -47,9 +39,16 @@ cargo build "${target_flags_apple[@]}" --profile "${profile}"
 
 # Run cargo build with all non-natively-macOS supported targets
 # This is required because tls-aws-lc needs to be built for each platform
-for target in "${selected_targets[@]}"; do
-    if [[ ! " ${targets_apple_test[@]} " =~ " ${target} " ]]; then
+if [[ "$target_group" == "all" || "$target_group" == "other_test" ]]; then
+    for target in "${targets_others_test[@]}"; do
         # running cross build for all targets at once throws an error, so a loop is used instead.
         cross build --target "$target" --profile "${profile}"
-    fi
-done
+    done
+fi
+
+if [[ "$target_group" == "all" ]]; then
+    for target in "${targets_other[@]}"; do
+        # running cross build for all targets at once throws an error, so a loop is used instead.
+        cross build --target "$target" --profile "${profile}"
+    done
+fi
