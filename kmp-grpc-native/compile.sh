@@ -40,12 +40,14 @@ fi
 targets_cargo_build=()
 if [[ include_apple_test_targets ]]; then
   for target in "${targets_apple_test[@]}"; do
+      rustup target add "$target"
       targets_cargo_build+=(--target "$target")
   done
 fi
 
 if [[ include_others_test_targets && "$(uname)" == "Linux" ]]; then
   for target in "${targets_others_test[@]}"; do
+      rustup target add "$target"
       targets_cargo_build+=(--target "$target")
   done
 fi
