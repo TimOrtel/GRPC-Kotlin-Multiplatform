@@ -13,6 +13,17 @@ if [[ "$target_group" != "all" && "$target_group" != "other_test" && "$target_gr
     exit 1
 fi
 
+if [[ "$(uname)" == "Linux" && target_group == "all" ]]; then
+    echo "Cannot build mac targets on linux. Use the other_test parameter."
+    exit 1
+fi
+
+include_apple_test_targets=false
+include_others_test_targets=false
+
+[[ "$target_group" == "all" || "$target_group" == "targets_apple_test" ]] && include_apple_test_targets=true
+[[ "$target_group" == "all" || "$target_group" == "other_test" ]] && include_others_test_targets=true
+
 # Ensure all selected targets are installed for apple targets
 if [[ "$target_group" != "apple_test" ]]; then
   for target in "${targets_apple_test[@]}"; do
@@ -21,34 +32,41 @@ if [[ "$target_group" != "apple_test" ]]; then
   done
 fi
 
-# For non apple targets, install cross
-if [[ "$target_group" == "all" || "$target_group" == "other_test" ]]; then
+# For non apple targets, install cross if on mac
+if [[ ("$target_group" == "all" || "$target_group" == "other_test") && "$(uname)" == "Darwin" ]]; then
     cargo install cross --git https://github.com/cross-rs/cross
 fi
 
-# Build an array of --target flags
-target_flags_apple=()
-for target in "${selected_targets[@]}"; do
-    if [[ " ${targets_apple_test[@]} " =~ " ${target} " ]]; then
-        target_flags_apple+=(--target "$target")
-    fi
-done
-
-# Run cargo build with all macOS supported targets
-cargo build "${target_flags_apple[@]}" --profile "${profile}"
-
-# Run cargo build with all non-natively-macOS supported targets
-# This is required because tls-aws-lc needs to be built for each platform
-if [[ "$target_group" == "all" || "$target_group" == "other_test" ]]; then
-    for target in "${targets_others_test[@]}"; do
-        # running cross build for all targets at once throws an error, so a loop is used instead.
-        cross build --target "$target" --profile "${profile}"
-    done
+targets_cargo_build=()
+if [[ include_apple_test_targets ]]; then
+  for target in "${targets_apple_test[@]}"; do
+      targets_cargo_build+=(--target "$target")
+  done
 fi
 
-if [[ "$target_group" == "all" ]]; then
-    for target in "${targets_other[@]}"; do
-        # running cross build for all targets at once throws an error, so a loop is used instead.
-        cross build --target "$target" --profile "${profile}"
-    done
+if [[ include_others_test_targets && "$(uname)" == "Linux" ]]; then
+  for target in "${targets_others_test[@]}"; do
+      targets_cargo_build+=(--target "$target")
+  done
+fi
+
+# Run cargo build with all targets supposed to run with cargo build
+cargo build "${targets_cargo_build[@]}" --profile "${profile}"
+
+if [[ "$(uname)" == "Darwin" ]]; then
+  # Run cargo build with all non-natively-macOS supported targets
+  # This is required because tls-aws-lc needs to be built for each platform
+  if [[ "$target_group" == "all" || "$target_group" == "other_test" ]]; then
+      for target in "${targets_others_test[@]}"; do
+          # running cross build for all targets at once throws an error, so a loop is used instead.
+          cross build --target "$target" --profile "${profile}"
+      done
+  fi
+
+  if [[ "$target_group" == "all" ]]; then
+      for target in "${targets_other[@]}"; do
+          # running cross build for all targets at once throws an error, so a loop is used instead.
+          cross build --target "$target" --profile "${profile}"
+      done
+  fi
 fi

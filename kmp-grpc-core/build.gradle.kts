@@ -292,3 +292,6 @@ if (buildAsRelease) {
         sign(publishing.publications)
     }
 }
+
+setupTestsTask()
+
