@@ -300,17 +300,5 @@ abstract class RpcTest : ServerTest {
             "Expected to fail with $codes status. statusMessage=${exception.status.statusMessage}"
         )
     }
-
-    @Test
-    fun httpsTest() = runTest {
-        val channel = Channel.Builder.forAddress("grpcb.in", 9001)
-            .build()
-
-        val stub = Hello.HelloServiceStub(channel)
-        val r = "Hello World"
-
-        val response = stub.SayHello(helloRequest { greeting = r })
-        assertEquals("hello $r", response.reply)
-    }
 }
 
