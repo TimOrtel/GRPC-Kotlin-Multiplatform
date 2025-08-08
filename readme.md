@@ -1,6 +1,6 @@
 [![GitHub license](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg?style=flat)](http://www.apache.org/licenses/LICENSE-2.0)
 [![Download](https://img.shields.io/maven-central/v/io.github.timortel/kmp-grpc-core) ](https://central.sonatype.com/artifact/io.github.timortel/kmp-grpc-core)
-![version](https://img.shields.io/badge/version-0.5.0-blue)
+![version](https://img.shields.io/badge/version-1.0.0-blue)
 
 ![badge][badge-android]
 ![badge][badge-jvm]
@@ -308,7 +308,7 @@ By default, kmp-grpc-core prints trace logs. To deactivate, build the library wi
 
 ## Contributing
 Feel free to implement improvements, bug fixes and features and create a pull request.
-Please send all pull requests to the `develop` branch, as the `master` branch always holds the code for the latest version.
+Please send all pull requests to the `develop` branch, as the `main` branch always holds the code for the latest version.
 
 ## Implementation details
 

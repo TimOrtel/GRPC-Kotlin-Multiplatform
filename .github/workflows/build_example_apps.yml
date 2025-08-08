@@ -3,11 +3,11 @@ name: Build Example Android and iOS Apps
 on:
   push:
     branches:
-      - master
+      - main
       - develop
   pull_request:
     branches:
-      - master
+      - main
       - develop
 
 jobs:
@@ -25,7 +25,7 @@ jobs:
 
       - name: Publish revision to maven local
         run:
-          ./gradlew :kmp-grpc-plugin:publishToMavenLocal :kmp-grpc-core:publishToMavenLocal
+          ./gradlew :kmp-grpc-plugin:publishToMavenLocal :kmp-grpc-core:publishToMavenLocal -Pio.github.timortel.kmp-grpc.internal.native.targets=othersTest
 
       - name: Build Android app
         run: |
@@ -46,12 +46,12 @@ jobs:
 
       - name: Publish revision to maven local
         run:
-          ./gradlew :kmp-grpc-plugin:publishToMavenLocal :kmp-grpc-core:publishToMavenLocal
+          ./gradlew :kmp-grpc-plugin:publishToMavenLocal :kmp-grpc-core:publishToMavenLocal -Pio.github.timortel.kmp-grpc.internal.native.targets=appleTest
 
       - name: Build common module
         run: |
           cd examples/native-integration
-          ./gradlew common:build
+          ./gradlew common:build -PappleTargetsOnly=true
 
       - name: Build iOS app
         run: |

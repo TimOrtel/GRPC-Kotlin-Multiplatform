@@ -63,3 +63,28 @@ fun KotlinMultiplatformExtension.setupTargets(project: Project) {
         mingwX64()
     }
 }
+
+fun Project.setupTestsTask() {
+    val targetsTarget = project.getTargetGroup()
+
+    val includeAppleTest = targetsTarget == TargetGroup.APPLE_TEST || targetsTarget == TargetGroup.ALL
+    val includeOthersTest = targetsTarget == TargetGroup.OTHERS_TEST || targetsTarget == TargetGroup.ALL
+
+    if (includeAppleTest) {
+        project.tasks.register("appleTest") {
+            dependsOn("iosX64Test")
+            dependsOn("iosSimulatorArm64Test")
+            dependsOn("macosArm64Test")
+            dependsOn("macosX64Test")
+        }
+    }
+
+    if (includeOthersTest) {
+        project.tasks.register("othersTest") {
+            dependsOn("jsTest")
+            dependsOn("wasmJsTest")
+            dependsOn("jvmTest")
+            dependsOn("linuxX64Test")
+        }
+    }
+}

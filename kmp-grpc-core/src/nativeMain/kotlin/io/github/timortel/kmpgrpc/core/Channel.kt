@@ -29,7 +29,7 @@ actual class Channel private constructor(
     init {
         val host = (if (usePlaintext) "http://" else "https://") + "$name:$port"
 
-        channel = channel_create(host)
+        channel = channel_create(host, usePlaintext)
         if (channel == null) {
             throw IllegalArgumentException("$host is not a valid uri.")
         }

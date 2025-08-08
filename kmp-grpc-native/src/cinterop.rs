@@ -8,8 +8,11 @@ use std::str::FromStr;
 use tokio::sync::mpsc::error::TrySendError;
 use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::sync::watch;
-use tonic::metadata::{AsciiMetadataKey, AsciiMetadataValue, BinaryMetadataKey, BinaryMetadataValue, KeyRef, MetadataMap};
-use tonic::transport::Channel;
+use tonic::metadata::{
+    AsciiMetadataKey, AsciiMetadataValue, BinaryMetadataKey, BinaryMetadataValue, KeyRef,
+    MetadataMap,
+};
+use tonic::transport::{Channel, ClientTlsConfig};
 
 /**
  * Holds the channel used to send messages into the RPC.
@@ -51,7 +54,7 @@ pub struct RpcTask {
  * Create a new channel from the given host. Returns null if the channel could not be created.
  */
 #[unsafe(no_mangle)]
-pub extern "C" fn channel_create(host: *const c_char) -> *mut RustChannel {
+pub extern "C" fn channel_create(host: *const c_char, use_plaintext: bool) -> *mut RustChannel {
     trace!("channel_create()");
 
     let _guard = TOKIO_RT.enter();
@@ -65,11 +68,22 @@ pub extern "C" fn channel_create(host: *const c_char) -> *mut RustChannel {
         }
     };
 
-    match Channel::from_shared(host) {
-        Ok(endpoint) => Box::into_raw(Box::new(RustChannel {
-            _channel: endpoint.connect_lazy(),
-        })),
-        Err(_) => null_mut(),
+    match Channel::from_shared(host)
+        .ok()
+        .and_then(|x| {
+            if use_plaintext {
+                Some(x)
+            } else {
+                x.tls_config(ClientTlsConfig::new().with_webpki_roots()).ok()
+            }
+        })
+    {
+        Some(endpoint) => {
+            Box::into_raw(Box::new(RustChannel {
+                _channel: endpoint.connect_lazy(),
+            }))
+        }
+        None => null_mut(),
     }
 }
 
@@ -276,8 +290,8 @@ pub extern "C" fn metadata_iterate(
         if let Some(metadata) = metadata.as_mut() {
             metadata._metadata.keys().for_each(|key| {
                 let key_str = match key {
-                    KeyRef::Ascii(ak) => { ak.as_str() }
-                    KeyRef::Binary(bk) => { bk.as_str() }
+                    KeyRef::Ascii(ak) => ak.as_str(),
+                    KeyRef::Binary(bk) => bk.as_str(),
                 };
 
                 let key_string = CString::new(key_str).unwrap();
@@ -287,14 +301,23 @@ pub extern "C" fn metadata_iterate(
                         for value in metadata._metadata.get_all(ascii_key) {
                             let value_string = CString::new(value.to_str().unwrap()).unwrap();
 
-                            block_ascii(data, key_string.clone().into_raw(), value_string.into_raw());
+                            block_ascii(
+                                data,
+                                key_string.clone().into_raw(),
+                                value_string.into_raw(),
+                            );
                         }
                     }
                     KeyRef::Binary(bin_key) => {
                         for value in metadata._metadata.get_all_bin(bin_key) {
                             match value.to_bytes() {
                                 Ok(bytes) => {
-                                    block_binary(data, key_string.clone().into_raw(), bytes.as_ptr(), bytes.len());
+                                    block_binary(
+                                        data,
+                                        key_string.clone().into_raw(),
+                                        bytes.as_ptr(),
+                                        bytes.len(),
+                                    );
                                 }
                                 Err(_) => {}
                             }

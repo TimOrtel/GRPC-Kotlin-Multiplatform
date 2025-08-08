@@ -14,7 +14,7 @@ pluginManagement {
         id("com.android.library")
 
         id("com.google.protobuf")
-        id("io.github.timortel.kmpgrpc.plugin") version "0.5.0" apply false
+        id("io.github.timortel.kmpgrpc.plugin") version "1.0.0" apply false
     }
 }
 

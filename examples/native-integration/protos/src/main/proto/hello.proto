@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package io.github.timortel.kmpgrpc.example;
+package hello;
 
 option java_multiple_files = true;
 
@@ -8,12 +8,10 @@ message HelloRequest {
   string greeting = 1;
 }
 
-message Response {
+message HelloResponse {
   string response = 1;
 }
 
 service HelloService {
-  rpc sayHello (HelloRequest) returns (Response);
-
-  rpc sayHelloMultipleTimes (HelloRequest) returns (stream Response);
+  rpc SayHello (HelloRequest) returns (HelloResponse);
 }

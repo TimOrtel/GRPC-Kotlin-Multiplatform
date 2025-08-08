@@ -13,6 +13,9 @@ version = libs.versions.grpcKotlinMultiplatform.get()
 java {
     withSourcesJar()
     withJavadocJar()
+
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 
 gradlePlugin {
@@ -38,6 +41,8 @@ kotlin {
             optIn("kotlin.ExperimentalStdlibApi")
         }
     }
+
+    jvmToolchain(17)
 }
 
 repositories {
@@ -103,4 +108,6 @@ tasks.withType<Jar>().all {
 tasks.withType<Javadoc> {
     exclude("**/Protobuf3Lexer.java")
     exclude("**/Protobuf3Parser.java")
+    exclude("**/Protobuf3BaseVisitor.java")
+    exclude("**/Protobuf3BaseListener.java")
 }

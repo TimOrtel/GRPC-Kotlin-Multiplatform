@@ -6,6 +6,7 @@ struct ContentView: View {
     @State private var port: String = ""
     @State private var greet: String = ""
     @State private var response: String = ""
+    @State private var useHttps: Bool = false
     
     var isButtonEnabled: Bool {
         !hostName.isEmpty && Int(port) != nil && !greet.isEmpty
@@ -15,6 +16,8 @@ struct ContentView: View {
         NavigationView {
             VStack(spacing: 16) {
                 TextField("Server host name", text: $hostName)
+                    .autocorrectionDisabled()
+                    .textInputAutocapitalization(.never)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
 
                 TextField("Server port", text: $port)
@@ -24,6 +27,10 @@ struct ContentView: View {
                 TextField("Enter your greeting", text: $greet)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
                     
+                Toggle(isOn: $useHttps) {
+                    Text("Use HTTPS")
+                }
+                
                 Button(action: performGRPCRequest) {
                     Text("Click to perform GRPC request")
                         .frame(maxWidth: .infinity)
@@ -48,6 +55,7 @@ struct ContentView: View {
             response = try await GreetingLogic().performGreeting(
                 host: hostName,
                 port: portNumber,
+                useHttps: useHttps,
                 message: greet
             )
         }
