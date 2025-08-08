@@ -26,6 +26,8 @@ val buildAsRelease = if (project.hasProperty(buildAsReleaseProperty)) {
 } else false
 
 kotlin {
+    jvmToolchain(17)
+
     applyDefaultHierarchyTemplate()
 
     setupTargets(project)

@@ -1,12 +1,14 @@
 package io.github.timortel.kmpgrpc.example.android
 
 import android.os.Bundle
+import android.widget.CheckBox
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -23,6 +25,7 @@ class MainActivity : AppCompatActivity() {
             val scope = rememberCoroutineScope()
             var hostName by remember { mutableStateOf("") }
             var port by remember { mutableStateOf("") }
+            var useHttps by remember { mutableStateOf(false) }
 
             var greet by remember { mutableStateOf("") }
             var resp by remember { mutableStateOf("") }
@@ -57,6 +60,20 @@ class MainActivity : AppCompatActivity() {
                         label = { Text("Enter your greeting") }
                     )
 
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Checkbox(
+                            modifier = Modifier,
+                            checked = useHttps,
+                            onCheckedChange = { useHttps = it }
+                        )
+
+                        Text(text = "Use HTTPS")
+                    }
+
                     Button(
                         modifier = Modifier.fillMaxWidth(),
                         content = {
@@ -65,7 +82,12 @@ class MainActivity : AppCompatActivity() {
                         onClick = {
                             scope.launch {
                                 resp =
-                                    GreetingLogic.performGreeting(hostName, port.toIntOrNull() ?: return@launch, greet)
+                                    GreetingLogic.performGreeting(
+                                        hostName,
+                                        port.toIntOrNull() ?: return@launch,
+                                        useHttps = useHttps,
+                                        greet
+                                    )
                             }
                         },
                         enabled = hostName.isNotBlank() && port.toIntOrNull() != null && greet.isNotBlank()

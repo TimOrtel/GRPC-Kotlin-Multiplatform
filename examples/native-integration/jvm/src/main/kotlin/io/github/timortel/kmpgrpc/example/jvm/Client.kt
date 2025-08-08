@@ -6,7 +6,5 @@ import kotlinx.coroutines.runBlocking
 fun main() {
     runBlocking {
         println(GreetingLogic.performGreeting("localhost", 17600, "Greeting from JVM"))
-
-        GreetingLogic.performMultipleGreetings("Multiple greetings from JVM", 17600)
     }
 }
