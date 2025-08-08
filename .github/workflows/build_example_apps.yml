@@ -25,7 +25,7 @@ jobs:
 
       - name: Publish revision to maven local
         run:
-          ./gradlew :kmp-grpc-plugin:publishToMavenLocal :kmp-grpc-core:publishToMavenLocal
+          ./gradlew :kmp-grpc-plugin:publishToMavenLocal :kmp-grpc-core:publishToMavenLocal -Pio.github.timortel.kmp-grpc.internal.native.targets=othersTest
 
       - name: Build Android app
         run: |
@@ -46,7 +46,7 @@ jobs:
 
       - name: Publish revision to maven local
         run:
-          ./gradlew :kmp-grpc-plugin:publishToMavenLocal :kmp-grpc-core:publishToMavenLocal
+          ./gradlew :kmp-grpc-plugin:publishToMavenLocal :kmp-grpc-core:publishToMavenLocal -Pio.github.timortel.kmp-grpc.internal.native.targets=appleTest
 
       - name: Build common module
         run: |
