@@ -16,7 +16,6 @@ This projects implements client-side gRPC for Android, JVM, Native (including iO
 - [Usage](#usage)
 - [Setup](#setup)
 - [Example Implementation](#example-implementation)
-- [Roadmap](#roadmap)
 - [Contributing](#contributing)
 - [Implementation details](#implementation-details)
 - [License](#license)
@@ -67,7 +66,7 @@ This projects implements client-side gRPC for Android, JVM, Native (including iO
 | Services     | ✅ Supported  |
 
 ### Well-known types:
-For reference, see [the official documentation](https://protobuf.dev/reference/protobuf/google.protobuf/).
+For reference, see [the official documentation](https://protobuf.dev/reference/protobuf/google.protobuf/). Well-known types support must be enabled in your gradle config (see [Setup](#setup)). 
 
 | Protobuf Type        | Supported     |
 |----------------------|---------------|
@@ -276,11 +275,18 @@ repositories {
     mavenCentral()
 }
 
+kotlin {
+    // Required
+    applyDefaultHierarchyTemplate()
+    
+    // ...
+}
+
 kmpGrpc {
     // declare the targets you need.
     common() // required
     jvm()
-    androidMain()
+    android()
     js()
     native() // for native targets like iOS
 
@@ -294,10 +300,7 @@ kmpGrpc {
 ```
 
 ## Example Implementation
-See an example implementation of an Android app and an iOS app in the `example` folder. 
-
-## Roadmap
-- Support all proto data types
+See an example implementation of an Android app and an iOS app in the `examples` folder.
 
 ## Building locally
 To build the native targets locally, you will need to have rust installed on your local machine. Once setup, you can run the following Gradle commands:

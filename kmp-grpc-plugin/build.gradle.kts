@@ -75,14 +75,6 @@ buildConfig {
     buildConfigField("String", "VERSION", "\"${libs.versions.grpcKotlinMultiplatform.get()}\"")
 }
 
-sourceSets {
-    main {
-        java {
-            srcDirs("../pod-build-workaround/shared-src/main/java")
-        }
-    }
-}
-
 publishing {
     repositories {
         mavenLocal()
