@@ -2,8 +2,8 @@ plugins {
     kotlin("jvm") version libs.versions.kotlin.get()
     id("java-gradle-plugin")
     id("maven-publish")
-    id("com.gradle.plugin-publish") version libs.versions.gradlePluginPublish.get()
-    id("com.github.gmazzo.buildconfig") version libs.versions.buildConfigPlugin.get()
+    alias(libs.plugins.buildConfig)
+    alias(libs.plugins.pluginPublish)
     antlr
 }
 

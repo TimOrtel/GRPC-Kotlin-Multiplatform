@@ -8,7 +8,7 @@ plugins {
     id("com.android.library")
     kotlin("multiplatform")
     id("maven-publish")
-    id("com.github.gmazzo.buildconfig") version libs.versions.buildConfigPlugin.get()
+    alias(libs.plugins.buildConfig)
     signing
 }
 
@@ -132,6 +132,11 @@ kotlin {
 publishing {
     repositories {
         mavenLocal()
+
+        maven {
+            name = "LocalRepo"
+            url = uri(layout.buildDirectory.dir("repos/releases"))
+        }
     }
 }
 
