@@ -1,7 +1,5 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.test
 
-import hello.Hello
-import hello.helloRequest
 import io.github.timortel.kmpgrpc.core.Channel
 import io.github.timortel.kmpgrpc.core.Code
 import io.github.timortel.kmpgrpc.core.StatusException

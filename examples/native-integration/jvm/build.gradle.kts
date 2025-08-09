@@ -13,16 +13,20 @@ repositories {
     mavenCentral()
 }
 
+val grpcVersion = "1.74.0"
+val grpcKotlinVersion = "1.4.3"
+val protobufVersion = "3.25.6"
+
 dependencies {
     implementation(project(":common"))
 
     // For server only
-    implementation("io.grpc:grpc-kotlin-stub:1.4.1")
-    implementation("io.grpc:grpc-protobuf:1.71.0")
-    implementation("io.grpc:grpc-stub:1.71.0")
-    implementation("io.grpc:grpc-netty-shaded:1.71.0")
-    implementation("io.grpc:grpc-services:1.71.0")
-    implementation("com.google.protobuf:protobuf-kotlin:3.25.6")
+    implementation("io.grpc:grpc-kotlin-stub:$grpcKotlinVersion")
+    implementation("io.grpc:grpc-protobuf:$grpcVersion")
+    implementation("io.grpc:grpc-stub:$grpcVersion")
+    implementation("io.grpc:grpc-netty-shaded:$grpcVersion")
+    implementation("io.grpc:grpc-services:$grpcVersion")
+    implementation("com.google.protobuf:protobuf-kotlin:$protobufVersion")
 }
 
 sourceSets {
@@ -35,15 +39,15 @@ sourceSets {
 
 protobuf {
     protoc {
-        artifact = "com.google.protobuf:protoc:3.25.6"
+        artifact = "com.google.protobuf:protoc:$protobufVersion"
     }
 
     plugins {
         id("grpc") {
-            artifact = "io.grpc:protoc-gen-grpc-java:1.71.0"
+            artifact = "io.grpc:protoc-gen-grpc-java:$grpcVersion"
         }
         id("grpckt") {
-            artifact = "io.grpc:protoc-gen-grpc-kotlin:1.4.1:jdk8@jar"
+            artifact = "io.grpc:protoc-gen-grpc-kotlin:$grpcKotlinVersion:jdk8@jar"
         }
     }
     generateProtoTasks {

@@ -5,7 +5,7 @@ plugins {
     kotlin("jvm")
 
     id("java")
-    id("com.google.protobuf") version libs.versions.protobufGradlePlugin.get()
+    alias(libs.plugins.protobuf)
     application
 }
 
