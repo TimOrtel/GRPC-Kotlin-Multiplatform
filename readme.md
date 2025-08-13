@@ -246,55 +246,85 @@ val channel = Channel.Builder
 ```
 
 ## Setup
-In your top-level build.gradle.kts, add the following:
-```kotlin
-buildscript {
-    repositories {
-        //...
-        gradlePluginPortal()
-    }
 
-    // ...
-}
-```
-
-### Common Module build.gradle.kts
 Add the following to your plugins block:
 ```kotlin
 plugins {
     kotlin("multiplatform")
-
-    //...
+    // ... other plugins you need
     id("io.github.timortel.kmpgrpc.plugin") version "<latest version>"
 }
+
 ```
-
-Add the library as a dependency:
+Configure kmp-grpc targets and where your .proto files live:
 ```kotlin
-repositories {
-    // ...
-    mavenCentral()
-}
-
 kmpGrpc {
-    // declare the targets you need.
+    // declare the targets you need
     common() // required
     jvm()
-    androidMain()
+    android()
     js()
+    wasmjs()
     native() // for native targets like iOS
 
-    // Optional: if the protobuf well known types should be included
+    // Optional: include protobuf well-known types
     // https://protobuf.dev/reference/protobuf/google.protobuf/
     includeWellKnownTypes = true
-    
-    // Specify the folders where your proto files are located, you can list multiple.
-    protoSourceFolders = project.files("<source to your protos>")
+
+    // Point to the folder(s) containing your proto files
+    // Example for a typical KMP module layout:
+    protoSourceFolders = project.files("src/commonMain/proto")
 }
 ```
+
+JVM/Android transport dependency:
+```kotlin
+kotlin {
+    sourceSets {
+        jvmMain.dependencies {
+            implementation("io.grpc:grpc-okhttp:1.74.0")
+        }
+        // For Android modules you can also add it in the Android configuration block
+    }
+}
+```
+In the kotlin section also add the following:
+```kotlin
+kotlin {
+ ...
+    applyDefaultHierarchyTemplate()
+ ...
+}
+
+```
+
+Android manifest permissions (if you call a remote server):
+```xml
+<manifest ...>
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Optional: only if you need to inspect connectivity state -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    ...
+</manifest>
+```
+
+Connection note:
+- For plaintext servers (no TLS), call `usePlaintext()` on your `Channel.Builder`.
+- For TLS (default), do not call `usePlaintext()` and ensure your endpoint supports HTTPS/HTTP2.
+
+Hello-World-Example specifics:
+- In the Hello-World-Example's composeApp module, `kmpGrpc` is configured with `protoSourceFolders = project.files("src/commonMain/proto")` (module-local path).
+- The sample Greeting uses a public demo endpoint `grpcb.in:9000` with `usePlaintext()`. Replace the host/port with your own service when testing.
+- Android adds INTERNET permission as shown above.
 
 ## Example Implementation
 See an example implementation of an Android app and an iOS app in the `example` folder. 
+
+Additionally, check the `Hello-World-Example` at the project root: 
+
+A Compose Multiplatform Hello World demonstrating kmp-grpc setup and a simple gRPC call (uses grpcb.in:9000 with plaintext) across Android/JVM, JS/WASM, and iOS.
+
+Note due CORS limitations on grpcb.in, the Wasmjs app will fail
 
 ## Roadmap
 - Support all proto data types
