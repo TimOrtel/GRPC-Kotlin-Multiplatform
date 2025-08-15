@@ -7,9 +7,8 @@ import org.jetbrains.kotlin.gradle.tasks.CInteropProcess
 plugins {
     id("com.android.library")
     kotlin("multiplatform")
-    kotlin("native.cocoapods")
     id("maven-publish")
-    id("com.github.gmazzo.buildconfig") version libs.versions.buildConfigPlugin.get()
+    alias(libs.plugins.buildConfig)
     signing
 }
 
@@ -27,6 +26,8 @@ val buildAsRelease = if (project.hasProperty(buildAsReleaseProperty)) {
 } else false
 
 kotlin {
+    jvmToolchain(17)
+
     applyDefaultHierarchyTemplate()
 
     setupTargets(project)
@@ -128,9 +129,51 @@ kotlin {
     }
 }
 
+val emptyJavadocJar by tasks.registering(Jar::class) {
+    archiveClassifier.set("javadoc")
+}
+
 publishing {
     repositories {
-        mavenLocal()
+        maven {
+            name = "BuildDir"
+            url = uri(layout.buildDirectory.dir("repos/releases"))
+        }
+    }
+
+    if(publications.findByName("jvm") != null) {
+        publications.named<MavenPublication>("jvm") {
+            artifact(emptyJavadocJar.get())
+        }
+    }
+
+    publications.withType<MavenPublication>().all {
+        pom {
+            name.set("kmp-grpc-core")
+            description.set("A gRPC core library for Kotlin Multiplatform")
+            url.set("https://github.com/TimOrtel/GRPC-Kotlin-Multiplatform")
+
+            licenses {
+                license {
+                    name.set("The Apache License, Version 2.0")
+                    url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
+                }
+            }
+
+            developers {
+                developer {
+                    id.set("timortel")
+                    name.set("Tim Ortel")
+                    email.set("100865202+TimOrtel@users.noreply.github.com")
+                }
+            }
+
+            scm {
+                connection.set("scm:git:git://github.com/TimOrtel/GRPC-Kotlin-Multiplatform.git")
+                developerConnection.set("scm:git:ssh://github.com/TimOrtel/GRPC-Kotlin-Multiplatform.git")
+                url.set("https://github.com/TimOrtel/GRPC-Kotlin-Multiplatform")
+            }
+        }
     }
 }
 
@@ -280,6 +323,8 @@ kotlin.targets.withType<KotlinNativeTarget>().configureEach {
 }
 
 tasks.withType<org.gradle.jvm.tasks.Jar>().configureEach {
+    if (this == emptyJavadocJar.get()) return@configureEach
+
     from(layout.projectDirectory.file("../THIRD_PARTY_LICENSES.txt")) {
         into("META-INF")
     }
@@ -292,3 +337,6 @@ if (buildAsRelease) {
         sign(publishing.publications)
     }
 }
+
+setupTestsTask()
+

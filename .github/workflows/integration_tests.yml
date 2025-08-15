@@ -42,7 +42,7 @@ jobs:
           echo "Service is healthy!"
 
       - name: Run tests in plugin module
-        run: ./gradlew :kmp-grpc-internal-test:allTests --info -Pio.github.timortel.kmp-grpc.internal.native.targets=othersTest
+        run: ./gradlew :kmp-grpc-internal-test:othersTest --info -Pio.github.timortel.kmp-grpc.internal.native.targets=othersTest
 
       - name: Upload JUnit Test Results
         if: success() || failure()
@@ -100,7 +100,7 @@ jobs:
           echo "Service is healthy!"
 
       - name: Run tests in plugin module
-        run: ./gradlew :kmp-grpc-internal-test:allTests --info -Pio.github.timortel.kmp-grpc.internal.native.targets=appleTest
+        run: ./gradlew :kmp-grpc-internal-test:appleTest --info -Pio.github.timortel.kmp-grpc.internal.native.targets=appleTest
 
       - name: Upload JUnit Test Results
         if: success() || failure()

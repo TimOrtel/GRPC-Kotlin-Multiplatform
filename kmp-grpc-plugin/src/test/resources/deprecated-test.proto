@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package io.github.timortel.kmpgrpc.test;
+
+option java_multiple_files = true;
+
+message MessageWithDeprecatedFields {
+  string deprecatedField = 1 [deprecated = true];
+  repeated string deprecatedList = 2 [deprecated = true];
+  map<string, string> deprecatedMap = 3 [deprecated = true];
+
+  string nonDeprecatedField = 4 [deprecated = false];
+  repeated string nonDeprecatedList = 5 [deprecated = false];
+  map<string, string> nonDeprecatedMap = 6 [deprecated = false];
+
+  oneof DeprecatedOneOf {
+    string nonDeprecatedOneOfOption = 7;
+    string deprecatedOneOfOption = 8 [deprecated = true];
+  }
+}
+
+enum DeprecatedEnum {
+  DEFAULT = 0;
+  DEPRECATED_OPTION = 1 [deprecated = true];
+}

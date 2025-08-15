@@ -12,5 +12,5 @@ interface ProtoField : ProtoOptionsHolder {
     val number: Int
     val ctx: ParserRuleContext
 
-    override val supportedOptions: List<Options.Option<*>> get() = emptyList()
+    override val supportedOptions: List<Options.Option<*>> get() = listOf(Options.deprecated)
 }

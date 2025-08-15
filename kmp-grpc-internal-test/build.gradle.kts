@@ -130,3 +130,5 @@ tasks.withType(Test::class) {
     reports.junitXml.outputLocation.set(rootProject.rootDir.resolve("test-outputs/${project.name}/$name/"))
     reports.html.outputLocation.set(rootProject.rootDir.resolve("test-outputs/${project.name}/$name/"))
 }
+
+setupTestsTask()

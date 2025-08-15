@@ -2,8 +2,8 @@ plugins {
     kotlin("jvm") version libs.versions.kotlin.get()
     id("java-gradle-plugin")
     id("maven-publish")
-    id("com.gradle.plugin-publish") version libs.versions.gradlePluginPublish.get()
-    id("com.github.gmazzo.buildconfig") version libs.versions.buildConfigPlugin.get()
+    alias(libs.plugins.buildConfig)
+    alias(libs.plugins.pluginPublish)
     antlr
 }
 
@@ -13,6 +13,9 @@ version = libs.versions.grpcKotlinMultiplatform.get()
 java {
     withSourcesJar()
     withJavadocJar()
+
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 
 gradlePlugin {
@@ -38,6 +41,8 @@ kotlin {
             optIn("kotlin.ExperimentalStdlibApi")
         }
     }
+
+    jvmToolchain(17)
 }
 
 repositories {
@@ -70,14 +75,6 @@ buildConfig {
     buildConfigField("String", "VERSION", "\"${libs.versions.grpcKotlinMultiplatform.get()}\"")
 }
 
-sourceSets {
-    main {
-        java {
-            srcDirs("../pod-build-workaround/shared-src/main/java")
-        }
-    }
-}
-
 publishing {
     repositories {
         mavenLocal()
@@ -103,4 +100,6 @@ tasks.withType<Jar>().all {
 tasks.withType<Javadoc> {
     exclude("**/Protobuf3Lexer.java")
     exclude("**/Protobuf3Parser.java")
+    exclude("**/Protobuf3BaseVisitor.java")
+    exclude("**/Protobuf3BaseListener.java")
 }

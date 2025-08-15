@@ -23,7 +23,7 @@ abstract class GenerateKmpGrpcSourcesTask : DefaultTask() {
         fun getJVMOutputFolder(project: Project): File = getOutputFolder(project).resolve("jvmMain/kotlin")
         fun getJSOutputFolder(project: Project): File = getOutputFolder(project).resolve("jsMain/kotlin")
         fun getWasmJsOutputFolder(project: Project): File = getOutputFolder(project).resolve("wasmJsMain/kotlin")
-        fun getIOSOutputFolder(project: Project): File = getOutputFolder(project).resolve("iosMain/kotlin")
+        fun getNativeOutputFolder(project: Project): File = getOutputFolder(project).resolve("nativeMain/kotlin")
 
         fun getWellKnownTypesFolder(project: Project): File =
             project.layout.buildDirectory.dir("well-known-protos").get().asFile
@@ -47,7 +47,7 @@ abstract class GenerateKmpGrpcSourcesTask : DefaultTask() {
                 getCommonOutputFolder(project),
                 getJVMOutputFolder(project),
                 getJSOutputFolder(project),
-                getIOSOutputFolder(project),
+                getNativeOutputFolder(project),
                 getWasmJsOutputFolder(project)
             )
         )
@@ -70,7 +70,7 @@ abstract class GenerateKmpGrpcSourcesTask : DefaultTask() {
 
         val protoFolders = sourceFolders.files.toList().map(::SystemInputFile) + wellKnownTypeFolders
 
-        ProtoSourceGenerator.generateProtoFiles(
+        ProtoSourceGenerator.writeProtoFiles(
             logger = logger,
             protoFolders = protoFolders,
             shouldGenerateTargetMap = shouldGenerateTargetMap,
@@ -78,7 +78,7 @@ abstract class GenerateKmpGrpcSourcesTask : DefaultTask() {
             jvmOutputFolder = getJVMOutputFolder(project),
             jsOutputFolder = getJSOutputFolder(project),
             wasmJsFolder = getWasmJsOutputFolder(project),
-            iosOutputDir = getIOSOutputFolder(project)
+            nativeOutputDir = getNativeOutputFolder(project)
         )
 
         val skipExtensionLibPropName = "io.github.timortel.kmp-grpc.internal.${project.name}.skip-wkt-ext"

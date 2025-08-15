@@ -23,11 +23,5 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Cache Lib Cocoapods Synthetic Build
-        uses: actions/cache@v4
-        with:
-          path: kmp-grpc-wellknown-ext/build/cocoapods/synthetic
-          key: lib-cocoapods-synthetic-${{ runner.os }}-${{ hashFiles('kmp-grpc-core/gradle.properties') }}
-
       - name: Run tests in plugin module
         run: ./gradlew :kmp-grpc-wellknown-ext:test

@@ -8,40 +8,38 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.m
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.service.ProtoServiceWriter
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.Options
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
-import java.io.File
 
 abstract class ProtoFileWriter(val isActual: Boolean) {
     abstract val protoServiceWriter: ProtoServiceWriter
     abstract val protoMessageWriter: ProtoMessageWriter
     abstract val protoEnumWriter: ProtoEnumerationWriter
 
-    open fun writeFiles(file: ProtoFile, outputDir: File) {
-        if (Options.javaMultipleFiles.get(file)) {
-            file.messages.forEach { message ->
+    fun generateFiles(file: ProtoFile): List<FileSpec> {
+        val files = if (Options.javaMultipleFiles.get(file)) {
+            val messageFiles = file.messages.map { message ->
                 FileSpec
                     .builder(message.className)
                     .addType(protoMessageWriter.generateProtoMessageClass(message))
                     .build()
-                    .writeTo(outputDir)
             }
 
-            file.services.forEach { service ->
+            val serviceFiles = file.services.map { service ->
                 FileSpec.builder(service.className)
                     .addType(protoServiceWriter.generateServiceStub(service))
                     .build()
-                    .writeTo(outputDir)
             }
 
-            if (!isActual) {
-                file.enums.forEach { enum ->
+            val enumFiles = if (!isActual) {
+                file.enums.map { enum ->
                     FileSpec.builder(enum.className)
                         .addType(protoEnumWriter.generateProtoEnum(enum))
                         .build()
-                        .writeTo(outputDir)
                 }
-            }
+            } else emptyList()
+
+            messageFiles + serviceFiles + enumFiles
         } else {
-            FileSpec
+            val file = FileSpec
                 .builder(file.className)
                 .addType(
                     TypeSpec.classBuilder(file.className)
@@ -56,7 +54,10 @@ abstract class ProtoFileWriter(val isActual: Boolean) {
                         .build()
                 )
                 .build()
-                .writeTo(outputDir)
+
+            listOf(file)
         }
+
+        return files
     }
 }
