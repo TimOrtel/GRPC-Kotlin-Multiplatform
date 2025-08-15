@@ -2,9 +2,10 @@ package io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.
 
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.field.BaseProtoFieldWriter
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoMessageField
 
-abstract class RepeatedProtoFieldWriter {
+abstract class RepeatedProtoFieldWriter : BaseProtoFieldWriter {
 
     protected abstract val attrs: List<KModifier>
 
@@ -16,7 +17,10 @@ abstract class RepeatedProtoFieldWriter {
             )
             .addKdoc(field.infoText)
             .addModifiers(attrs)
-            .apply { modifyListProperty(this, field) }
+            .apply {
+                modifyListProperty(this, field)
+                applyDeprecatedOption(field)
+            }
             .build()
 
         builder.addProperty(listProperty)

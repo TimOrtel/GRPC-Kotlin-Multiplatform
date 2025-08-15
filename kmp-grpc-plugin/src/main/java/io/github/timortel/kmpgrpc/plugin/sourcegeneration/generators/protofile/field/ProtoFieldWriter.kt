@@ -14,7 +14,6 @@ abstract class ProtoFieldWriter {
     abstract val repeatedProtoFieldWriter: RepeatedProtoFieldWriter
     abstract val mapProtoFieldWriter: ProtoMapFieldWriter
 
-
     fun addMessageField(builder: TypeSpec.Builder, field: ProtoMessageField) {
         when (field.cardinality) {
             is ProtoFieldCardinality.Singular -> singularProtoFieldWriter.addField(builder, field)

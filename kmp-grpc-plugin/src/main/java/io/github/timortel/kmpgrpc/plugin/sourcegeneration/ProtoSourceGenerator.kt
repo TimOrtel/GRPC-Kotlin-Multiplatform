@@ -1,5 +1,6 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration
 
+import com.squareup.kotlinpoet.FileSpec
 import io.github.timortel.kmpgrpc.anltr.Protobuf3Lexer
 import io.github.timortel.kmpgrpc.anltr.Protobuf3Parser
 import io.github.timortel.kmpgrpc.plugin.KmpGrpcExtension
@@ -18,7 +19,7 @@ import java.io.File
 
 object ProtoSourceGenerator {
 
-    fun generateProtoFiles(
+    fun writeProtoFiles(
         logger: Logger,
         protoFolders: List<InputFile>,
         shouldGenerateTargetMap: Map<String, Boolean>,
@@ -26,8 +27,42 @@ object ProtoSourceGenerator {
         jvmOutputFolder: File,
         jsOutputFolder: File,
         wasmJsFolder: File,
-        iosOutputDir: File
+        nativeOutputDir: File
     ) {
+        val shouldGenerateTargetMapBySourceTarget: Map<SourceTarget, Boolean> = mapOf(
+            SourceTarget.Common to (shouldGenerateTargetMap[KmpGrpcExtension.COMMON] ?: false),
+            SourceTarget.Jvm to (shouldGenerateTargetMap[KmpGrpcExtension.JVM] ?: false),
+            SourceTarget.Native to (shouldGenerateTargetMap[KmpGrpcExtension.NATIVE] ?: false),
+            SourceTarget.Js to (
+                    (shouldGenerateTargetMap[KmpGrpcExtension.JS]
+                        ?: false) || (shouldGenerateTargetMap[KmpGrpcExtension.WASMJS] ?: false)
+                    ),
+        )
+
+        val fileMap = generateProtoFiles(logger, protoFolders, shouldGenerateTargetMapBySourceTarget)
+
+        fileMap[SourceTarget.Common].writeTo(commonOutputFolder)
+        fileMap[SourceTarget.Jvm].writeTo(jvmOutputFolder)
+        fileMap[SourceTarget.Native].writeTo(nativeOutputDir)
+
+        if (shouldGenerateTargetMap[KmpGrpcExtension.JS] == true) {
+            fileMap[SourceTarget.Js].writeTo(jsOutputFolder)
+        }
+
+        if (shouldGenerateTargetMap[KmpGrpcExtension.WASMJS] == true) {
+            fileMap[SourceTarget.Js].writeTo(wasmJsFolder)
+        }
+    }
+
+    private fun List<FileSpec>?.writeTo(folder: File) {
+        orEmpty().forEach { it.writeTo(folder) }
+    }
+
+    internal fun generateProtoFiles(
+        logger: Logger,
+        protoFolders: List<InputFile>,
+        shouldGenerateTargetMap: Map<SourceTarget, Boolean>
+    ): Map<SourceTarget, List<FileSpec>> {
         val folders = protoFolders.mapNotNull { sourceFolder ->
             walkFolder(sourceFolder)
         }
@@ -43,24 +78,22 @@ object ProtoSourceGenerator {
         // Before generating code, validate and print warnings / throw errors
         project.validate()
 
-        if (shouldGenerateTargetMap[KmpGrpcExtension.COMMON] == true) {
-            CommonProtoProjectWriter.writeProject(project, commonOutputFolder)
-        }
+        return buildMap {
+            if (shouldGenerateTargetMap[SourceTarget.Common] == true) {
+                put(SourceTarget.Common, CommonProtoProjectWriter.generateProjectFiles(project))
+            }
 
-        if (shouldGenerateTargetMap[KmpGrpcExtension.JVM] == true) {
-            JvmProtoProjectWriter.writeProject(project, jvmOutputFolder)
-        }
+            if (shouldGenerateTargetMap[SourceTarget.Jvm] == true) {
+                put(SourceTarget.Jvm, JvmProtoProjectWriter.generateProjectFiles(project))
+            }
 
-        if (shouldGenerateTargetMap[KmpGrpcExtension.JS] == true) {
-            JsProtoProjectWriter.writeProject(project, jsOutputFolder)
-        }
+            if (shouldGenerateTargetMap[SourceTarget.Js] == true) {
+                put(SourceTarget.Js, JsProtoProjectWriter.generateProjectFiles(project))
+            }
 
-        if (shouldGenerateTargetMap[KmpGrpcExtension.WASMJS] == true) {
-            JsProtoProjectWriter.writeProject(project, wasmJsFolder)
-        }
-
-        if (shouldGenerateTargetMap[KmpGrpcExtension.NATIVE] == true) {
-            NativeProtoProjectWriter.writeProject(project, iosOutputDir)
+            if (shouldGenerateTargetMap[SourceTarget.Native] == true) {
+                put(SourceTarget.Native, NativeProtoProjectWriter.generateProjectFiles(project))
+            }
         }
     }
 

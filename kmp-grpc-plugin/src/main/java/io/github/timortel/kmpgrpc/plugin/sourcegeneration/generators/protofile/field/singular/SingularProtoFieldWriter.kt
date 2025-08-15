@@ -1,9 +1,13 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.field.singular
 
-import com.squareup.kotlinpoet.*
+import com.squareup.kotlinpoet.BOOLEAN
+import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.PropertySpec
+import com.squareup.kotlinpoet.TypeSpec
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.field.BaseProtoFieldWriter
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoMessageField
 
-abstract class SingularProtoFieldWriter {
+abstract class SingularProtoFieldWriter : BaseProtoFieldWriter {
 
     protected abstract val attrs: List<KModifier>
 
@@ -16,6 +20,7 @@ abstract class SingularProtoFieldWriter {
                     .addModifiers(attrs)
                     .apply {
                         modifyProperty(field)
+                        applyDeprecatedOption(field)
                     }
                     .build()
             )

@@ -5,11 +5,16 @@ fun createSingleFileProtoFolder(content: String): FakeInputDirectory {
 }
 
 fun createProto3File(content: String, name: String = "testFile"): FakeInputFile {
-    val protoContent =  """
+    val protoContent = """
         syntax = "proto3";
         
         $content
     """.trimIndent()
 
     return FakeInputFile(name, protoContent)
+}
+
+fun createSingleFileProtoFolderFromResource(classLoader: ClassLoader, fileName: String): FakeInputDirectory {
+    val content = classLoader.getResourceAsStream(fileName)!!.reader().readText()
+    return FakeInputDirectory("dir", listOf(FakeInputFile(fileName, content)))
 }
