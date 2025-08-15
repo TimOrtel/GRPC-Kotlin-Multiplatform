@@ -1,28 +1,29 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.project
 
+import com.squareup.kotlinpoet.FileSpec
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.dsl.ProtoDslWriter
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.ProtoFileWriter
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.structure.ProtoPackage
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoProject
-import java.io.File
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.structure.ProtoPackage
 
 abstract class ProtoProjectWriter {
 
     abstract val fileWriter: ProtoFileWriter
     abstract val dslWriter: ProtoDslWriter
 
-    fun writeProject(protoProject: ProtoProject, outputFolder: File) {
-        writePackage(protoProject.rootPackage, outputFolder)
+    fun generateProjectFiles(protoProject: ProtoProject): List<FileSpec> {
+        return generatePackageFiles(protoProject.rootPackage)
     }
 
-    private fun writePackage(protoPackage: ProtoPackage, outputFolder: File) {
-        protoPackage.files.forEach { file ->
-            fileWriter.writeFiles(file, outputFolder)
-            dslWriter.writeDslBuilderFile(file, outputFolder)
+    private fun generatePackageFiles(protoPackage: ProtoPackage): List<FileSpec> {
+        val packageFiles = protoPackage.files.flatMap { file ->
+            fileWriter.generateFiles(file) + dslWriter.generateDslBuilderFile(file)
         }
 
-        protoPackage.packages.forEach { pkg ->
-            writePackage(pkg, outputFolder)
+        val subPackageFiles = protoPackage.packages.flatMap { pkg ->
+            generatePackageFiles(pkg)
         }
+
+        return packageFiles + subPackageFiles
     }
 }

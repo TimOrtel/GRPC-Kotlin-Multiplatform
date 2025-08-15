@@ -7,19 +7,16 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.Prot
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoFieldCardinality
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.capitalize
-import java.io.File
 
 abstract class ProtoDslWriter(private val isActual: Boolean) {
 
-    fun writeDslBuilderFile(protoFile: ProtoFile, outputDir: File) {
+    fun generateDslBuilderFile(protoFile: ProtoFile): FileSpec {
         val builder = FileSpec
             .builder(protoFile.javaPackage, protoFile.javaFileName + "Dsl")
 
         generateDslBuilders(protoFile, builder)
 
-        builder
-            .build()
-            .writeTo(outputDir)
+        return builder.build()
     }
 
     private fun generateDslBuilders(protoFile: ProtoFile, builder: FileSpec.Builder) {
@@ -105,7 +102,10 @@ abstract class ProtoDslWriter(private val isActual: Boolean) {
                             PropertySpec
                                 .builder(
                                     name = field.attributeName,
-                                    type = MUTABLE_MAP.parameterizedBy(field.keyType.resolve(), field.valuesType.resolve())
+                                    type = MUTABLE_MAP.parameterizedBy(
+                                        field.keyType.resolve(),
+                                        field.valuesType.resolve()
+                                    )
                                 )
                                 .addModifiers(modifier)
                                 .apply {

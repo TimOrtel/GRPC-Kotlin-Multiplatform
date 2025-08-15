@@ -3,6 +3,8 @@ package io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.
 import com.squareup.kotlinpoet.*
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.Const
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.kmEnum
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.DefaultAnnotations
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.Options
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoEnum
 
 abstract class ProtoEnumerationWriter(val isActual: Boolean) {
@@ -49,6 +51,10 @@ abstract class ProtoEnumerationWriter(val isActual: Boolean) {
                             .apply {
                                 if (supplyImplementation) {
                                     addSuperclassConstructorParameter("%L", enumField.number)
+                                }
+
+                                if (Options.deprecated.get(enumField)) {
+                                    addAnnotation(DefaultAnnotations.Deprecated)
                                 }
                             }
                             .build()

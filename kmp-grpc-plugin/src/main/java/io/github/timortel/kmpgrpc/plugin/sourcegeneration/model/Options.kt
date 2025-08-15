@@ -27,6 +27,12 @@ object Options {
         default = false
     )
 
+    val deprecated = Option(
+        name = "deprecated",
+        parse = String::toBooleanStrictOrNull,
+        default = false
+    )
+
     /**
      * Options that do not apply to Java/Kotlin
      */
