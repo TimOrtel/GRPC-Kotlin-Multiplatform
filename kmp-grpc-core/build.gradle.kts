@@ -141,8 +141,10 @@ publishing {
         }
     }
 
-    publications.named<MavenPublication>("jvm") {
-        artifact(emptyJavadocJar.get())
+    if(publications.findByName("jvm") != null) {
+        publications.named<MavenPublication>("jvm") {
+            artifact(emptyJavadocJar.get())
+        }
     }
 
     publications.withType<MavenPublication>().all {
