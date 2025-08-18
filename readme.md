@@ -1,6 +1,6 @@
 [![GitHub license](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg?style=flat)](http://www.apache.org/licenses/LICENSE-2.0)
 [![Download](https://img.shields.io/maven-central/v/io.github.timortel/kmp-grpc-core) ](https://central.sonatype.com/artifact/io.github.timortel/kmp-grpc-core)
-![version](https://img.shields.io/badge/version-1.0.0-blue)
+![version](https://img.shields.io/badge/version-1.1.0-blue)
 
 ![badge][badge-android]
 ![badge][badge-jvm]
@@ -54,7 +54,7 @@ This projects implements client-side gRPC for Android, JVM, Native (including iO
 | `java_package`       | ✅ Supported  |
 | `java_outer_classname` | ✅ Supported  |
 | `java_multiple_files` | ✅ Supported  |
-| `deprecated`        | ⏳ Planned    |
+| `deprecated`        | ✅ Supported    |
 | `packed`           | ⏳ Planned    |
 | `optimize_for`       | ❌ Not Supported |
 
