@@ -3,6 +3,7 @@ package io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeSpec
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.DefaultAnnotations
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.enumeration.ProtoEnumerationWriter
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.ProtoMessageWriter
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.service.ProtoServiceWriter
@@ -19,12 +20,14 @@ abstract class ProtoFileWriter(val isActual: Boolean) {
             val messageFiles = file.messages.map { message ->
                 FileSpec
                     .builder(message.className)
+                    .addAnnotation(DefaultAnnotations.SuppressDeprecation)
                     .addType(protoMessageWriter.generateProtoMessageClass(message))
                     .build()
             }
 
             val serviceFiles = file.services.map { service ->
                 FileSpec.builder(service.className)
+                    .addAnnotation(DefaultAnnotations.SuppressDeprecation)
                     .addType(protoServiceWriter.generateServiceStub(service))
                     .build()
             }
@@ -32,6 +35,7 @@ abstract class ProtoFileWriter(val isActual: Boolean) {
             val enumFiles = if (!isActual) {
                 file.enums.map { enum ->
                     FileSpec.builder(enum.className)
+                        .addAnnotation(DefaultAnnotations.SuppressDeprecation)
                         .addType(protoEnumWriter.generateProtoEnum(enum))
                         .build()
                 }
@@ -41,6 +45,7 @@ abstract class ProtoFileWriter(val isActual: Boolean) {
         } else {
             val file = FileSpec
                 .builder(file.className)
+                .addAnnotation(DefaultAnnotations.SuppressDeprecation)
                 .addType(
                     TypeSpec.classBuilder(file.className)
                         .apply {

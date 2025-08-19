@@ -3,6 +3,7 @@ package io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.dsl
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.Const
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.DefaultAnnotations
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoMessage
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoFieldCardinality
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
@@ -13,6 +14,7 @@ abstract class ProtoDslWriter(private val isActual: Boolean) {
     fun generateDslBuilderFile(protoFile: ProtoFile): FileSpec {
         val builder = FileSpec
             .builder(protoFile.javaPackage, protoFile.javaFileName + "Dsl")
+            .addAnnotation(DefaultAnnotations.SuppressDeprecation)
 
         generateDslBuilders(protoFile, builder)
 
