@@ -32,7 +32,7 @@ object Const {
     }
 
     object Message {
-        val reservedAttributeNames = setOf("fullName", "requiredSize", Constructor.UnknownFields.name)
+        val reservedAttributeNames = setOf("fullName", "requiredSize", Companion.WrapperDeserializationFunction.TAG_LOCAL_VARIABLE, Constructor.UnknownFields.name)
 
         val fullNameProperty = Property("fullName", STRING)
 
@@ -71,6 +71,7 @@ object Const {
             object WrapperDeserializationFunction {
                 const val NAME = "deserialize"
                 const val STREAM_PARAM = "stream"
+                const val TAG_LOCAL_VARIABLE = "tag_"
             }
         }
     }
