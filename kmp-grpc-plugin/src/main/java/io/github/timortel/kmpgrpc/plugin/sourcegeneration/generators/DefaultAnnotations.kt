@@ -6,4 +6,8 @@ object DefaultAnnotations {
     val Deprecated = AnnotationSpec.builder(kotlin.Deprecated::class)
         .addMember("%S", "Set deprecated by protobuf option")
         .build()
+
+    val SuppressDeprecation = AnnotationSpec.builder(Suppress::class)
+        .addMember("%S", "DEPRECATION")
+        .build()
 }
