@@ -120,7 +120,7 @@ class Protobuf3ModelBuilderVisitor(
         val start = ctx.intLit(0).parseInt()
         val end = when {
             ctx.intLit(1) != null -> ctx.intLit(1).parseInt()
-            else -> Integer.MAX_VALUE
+            else -> start
         }
 
         return ProtoReservation(ranges = listOf(start..end))
