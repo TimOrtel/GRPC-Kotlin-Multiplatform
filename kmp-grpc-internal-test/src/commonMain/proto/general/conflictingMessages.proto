@@ -11,6 +11,11 @@ message MessageWithMessage {
 message MessageWithReservedFields {
   int32 requiredSize = 1;
   string fullName = 2;
+  string tag_ = 3;
+}
+
+message MessageWithPropertyTag {
+  string tag = 1;
 }
 
 message MessageWithListClash {

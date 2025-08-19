@@ -41,6 +41,8 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
         builder: FunSpec.Builder,
         message: ProtoMessage
     ) {
+        val tagLocalFieldName = Const.Message.Companion.WrapperDeserializationFunction.TAG_LOCAL_VARIABLE
+
         val wrapperParamName =
             Const.Message.Companion.WrapperDeserializationFunction.STREAM_PARAM
 
@@ -113,12 +115,13 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
 
             beginControlFlow("while (true)")
             addStatement(
-                "val tag = %N.readTag()",
+                "val %N = %N.readTag()",
+                tagLocalFieldName,
                 wrapperParamName
             )
-            addStatement("if (tag == 0) break")
+            addStatement("if (%N == 0) break", tagLocalFieldName)
 
-            beginControlFlow("when (tag)")
+            beginControlFlow("when (%N)", tagLocalFieldName)
 
             val getScalarAndRepeatedTagCode = { type: ProtoType, isRepeated: Boolean, fieldNumber: Int ->
                 val isPacked = type.isPackable && isRepeated
@@ -350,7 +353,12 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
             }
 
             // Unknown field
-            addStatement("else -> %N.%N(tag)?.let { unknownFields.add(it) }", wrapperParamName, "readUnknownField")
+            addStatement(
+                "else -> %N.%N(%N)?.let { unknownFields.add(it) }",
+                wrapperParamName,
+                "readUnknownField",
+                tagLocalFieldName
+            )
             // Unknown field
 
             endControlFlow()
