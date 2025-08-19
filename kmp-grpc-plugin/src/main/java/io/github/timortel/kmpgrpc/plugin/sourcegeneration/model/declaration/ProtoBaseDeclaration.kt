@@ -1,7 +1,6 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration
 
 import com.squareup.kotlinpoet.ClassName
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.capitalize
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.Options
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOptionsHolder
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
@@ -32,7 +31,7 @@ interface ProtoBaseDeclaration : ProtoOptionsHolder {
             return if (Options.javaMultipleFiles.get(file)) {
                 ClassName(file.javaPackage, kotlinClassName)
             } else {
-                ClassName(file.javaPackage, listOf(file.fileNameWithoutExtension.capitalize(), kotlinClassName))
+                file.className.nestedClass(kotlinClassName)
             }
         }
 

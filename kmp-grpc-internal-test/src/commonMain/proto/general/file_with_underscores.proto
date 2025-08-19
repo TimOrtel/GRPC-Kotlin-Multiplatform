@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+message MessageInFileWithUnderscores {
+  string a = 1;
+}
+
+message Message_With_Underscores {
+  string a = 1;
+}
