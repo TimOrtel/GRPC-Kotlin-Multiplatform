@@ -6,6 +6,7 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.SourceTarget
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.*
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoMessage
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoFieldCardinality
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoMessageField
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoRegularField
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.joinCodeBlocks
@@ -101,7 +102,7 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
     private fun FunSpec.Builder.declareWhenEntriesForOneOfs(message: ProtoMessage) {
         message.oneOfs.forEach { oneOf ->
             oneOf.fields.forEach { field ->
-                addCode(buildFieldTagCode(field))
+                addCode(buildFieldTagCode(field, field.isPacked))
                 addCode(
                     "·->·%N·=·%T(",
                     oneOf.attributeName,
@@ -115,90 +116,105 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
 
     private fun FunSpec.Builder.declareWhenEntriesForFields(message: ProtoMessage) {
         message.fields.forEach { field ->
-            addCode(buildFieldTagCode(field))
+            // https://protobuf.dev/programming-guides/encoding/#repeated
+            // Must be able to read both packed and non-packed version
+            if (field.cardinality == ProtoFieldCardinality.Repeated && field.type.isPackable) {
+                declareWhenEntryForField(field = field, isPacked = true)
+                declareWhenEntryForField(field = field, isPacked = false)
+            } else {
+                declareWhenEntryForField(field = field, isPacked = false)
+            }
+        }
+    }
 
-            addCode(" -> ")
+    private fun FunSpec.Builder.declareWhenEntryForField(field: ProtoMessageField, isPacked: Boolean) {
+        addCode(buildFieldTagCode(field, isPacked))
 
-            when (field.cardinality) {
-                is ProtoFieldCardinality.Singular -> {
-                    addCode("%N·=·", field.attributeName)
-                    addCode(buildReadScalarFieldDataCode(field))
-                    addCode("\n")
-                }
+        addCode(" -> ")
 
-                ProtoFieldCardinality.Repeated -> {
-                    beginControlFlow("{")
+        when (field.cardinality) {
+            is ProtoFieldCardinality.Singular -> {
+                addCode("%N·=·", field.attributeName)
+                addCode(buildReadScalarFieldDataCode(field))
+                addCode("\n")
+            }
 
-                    when {
-                        field.type == ProtoType.StringType -> {
-                            addCode(
-                                "%N·+=·%N.readString()",
-                                field.attributeName,
-                                wrapperParamName
-                            )
-                        }
+            ProtoFieldCardinality.Repeated -> {
+                beginControlFlow("{")
 
-                        field.type == ProtoType.BytesType -> {
-                            addCode(
-                                "%N·+=·%N.readBytes()",
-                                field.attributeName,
-                                wrapperParamName
-                            )
-                        }
-
-                        field.type.isMessage -> {
-                            addCode(
-                                "%N·+=·%N.%N(%T.Companion)\n",
-                                field.attributeName,
-                                wrapperParamName,
-                                "readMessage",
-                                field.type.resolve()
-                            )
-                        }
-
-                        else -> {
-                            //All packable
-                            addStatement(
-                                "val length·=·%N.readInt32()",
-                                wrapperParamName
-                            )
-                            addStatement(
-                                "val limit·=·%N.pushLimit(length)",
-                                wrapperParamName
-                            )
-                            beginControlFlow(
-                                "while·(!%N.isAtEnd)·{",
-                                wrapperParamName
-                            )
-
-                            //Enums need to first get mapped
-                            if (field.type.isEnum) {
-                                addStatement(
-                                    "%N += %T.%N(%N.readEnum())",
-                                    field.attributeName,
-                                    field.type.resolve(),
-                                    Const.Enum.GET_ENUM_FOR_FUNCTION_NAME,
-                                    wrapperParamName
-                                )
-                            } else {
-                                val functionName = getReadScalarFunctionName(field.type)
-
-                                addStatement(
-                                    "%N·+=·%N.%N()",
-                                    field.attributeName,
-                                    wrapperParamName,
-                                    functionName
-                                )
-                            }
-
-                            endControlFlow()
-
-                            addStatement("%N.popLimit(limit)", wrapperParamName)
-                        }
+                when {
+                    field.type.isMessage -> {
+                        addCode(
+                            "%N·+=·%N.%N(%T.Companion)\n",
+                            field.attributeName,
+                            wrapperParamName,
+                            "readMessage",
+                            field.type.resolve()
+                        )
                     }
 
-                    endControlFlow()
+                    isPacked -> {
+                        addStatement(
+                            "val length·=·%N.readInt32()",
+                            wrapperParamName
+                        )
+                        addStatement(
+                            "val limit·=·%N.pushLimit(length)",
+                            wrapperParamName
+                        )
+                        beginControlFlow(
+                            "while·(!%N.isAtEnd)·{",
+                            wrapperParamName
+                        )
+
+                        //Enums need to first get mapped
+                        if (field.type.isEnum) {
+                            addStatement(
+                                "%N += %T.%N(%N.readEnum())",
+                                field.attributeName,
+                                field.type.resolve(),
+                                Const.Enum.GET_ENUM_FOR_FUNCTION_NAME,
+                                wrapperParamName
+                            )
+                        } else {
+                            val functionName = getReadScalarFunctionName(field.type)
+
+                            addStatement(
+                                "%N·+=·%N.%N()",
+                                field.attributeName,
+                                wrapperParamName,
+                                functionName
+                            )
+                        }
+
+                        endControlFlow()
+
+                        addStatement("%N.popLimit(limit)", wrapperParamName)
+                    }
+
+                    else -> {
+                        // not packed
+                        if (field.type.isEnum) {
+                            addCode(
+                                "%N·+=·%T.%N(%N.%N())\n",
+                                field.attributeName,
+                                field.type.resolve(),
+                                Const.Enum.GET_ENUM_FOR_FUNCTION_NAME,
+                                wrapperParamName,
+                                getReadScalarFunctionName(field.type)
+                            )
+                        } else {
+                            addCode(
+                                "%N·+=·%N.%N()\n",
+                                field.attributeName,
+                                wrapperParamName,
+                                getReadScalarFunctionName(field.type)
+                            )
+                        }
+                    }
                 }
+
+                endControlFlow()
             }
         }
     }
@@ -348,7 +364,7 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
         builder.addCode("\n")
     }
 
-    private fun buildFieldTagCode(field: ProtoRegularField): CodeBlock {
+    private fun buildFieldTagCode(field: ProtoRegularField, isPacked: Boolean): CodeBlock {
         return CodeBlock.of(
             "%M(%L, %M(%T.%N, %L))",
             WireFormatMakeTag,
@@ -356,7 +372,7 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
             WireFormatForType,
             DataType,
             field.type.wireType,
-            field.isPacked
+            isPacked
         )
     }
 
