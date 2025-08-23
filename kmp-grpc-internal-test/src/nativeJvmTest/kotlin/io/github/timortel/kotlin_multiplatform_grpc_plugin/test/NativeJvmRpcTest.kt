@@ -3,6 +3,7 @@ package io.github.timortel.kotlin_multiplatform_grpc_plugin.test
 import io.github.timortel.kmpgrpc.test.CancellationServiceStub
 import io.github.timortel.kmpgrpc.test.cancellationMessage
 import io.github.timortel.kmpgrpc.test.simpleMessage
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.integration.RpcTest
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf

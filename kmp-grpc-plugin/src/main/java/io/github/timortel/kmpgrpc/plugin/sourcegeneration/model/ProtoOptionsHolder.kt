@@ -13,17 +13,23 @@ interface ProtoOptionsHolder : ProtoNode {
     val supportedOptions: List<Options.Option<*>>
 
     override fun validate() {
-        options
-            .filter { option -> option.name !in supportedOptions.map { it.name } && option.name !in Options.ignoredOptions }
-            .forEach { unsupportedOption ->
+        options.forEach { option ->
+            val isSupported = option.name in supportedOptions.map { it.name }
+            val isIgnored = option.name in Options.ignoredOptions
+
+            // An option can be supported, but still not valid, for example because it is only valid on certain field types
+            val isValid = isSupported && isSupportedOptionValid(option)
+
+            if (!isIgnored && !isValid) {
                 file.project.logger.warn(
                     Warnings.unsupportedOptionUsed.withMessage(
-                        "${unsupportedOption.name} at ${
-                            unsupportedOption.ctx.toFilePositionString(file.path)
+                        "${option.name} at ${
+                            option.ctx.toFilePositionString(file.path)
                         }"
                     )
                 )
             }
+        }
 
         options
             .groupBy { it.name }
@@ -39,4 +45,6 @@ interface ProtoOptionsHolder : ProtoNode {
                 throw CompilationException.DuplicateDeclaration(message, file)
             }
     }
+
+    fun isSupportedOptionValid(option: ProtoOption): Boolean = true
 }

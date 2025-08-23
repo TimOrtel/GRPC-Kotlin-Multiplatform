@@ -55,7 +55,7 @@ This projects implements client-side gRPC for Android, JVM, Native (including iO
 | `java_outer_classname` | ✅ Supported  |
 | `java_multiple_files` | ✅ Supported  |
 | `deprecated`        | ✅ Supported    |
-| `packed`           | ⏳ Planned    |
+| `packed`           | ✅ Supported    |
 | `optimize_for`       | ❌ Not Supported |
 
 ### Code generation:

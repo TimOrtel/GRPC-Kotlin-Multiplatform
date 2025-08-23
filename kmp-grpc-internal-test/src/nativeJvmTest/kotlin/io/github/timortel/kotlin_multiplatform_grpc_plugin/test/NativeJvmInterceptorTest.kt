@@ -3,6 +3,7 @@ package io.github.timortel.kotlin_multiplatform_grpc_plugin.test
 import io.github.timortel.kmpgrpc.core.Channel
 import io.github.timortel.kmpgrpc.test.InterceptorMessage
 import io.github.timortel.kmpgrpc.test.InterceptorServiceStub
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.integration.InterceptorTest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
