@@ -38,19 +38,12 @@ kotlin {
             }
         }
 
-        val serializationTest by creating {
-            dependsOn(commonTest.get())
-            dependencies {
-                implementation(kotlin("test"))
-            }
-        }
-
         val nativeJvmTest by creating {
             dependsOn(commonTest.get())
         }
 
         val jsTestTargetCommon by creating {
-            dependsOn(serializationTest)
+            dependsOn(commonTest.get())
 
             dependencies {
                 implementation(libs.ktor.core)
@@ -66,12 +59,10 @@ kotlin {
         }
 
         nativeTest {
-            dependsOn(serializationTest)
             dependsOn(nativeJvmTest)
         }
 
         jvmTest {
-            dependsOn(serializationTest)
             dependsOn(nativeJvmTest)
 
             dependencies {

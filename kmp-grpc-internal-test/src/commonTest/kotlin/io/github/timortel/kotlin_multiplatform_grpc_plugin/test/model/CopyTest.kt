@@ -1,4 +1,4 @@
-package io.github.timortel.kotlin_multiplatform_grpc_plugin.test
+package io.github.timortel.kotlin_multiplatform_grpc_plugin.test.model
 
 import io.github.timortel.kmpgrpc.test.SimpleMessage
 import kotlin.test.Test

@@ -1,4 +1,4 @@
-package io.github.timortel.kotlin_multiplatform_grpc_plugin.test
+package io.github.timortel.kotlin_multiplatform_grpc_plugin.test.integration
 
 import io.github.timortel.kmpgrpc.core.Channel
 import io.github.timortel.kmpgrpc.core.StatusException

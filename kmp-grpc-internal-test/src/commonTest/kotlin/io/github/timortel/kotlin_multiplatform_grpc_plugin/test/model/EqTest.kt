@@ -1,7 +1,11 @@
-package io.github.timortel.kotlin_multiplatform_grpc_plugin.test
+package io.github.timortel.kotlin_multiplatform_grpc_plugin.test.model
 
 import io.github.timortel.kmpgrpc.core.message.UnknownField
-import io.github.timortel.kmpgrpc.test.*
+import io.github.timortel.kmpgrpc.test.Unknownfield
+import io.github.timortel.kmpgrpc.test.emptyMessage
+import io.github.timortel.kmpgrpc.test.simpleMessage
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.createMessageWithAllTypes
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.createScalarMessage
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals

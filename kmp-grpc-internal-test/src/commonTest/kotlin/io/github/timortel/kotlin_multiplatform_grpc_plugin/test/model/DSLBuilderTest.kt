@@ -1,6 +1,22 @@
-package io.github.timortel.kotlin_multiplatform_grpc_plugin.test
+package io.github.timortel.kotlin_multiplatform_grpc_plugin.test.model
 
-import io.github.timortel.kmpgrpc.test.*
+import io.github.timortel.kmpgrpc.test.OneOfMessage
+import io.github.timortel.kmpgrpc.test.SimpleEnum
+import io.github.timortel.kmpgrpc.test.complexRepeatedMessage
+import io.github.timortel.kmpgrpc.test.longMessage
+import io.github.timortel.kmpgrpc.test.messageWithEnum
+import io.github.timortel.kmpgrpc.test.messageWithEnumMap
+import io.github.timortel.kmpgrpc.test.messageWithMap
+import io.github.timortel.kmpgrpc.test.messageWithMessageMap
+import io.github.timortel.kmpgrpc.test.messageWithNestedMessage
+import io.github.timortel.kmpgrpc.test.messageWithRepeatedEnum
+import io.github.timortel.kmpgrpc.test.messageWithRepeatedSubMessage
+import io.github.timortel.kmpgrpc.test.messageWithSubMessage
+import io.github.timortel.kmpgrpc.test.nestedMessage
+import io.github.timortel.kmpgrpc.test.oneOfMessage
+import io.github.timortel.kmpgrpc.test.simpleMessage
+import io.github.timortel.kmpgrpc.test.simpleRepeatedMessage
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.createScalarMessage
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue

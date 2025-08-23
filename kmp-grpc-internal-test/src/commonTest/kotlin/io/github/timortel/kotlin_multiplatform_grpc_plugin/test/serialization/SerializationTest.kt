@@ -1,13 +1,26 @@
-package io.github.timortel.kotlin_multiplatform_grpc_plugin.test
+package io.github.timortel.kotlin_multiplatform_grpc_plugin.test.serialization
 
 import io.github.timortel.kmpgrpc.core.message.UnknownField
-import io.github.timortel.kmpgrpc.test.*
+import io.github.timortel.kmpgrpc.test.ComplexRepeatedMessage
+import io.github.timortel.kmpgrpc.test.LongMessage
+import io.github.timortel.kmpgrpc.test.MessageWithEverything
+import io.github.timortel.kmpgrpc.test.MessageWithSubMessage
+import io.github.timortel.kmpgrpc.test.OneOfMessage
+import io.github.timortel.kmpgrpc.test.RepeatedLongMessage
+import io.github.timortel.kmpgrpc.test.ScalarTypes
+import io.github.timortel.kmpgrpc.test.Unknownfield
+import io.github.timortel.kmpgrpc.test.longMessage
+import io.github.timortel.kmpgrpc.test.messageWithSubMessage
+import io.github.timortel.kmpgrpc.test.oneOfMessage
+import io.github.timortel.kmpgrpc.test.repeatedLongMessage
+import io.github.timortel.kmpgrpc.test.simpleMessage
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.createComplexRepeated
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.createMessageWithAllTypes
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.createScalarMessage
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-abstract class SerializationTest {
-
-    abstract fun serialize(message: LongMessage): LongMessage
+class SerializationTest {
 
     @Test
     fun testSerializeLong() {
@@ -15,12 +28,9 @@ abstract class SerializationTest {
             field1 = 12L
         }
 
-        val serializedMessage = serialize(message)
-
+        val serializedMessage = LongMessage.deserialize(message.serialize())
         assertEquals(message, serializedMessage)
     }
-
-    abstract fun serialize(message: RepeatedLongMessage): RepeatedLongMessage
 
     @Test
     fun testSerializeRepeatedLong() {
@@ -28,32 +38,26 @@ abstract class SerializationTest {
             field1List += listOf(12L, 13L, 25L)
         }
 
-        val serializedMessage = serialize(message)
+        val serializedMessage = RepeatedLongMessage.deserialize(message.serialize())
 
         assertEquals(message, serializedMessage)
     }
 
-    abstract fun serialize(message: ScalarTypes): ScalarTypes
-
     @Test
     fun testScalarSerialization() {
         val msg: ScalarTypes = createScalarMessage()
-        val reconstructed = serialize(msg)
+        val reconstructed = ScalarTypes.deserialize(msg.serialize())
 
         assertEquals(msg, reconstructed)
     }
-
-    abstract fun serialize(message: MessageWithSubMessage): MessageWithSubMessage
 
     @Test
     fun testComplexRepeatedSerialization() {
         val msg = createComplexRepeated()
-        val reconstructed = serialize(msg)
+        val reconstructed = ComplexRepeatedMessage.deserialize(msg.serialize())
 
         assertEquals(msg, reconstructed)
     }
-
-    abstract fun serialize(message: ComplexRepeatedMessage): ComplexRepeatedMessage
 
     @Test
     fun testSerializeMessageWithMessage() {
@@ -61,12 +65,10 @@ abstract class SerializationTest {
             field1 = simpleMessage { field1 = "Foo" }
         }
 
-        val reconstructed = serialize(msg)
+        val reconstructed = MessageWithSubMessage.deserialize(msg.serialize())
 
         assertEquals(msg, reconstructed)
     }
-
-    abstract fun serialize(message: OneOfMessage): OneOfMessage
 
     @Test
     fun testSerializeOneOfScalarNumeric() {
@@ -74,7 +76,7 @@ abstract class SerializationTest {
             oneOf1 = OneOfMessage.OneOf1.Field1(23)
         }
 
-        assertEquals(msg, serialize(msg))
+        assertEquals(msg, OneOfMessage.deserialize(msg.serialize()))
     }
 
     @Test
@@ -83,21 +85,17 @@ abstract class SerializationTest {
             oneOf1 = OneOfMessage.OneOf1.Field3(longMessage { field1 = 15323L })
         }
 
-        assertEquals(msg, serialize(msg))
+        assertEquals(msg, OneOfMessage.deserialize(msg.serialize()))
     }
-
-    abstract fun serialize(message: MessageWithEverything): MessageWithEverything
 
     @Test
     fun testSerialization() {
         val msg: MessageWithEverything = createMessageWithAllTypes()
 
-        val reconstructed = serialize(msg)
+        val reconstructed = MessageWithEverything.deserialize(msg.serialize())
 
         assertEquals(msg, reconstructed)
     }
-
-    abstract fun serialize(message: Unknownfield.MessageWithUnknownField): Unknownfield.MessageWithUnknownField
 
     @Test
     fun testUnknownFieldsSerialization() {
@@ -111,7 +109,7 @@ abstract class SerializationTest {
 
         val msg = Unknownfield.MessageWithUnknownField(unknownFields = fields)
 
-        val reconstructed = serialize(msg)
+        val reconstructed = Unknownfield.MessageWithUnknownField.deserialize(msg.serialize())
 
         assertEquals(msg, reconstructed)
     }

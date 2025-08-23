@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+message PackedIntegersMessage {
+  repeated int32 field1 = 1 [packed = true];
+}
+
+message NonPackedIntegersMessage {
+  repeated int32 field1 = 1 [packed = false];
+}
