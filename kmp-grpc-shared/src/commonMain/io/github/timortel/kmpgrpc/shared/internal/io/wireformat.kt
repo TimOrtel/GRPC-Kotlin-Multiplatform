@@ -11,8 +11,9 @@
  * - Translated to Kotlin
  * - Took only the necessary functions and functionality
  */
+package io.github.timortel.kmpgrpc.shared.internal.io
 
-package io.github.timortel.kmpgrpc.shared
+import io.github.timortel.kmpgrpc.shared.internal.InternalKmpGrpcApi
 
 /**
  * From: https://github.com/protocolbuffers/protobuf/blob/fcd3b9a85ef36e46643dc30176cea1a7ad62e02b/objectivec/GPBWireFormat.m
@@ -21,18 +22,18 @@ package io.github.timortel.kmpgrpc.shared
 private const val TYPE_BITS = 3
 private const val TYPE_MASK = 7
 
-fun wireFormatMakeTag(fieldNumber: Int, dataType: DataType, isPacked: Boolean): Int = wireFormatMakeTag(
+internal fun wireFormatMakeTag(fieldNumber: Int, dataType: DataType, isPacked: Boolean): Int = wireFormatMakeTag(
     fieldNumber = fieldNumber,
     wireType = wireFormatForType(dataType, isPacked)
 )
 
-fun wireFormatMakeTag(fieldNumber: Int, wireType: WireFormat): Int = (fieldNumber shl TYPE_BITS) or wireType.value
+internal fun wireFormatMakeTag(fieldNumber: Int, wireType: WireFormat): Int = (fieldNumber shl TYPE_BITS) or wireType.value
 
-fun wireFormatGetTagWireType(tag: Int): Int = tag and TYPE_MASK
+internal fun wireFormatGetTagWireType(tag: Int): Int = tag and TYPE_MASK
 
-fun wireFormatGetTagFieldNumber(tag: Int): Int = tag ushr TYPE_BITS
+internal fun wireFormatGetTagFieldNumber(tag: Int): Int = tag ushr TYPE_BITS
 
-fun wireFormatForType(dataType: DataType, isPacked: Boolean): WireFormat {
+internal fun wireFormatForType(dataType: DataType, isPacked: Boolean): WireFormat {
     if (isPacked) return WireFormat.LENGTH_DELIMITED
 
     return when (dataType) {
@@ -44,7 +45,7 @@ fun wireFormatForType(dataType: DataType, isPacked: Boolean): WireFormat {
     }
 }
 
-fun getWireFormatByValue(value: Int): WireFormat? {
+internal fun getWireFormatByValue(value: Int): WireFormat? {
     return when (value) {
         0 -> WireFormat.VARINT
         1 -> WireFormat.FIXED64
@@ -56,6 +57,7 @@ fun getWireFormatByValue(value: Int): WireFormat? {
     }
 }
 
+@InternalKmpGrpcApi
 enum class WireFormat(val value: Int) {
     VARINT(0),
     FIXED64(1),

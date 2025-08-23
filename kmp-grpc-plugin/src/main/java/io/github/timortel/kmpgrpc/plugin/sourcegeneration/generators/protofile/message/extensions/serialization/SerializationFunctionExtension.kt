@@ -12,6 +12,7 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.mess
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoMessageField
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoRegularField
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
+import io.github.timortel.kmpgrpc.shared.internal.io.wireFormatMakeTag
 
 /**
  * Writes the serialize function in the actual source code.
@@ -80,16 +81,12 @@ class SerializationFunctionExtension : BaseSerializationExtension() {
                             // From GPBDescriptor.m: GPBWireFormatForType(description->dataType,
                             //                                  ((description->flags & GPBFieldPacked) != 0))
                             addStatement(
-                                "%N.%N(%L, %N, %M(%L, %M(%T.%N, true)).toUInt())",
+                                "%N.%N(%L, %N, %Lu)",
                                 Const.Message.SerializeFunction.STREAM_PARAM,
                                 writeArrayFunction,
                                 field.number,
                                 field.attributeName,
-                                WireFormatMakeTag,
-                                field.number,
-                                WireFormatForType,
-                                DataType,
-                                field.type.wireType
+                                wireFormatMakeTag(field.number, field.type.wireType, true)
                             )
                         } else {
                             val code = if (field.type.isPackable) {

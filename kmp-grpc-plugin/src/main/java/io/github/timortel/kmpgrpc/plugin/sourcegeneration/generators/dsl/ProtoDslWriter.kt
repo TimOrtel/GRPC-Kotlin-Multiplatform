@@ -15,6 +15,7 @@ abstract class ProtoDslWriter(private val isActual: Boolean) {
         val builder = FileSpec
             .builder(protoFile.javaPackage, protoFile.javaFileName + "Dsl")
             .addAnnotation(DefaultAnnotations.SuppressDeprecation)
+            .addAnnotation(DefaultAnnotations.OptIntoKmpGrpcInternalApi)
 
         generateDslBuilders(protoFile, builder)
 

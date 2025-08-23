@@ -5,7 +5,6 @@ import io.grpc.CallOptions
 import kotlin.time.Duration
 import kotlin.time.toJavaDuration
 
-// Additional layer of abstraction for the second generic argument.
 /**
  * The Android and Jvm stub type.
  */

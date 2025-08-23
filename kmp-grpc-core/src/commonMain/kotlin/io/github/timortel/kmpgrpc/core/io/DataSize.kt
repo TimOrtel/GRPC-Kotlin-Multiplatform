@@ -19,10 +19,12 @@ package io.github.timortel.kmpgrpc.core.io
 import io.github.timortel.kmpgrpc.core.io.internal.DataEncoding
 import io.github.timortel.kmpgrpc.core.message.Message
 import io.github.timortel.kmpgrpc.core.message.UnknownField
-import io.github.timortel.kmpgrpc.shared.WireFormat
-import io.github.timortel.kmpgrpc.shared.wireFormatMakeTag
+import io.github.timortel.kmpgrpc.shared.internal.InternalKmpGrpcApi
+import io.github.timortel.kmpgrpc.shared.internal.io.WireFormat
+import io.github.timortel.kmpgrpc.shared.internal.io.wireFormatMakeTag
 import okio.utf8Size
 
+@InternalKmpGrpcApi
 object DataSize {
 
     private const val FIXED32_SIZE: Int = 4

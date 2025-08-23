@@ -3,7 +3,8 @@ package io.github.timortel.kmpgrpc.core.io
 import io.github.timortel.kmpgrpc.core.message.Message
 import io.github.timortel.kmpgrpc.core.message.Enum
 import io.github.timortel.kmpgrpc.core.message.UnknownField
-import io.github.timortel.kmpgrpc.shared.WireFormat
+import io.github.timortel.kmpgrpc.shared.internal.InternalKmpGrpcApi
+import io.github.timortel.kmpgrpc.shared.internal.io.WireFormat
 
 /**
  * Interface that encodes messages to send them over the network connection. Counterpart to [CodedInputStream].
@@ -11,6 +12,7 @@ import io.github.timortel.kmpgrpc.shared.WireFormat
  *
  * This class is not stable for inheritance.
  */
+@InternalKmpGrpcApi
 interface CodedOutputStream {
 
     fun writeBool(fieldNumber: Int, value: Boolean)

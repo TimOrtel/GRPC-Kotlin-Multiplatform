@@ -2,6 +2,7 @@ package io.github.timortel.kmpgrpc.core.rpc
 
 import io.github.timortel.kmpgrpc.core.*
 import io.github.timortel.kmpgrpc.core.metadata.Metadata
+import io.github.timortel.kmpgrpc.shared.internal.InternalKmpGrpcApi
 import io.grpc.CallOptions
 import io.grpc.MethodDescriptor
 import io.grpc.StatusException
@@ -10,6 +11,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlin.jvm.Throws
 
+@InternalKmpGrpcApi
 @Throws(StatusException::class)
 suspend fun <REQ, RESP> unaryRpc(
     channel: Channel,
@@ -31,6 +33,7 @@ suspend fun <REQ, RESP> unaryRpc(
     }
 }
 
+@InternalKmpGrpcApi
 fun <REQ, RESP> serverStreamingRpc(
     channel: Channel,
     method: MethodDescriptor<REQ, RESP>,
@@ -51,6 +54,7 @@ fun <REQ, RESP> serverStreamingRpc(
         }
 }
 
+@InternalKmpGrpcApi
 @Throws(StatusException::class)
 suspend fun <REQ, RESP> clientStreamingRpc(
     channel: Channel,
@@ -72,6 +76,7 @@ suspend fun <REQ, RESP> clientStreamingRpc(
     }
 }
 
+@InternalKmpGrpcApi
 @Throws(StatusException::class)
 fun <REQ, RESP> bidiStreamingRpc(
     channel: Channel,

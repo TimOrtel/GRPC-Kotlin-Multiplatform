@@ -35,10 +35,17 @@ gradlePlugin {
 }
 
 kotlin {
-    sourceSets.all {
-        languageSettings {
-            optIn("kotlin.RequiresOptIn")
-            optIn("kotlin.ExperimentalStdlibApi")
+    sourceSets {
+        all {
+            languageSettings {
+                optIn("kotlin.RequiresOptIn")
+                optIn("kotlin.ExperimentalStdlibApi")
+                optIn("io.github.timortel.kmpgrpc.shared.internal.InternalKmpGrpcApi")
+            }
+        }
+
+        main {
+            kotlin.srcDir(layout.projectDirectory.dir("../kmp-grpc-shared/src/commonMain"))
         }
     }
 
