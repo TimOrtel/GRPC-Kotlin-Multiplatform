@@ -1,9 +1,45 @@
 syntax = "proto3";
 
+package io.github.timortel.kmpgrpc.test;
+
+option java_multiple_files = true;
+
 message PackedIntegersMessage {
   repeated int32 field1 = 1 [packed = true];
 }
 
 message NonPackedIntegersMessage {
   repeated int32 field1 = 1 [packed = false];
+}
+
+message PackedTypesMessage {
+  repeated int32 field1 = 1 [packed = true];
+  repeated int64 field2 = 2 [packed = true];
+  repeated double field3 = 3 [packed = true];
+  repeated float field4 = 4 [packed = true];
+  repeated uint32 field5 = 5 [packed = true];
+  repeated uint64 field6 = 6 [packed = true];
+  repeated sint32 field7 = 7 [packed = true];
+  repeated sint64 field8 = 8 [packed = true];
+  repeated fixed32 field9 = 9 [packed = true];
+  repeated fixed64 field10 = 10 [packed = true];
+  repeated sfixed32 field11 = 11 [packed = true];
+  repeated sfixed64 field12 = 12 [packed = true];
+  repeated bool field13 = 13 [packed = true];
+}
+
+message NonPackedTypesMessage {
+  repeated int32 field1 = 1 [packed = false];
+  repeated int64 field2 = 2 [packed = false];
+  repeated double field3 = 3 [packed = false];
+  repeated float field4 = 4 [packed = false];
+  repeated uint32 field5 = 5 [packed = false];
+  repeated uint64 field6 = 6 [packed = false];
+  repeated sint32 field7 = 7 [packed = false];
+  repeated sint64 field8 = 8 [packed = false];
+  repeated fixed32 field9 = 9 [packed = false];
+  repeated fixed64 field10 = 10 [packed = false];
+  repeated sfixed32 field11 = 11 [packed = false];
+  repeated sfixed64 field12 = 12 [packed = false];
+  repeated bool field13 = 13 [packed = false];
 }

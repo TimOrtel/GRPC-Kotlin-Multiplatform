@@ -20,7 +20,10 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.createScalarMess
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class SerializationTest {
+/**
+ * Tests that messages when serialized and deserializes yield an equal message.
+ */
+class SelfMessageSerializationTest {
 
     @Test
     fun testSerializeLong() {
