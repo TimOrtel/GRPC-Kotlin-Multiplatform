@@ -12,9 +12,7 @@
  * - Took only the necessary functions and functionality
  */
 
-package io.github.timortel.kmpgrpc.core.io
-
-import io.github.timortel.kmpgrpc.core.message.DataType
+package io.github.timortel.kmpgrpc.shared
 
 /**
  * From: https://github.com/protocolbuffers/protobuf/blob/fcd3b9a85ef36e46643dc30176cea1a7ad62e02b/objectivec/GPBWireFormat.m

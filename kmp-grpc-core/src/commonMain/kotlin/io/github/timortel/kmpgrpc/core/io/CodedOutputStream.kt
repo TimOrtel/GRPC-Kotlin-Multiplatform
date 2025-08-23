@@ -3,6 +3,7 @@ package io.github.timortel.kmpgrpc.core.io
 import io.github.timortel.kmpgrpc.core.message.Message
 import io.github.timortel.kmpgrpc.core.message.Enum
 import io.github.timortel.kmpgrpc.core.message.UnknownField
+import io.github.timortel.kmpgrpc.shared.WireFormat
 
 /**
  * Interface that encodes messages to send them over the network connection. Counterpart to [CodedInputStream].

@@ -1,4 +1,4 @@
-package io.github.timortel.kmpgrpc.core.message
+package io.github.timortel.kmpgrpc.shared
 
 /**
  * The supported data types that can be used as message fields.

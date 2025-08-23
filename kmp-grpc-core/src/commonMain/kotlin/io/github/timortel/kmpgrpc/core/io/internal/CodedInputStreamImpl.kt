@@ -18,6 +18,11 @@ Changes:
 package io.github.timortel.kmpgrpc.core.io.internal
 
 import io.github.timortel.kmpgrpc.core.io.*
+import io.github.timortel.kmpgrpc.shared.WireFormat
+import io.github.timortel.kmpgrpc.shared.getWireFormatByValue
+import io.github.timortel.kmpgrpc.shared.wireFormatGetTagFieldNumber
+import io.github.timortel.kmpgrpc.shared.wireFormatGetTagWireType
+import io.github.timortel.kmpgrpc.shared.wireFormatMakeTag
 import kotlinx.io.*
 
 internal class CodedInputStreamImpl(val source: Source) : CodedInputStream() {

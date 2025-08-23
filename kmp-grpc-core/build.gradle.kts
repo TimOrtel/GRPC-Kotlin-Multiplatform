@@ -63,6 +63,8 @@ kotlin {
 
     sourceSets {
         commonMain {
+            kotlin.srcDir(layout.projectDirectory.dir("../kmp-grpc-shared/src/commonMain"))
+            
             dependencies {
                 implementation(kotlin("stdlib-common"))
                 implementation(libs.kotlinx.coroutines.core)

@@ -19,6 +19,8 @@ package io.github.timortel.kmpgrpc.core.io
 import io.github.timortel.kmpgrpc.core.io.internal.DataEncoding
 import io.github.timortel.kmpgrpc.core.message.Message
 import io.github.timortel.kmpgrpc.core.message.UnknownField
+import io.github.timortel.kmpgrpc.shared.WireFormat
+import io.github.timortel.kmpgrpc.shared.wireFormatMakeTag
 import okio.utf8Size
 
 object DataSize {

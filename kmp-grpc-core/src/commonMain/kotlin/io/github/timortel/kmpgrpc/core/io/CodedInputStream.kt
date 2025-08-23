@@ -1,9 +1,14 @@
 package io.github.timortel.kmpgrpc.core.io
 
-import io.github.timortel.kmpgrpc.core.message.DataType
+import io.github.timortel.kmpgrpc.shared.DataType
 import io.github.timortel.kmpgrpc.core.message.Message
 import io.github.timortel.kmpgrpc.core.message.MessageDeserializer
 import io.github.timortel.kmpgrpc.core.message.UnknownField
+import io.github.timortel.kmpgrpc.shared.WireFormat
+import io.github.timortel.kmpgrpc.shared.wireFormatForType
+import io.github.timortel.kmpgrpc.shared.wireFormatGetTagFieldNumber
+import io.github.timortel.kmpgrpc.shared.wireFormatGetTagWireType
+import io.github.timortel.kmpgrpc.shared.wireFormatMakeTag
 
 /**
  * Base class that decodes messages sent over the network connection. Counterpart to [CodedOutputStream].
