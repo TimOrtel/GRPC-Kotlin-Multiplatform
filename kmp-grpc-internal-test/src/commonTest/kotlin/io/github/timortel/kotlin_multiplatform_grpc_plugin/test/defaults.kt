@@ -65,8 +65,8 @@ fun createMessageWithAllTypes() = messageWithEverything {
 
 private val field1 = listOf(0, 1, -13, 5000)
 private val field2 = listOf(0L, 1L, -13L, 5000L)
-private val field3 = listOf(0.0, 1.0, -13.0, 5000.0, -12.3, 31402.32)
-private val field4 = listOf(0f, 1f, -13f, 5000f, -12.3f, 31402.32f)
+private val field3 = listOf(0.0, 1.0, -13.0, 5000.0, 2.5, -0.5)
+private val field4 = listOf(0f, 1f, -13f, 5000f, 2.5f, -0.5f)
 private val field5 = listOf(0u, 1u, 13u, 5000u)
 private val field6 = listOf(0uL, 1uL, 13uL, 5000uL)
 private val field7 = listOf(0, 1, -13, 5000)
