@@ -10,6 +10,7 @@ import io.github.timortel.kmpgrpc.core.metadata.Entry
 import io.github.timortel.kmpgrpc.core.metadata.Key
 import io.github.timortel.kmpgrpc.core.metadata.Metadata
 import io.github.timortel.kmpgrpc.native.*
+import io.github.timortel.kmpgrpc.shared.internal.InternalKmpGrpcApi
 import kotlinx.cinterop.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.awaitClose
@@ -33,6 +34,7 @@ import kotlinx.coroutines.channels.Channel as CoroutineChannel
  * @throws StatusException If the gRPC call encounters an error or the server returns a failure status.
  * @throws CancellationException If the coroutine's job is canceled.
  */
+@InternalKmpGrpcApi
 @Throws(StatusException::class, CancellationException::class)
 suspend fun <REQ : Message, RES : Message> unaryCallImplementation(
     channel: Channel,
@@ -66,6 +68,7 @@ suspend fun <REQ : Message, RES : Message> unaryCallImplementation(
  * @param responseDeserializer The [MessageDeserializer] responsible for deserializing the response messages.
  * @return A [Flow] of response messages from the server, where each emitted item represents a message from the stream.
  */
+@InternalKmpGrpcApi
 @OptIn(ExperimentalCoroutinesApi::class)
 fun <REQ : Message, RES : Message> serverSideStreamingCallImplementation(
     channel: Channel,
@@ -102,6 +105,7 @@ fun <REQ : Message, RES : Message> serverSideStreamingCallImplementation(
  * @throws StatusException If the call fails due to a gRPC status-related error.
  * @throws CancellationException If the coroutine or the call is canceled.
  */
+@InternalKmpGrpcApi
 suspend fun <REQ : Message, RES : Message> clientStreamingCallImplementation(
     channel: Channel,
     callOptions: CallOptions,
@@ -132,6 +136,7 @@ suspend fun <REQ : Message, RES : Message> clientStreamingCallImplementation(
  * @param responseDeserializer A deserializer for the response messages to handle deserialization details.
  * @return A flow of response messages received from the server.
  */
+@InternalKmpGrpcApi
 fun <REQ : Message, RES : Message> bidiStreamingCallImplementation(
     channel: Channel,
     callOptions: CallOptions,

@@ -11,6 +11,9 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.mess
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.joinCodeBlocks
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.joinToCodeBlock
+import io.github.timortel.kmpgrpc.shared.internal.io.DataType
+import io.github.timortel.kmpgrpc.shared.internal.io.wireFormatForType
+import io.github.timortel.kmpgrpc.shared.internal.io.wireFormatMakeTag
 
 /**
  * Adds the deserialization function using CodedOutputStream to the companion object.
@@ -221,14 +224,7 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
 
     private fun FunSpec.Builder.declareWhenEntriesForMapFields(message: ProtoMessage) {
         message.mapFields.forEach { mapField ->
-            addCode(
-                "%M(%L, %M(%T.%N, false)).toInt()",
-                WireFormatMakeTag,
-                mapField.number,
-                WireFormatForType,
-                DataType,
-                "MESSAGE"
-            )
+            addCode("%L", wireFormatMakeTag(mapField.number, DataType.MESSAGE, false))
 
             addCode(" -> ")
 
@@ -237,10 +233,10 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
                 Const.Message.Companion.WrapperDeserializationFunction.STREAM_PARAM,
                 "readMapEntry",
                 mapField.attributeName,
-                DataType,
-                mapField.keyType.wireType,
-                DataType,
-                mapField.valuesType.wireType,
+                DataType::class.asTypeName(),
+                mapField.keyType.wireType.name,
+                DataType::class.asTypeName(),
+                mapField.valuesType.wireType.name,
             )
 
             val getDefaultEntry = { type: ProtoType ->
@@ -365,15 +361,7 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
     }
 
     private fun buildFieldTagCode(field: ProtoRegularField, isPacked: Boolean): CodeBlock {
-        return CodeBlock.of(
-            "%M(%L, %M(%T.%N, %L))",
-            WireFormatMakeTag,
-            field.number,
-            WireFormatForType,
-            DataType,
-            field.type.wireType,
-            isPacked
-        )
+        return CodeBlock.of("%L", wireFormatMakeTag(field.number, wireFormatForType(field.type.wireType, isPacked)))
     }
 
     /**

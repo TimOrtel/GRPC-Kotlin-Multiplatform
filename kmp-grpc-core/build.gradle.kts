@@ -20,11 +20,6 @@ repositories {
     google()
 }
 
-val buildAsReleaseProperty = "io.github.timortel.kmp-grpc.internal.native.release"
-val buildAsRelease = if (project.hasProperty(buildAsReleaseProperty)) {
-    project.property(buildAsReleaseProperty).toString() == "true"
-} else false
-
 kotlin {
     jvmToolchain(17)
 
@@ -62,7 +57,15 @@ kotlin {
     }
 
     sourceSets {
+        all {
+            languageSettings {
+                optIn("io.github.timortel.kmpgrpc.shared.internal.InternalKmpGrpcApi")
+            }
+        }
+
         commonMain {
+            kotlin.srcDir(layout.projectDirectory.dir("../kmp-grpc-shared/src/commonMain"))
+
             dependencies {
                 implementation(kotlin("stdlib-common"))
                 implementation(libs.kotlinx.coroutines.core)
@@ -141,7 +144,7 @@ publishing {
         }
     }
 
-    if(publications.findByName("jvm") != null) {
+    if (publications.findByName("jvm") != null) {
         publications.named<MavenPublication>("jvm") {
             artifact(emptyJavadocJar.get())
         }

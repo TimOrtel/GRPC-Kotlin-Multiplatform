@@ -21,6 +21,7 @@ abstract class ProtoFileWriter(val isActual: Boolean) {
                 FileSpec
                     .builder(message.className)
                     .addAnnotation(DefaultAnnotations.SuppressDeprecation)
+                    .addAnnotation(DefaultAnnotations.OptIntoKmpGrpcInternalApi)
                     .addType(protoMessageWriter.generateProtoMessageClass(message))
                     .build()
             }
@@ -28,6 +29,7 @@ abstract class ProtoFileWriter(val isActual: Boolean) {
             val serviceFiles = file.services.map { service ->
                 FileSpec.builder(service.className)
                     .addAnnotation(DefaultAnnotations.SuppressDeprecation)
+                    .addAnnotation(DefaultAnnotations.OptIntoKmpGrpcInternalApi)
                     .addType(protoServiceWriter.generateServiceStub(service))
                     .build()
             }
@@ -36,6 +38,7 @@ abstract class ProtoFileWriter(val isActual: Boolean) {
                 file.enums.map { enum ->
                     FileSpec.builder(enum.className)
                         .addAnnotation(DefaultAnnotations.SuppressDeprecation)
+                        .addAnnotation(DefaultAnnotations.OptIntoKmpGrpcInternalApi)
                         .addType(protoEnumWriter.generateProtoEnum(enum))
                         .build()
                 }
@@ -46,6 +49,7 @@ abstract class ProtoFileWriter(val isActual: Boolean) {
             val file = FileSpec
                 .builder(file.className)
                 .addAnnotation(DefaultAnnotations.SuppressDeprecation)
+                .addAnnotation(DefaultAnnotations.OptIntoKmpGrpcInternalApi)
                 .addType(
                     TypeSpec.classBuilder(file.className)
                         .apply {

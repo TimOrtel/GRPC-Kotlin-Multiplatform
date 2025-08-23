@@ -1,8 +1,11 @@
-package io.github.timortel.kmpgrpc.core.message
+package io.github.timortel.kmpgrpc.shared.internal.io
+
+import io.github.timortel.kmpgrpc.shared.internal.InternalKmpGrpcApi
 
 /**
  * The supported data types that can be used as message fields.
  */
+@InternalKmpGrpcApi
 enum class DataType {
     DOUBLE,
     FLOAT,

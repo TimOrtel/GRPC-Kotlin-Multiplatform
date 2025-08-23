@@ -1,9 +1,15 @@
 package io.github.timortel.kmpgrpc.core.io
 
-import io.github.timortel.kmpgrpc.core.message.DataType
+import io.github.timortel.kmpgrpc.shared.internal.io.DataType
 import io.github.timortel.kmpgrpc.core.message.Message
 import io.github.timortel.kmpgrpc.core.message.MessageDeserializer
 import io.github.timortel.kmpgrpc.core.message.UnknownField
+import io.github.timortel.kmpgrpc.shared.internal.InternalKmpGrpcApi
+import io.github.timortel.kmpgrpc.shared.internal.io.WireFormat
+import io.github.timortel.kmpgrpc.shared.internal.io.wireFormatForType
+import io.github.timortel.kmpgrpc.shared.internal.io.wireFormatGetTagFieldNumber
+import io.github.timortel.kmpgrpc.shared.internal.io.wireFormatGetTagWireType
+import io.github.timortel.kmpgrpc.shared.internal.io.wireFormatMakeTag
 
 /**
  * Base class that decodes messages sent over the network connection. Counterpart to [CodedOutputStream].
@@ -11,6 +17,7 @@ import io.github.timortel.kmpgrpc.core.message.UnknownField
  *
  * This class is not stable for inheritance.
  */
+@InternalKmpGrpcApi
 abstract class CodedInputStream {
 
     companion object {

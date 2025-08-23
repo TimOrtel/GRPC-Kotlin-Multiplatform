@@ -18,11 +18,11 @@ package io.github.timortel.kmpgrpc.core.io.internal
 
 import io.github.timortel.kmpgrpc.core.io.CodedOutputStream
 import io.github.timortel.kmpgrpc.core.io.DataSize
-import io.github.timortel.kmpgrpc.core.io.WireFormat
+import io.github.timortel.kmpgrpc.shared.internal.io.WireFormat
 import io.github.timortel.kmpgrpc.core.io.kMapKeyFieldNumber
 import io.github.timortel.kmpgrpc.core.io.kMapValueFieldNumber
-import io.github.timortel.kmpgrpc.core.io.wireFormatMakeTag
-import io.github.timortel.kmpgrpc.core.message.DataType
+import io.github.timortel.kmpgrpc.shared.internal.io.wireFormatMakeTag
+import io.github.timortel.kmpgrpc.shared.internal.io.DataType
 import io.github.timortel.kmpgrpc.core.message.Enum
 import io.github.timortel.kmpgrpc.core.message.Message
 import kotlinx.io.Sink
