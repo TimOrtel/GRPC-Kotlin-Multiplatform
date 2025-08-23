@@ -68,6 +68,12 @@ data class ProtoMessageField(
     override val supportedOptions: List<Options.Option<*>>
         get() = super.supportedOptions + listOf(Options.packed)
 
+    /**
+     * True iff [cardinality] is [ProtoFieldCardinality.Repeated], the [type] is packable and the proto option packed is not set to false
+     */
+    override val isPacked: Boolean
+        get() = cardinality == ProtoFieldCardinality.Repeated && type.isPackable && Options.packed.get(this)
+
     init {
         type.parent = ProtoType.Parent.MessageField(this)
     }

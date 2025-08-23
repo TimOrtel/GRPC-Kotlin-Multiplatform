@@ -30,7 +30,7 @@ class SerializationFunctionExtension : BaseSerializationExtension() {
                 .apply {
                     if (sourceTarget is SourceTarget.Actual) {
                         addModifiers(KModifier.ACTUAL)
-                        buildSerializeFunction(this, message, sourceTarget)
+                        buildSerializeFunction(this, message)
                     }
                 }
                 .build()
@@ -42,8 +42,7 @@ class SerializationFunctionExtension : BaseSerializationExtension() {
      */
     private fun buildSerializeFunction(
         builder: FunSpec.Builder,
-        message: ProtoMessage,
-        sourceTarget: SourceTarget.Actual
+        message: ProtoMessage
     ) {
         builder.apply {
             message.fields.forEach { field ->
@@ -76,41 +75,43 @@ class SerializationFunctionExtension : BaseSerializationExtension() {
                     field.cardinality == ProtoFieldCardinality.Repeated -> {
                         val writeArrayFunction = getWriteArrayFunctionName(field.type)
 
-                        when {
-                            field.type.isPackable -> {
-                                //Write packed.
-                                // From GPBDescriptor.m: GPBWireFormatForType(description->dataType,
-                                //                                  ((description->flags & GPBFieldPacked) != 0))
-                                addStatement(
-                                    "%N.%N(%L, %N, %M(%L, %M(%T.%N, true)).toUInt())",
-                                    Const.Message.SerializeFunction.STREAM_PARAM,
-                                    writeArrayFunction,
-                                    field.number,
-                                    field.attributeName,
-                                    WireFormatMakeTag,
-                                    field.number,
-                                    WireFormatForType,
-                                    DataType,
-                                    field.type.wireType
-                                )
+                        if (field.isPacked) {
+                            //Write packed.
+                            // From GPBDescriptor.m: GPBWireFormatForType(description->dataType,
+                            //                                  ((description->flags & GPBFieldPacked) != 0))
+                            addStatement(
+                                "%N.%N(%L, %N, %M(%L, %M(%T.%N, true)).toUInt())",
+                                Const.Message.SerializeFunction.STREAM_PARAM,
+                                writeArrayFunction,
+                                field.number,
+                                field.attributeName,
+                                WireFormatMakeTag,
+                                field.number,
+                                WireFormatForType,
+                                DataType,
+                                field.type.wireType
+                            )
+                        } else {
+                            val code = if (field.type.isPackable) {
+                                "%N.%N(%L, %N, 0u)"
+                            } else {
+                                "%N.%N(%L, %N)"
                             }
 
-                            else -> {
-                                addStatement(
-                                    "%N.%N(%L, %N)",
-                                    Const.Message.SerializeFunction.STREAM_PARAM,
-                                    writeArrayFunction,
-                                    field.number,
-                                    field.attributeName
-                                )
-                            }
+                            addStatement(
+                                code,
+                                Const.Message.SerializeFunction.STREAM_PARAM,
+                                writeArrayFunction,
+                                field.number,
+                                field.attributeName
+                            )
                         }
                     }
                 }
             }
 
             message.mapFields.forEach { mapField ->
-                buildMapAttributeSerializeCode(builder, mapField, sourceTarget)
+                buildMapAttributeSerializeCode(builder, mapField)
             }
 
             message.oneOfs.forEach { oneOf ->
@@ -133,11 +134,8 @@ class SerializationFunctionExtension : BaseSerializationExtension() {
 
     fun buildMapAttributeSerializeCode(
         builder: FunSpec.Builder,
-        field: ProtoMapField,
-        sourceTarget: SourceTarget.Actual
+        field: ProtoMapField
     ) {
-        val isJs = sourceTarget is SourceTarget.Js
-
         builder.apply {
             addCode(
                 "%N.%N(%L, %N, ",

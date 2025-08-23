@@ -62,3 +62,49 @@ fun createMessageWithAllTypes() = messageWithEverything {
     field35List += listOf(-154L, 0L, 4514124121L)
     field36List += listOf(byteArrayOf(0, -127, 127), byteArrayOf(-123, 1, 2), byteArrayOf(3, 3, -6))
 }
+
+private val field1 = listOf(0, 1, -13, 5000)
+private val field2 = listOf(0L, 1L, -13L, 5000L)
+private val field3 = listOf(0.0, 1.0, -13.0, 5000.0, -12.3, 31402.32)
+private val field4 = listOf(0f, 1f, -13f, 5000f, -12.3f, 31402.32f)
+private val field5 = listOf(0u, 1u, 13u, 5000u)
+private val field6 = listOf(0uL, 1uL, 13uL, 5000uL)
+private val field7 = listOf(0, 1, -13, 5000)
+private val field8 = listOf(0L, 1L, -13L, 5000L)
+private val field9 = listOf(0u, 1u, 13u, 5000u)
+private val field10 = listOf(0uL, 1uL, 13uL, 5000uL)
+private val field11 = listOf(0, 1, -13, 5000)
+private val field12 = listOf(0L, 1L, -13L, 5000L)
+private val field13 = listOf(true, false, false, true, true)
+
+fun createPackedTypesMessage(): PackedTypesMessage = PackedTypesMessage(
+    field1List = field1,
+    field2List = field2,
+    field3List = field3,
+    field4List = field4,
+    field5List = field5,
+    field6List = field6,
+    field7List = field7,
+    field8List = field8,
+    field9List = field9,
+    field10List = field10,
+    field11List = field11,
+    field12List = field12,
+    field13List = field13,
+)
+
+fun createNonPackedTypesMessage(): NonPackedTypesMessage = NonPackedTypesMessage(
+    field1List = field1,
+    field2List = field2,
+    field3List = field3,
+    field4List = field4,
+    field5List = field5,
+    field6List = field6,
+    field7List = field7,
+    field8List = field8,
+    field9List = field9,
+    field10List = field10,
+    field11List = field11,
+    field12List = field12,
+    field13List = field13,
+)

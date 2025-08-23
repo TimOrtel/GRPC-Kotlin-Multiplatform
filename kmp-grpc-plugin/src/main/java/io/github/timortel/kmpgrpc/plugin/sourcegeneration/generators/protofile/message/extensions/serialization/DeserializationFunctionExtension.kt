@@ -16,6 +16,8 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.joinToCodeBlock
  */
 class DeserializationFunctionExtension : BaseSerializationExtension() {
 
+    private val wrapperParamName = Const.Message.Companion.WrapperDeserializationFunction.STREAM_PARAM
+
     override fun applyToCompanionObject(builder: TypeSpec.Builder, message: ProtoMessage, sourceTarget: SourceTarget) {
         builder.addFunction(
             //The function that builds the message from a stream.
@@ -41,78 +43,30 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
         builder: FunSpec.Builder,
         message: ProtoMessage
     ) {
-        val tagLocalFieldName = Const.Message.Companion.WrapperDeserializationFunction.TAG_LOCAL_VARIABLE
-
-        val wrapperParamName =
-            Const.Message.Companion.WrapperDeserializationFunction.STREAM_PARAM
-
-        val unknownFieldsFieldName = "unknownFields"
-        builder.addStatement(
-            "val %N: %T = mutableListOf()",
-            unknownFieldsFieldName,
-            MUTABLE_LIST.parameterizedBy(unknownField)
+        // declare unknownFields variable
+        declareLocalVariable(
+            builder = builder,
+            fieldName = Const.Message.Companion.WrapperDeserializationFunction.UNKNOWN_FIELDS_LOCAL_VARIABLE,
+            type = MUTABLE_LIST.parameterizedBy(unknownField),
+            isMutable = false,
+            defaultValue = CodeBlock.of("mutableListOf()")
         )
 
-        val addVariable = { fieldName: String, type: TypeName, isMutable: Boolean, defaultValue: CodeBlock ->
-            builder.addCode(
-                if (isMutable) "var %N: %T = " else "val %N: %T = ",
-                fieldName,
-                type
-            )
+        // declare variables for each field
+        declareLocalVariablesForFields(builder, message)
 
-            builder.addCode(defaultValue)
-            builder.addCode("\n")
-        }
+        writeDeserializationLoop(builder, message)
+
+        writeReturnStatement(builder, message)
+    }
+
+    private fun writeDeserializationLoop(
+        builder: FunSpec.Builder,
+        message: ProtoMessage
+    ) {
+        val tagLocalFieldName: String = Const.Message.Companion.WrapperDeserializationFunction.TAG_LOCAL_VARIABLE
 
         builder.apply {
-            message.fields.forEach { field ->
-                when (field.cardinality) {
-                    is ProtoFieldCardinality.Singular -> {
-                        val type = if (field.needsIsSetProperty)
-                            field.type.resolve().copy(nullable = true)
-                        else field.type.resolve()
-
-                        val defaultValue = if (field.needsIsSetProperty) {
-                            CodeBlock.of("null")
-                        } else field.type.defaultValue()
-
-                        addVariable(
-                            field.attributeName,
-                            type,
-                            true,
-                            defaultValue
-                        )
-                    }
-
-                    ProtoFieldCardinality.Repeated -> {
-                        addVariable(
-                            field.attributeName,
-                            MUTABLE_LIST.parameterizedBy(field.type.resolve()),
-                            false,
-                            CodeBlock.of("mutableListOf()")
-                        )
-                    }
-                }
-            }
-
-            message.mapFields.forEach { field ->
-                addVariable(
-                    field.attributeName,
-                    MUTABLE_MAP.parameterizedBy(field.keyType.resolve(), field.valuesType.resolve()),
-                    false,
-                    CodeBlock.of("mutableMapOf()")
-                )
-            }
-
-            message.oneOfs.forEach { oneOf ->
-                addVariable(
-                    oneOf.attributeName,
-                    oneOf.sealedClassName,
-                    true,
-                    CodeBlock.of("%T", oneOf.sealedClassNameNotSet)
-                )
-            }
-
             beginControlFlow("while (true)")
             addStatement(
                 "val %N = %N.readTag()",
@@ -123,234 +77,11 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
 
             beginControlFlow("when (%N)", tagLocalFieldName)
 
-            val getScalarAndRepeatedTagCode = { type: ProtoType, isRepeated: Boolean, fieldNumber: Int ->
-                val isPacked = type.isPackable && isRepeated
+            declareWhenEntriesForMapFields(message)
 
-                CodeBlock.of(
-                    "%M(%L, %M(%T.%N, %L))",
-                    WireFormatMakeTag,
-                    fieldNumber,
-                    WireFormatForType,
-                    DataType,
-                    type.wireType,
-                    isPacked
-                )
-            }
+            declareWhenEntriesForFields(message)
 
-            val getScalarReadFieldCode = { field: ProtoRegularField ->
-                when (val type = field.type) {
-                    is ProtoType.NonDeclType -> {
-                        CodeBlock.of(
-                            "%N.%N()",
-                            wrapperParamName,
-                            getReadScalarFunctionName(field.type)
-                        )
-                    }
-
-                    is ProtoType.DefType -> {
-                        when (type.declType) {
-                            ProtoType.DefType.DeclarationType.MESSAGE -> {
-                                CodeBlock.of(
-                                    "%N.%N(%T.Companion)",
-                                    wrapperParamName,
-                                    "readMessage",
-                                    field.type.resolve()
-                                )
-                            }
-
-                            ProtoType.DefType.DeclarationType.ENUM -> {
-                                CodeBlock.of(
-                                    "%T.%N(%N.readEnum())",
-                                    field.type.resolve(),
-                                    Const.Enum.GET_ENUM_FOR_FUNCTION_NAME,
-                                    wrapperParamName
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-
-            message.mapFields.forEach { mapField ->
-                addCode(
-                    "%M(%L, %M(%T.%N, false)).toInt()",
-                    WireFormatMakeTag,
-                    mapField.number,
-                    WireFormatForType,
-                    DataType,
-                    "MESSAGE"
-                )
-
-                addCode(" -> ")
-
-                addCode(
-                    "%N.%N(%N, %T.%N, %T.%N, ",
-                    Const.Message.Companion.WrapperDeserializationFunction.STREAM_PARAM,
-                    "readMapEntry",
-                    mapField.attributeName,
-                    DataType,
-                    mapField.keyType.wireType,
-                    DataType,
-                    mapField.valuesType.wireType,
-                )
-
-                val getDefaultEntry = { type: ProtoType ->
-                    when (type) {
-                        is ProtoType.DefType -> type.defaultValue(ProtoType.MessageDefaultValue.EMPTY)
-                        is ProtoType.NonDeclType -> type.defaultValue()
-                    }
-                }
-
-                val addReadScalarCode = { type: ProtoType ->
-                    when (type) {
-                        is ProtoType.NonDeclType -> {
-                            addCode(
-                                "{·%N()·}",
-                                getReadScalarFunctionName(type)
-                            )
-                        }
-
-                        is ProtoType.DefType -> {
-                            when (type.declType) {
-                                ProtoType.DefType.DeclarationType.MESSAGE -> {
-                                    addCode(
-                                        "{·%N(%T.Companion)}",
-                                        "readMessage",
-                                        type.resolve()
-                                    )
-                                }
-
-                                ProtoType.DefType.DeclarationType.ENUM -> {
-                                    addCode(
-                                        "{·%T.%N(readEnum())·}",
-                                        type.resolve(),
-                                        Const.Enum.GET_ENUM_FOR_FUNCTION_NAME
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-
-                //Write default values
-                addCode(getDefaultEntry(mapField.keyType))
-                addCode(", ")
-                addCode(getDefaultEntry(mapField.valuesType))
-                addCode(", ")
-
-                addReadScalarCode(mapField.keyType)
-
-                addCode(", ")
-                addReadScalarCode(mapField.valuesType)
-                addCode(")\n")
-            }
-
-            message.fields.forEach { field ->
-                addCode(
-                    getScalarAndRepeatedTagCode(
-                        field.type,
-                        field.cardinality == ProtoFieldCardinality.Repeated,
-                        field.number
-                    )
-                )
-
-                addCode(" -> ")
-
-                when (field.cardinality) {
-                    is ProtoFieldCardinality.Singular -> {
-                        addCode("%N·=·", field.attributeName)
-                        addCode(getScalarReadFieldCode(field))
-                        addCode("\n")
-                    }
-
-                    ProtoFieldCardinality.Repeated -> {
-                        beginControlFlow("{")
-
-                        when {
-                            field.type == ProtoType.StringType -> {
-                                addCode(
-                                    "%N·+=·%N.readString()",
-                                    field.attributeName,
-                                    wrapperParamName
-                                )
-                            }
-
-                            field.type == ProtoType.BytesType -> {
-                                addCode(
-                                    "%N·+=·%N.readBytes()",
-                                    field.attributeName,
-                                    wrapperParamName
-                                )
-                            }
-
-                            field.type.isMessage -> {
-                                addCode(
-                                    "%N·+=·%N.%N(%T.Companion)\n",
-                                    field.attributeName,
-                                    wrapperParamName,
-                                    "readMessage",
-                                    field.type.resolve()
-                                )
-                            }
-
-                            else -> {
-                                //All packable
-                                addStatement(
-                                    "val length·=·%N.readInt32()",
-                                    wrapperParamName
-                                )
-                                addStatement(
-                                    "val limit·=·%N.pushLimit(length)",
-                                    wrapperParamName
-                                )
-                                beginControlFlow(
-                                    "while·(!%N.isAtEnd)·{",
-                                    wrapperParamName
-                                )
-
-                                //Enums need to first get mapped
-                                if (field.type.isEnum) {
-                                    addStatement(
-                                        "%N += %T.%N(%N.readEnum())",
-                                        field.attributeName,
-                                        field.type.resolve(),
-                                        Const.Enum.GET_ENUM_FOR_FUNCTION_NAME,
-                                        wrapperParamName
-                                    )
-                                } else {
-                                    val functionName = getReadScalarFunctionName(field.type)
-
-                                    addStatement(
-                                        "%N·+=·%N.%N()",
-                                        field.attributeName,
-                                        wrapperParamName,
-                                        functionName
-                                    )
-                                }
-
-                                endControlFlow()
-
-                                addStatement("%N.popLimit(limit)", wrapperParamName)
-                            }
-                        }
-
-                        endControlFlow()
-                    }
-                }
-            }
-
-            message.oneOfs.forEach { oneOf ->
-                oneOf.fields.forEach { field ->
-                    addCode(getScalarAndRepeatedTagCode(field.type, false, field.number))
-                    addCode(
-                        "·->·%N·=·%T(",
-                        oneOf.attributeName,
-                        field.sealedClassChildName
-                    )
-                    addCode(getScalarReadFieldCode(field))
-                    addCode(")\n")
-                }
-            }
+            declareWhenEntriesForOneOfs(message)
 
             // Unknown field
             addStatement(
@@ -364,7 +95,162 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
             endControlFlow()
 
             endControlFlow()
+        }
+    }
 
+    private fun FunSpec.Builder.declareWhenEntriesForOneOfs(message: ProtoMessage) {
+        message.oneOfs.forEach { oneOf ->
+            oneOf.fields.forEach { field ->
+                addCode(buildFieldTagCode(field))
+                addCode(
+                    "·->·%N·=·%T(",
+                    oneOf.attributeName,
+                    field.sealedClassChildName
+                )
+                addCode(buildReadScalarFieldDataCode(field))
+                addCode(")\n")
+            }
+        }
+    }
+
+    private fun FunSpec.Builder.declareWhenEntriesForFields(message: ProtoMessage) {
+        message.fields.forEach { field ->
+            addCode(buildFieldTagCode(field))
+
+            addCode(" -> ")
+
+            when (field.cardinality) {
+                is ProtoFieldCardinality.Singular -> {
+                    addCode("%N·=·", field.attributeName)
+                    addCode(buildReadScalarFieldDataCode(field))
+                    addCode("\n")
+                }
+
+                ProtoFieldCardinality.Repeated -> {
+                    beginControlFlow("{")
+
+                    when {
+                        field.type == ProtoType.StringType -> {
+                            addCode(
+                                "%N·+=·%N.readString()",
+                                field.attributeName,
+                                wrapperParamName
+                            )
+                        }
+
+                        field.type == ProtoType.BytesType -> {
+                            addCode(
+                                "%N·+=·%N.readBytes()",
+                                field.attributeName,
+                                wrapperParamName
+                            )
+                        }
+
+                        field.type.isMessage -> {
+                            addCode(
+                                "%N·+=·%N.%N(%T.Companion)\n",
+                                field.attributeName,
+                                wrapperParamName,
+                                "readMessage",
+                                field.type.resolve()
+                            )
+                        }
+
+                        else -> {
+                            //All packable
+                            addStatement(
+                                "val length·=·%N.readInt32()",
+                                wrapperParamName
+                            )
+                            addStatement(
+                                "val limit·=·%N.pushLimit(length)",
+                                wrapperParamName
+                            )
+                            beginControlFlow(
+                                "while·(!%N.isAtEnd)·{",
+                                wrapperParamName
+                            )
+
+                            //Enums need to first get mapped
+                            if (field.type.isEnum) {
+                                addStatement(
+                                    "%N += %T.%N(%N.readEnum())",
+                                    field.attributeName,
+                                    field.type.resolve(),
+                                    Const.Enum.GET_ENUM_FOR_FUNCTION_NAME,
+                                    wrapperParamName
+                                )
+                            } else {
+                                val functionName = getReadScalarFunctionName(field.type)
+
+                                addStatement(
+                                    "%N·+=·%N.%N()",
+                                    field.attributeName,
+                                    wrapperParamName,
+                                    functionName
+                                )
+                            }
+
+                            endControlFlow()
+
+                            addStatement("%N.popLimit(limit)", wrapperParamName)
+                        }
+                    }
+
+                    endControlFlow()
+                }
+            }
+        }
+    }
+
+    private fun FunSpec.Builder.declareWhenEntriesForMapFields(message: ProtoMessage) {
+        message.mapFields.forEach { mapField ->
+            addCode(
+                "%M(%L, %M(%T.%N, false)).toInt()",
+                WireFormatMakeTag,
+                mapField.number,
+                WireFormatForType,
+                DataType,
+                "MESSAGE"
+            )
+
+            addCode(" -> ")
+
+            addCode(
+                "%N.%N(%N, %T.%N, %T.%N, ",
+                Const.Message.Companion.WrapperDeserializationFunction.STREAM_PARAM,
+                "readMapEntry",
+                mapField.attributeName,
+                DataType,
+                mapField.keyType.wireType,
+                DataType,
+                mapField.valuesType.wireType,
+            )
+
+            val getDefaultEntry = { type: ProtoType ->
+                when (type) {
+                    is ProtoType.DefType -> type.defaultValue(ProtoType.MessageDefaultValue.EMPTY)
+                    is ProtoType.NonDeclType -> type.defaultValue()
+                }
+            }
+
+            //Write default values
+            addCode(getDefaultEntry(mapField.keyType))
+            addCode(", ")
+            addCode(getDefaultEntry(mapField.valuesType))
+            addCode(", ")
+            addCode(buildReadMapFieldDataCode(mapField.keyType))
+            addCode(", ")
+            addCode(buildReadMapFieldDataCode(mapField.valuesType))
+            addCode(")\n")
+        }
+    }
+
+    private fun writeReturnStatement(
+        builder: FunSpec.Builder,
+        message: ProtoMessage
+    ) {
+        builder.apply {
             addCode("return %T(", message.className)
 
             val separator = ",\n"
@@ -379,11 +265,166 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
                 }
 
             val unknownFieldsBlock =
-                CodeBlock.of("%N·=·%N", Const.Message.Constructor.UnknownFields.name, unknownFieldsFieldName)
+                CodeBlock.of(
+                    "%N·=·%N",
+                    Const.Message.Constructor.UnknownFields.name,
+                    Const.Message.Companion.WrapperDeserializationFunction.UNKNOWN_FIELDS_LOCAL_VARIABLE
+                )
 
             addCode(listOf(fieldsBlock, unknownFieldsBlock).joinCodeBlocks(separator))
 
             addCode(")\n")
+        }
+    }
+
+    private fun declareLocalVariablesForFields(builder: FunSpec.Builder, message: ProtoMessage) {
+        message.fields.forEach { field ->
+            when (field.cardinality) {
+                is ProtoFieldCardinality.Singular -> {
+                    val type = if (field.needsIsSetProperty)
+                        field.type.resolve().copy(nullable = true)
+                    else field.type.resolve()
+
+                    val defaultValue = if (field.needsIsSetProperty) {
+                        CodeBlock.of("null")
+                    } else field.type.defaultValue()
+
+                    declareLocalVariable(
+                        builder,
+                        field.attributeName,
+                        type,
+                        true,
+                        defaultValue
+                    )
+                }
+
+                ProtoFieldCardinality.Repeated -> {
+                    declareLocalVariable(
+                        builder,
+                        field.attributeName,
+                        MUTABLE_LIST.parameterizedBy(field.type.resolve()),
+                        false,
+                        CodeBlock.of("mutableListOf()")
+                    )
+                }
+            }
+        }
+
+        message.mapFields.forEach { field ->
+            declareLocalVariable(
+                builder,
+                field.attributeName,
+                MUTABLE_MAP.parameterizedBy(field.keyType.resolve(), field.valuesType.resolve()),
+                false,
+                CodeBlock.of("mutableMapOf()")
+            )
+        }
+
+        message.oneOfs.forEach { oneOf ->
+            declareLocalVariable(
+                builder,
+                oneOf.attributeName,
+                oneOf.sealedClassName,
+                true,
+                CodeBlock.of("%T", oneOf.sealedClassNameNotSet)
+            )
+        }
+    }
+
+    private fun declareLocalVariable(
+        builder: FunSpec.Builder,
+        fieldName: String,
+        type: TypeName,
+        isMutable: Boolean,
+        defaultValue: CodeBlock
+    ) {
+        builder.addCode(
+            if (isMutable) "var %N: %T = " else "val %N: %T = ",
+            fieldName,
+            type
+        )
+
+        builder.addCode(defaultValue)
+        builder.addCode("\n")
+    }
+
+    private fun buildFieldTagCode(field: ProtoRegularField): CodeBlock {
+        return CodeBlock.of(
+            "%M(%L, %M(%T.%N, %L))",
+            WireFormatMakeTag,
+            field.number,
+            WireFormatForType,
+            DataType,
+            field.type.wireType,
+            field.isPacked
+        )
+    }
+
+    /**
+     * @return a CodeBlock that reads the data for [field] under the assumption that it is a scalar field
+     */
+    private fun buildReadScalarFieldDataCode(field: ProtoRegularField): CodeBlock {
+        return when (val type = field.type) {
+            is ProtoType.NonDeclType -> {
+                CodeBlock.of(
+                    "%N.%N()",
+                    wrapperParamName,
+                    getReadScalarFunctionName(field.type)
+                )
+            }
+
+            is ProtoType.DefType -> {
+                when (type.declType) {
+                    ProtoType.DefType.DeclarationType.MESSAGE -> {
+                        CodeBlock.of(
+                            "%N.%N(%T.Companion)",
+                            wrapperParamName,
+                            "readMessage",
+                            field.type.resolve()
+                        )
+                    }
+
+                    ProtoType.DefType.DeclarationType.ENUM -> {
+                        CodeBlock.of(
+                            "%T.%N(%N.readEnum())",
+                            field.type.resolve(),
+                            Const.Enum.GET_ENUM_FOR_FUNCTION_NAME,
+                            wrapperParamName
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private fun buildReadMapFieldDataCode(type: ProtoType): CodeBlock {
+        return when (type) {
+            is ProtoType.NonDeclType -> {
+                CodeBlock.of(
+                    "{·%N()·}",
+                    getReadScalarFunctionName(type)
+                )
+            }
+
+            is ProtoType.DefType -> {
+                when (type.declType) {
+                    ProtoType.DefType.DeclarationType.MESSAGE -> {
+                        CodeBlock.of(
+                            "{·%N(%T.Companion)}",
+                            "readMessage",
+                            type.resolve()
+                        )
+                    }
+
+                    ProtoType.DefType.DeclarationType.ENUM -> {
+                        CodeBlock.of(
+                            "{·%T.%N(readEnum())·}",
+                            type.resolve(),
+                            Const.Enum.GET_ENUM_FOR_FUNCTION_NAME
+                        )
+                    }
+                }
+            }
         }
     }
 

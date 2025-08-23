@@ -34,6 +34,8 @@ data class ProtoOneOfField(
     override val propertyType: TypeName
         get() = sealedClassChildName
 
+    override val isPacked: Boolean = false
+
     init {
         type.parent = ProtoType.Parent.OneOfField(this)
     }

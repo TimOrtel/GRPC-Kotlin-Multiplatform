@@ -72,6 +72,7 @@ object Const {
                 const val NAME = "deserialize"
                 const val STREAM_PARAM = "stream"
                 const val TAG_LOCAL_VARIABLE = "tag_"
+                const val UNKNOWN_FIELDS_LOCAL_VARIABLE = "unknownFields"
             }
         }
     }

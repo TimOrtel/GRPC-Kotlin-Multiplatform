@@ -5,6 +5,7 @@ import io.github.timortel.kmpgrpc.test.ComplexRepeatedMessage
 import io.github.timortel.kmpgrpc.test.LongMessage
 import io.github.timortel.kmpgrpc.test.MessageWithEverything
 import io.github.timortel.kmpgrpc.test.MessageWithSubMessage
+import io.github.timortel.kmpgrpc.test.NonPackedTypesMessage
 import io.github.timortel.kmpgrpc.test.OneOfMessage
 import io.github.timortel.kmpgrpc.test.RepeatedLongMessage
 import io.github.timortel.kmpgrpc.test.ScalarTypes
@@ -16,6 +17,7 @@ import io.github.timortel.kmpgrpc.test.repeatedLongMessage
 import io.github.timortel.kmpgrpc.test.simpleMessage
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.createComplexRepeated
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.createMessageWithAllTypes
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.createNonPackedTypesMessage
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.createScalarMessage
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -113,6 +115,15 @@ class SelfMessageSerializationTest {
         val msg = Unknownfield.MessageWithUnknownField(unknownFields = fields)
 
         val reconstructed = Unknownfield.MessageWithUnknownField.deserialize(msg.serialize())
+
+        assertEquals(msg, reconstructed)
+    }
+
+    @Test
+    fun testNonPackedFieldsSerialization() {
+        val msg = createNonPackedTypesMessage()
+
+        val reconstructed = NonPackedTypesMessage.deserialize(msg.serialize())
 
         assertEquals(msg, reconstructed)
     }
