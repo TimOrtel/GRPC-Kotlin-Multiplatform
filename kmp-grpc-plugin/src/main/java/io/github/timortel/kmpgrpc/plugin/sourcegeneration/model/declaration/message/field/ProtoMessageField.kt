@@ -5,6 +5,7 @@ import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.LIST
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.TypeName
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.Options
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOption
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoChildProperty
@@ -42,6 +43,7 @@ data class ProtoMessageField(
             is ProtoFieldCardinality.Singular -> {
                 type.resolve()
             }
+
             is ProtoFieldCardinality.Repeated -> {
                 LIST.parameterizedBy(type.resolve())
             }
@@ -63,6 +65,9 @@ data class ProtoMessageField(
     val childProperties: List<ProtoChildProperty>
         get() = if (needsIsSetProperty) listOf(isSetProperty) else emptyList()
 
+    override val supportedOptions: List<Options.Option<*>>
+        get() = super.supportedOptions + listOf(Options.packed)
+
     init {
         type.parent = ProtoType.Parent.MessageField(this)
     }
@@ -71,6 +76,16 @@ data class ProtoMessageField(
         return when (cardinality) {
             ProtoFieldCardinality.Implicit, ProtoFieldCardinality.Optional -> type.defaultValue(messageDefaultValue)
             ProtoFieldCardinality.Repeated -> CodeBlock.of("emptyList()")
+        }
+    }
+
+    override fun isSupportedOptionValid(option: ProtoOption): Boolean {
+        return when (option.name) {
+            Options.packed.name -> {
+                // packed option is only valid on repeated fields that have a packable type
+                cardinality == ProtoFieldCardinality.Repeated && type.isPackable
+            }
+            else -> super.isSupportedOptionValid(option)
         }
     }
 

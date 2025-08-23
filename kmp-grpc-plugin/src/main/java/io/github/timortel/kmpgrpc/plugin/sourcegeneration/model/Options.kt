@@ -3,6 +3,7 @@ package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.CompilationException
 
 object Options {
+
     val javaMultipleFiles = Option(
         name = "java_multiple_files",
         parse = String::toBooleanStrictOrNull,
@@ -31,6 +32,12 @@ object Options {
         name = "deprecated",
         parse = String::toBooleanStrictOrNull,
         default = false
+    )
+
+    val packed = Option(
+        name = "packed",
+        parse = String::toBooleanStrictOrNull,
+        default = true
     )
 
     /**

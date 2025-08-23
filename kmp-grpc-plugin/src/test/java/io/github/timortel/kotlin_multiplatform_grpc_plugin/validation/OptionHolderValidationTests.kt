@@ -103,4 +103,43 @@ class OptionHolderValidationTests : BaseValidationTest() {
 
         verify(atLeast = 1) { logger.warn(matchWarning(Warnings.unsupportedOptionUsed)) }
     }
+
+    @Test
+    fun `test WHEN packed option is used on a non-repeated field THEN a warning is printed`() {
+        runGenerator(
+            """
+                    message TestMessage {
+                        bool a = 1 [packed = false];
+                    }
+                """.trimIndent()
+        )
+
+        verify(atLeast = 1) { logger.warn(matchWarning(Warnings.unsupportedOptionUsed)) }
+    }
+
+    @Test
+    fun `test WHEN packed option is used on a repeated field that has a non-packable type THEN a warning is printed`() {
+        runGenerator(
+            """
+                    message TestMessage {
+                        repeated string a = 1 [packed = false];
+                    }
+                """.trimIndent()
+        )
+
+        verify(atLeast = 1) { logger.warn(matchWarning(Warnings.unsupportedOptionUsed)) }
+    }
+
+    @Test
+    fun `test WHEN packed option is used on a repeated field that has a packable type THEN no warning is printed`() {
+        runGenerator(
+            """
+                    message TestMessage {
+                        repeated int32 a = 1 [packed = false];
+                    }
+                """.trimIndent()
+        )
+
+        verify(exactly = 0) { logger.warn(matchWarning(Warnings.unsupportedOptionUsed)) }
+    }
 }
