@@ -29,9 +29,9 @@ jobs:
           echo $! > gradle_pid.txt
 
       - name: Start envoy service
-        run: docker run -d --rm --name envoy --network host \
+        run: |
+          docker run -d --rm --name envoy --network host \
           -v $(pwd)/kmp-grpc-internal-test/envoy.yml:/etc/envoy/envoy.yaml \
-          -v $(pwd)/envoy.log:/tmp/envoy.log \
           -p 8082:8082 envoyproxy/envoy-dev:latest \
           -c /etc/envoy/envoy.yaml \
           -l trace
