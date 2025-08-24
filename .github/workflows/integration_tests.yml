@@ -25,11 +25,12 @@ jobs:
 
       - name: Start test-server
         run: |
-          nohup ./gradlew :kmp-grpc-internal-test:test-server:run &
+          nohup ./gradlew :kmp-grpc-internal-test:test-server:run > server.log 2>&1 &
           echo $! > gradle_pid.txt
+          tail -f server.log &
 
       - name: Start envoy service
-        run: docker run -d --rm --name envoy --network host -v $(pwd)/kmp-grpc-internal-test/envoy.yml:/etc/envoy/envoy.yaml -p 8082:8082 envoyproxy/envoy-dev:latest -c /etc/envoy/envoy.yaml -l debug
+        run: docker run -d --rm --name envoy --network host -v $(pwd)/kmp-grpc-internal-test/envoy.yml:/etc/envoy/envoy.yaml -p 8082:8082 envoyproxy/envoy-dev:latest -c /etc/envoy/envoy.yaml -l trace
 
       - name: Wait for test-server to be healthy
         timeout-minutes: 10
@@ -87,8 +88,9 @@ jobs:
 
       - name: Start test-server
         run: |
-          nohup ./gradlew :kmp-grpc-internal-test:test-server:run &
+          nohup ./gradlew :kmp-grpc-internal-test:test-server:run > server.log 2>&1 &
           echo $! > gradle_pid.txt
+          tail -f server.log &
 
       - name: Wait for test-server to be healthy
         timeout-minutes: 10
