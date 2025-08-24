@@ -29,15 +29,15 @@ jobs:
           echo $! > gradle_pid.txt
 
       - name: Start envoy service
-        run:
+        run: |
           touch envoy.log
           docker run -d --rm --name envoy --network host \
-          -v $(pwd)/kmp-grpc-internal-test/envoy.yml:/etc/envoy/envoy.yaml \
-          -v $(pwd)/envoy.log:/tmp/envoy.log \
-          -p 8082:8082 envoyproxy/envoy-dev:latest \
-          -c /etc/envoy/envoy.yaml \
-          -l trace \
-          --log-path /tmp/envoy.log
+            -v $(pwd)/kmp-grpc-internal-test/envoy.yml:/etc/envoy/envoy.yaml \
+            -v $(pwd)/envoy.log:/tmp/envoy.log \
+            -p 8082:8082 envoyproxy/envoy-dev:latest \
+            -c /etc/envoy/envoy.yaml \
+            -l trace \
+            --log-path /tmp/envoy.log
 
       - name: Wait for test-server to be healthy
         timeout-minutes: 10
