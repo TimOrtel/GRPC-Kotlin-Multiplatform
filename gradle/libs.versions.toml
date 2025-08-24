@@ -14,7 +14,7 @@ kotlinxCoroutines = "1.10.2"
 ktor = "3.2.3"
 okio = "3.16.0"
 
-grpcJvm = "1.75.0"
+grpcJvm = "1.74.0"
 grpcKotlin = "1.4.3"
 
 # Plugin Relevant
