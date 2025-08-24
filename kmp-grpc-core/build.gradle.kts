@@ -226,10 +226,11 @@ val compileNativeCodeTask = tasks.register("compileNativeCode", Exec::class.java
     workingDir = project.layout.projectDirectory.dir("../kmp-grpc-native/").asFile
 
     val profile = if (buildAsRelease) "release" else "dev"
-    val targetGroup = when (project.getTargetGroup()) {
+    val targetGroup = when (val targetGroup = project.getTargetGroup()) {
         TargetGroup.ALL -> "all"
-        TargetGroup.APPLE_TEST -> "apple_test"
-        TargetGroup.OTHERS_TEST -> "other_test"
+        TargetGroup.NATIVE_APPLE -> "apple_test"
+        TargetGroup.NATIVE_OTHERS_TESTABLE -> "other_test"
+        else -> throw IllegalStateException("target group $targetGroup does not include any native targets")
     }
 
     commandLine = listOf("./compile.sh", profile, targetGroup)

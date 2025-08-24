@@ -4,18 +4,26 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
 enum class TargetGroup {
     ALL,
-    APPLE_TEST,
-    OTHERS_TEST
+    NATIVE_APPLE,
+    NATIVE_OTHERS_TESTABLE,
+    JS,
+    JVM,
+    NON_APPLE_TESTABLE
+}
+
+private enum class Targets {
+    NATIVE_APPLE,
+    NATIVE_OTHERS_TESTABLE,
+    NATIVE_OTHERS_NON_TESTABLE,
+    JS,
+    JVM
 }
 
 fun Project.getTargetGroup(): TargetGroup {
     val targetsTargetProperty = "io.github.timortel.kmp-grpc.internal.native.targets"
     return if (project.hasProperty(targetsTargetProperty)) {
-        when (project.property(targetsTargetProperty).toString()) {
-            "appleTest" -> TargetGroup.APPLE_TEST
-            "othersTest" -> TargetGroup.OTHERS_TEST
-            else -> TargetGroup.ALL
-        }
+        TargetGroup.values().firstOrNull { it.name == project.property(targetsTargetProperty).toString() }
+            ?: TargetGroup.ALL
     } else TargetGroup.ALL
 }
 
@@ -23,17 +31,21 @@ fun Project.getTargetGroup(): TargetGroup {
 fun KotlinMultiplatformExtension.setupTargets(project: Project) {
     val targetsTarget = project.getTargetGroup()
 
-    val includeAllTargets = targetsTarget == TargetGroup.ALL
-
-    val includeAppleTest = targetsTarget == TargetGroup.APPLE_TEST
-    val includeOthersTest = targetsTarget == TargetGroup.OTHERS_TEST
+    val enabledTargets = when(targetsTarget) {
+        TargetGroup.ALL -> Targets.values().toList()
+        TargetGroup.NATIVE_APPLE -> listOf(Targets.NATIVE_APPLE)
+        TargetGroup.NATIVE_OTHERS_TESTABLE -> listOf(Targets.NATIVE_OTHERS_TESTABLE)
+        TargetGroup.JS -> listOf(Targets.JS)
+        TargetGroup.JVM -> listOf(Targets.JVM)
+        TargetGroup.NON_APPLE_TESTABLE -> listOf(Targets.JVM, Targets.JS, Targets.NATIVE_OTHERS_TESTABLE)
+    }
 
     // Android always has to be included.
     androidTarget("android") {
         publishLibraryVariants("release", "debug")
     }
 
-    if (includeAllTargets || includeOthersTest) {
+    if (Targets.JS in enabledTargets) {
         js(IR) {
             browser()
             nodejs()
@@ -43,14 +55,18 @@ fun KotlinMultiplatformExtension.setupTargets(project: Project) {
             browser()
             nodejs()
         }
+    }
 
+    if (Targets.JVM in enabledTargets) {
         jvm("jvm")
+    }
 
+    if (Targets.NATIVE_OTHERS_TESTABLE in enabledTargets) {
         linuxX64()
         linuxArm64()
     }
 
-    if (includeAllTargets || includeAppleTest) {
+    if (Targets.NATIVE_APPLE in enabledTargets) {
         iosX64()
         iosArm64()
         iosSimulatorArm64()
@@ -59,7 +75,7 @@ fun KotlinMultiplatformExtension.setupTargets(project: Project) {
         macosX64()
     }
 
-    if (includeAllTargets) {
+    if (Targets.NATIVE_OTHERS_NON_TESTABLE in enabledTargets) {
         mingwX64()
     }
 }
@@ -67,10 +83,7 @@ fun KotlinMultiplatformExtension.setupTargets(project: Project) {
 fun Project.setupTestsTask() {
     val targetsTarget = project.getTargetGroup()
 
-    val includeAppleTest = targetsTarget == TargetGroup.APPLE_TEST || targetsTarget == TargetGroup.ALL
-    val includeOthersTest = targetsTarget == TargetGroup.OTHERS_TEST || targetsTarget == TargetGroup.ALL
-
-    if (includeAppleTest) {
+    if (targetsTarget == TargetGroup.NATIVE_APPLE || targetsTarget == TargetGroup.ALL) {
         project.tasks.register("appleTest") {
             dependsOn("iosX64Test")
             dependsOn("iosSimulatorArm64Test")
@@ -79,11 +92,17 @@ fun Project.setupTestsTask() {
         }
     }
 
-    if (includeOthersTest) {
+    if (targetsTarget == TargetGroup.NON_APPLE_TESTABLE || targetsTarget == TargetGroup.ALL) {
         project.tasks.register("othersTest") {
             dependsOn("jsTest")
             dependsOn("wasmJsTest")
             dependsOn("jvmTest")
+            dependsOn("linuxX64Test")
+        }
+    }
+
+    if (targetsTarget == TargetGroup.NATIVE_OTHERS_TESTABLE) {
+        project.tasks.register("othersTest") {
             dependsOn("linuxX64Test")
         }
     }
