@@ -53,16 +53,16 @@ jobs:
         if: success() || failure()
         uses: actions/upload-artifact@v4
         with:
-          name: Non-Apple Test Results
+          name: JS Test Results
           if-no-files-found: error
-          path: kmp-grpc-internal-test/build/test-results/**/*.xml
+          path: test-outputs/kmp-grpc-internal-test/**/*.xml
 
       - name: Report Test Results
         uses: dorny/test-reporter@v2
         if: success() || failure()
         with:
-          name: Tests
-          path: 'kmp-grpc-internal-test/build/test-results/**/*.xml'
+          name: JS Tests
+          path: 'test-outputs/kmp-grpc-internal-test/**/*.xml'
           reporter: java-junit
 
       - name: Kill test-server
@@ -117,16 +117,16 @@ jobs:
         if: success() || failure()
         uses: actions/upload-artifact@v4
         with:
-          name: Non-Apple Test Results
+          name: JVM Test Results
           if-no-files-found: error
-          path: kmp-grpc-internal-test/build/test-results/**/*.xml
+          path: test-outputs/kmp-grpc-internal-test/**/*.xml
 
       - name: Report Test Results
         uses: dorny/test-reporter@v2
         if: success() || failure()
         with:
-          name: Tests
-          path: 'kmp-grpc-internal-test/build/test-results/**/*.xml'
+          name: JVM Tests
+          path: 'test-outputs/kmp-grpc-internal-test/**/*.xml'
           reporter: java-junit
 
       - name: Kill test-server
@@ -233,14 +233,14 @@ jobs:
         with:
           name: Apple Test Results
           if-no-files-found: error
-          path: kmp-grpc-internal-test/build/test-results/**/*.xml
+          path: test-outputs/kmp-grpc-internal-test/**/*.xml
 
       - name: Report Test Results
         uses: dorny/test-reporter@v2
         if: always()
         with:
           name: Tests
-          path: 'kmp-grpc-internal-test/build/test-results/**/*.xml'
+          path: 'test-outputs/kmp-grpc-internal-test/**/*.xml'
           reporter: java-junit
 
       - name: Kill test-server

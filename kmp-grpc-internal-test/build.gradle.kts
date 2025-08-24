@@ -107,7 +107,7 @@ kmpGrpc {
     protoSourceFolders = project.files("src/commonMain/proto/general", "src/commonMain/proto/unknownfield")
 }
 
-tasks.withType(Test::class) {
+tasks.withType(AbstractTestTask::class) {
     testLogging.setEvents(listOf(TestLogEvent.FAILED))
 
     testLogging.exceptionFormat = TestExceptionFormat.FULL
