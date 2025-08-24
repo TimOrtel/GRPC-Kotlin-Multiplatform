@@ -16,6 +16,8 @@ plugins {
     kotlin("jvm") apply false
     kotlin("multiplatform") apply false
     id("com.android.library") apply false
+    alias(libs.plugins.protobuf) apply false
+    alias(libs.plugins.kmpGrpc) apply false
 }
 
 //Called by jitpack

@@ -5,7 +5,7 @@ plugins {
     id("com.android.library")
     kotlin("multiplatform")
 
-    id("io.github.timortel.kmpgrpc.plugin") version libs.versions.grpcKotlinMultiplatform.get()
+    id("io.github.timortel.kmpgrpc.plugin")
 }
 
 version = "dev"

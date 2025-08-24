@@ -1,5 +1,5 @@
 [versions]
-grpcKotlinMultiplatform = "1.1.0"
+grpcKotlinMultiplatform = "1.2.0"
 
 androidGradlePlugin = "8.11.0"
 
@@ -7,22 +7,22 @@ androidGradlePlugin = "8.11.0"
 androidCompileSdk = "36"
 androidMinSdk = "21"
 
-kotlin = "2.2.0"
+kotlin = "2.2.10"
 kotlinxIo = "0.8.0"
 kotlinxCoroutines = "1.10.2"
 
 ktor = "3.2.3"
-okio = "3.11.0"
+okio = "3.16.0"
 
 # Plugin Relevant
 antlr = "4.13.2"
 gradlePluginPublish = "1.3.1"
-buildConfigPlugin = "5.5.4"
+buildConfigPlugin = "5.6.7"
 
 kotlinPoet = "2.2.0"
 
 # Misc (Testing, Example Apps)
-grpcJvm = "1.74.0"
+grpcJvm = "1.75.0"
 grpcKotlin = "1.4.3"
 protobufJvm = "3.25.6"
 protobufGradlePlugin = "0.9.5"
@@ -51,7 +51,7 @@ grpc-protobuf-lite = { group = "io.grpc", name = "grpc-protobuf-lite", version.r
 grpc-stub = { group = "io.grpc", name = "grpc-stub", version.ref = "grpcJvm" }
 grpc-services = { group = "io.grpc", name = "grpc-services", version.ref = "grpcJvm" }
 grpc-kotlin-stub = { group = "io.grpc", name = "grpc-kotlin-stub", version.ref = "grpcKotlin" }
-grpc-netty = { group = "io.grpc", name = "grpc-netty", version = "1.69.1" }
+grpc-netty = { group = "io.grpc", name = "grpc-netty", version.ref = "grpcJvm" }
 grpc-netty-shaded = { group = "io.grpc", name = "grpc-netty-shaded", version.ref = "grpcJvm" }
 
 ktor-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
@@ -76,3 +76,4 @@ kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref 
 protobuf = { id = "com.google.protobuf", version.ref = "protobufGradlePlugin" }
 buildConfig = { id = "com.github.gmazzo.buildconfig", version.ref = "buildConfigPlugin" }
 pluginPublish = { id = "com.gradle.plugin-publish", version.ref = "gradlePluginPublish" }
+kmpGrpc = { id = "io.github.timortel.kmpgrpc.plugin", version.ref = "grpcKotlinMultiplatform" }
