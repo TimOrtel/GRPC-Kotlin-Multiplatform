@@ -99,9 +99,23 @@ abstract class GenerateKmpGrpcSourcesTask : DefaultTask() {
         outputDir.mkdirs()
 
         files.forEach { file ->
-            GenerateKmpGrpcSourcesTask::class.java.classLoader.getResourceAsStream("$path/$file")?.use { input ->
-                outputDir.resolve(file).outputStream().use { output ->
-                    input.copyTo(output)
+            val fileAsStream = GenerateKmpGrpcSourcesTask::class.java.classLoader.getResourceAsStream("$path/$file")
+                ?: throw IllegalStateException("Could not find well-known-extension file $file in $path/$file")
+
+            val text = fileAsStream.use { input ->
+                input.reader().readText().let {
+                    // A simple string replacement is sufficient for now
+                    if (internalVisibility.get()) {
+                        it.replace("public", "internal")
+                    } else {
+                        it
+                    }
+                }
+            }
+
+            outputDir.resolve(file).outputStream().use { output ->
+                output.writer().use { writer ->
+                    writer.write(text)
                 }
             }
         }

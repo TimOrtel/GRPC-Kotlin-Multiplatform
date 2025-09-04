@@ -37,7 +37,7 @@ open class KmpGrpcExtension @Inject constructor(objects: ObjectFactory) {
         .convention(false)
 
     /**
-     * If the generated source code should be generated with "internal" visibility. By default, "public" is used.
+     * If the generated source code should be generated with "internal" visibility by default. By default, "public" is used.
      */
     val internalVisibility: Property<Boolean> = objects
         .property(Boolean::class.java)
