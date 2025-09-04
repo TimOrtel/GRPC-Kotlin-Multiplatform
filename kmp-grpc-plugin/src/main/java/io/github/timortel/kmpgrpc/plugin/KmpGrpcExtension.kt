@@ -4,7 +4,6 @@ import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
-import org.jetbrains.kotlin.gradle.targets.js.WASM
 import javax.inject.Inject
 
 open class KmpGrpcExtension @Inject constructor(objects: ObjectFactory) {
@@ -34,6 +33,13 @@ open class KmpGrpcExtension @Inject constructor(objects: ObjectFactory) {
      * Instructs the plugin to download and include the well known proto-types: https://protobuf.dev/reference/protobuf/google.protobuf/
      */
     val includeWellKnownTypes: Property<Boolean> = objects
+        .property(Boolean::class.java)
+        .convention(false)
+
+    /**
+     * If the generated source code should be generated with "internal" visibility. By default, "public" is used.
+     */
+    val internalVisibility: Property<Boolean> = objects
         .property(Boolean::class.java)
         .convention(false)
 

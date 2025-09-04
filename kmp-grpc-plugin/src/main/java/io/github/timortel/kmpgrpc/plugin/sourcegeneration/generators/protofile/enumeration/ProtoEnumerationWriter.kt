@@ -21,6 +21,7 @@ abstract class ProtoEnumerationWriter(val isActual: Boolean) {
 
         return TypeSpec
             .enumBuilder(protoEnum.className)
+            .addModifiers(protoEnum.visibility.modifier)
             .addSuperinterface(kmEnum)
             .addProperty(
                 PropertySpec

@@ -51,7 +51,9 @@ abstract class ProtoFileWriter(val isActual: Boolean) {
                 .addAnnotation(DefaultAnnotations.SuppressDeprecation)
                 .addAnnotation(DefaultAnnotations.OptIntoKmpGrpcInternalApi)
                 .addType(
-                    TypeSpec.classBuilder(file.className)
+                    TypeSpec
+                        .classBuilder(file.className)
+                        .addModifiers(file.visibility.modifier)
                         .apply {
                             addModifiers(if (isActual) KModifier.ACTUAL else KModifier.EXPECT)
 

@@ -7,7 +7,11 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.structure.ProtoP
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
 import org.slf4j.Logger
 
-data class ProtoProject(val rootFolder: ProtoFolder, val logger: Logger) : ProtoNode {
+data class ProtoProject(
+    val rootFolder: ProtoFolder,
+    val logger: Logger,
+    val defaultVisibility: Visibility
+) : ProtoNode {
 
     val rootPackage: ProtoPackage
 

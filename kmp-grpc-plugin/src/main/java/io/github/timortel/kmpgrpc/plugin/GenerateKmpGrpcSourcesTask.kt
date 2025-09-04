@@ -38,6 +38,9 @@ abstract class GenerateKmpGrpcSourcesTask : DefaultTask() {
     @get:Input
     abstract val includeWellKnownTypes: Property<Boolean>
 
+    @get:Input
+    abstract val internalVisibility: Property<Boolean>
+
     @get:OutputDirectories
     val outputFolders: ConfigurableFileCollection = project.objects.fileCollection()
 
@@ -78,7 +81,8 @@ abstract class GenerateKmpGrpcSourcesTask : DefaultTask() {
             jvmOutputFolder = getJVMOutputFolder(project),
             jsOutputFolder = getJSOutputFolder(project),
             wasmJsFolder = getWasmJsOutputFolder(project),
-            nativeOutputDir = getNativeOutputFolder(project)
+            nativeOutputDir = getNativeOutputFolder(project),
+            internalVisibility = internalVisibility.get()
         )
 
         val skipExtensionLibPropName = "io.github.timortel.kmp-grpc.internal.${project.name}.skip-wkt-ext"
