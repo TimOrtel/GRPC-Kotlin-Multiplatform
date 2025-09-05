@@ -3,6 +3,8 @@ package io.github.timortel.kmpgrpc.plugin.sourcegeneration
 import com.squareup.kotlinpoet.FileSpec
 import io.github.timortel.kmpgrpc.anltr.Protobuf3Lexer
 import io.github.timortel.kmpgrpc.anltr.Protobuf3Parser
+import io.github.timortel.kmpgrpc.anltr.ProtobufEditionsLexer
+import io.github.timortel.kmpgrpc.anltr.ProtobufEditionsParser
 import io.github.timortel.kmpgrpc.plugin.KmpGrpcExtension
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.project.CommonProtoProjectWriter
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.project.NativeProtoProjectWriter
@@ -11,7 +13,7 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.project.Jvm
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoProject
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.structure.ProtoFolder
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.parsing.Protobuf3ModelBuilderVisitor
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.parsing.ProtobufModelBuilderVisitor
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import org.slf4j.Logger
@@ -64,7 +66,7 @@ object ProtoSourceGenerator {
         shouldGenerateTargetMap: Map<SourceTarget, Boolean>
     ): Map<SourceTarget, List<FileSpec>> {
         val folders = protoFolders.mapNotNull { sourceFolder ->
-            walkFolder(sourceFolder)
+            walkFolder(sourceFolder, logger)
         }
 
         val project = ProtoProject(
@@ -100,20 +102,22 @@ object ProtoSourceGenerator {
     /**
      * @return the proto folder only if the folder or any of its subfolders did contain proto files
      */
-    private fun walkFolder(folder: InputFile): ProtoFolder? {
+    private fun walkFolder(folder: InputFile, logger: Logger): ProtoFolder? {
         val folders = mutableListOf<ProtoFolder>()
         val files = mutableListOf<ProtoFile>()
 
         folder.files.forEach { file ->
             when {
                 file.isDirectory -> {
-                    val subFolder = walkFolder(file)
+                    val subFolder = walkFolder(file, logger)
                     if (subFolder != null) folders.add(subFolder)
                 }
 
                 file.isProtoFile -> {
-                    val protoFile = readProtoFile(file)
-                    files.add(protoFile)
+                    val protoFile = readProtoFile(file, logger)
+                    if (protoFile != null) {
+                        files.add(protoFile)
+                    }
                 }
             }
         }
@@ -125,16 +129,28 @@ object ProtoSourceGenerator {
         }
     }
 
-    private fun readProtoFile(file: InputFile): ProtoFile {
-        val lexer = Protobuf3Lexer(CharStreams.fromStream(file.inputStream()))
-        val parser = Protobuf3Parser(CommonTokenStream(lexer))
+    private fun readProtoFile(file: InputFile, logger: Logger): ProtoFile? {
+        val proto3Lexer = Protobuf3Lexer(CharStreams.fromStream(file.inputStream()))
+        val proto3Parser = Protobuf3Parser(CommonTokenStream(proto3Lexer))
+        val proto3File = proto3Parser.proto()
 
-        val proto3File = parser.proto()
+        val protoEditionsLexer = ProtobufEditionsLexer(CharStreams.fromStream(file.inputStream()))
+        val protoEditionsParser = ProtobufEditionsParser(CommonTokenStream(protoEditionsLexer))
+        val protoEditionsFile = protoEditionsParser.proto()
 
-        return Protobuf3ModelBuilderVisitor(
+        val visitor = ProtobufModelBuilderVisitor(
             filePath = file.path,
             fileNameWithoutExtension = file.nameWithoutExtension,
             fileName = file.name
-        ).visitProto(proto3File)
+        )
+
+        return when {
+            proto3File.syntax() != null -> visitor.visitProto(proto3File)
+            protoEditionsFile.edition() != null -> visitor.visitProto(protoEditionsFile)
+            else -> {
+                logger.warn("File $file could not be read as a proto file. Only proto3 and proto editions files are currently supported. Ignoring file.")
+                null
+            }
+        }
     }
 }

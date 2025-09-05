@@ -1,0 +1,25 @@
+edition = "2023";
+
+option java_outer_classname = "DeclarationTestEditions";
+
+message SimpleMessage {
+
+}
+
+message NestingMessage {
+  message NestedMessage {
+
+  }
+
+  enum NestedEnum {
+    DEFAULT = 0;
+  }
+}
+
+enum SimpleEnum {
+  DEFAULT = 0;
+}
+
+service SomeService {
+
+}
