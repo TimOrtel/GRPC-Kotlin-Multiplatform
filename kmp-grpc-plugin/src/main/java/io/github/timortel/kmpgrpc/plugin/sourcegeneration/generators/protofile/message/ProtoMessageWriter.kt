@@ -57,6 +57,7 @@ abstract class ProtoMessageWriter(private val isActual: Boolean) {
 
         return TypeSpec
             .classBuilder(message.className)
+            .addModifiers(message.visibility.modifier)
             .apply {
                 when {
                     isActual -> addModifiers(KModifier.ACTUAL)

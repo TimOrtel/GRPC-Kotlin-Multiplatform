@@ -23,6 +23,7 @@ abstract class ProtoServiceWriter(private val isActual: Boolean) {
 
         return TypeSpec
             .classBuilder(service.className)
+            .addModifiers(service.visibility.modifier)
             .addModifiers(classAndFunctionModifiers)
             .addFunction(
                 FunSpec

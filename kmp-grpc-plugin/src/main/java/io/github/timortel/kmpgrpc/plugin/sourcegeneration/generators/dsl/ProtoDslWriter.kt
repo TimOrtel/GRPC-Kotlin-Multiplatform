@@ -54,6 +54,7 @@ abstract class ProtoDslWriter(private val isActual: Boolean) {
             TypeSpec
                 .classBuilder(dslBuilderClassName)
                 .addModifiers(modifier)
+                .addModifiers(message.visibility.modifier)
                 .primaryConstructor(
                     FunSpec.constructorBuilder()
                         .apply {
@@ -141,6 +142,7 @@ abstract class ProtoDslWriter(private val isActual: Boolean) {
                 .addFunction(
                     FunSpec
                         .builder(Const.DSL.BUILD_FUNCTION_NAME)
+                        .addModifiers(message.visibility.modifier)
                         .addModifiers(modifier)
                         .returns(message.className)
                         .apply { if (isActual) modifyBuildFunction(this, message) }
@@ -167,7 +169,7 @@ abstract class ProtoDslWriter(private val isActual: Boolean) {
             addTopLevelFunction(
                 FunSpec
                     .builder(message.dslBuildFunction)
-                    .addModifiers(KModifier.INLINE)
+                    .addModifiers(KModifier.INLINE, message.visibility.modifier)
                     .addParameter(
                         "builderDsl",
                         LambdaTypeName.get(

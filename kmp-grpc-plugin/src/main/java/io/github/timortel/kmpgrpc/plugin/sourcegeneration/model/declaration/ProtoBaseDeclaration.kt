@@ -3,10 +3,12 @@ package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration
 import com.squareup.kotlinpoet.ClassName
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.Options
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOptionsHolder
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoProject
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoVisibilityHolder
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
 import org.antlr.v4.runtime.ParserRuleContext
 
-interface ProtoBaseDeclaration : ProtoOptionsHolder {
+interface ProtoBaseDeclaration : ProtoOptionsHolder, ProtoVisibilityHolder {
 
     /**
      * The name of this declaration
@@ -22,6 +24,9 @@ interface ProtoBaseDeclaration : ProtoOptionsHolder {
      * The file this declaration is located in
      */
     override val file: ProtoFile
+
+    override val project: ProtoProject
+        get() = file.project
 
     /**
      * The type of this declaration as it will be generated

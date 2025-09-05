@@ -16,6 +16,7 @@ repositories {
 
 kotlin {
     applyDefaultHierarchyTemplate()
+    explicitApi()
 
     setupTargets(project)
 
