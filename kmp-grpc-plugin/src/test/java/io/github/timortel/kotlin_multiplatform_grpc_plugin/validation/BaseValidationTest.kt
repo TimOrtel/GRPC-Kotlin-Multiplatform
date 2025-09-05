@@ -17,11 +17,12 @@ abstract class BaseValidationTest {
             logger = logger,
             protoFolders = listOf(folder),
             shouldGenerateTargetMap = emptyMap(),
-            File(""),
-            File(""),
-            File(""),
-            File(""),
-            File("")
+            internalVisibility = false,
+            commonOutputFolder = File(""),
+            jvmOutputFolder = File(""),
+            jsOutputFolder = File(""),
+            wasmJsFolder = File(""),
+            nativeOutputDir = File("")
         )
     }
 }

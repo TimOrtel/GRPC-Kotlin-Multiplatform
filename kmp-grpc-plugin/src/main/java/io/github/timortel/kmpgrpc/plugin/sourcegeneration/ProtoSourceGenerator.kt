@@ -11,6 +11,7 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.project.Nat
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.project.JsProtoProjectWriter
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.project.JvmProtoProjectWriter
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoProject
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.Visibility
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.structure.ProtoFolder
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.parsing.ProtobufModelBuilderVisitor
@@ -25,6 +26,7 @@ object ProtoSourceGenerator {
         logger: Logger,
         protoFolders: List<InputFile>,
         shouldGenerateTargetMap: Map<String, Boolean>,
+        internalVisibility: Boolean,
         commonOutputFolder: File,
         jvmOutputFolder: File,
         jsOutputFolder: File,
@@ -41,7 +43,12 @@ object ProtoSourceGenerator {
                     ),
         )
 
-        val fileMap = generateProtoFiles(logger, protoFolders, shouldGenerateTargetMapBySourceTarget)
+        val fileMap = generateProtoFiles(
+            logger = logger,
+            protoFolders = protoFolders,
+            shouldGenerateTargetMap = shouldGenerateTargetMapBySourceTarget,
+            internalVisibility = internalVisibility
+        )
 
         fileMap[SourceTarget.Common].writeTo(commonOutputFolder)
         fileMap[SourceTarget.Jvm].writeTo(jvmOutputFolder)
@@ -63,7 +70,8 @@ object ProtoSourceGenerator {
     internal fun generateProtoFiles(
         logger: Logger,
         protoFolders: List<InputFile>,
-        shouldGenerateTargetMap: Map<SourceTarget, Boolean>
+        shouldGenerateTargetMap: Map<SourceTarget, Boolean>,
+        internalVisibility: Boolean
     ): Map<SourceTarget, List<FileSpec>> {
         val folders = protoFolders.mapNotNull { sourceFolder ->
             walkFolder(sourceFolder, logger)
@@ -74,7 +82,8 @@ object ProtoSourceGenerator {
             rootFolder = folders.fold(ProtoFolder("", emptyList(), emptyList())) { l, r ->
                 ProtoFolder(name = "", folders = l.folders + r.folders, files = l.files + r.files)
             },
-            logger = logger
+            logger = logger,
+            defaultVisibility = if (internalVisibility) Visibility.INTERNAL else Visibility.PUBLIC
         )
 
         // Before generating code, validate and print warnings / throw errors

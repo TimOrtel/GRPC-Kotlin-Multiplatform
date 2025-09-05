@@ -9,30 +9,21 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.createSingleFileProto
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertInstanceOf
-import org.slf4j.LoggerFactory
 
-class DeprecatedOptionGenerationTest {
-
-    private val logger = LoggerFactory.getLogger("DeprecatedOptionGenerationTest")
-
-    private val targetMapAll = mapOf(
-        SourceTarget.Common to true,
-        SourceTarget.Js to true,
-        SourceTarget.Jvm to true,
-        SourceTarget.Native to true
-    )
+class DeprecatedOptionGenerationTest : BaseGenerationTest() {
 
     @Test
     fun `test generates deprecated annotation correctly`() {
         val fileMap = ProtoSourceGenerator.generateProtoFiles(
-            logger,
+            logger = logger,
             protoFolders = listOf(
                 createSingleFileProtoFolderFromResource(
                     classLoader = javaClass.classLoader,
                     fileName = "deprecated-test.proto"
                 )
             ),
-            shouldGenerateTargetMap = targetMapAll
+            shouldGenerateTargetMap = targetMapAll,
+            internalVisibility = false
         )
 
         val deprecatedProperties = listOf(

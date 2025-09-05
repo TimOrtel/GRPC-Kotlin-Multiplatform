@@ -21,7 +21,7 @@ data class ProtoFile(
     val services: List<ProtoService>,
     override val options: List<ProtoOption>,
     val imports: List<ProtoImport>
-) : FileBasedDeclarationResolver, ProtoOptionsHolder {
+) : FileBasedDeclarationResolver, ProtoOptionsHolder, ProtoVisibilityHolder {
     lateinit var folder: ProtoFolder
     lateinit var protoPackage: ProtoPackage
 
@@ -33,7 +33,7 @@ data class ProtoFile(
             return folder.path + fileName
         }
 
-    val project: ProtoProject
+    override val project: ProtoProject
         get() = folder.project
 
     override val file: ProtoFile

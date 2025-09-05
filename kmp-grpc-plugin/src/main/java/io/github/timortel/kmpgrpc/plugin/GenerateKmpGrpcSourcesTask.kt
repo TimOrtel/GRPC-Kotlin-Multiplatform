@@ -38,6 +38,9 @@ abstract class GenerateKmpGrpcSourcesTask : DefaultTask() {
     @get:Input
     abstract val includeWellKnownTypes: Property<Boolean>
 
+    @get:Input
+    abstract val internalVisibility: Property<Boolean>
+
     @get:OutputDirectories
     val outputFolders: ConfigurableFileCollection = project.objects.fileCollection()
 
@@ -78,7 +81,8 @@ abstract class GenerateKmpGrpcSourcesTask : DefaultTask() {
             jvmOutputFolder = getJVMOutputFolder(project),
             jsOutputFolder = getJSOutputFolder(project),
             wasmJsFolder = getWasmJsOutputFolder(project),
-            nativeOutputDir = getNativeOutputFolder(project)
+            nativeOutputDir = getNativeOutputFolder(project),
+            internalVisibility = internalVisibility.get()
         )
 
         val skipExtensionLibPropName = "io.github.timortel.kmp-grpc.internal.${project.name}.skip-wkt-ext"
@@ -95,9 +99,23 @@ abstract class GenerateKmpGrpcSourcesTask : DefaultTask() {
         outputDir.mkdirs()
 
         files.forEach { file ->
-            GenerateKmpGrpcSourcesTask::class.java.classLoader.getResourceAsStream("$path/$file")?.use { input ->
-                outputDir.resolve(file).outputStream().use { output ->
-                    input.copyTo(output)
+            val fileAsStream = GenerateKmpGrpcSourcesTask::class.java.classLoader.getResourceAsStream("$path/$file")
+                ?: throw IllegalStateException("Could not find well-known-extension file $file in $path/$file")
+
+            val text = fileAsStream.use { input ->
+                input.reader().readText().let {
+                    // A simple string replacement is sufficient for now
+                    if (internalVisibility.get()) {
+                        it.replace("public", "internal")
+                    } else {
+                        it
+                    }
+                }
+            }
+
+            outputDir.resolve(file).outputStream().use { output ->
+                output.writer().use { writer ->
+                    writer.write(text)
                 }
             }
         }

@@ -8,6 +8,7 @@ import io.github.timortel.kmpgrpc.core.message.MessageDeserializer
 import io.github.timortel.kmpgrpc.core.metadata.Entry
 import io.github.timortel.kmpgrpc.core.metadata.Key
 import io.github.timortel.kmpgrpc.core.metadata.Metadata
+import io.github.timortel.kmpgrpc.shared.internal.InternalKmpGrpcApi
 import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -36,6 +37,7 @@ private val base64 = Base64.withPadding(Base64.PaddingOption.PRESENT_OPTIONAL)
  * @throws StatusException if an RpcError is caught, wrapping the error details into a KMStatusException.
  * @throws Exception if any other exception is caught during execution.
  */
+@InternalKmpGrpcApi
 suspend fun <Request : Message, Response : Message> unaryCallImplementation(
     channel: Channel,
     path: String,
@@ -60,6 +62,7 @@ suspend fun <Request : Message, Response : Message> unaryCallImplementation(
  * @param callOptions The callOptions that provide additional configuration to this call.
  * @return A [Flow] instance emitting responses of type JS_RESPONSE, or errors if the streaming call fails.
  */
+@InternalKmpGrpcApi
 fun <Request : Message, Response : Message> serverSideStreamingCallImplementation(
     channel: Channel,
     path: String,

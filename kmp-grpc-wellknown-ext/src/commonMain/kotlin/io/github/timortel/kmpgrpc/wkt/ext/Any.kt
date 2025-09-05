@@ -11,7 +11,7 @@ private const val DEFAULT_TYPE_URL_PREFIX = "type.googleapis.com"
 /**
  * @return a new [Any] message with the given [message] as content.
  */
-fun <T : Message> Any.Companion.wrap(message: T, typeUrlPrefix: String = DEFAULT_TYPE_URL_PREFIX): Any = any {
+public fun <T : Message> Any.Companion.wrap(message: T, typeUrlPrefix: String = DEFAULT_TYPE_URL_PREFIX): Any = any {
     type_url = getTypeUrl(message.fullName, typeUrlPrefix)
     value = message.serialize()
 }
@@ -21,7 +21,7 @@ fun <T : Message> Any.Companion.wrap(message: T, typeUrlPrefix: String = DEFAULT
  * @param deserializer typically the companion object of [T].
  * @return a message of type [T]
  */
-fun <T : Message, DES : MessageDeserializer<T>> Any.unwrap(deserializer: DES): T {
+public fun <T : Message, DES : MessageDeserializer<T>> Any.unwrap(deserializer: DES): T {
     return deserializer.deserialize(value)
 }
 
@@ -31,7 +31,7 @@ fun <T : Message, DES : MessageDeserializer<T>> Any.unwrap(deserializer: DES): T
  * @param message the companion object of [T]
  * @return if the type held by this object matches [T]
  */
-fun <T : Message> Any.isType(message: MessageCompanion<T>, typeUrlPrefix: String): Boolean {
+public fun <T : Message> Any.isType(message: MessageCompanion<T>, typeUrlPrefix: String): Boolean {
     return type_url == getTypeUrl(message.fullName, typeUrlPrefix)
 }
 
@@ -41,7 +41,7 @@ fun <T : Message> Any.isType(message: MessageCompanion<T>, typeUrlPrefix: String
  * @param message the companion object of [T]
  * @return if the type held by this object matches [T]
  */
-fun <T : Message> Any.isType(message: MessageCompanion<T>): Boolean {
+public fun <T : Message> Any.isType(message: MessageCompanion<T>): Boolean {
     return type_url.substringAfterLast('/') == message.fullName
 }
 
@@ -50,7 +50,7 @@ fun <T : Message> Any.isType(message: MessageCompanion<T>): Boolean {
  *
  * @return if the type held by this object matches the type of [message]
  */
-fun Any.isSameTypeAs(message: Message, typeUrlPrefix: String): Boolean {
+public fun Any.isSameTypeAs(message: Message, typeUrlPrefix: String): Boolean {
     return type_url == getTypeUrl(message.fullName, typeUrlPrefix)
 }
 
@@ -59,7 +59,7 @@ fun Any.isSameTypeAs(message: Message, typeUrlPrefix: String): Boolean {
  *
  * @return if the type held by this object matches the type of [message]
  */
-fun Any.isSameTypeAs(message: Message): Boolean {
+public fun Any.isSameTypeAs(message: Message): Boolean {
     return type_url.substringAfterLast('/') == message.fullName
 }
 

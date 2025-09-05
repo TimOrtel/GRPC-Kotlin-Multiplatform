@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+option java_outer_classname = "DeclarationTestBasic";
+
+message SimpleMessage {
+
+}
+
+message NestingMessage {
+  message NestedMessage {
+
+  }
+
+  enum NestedEnum {
+    DEFAULT = 0;
+  }
+}
+
+enum SimpleEnum {
+  DEFAULT = 0;
+}
+
+service SomeService {
+
+}
