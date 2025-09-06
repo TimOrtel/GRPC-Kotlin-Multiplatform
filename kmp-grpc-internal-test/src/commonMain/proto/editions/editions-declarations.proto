@@ -1,6 +1,6 @@
 edition = "2023";
 
-option java_outer_classname = "DeclarationTestEditions";
+option java_outer_classname = "EditionDeclarations";
 
 message SimpleMessage {
 

@@ -22,6 +22,12 @@ import java.io.File
 
 object ProtoSourceGenerator {
 
+    // regexes that allow for arbitrarily many whitespaces and comments in the proto file, but expect the syntax/edition statement first.
+    private val proto3Regex =
+        "^\\s*(?:(?://[^\\n]*|/\\*[\\s\\S]*?\\*/)\\s*|\\s*\\n)*syntax\\s*=\\s*[\"']proto3[\"']\\s*;[\\s\\S]*$".toRegex()
+    private val protoEditionsRegex =
+        "^\\s*(?:(?://[^\\n]*|/\\*[\\s\\S]*?\\*/)\\s*|\\s*\\n)*edition\\s*=\\s*[\"']\\d+[\"']\\s*;[\\s\\S]*$".toRegex()
+
     fun writeProtoFiles(
         logger: Logger,
         protoFolders: List<InputFile>,
@@ -139,25 +145,34 @@ object ProtoSourceGenerator {
     }
 
     private fun readProtoFile(file: InputFile, logger: Logger): ProtoFile? {
-        val proto3Lexer = Protobuf3Lexer(CharStreams.fromStream(file.inputStream()))
-        val proto3Parser = Protobuf3Parser(CommonTokenStream(proto3Lexer))
-        val proto3File = proto3Parser.proto()
-
-        val protoEditionsLexer = ProtobufEditionsLexer(CharStreams.fromStream(file.inputStream()))
-        val protoEditionsParser = ProtobufEditionsParser(CommonTokenStream(protoEditionsLexer))
-        val protoEditionsFile = protoEditionsParser.proto()
-
         val visitor = ProtobufModelBuilderVisitor(
             filePath = file.path,
             fileNameWithoutExtension = file.nameWithoutExtension,
             fileName = file.name
         )
 
+        val fileText =
+            file.inputStream().use { inputStream -> inputStream.reader().use { reader -> reader.readText() } }
+
         return when {
-            proto3File.syntax() != null -> visitor.visitProto(proto3File)
-            protoEditionsFile.edition() != null -> visitor.visitProto(protoEditionsFile)
+            fileText.matches(proto3Regex) -> {
+                val proto3Lexer = Protobuf3Lexer(CharStreams.fromStream(file.inputStream()))
+                val proto3Parser = Protobuf3Parser(CommonTokenStream(proto3Lexer))
+                val proto3File = proto3Parser.proto()
+
+                visitor.visitProto(proto3File)
+            }
+
+            fileText.matches(protoEditionsRegex) -> {
+                val protoEditionsLexer = ProtobufEditionsLexer(CharStreams.fromStream(file.inputStream()))
+                val protoEditionsParser = ProtobufEditionsParser(CommonTokenStream(protoEditionsLexer))
+                val protoEditionsFile = protoEditionsParser.proto()
+
+                visitor.visitProto(protoEditionsFile)
+            }
+
             else -> {
-                logger.warn("File $file could not be read as a proto file. Only proto3 and proto editions files are currently supported. Ignoring file.")
+                logger.warn("File $file does not seem to conform to any known proto syntax. Only proto3 and proto editions files are currently supported. Ignoring file.")
                 null
             }
         }

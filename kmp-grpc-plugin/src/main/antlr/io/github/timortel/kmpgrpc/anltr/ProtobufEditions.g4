@@ -28,7 +28,7 @@ proto
 // Edition
 
 edition
-    : EDITION EQ  ((AP DECIMAL_LIT AP) | (QM DECIMAL_LIT QM))? SEMI
+    : EDITION EQ STR_LIT SEMI
     ;
 
 // Import Statement
@@ -473,14 +473,6 @@ GROUP
     ;
 
 // symbols
-
-QM
-    : '"'
-    ;
-
-AP
-    : '\''
-    ;
 
 SEMI
     : ';'

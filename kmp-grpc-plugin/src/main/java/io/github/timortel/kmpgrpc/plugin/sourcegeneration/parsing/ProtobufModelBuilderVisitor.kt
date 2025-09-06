@@ -376,12 +376,13 @@ class ProtobufModelBuilderVisitor(
         )
     }
 
-    override fun visitFieldOptions(ctx: ProtobufEditionsParser.FieldOptionsContext): List<ProtoOption> {
-        return ctx.fieldOption().orEmpty().map { visitFieldOption(it) }
+    // Nullability is required - otherwise NPE
+    override fun visitFieldOptions(ctx: ProtobufEditionsParser.FieldOptionsContext?): List<ProtoOption> {
+        return ctx?.fieldOption().orEmpty().map { visitFieldOption(it) }
     }
 
-    override fun visitFieldOptions(ctx: Protobuf3Parser.FieldOptionsContext): List<ProtoOption> {
-        return ctx.fieldOption().orEmpty().map { visitFieldOption(it) }
+    override fun visitFieldOptions(ctx: Protobuf3Parser.FieldOptionsContext?): List<ProtoOption> {
+        return ctx?.fieldOption().orEmpty().map { visitFieldOption(it) }
     }
 
     private fun visitFieldOption(ctx: ParserRuleContext, name: String, value: String): ProtoOption {
@@ -427,12 +428,13 @@ class ProtobufModelBuilderVisitor(
         return visitEnumField(ctx, name, number, options, ctx.MINUS() != null)
     }
 
-    override fun visitEnumValueOptions(ctx: ProtobufEditionsParser.EnumValueOptionsContext): List<ProtoOption> {
-        return ctx.enumValueOption().orEmpty().map { visitEnumValueOption(it) }
+    // Nullability is required - otherwise NPE
+    override fun visitEnumValueOptions(ctx: ProtobufEditionsParser.EnumValueOptionsContext?): List<ProtoOption> {
+        return ctx?.enumValueOption().orEmpty().map { visitEnumValueOption(it) }
     }
 
-    override fun visitEnumValueOptions(ctx: Protobuf3Parser.EnumValueOptionsContext): List<ProtoOption> {
-        return ctx.enumValueOption().orEmpty().map { visitEnumValueOption(it) }
+    override fun visitEnumValueOptions(ctx: Protobuf3Parser.EnumValueOptionsContext?): List<ProtoOption> {
+        return ctx?.enumValueOption().orEmpty().map { visitEnumValueOption(it) }
     }
 
     override fun visitEnumValueOption(ctx: ProtobufEditionsParser.EnumValueOptionContext): ProtoOption {
