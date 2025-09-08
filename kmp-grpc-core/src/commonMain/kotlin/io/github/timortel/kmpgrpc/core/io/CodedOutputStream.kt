@@ -2,8 +2,8 @@ package io.github.timortel.kmpgrpc.core.io
 
 import io.github.timortel.kmpgrpc.core.message.Message
 import io.github.timortel.kmpgrpc.core.message.Enum
-import io.github.timortel.kmpgrpc.core.message.FieldType
 import io.github.timortel.kmpgrpc.core.message.UnknownField
+import io.github.timortel.kmpgrpc.core.message.extensions.Extension
 import io.github.timortel.kmpgrpc.core.message.extensions.MessageExtensions
 import io.github.timortel.kmpgrpc.shared.internal.InternalKmpGrpcApi
 import io.github.timortel.kmpgrpc.shared.internal.io.WireFormat
@@ -169,14 +169,15 @@ interface CodedOutputStream {
             key.fieldType.writeScalar(this, key.fieldNumber, value)
         }
 
-        messageExtensions.repeatedMap.forEach { (key, value) ->
-            when (val fieldType = key.fieldType) {
-                is FieldType.PackableFieldType<Any> -> {
-                    fieldType.writeRepeated(this, key.fieldNumber, value, key.tag)
+        messageExtensions.repeatedMap.forEach { (extension, value) ->
+            when (extension) {
+                is Extension.PackableRepeatedValueExtension -> {
+                    extension.fieldType.writeRepeated(this, extension.fieldNumber, value, extension.tag)
+
                 }
 
-                is FieldType.NonPackableFieldType -> {
-                    fieldType.writeRepeated(this, key.fieldNumber, value)
+                is Extension.NonPackableRepeatedValueExtension -> {
+                    extension.fieldType.writeRepeated(this, extension.fieldNumber, value)
                 }
             }
         }
