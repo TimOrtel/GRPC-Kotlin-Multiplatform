@@ -46,7 +46,8 @@ abstract class ProtoMessageWriter(private val isActual: Boolean) {
         ToStringFunctionExtension,
         CopyFunctionExtension,
         FieldPropertyConstructorExtension,
-        UnknownFieldsExtension
+        UnknownFieldsExtension,
+        ExtensionDefinitionExtension
     )
 
     /**

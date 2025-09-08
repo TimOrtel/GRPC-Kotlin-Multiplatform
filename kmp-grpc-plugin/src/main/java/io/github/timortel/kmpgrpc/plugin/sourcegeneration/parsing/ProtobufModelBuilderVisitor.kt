@@ -5,6 +5,7 @@ import io.github.timortel.kmpgrpc.anltr.Protobuf3Visitor
 import io.github.timortel.kmpgrpc.anltr.ProtobufEditionsParser
 import io.github.timortel.kmpgrpc.anltr.ProtobufEditionsVisitor
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.CompilationException
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoExtensionDefinition
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoImport
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOption
@@ -27,7 +28,7 @@ import org.antlr.v4.runtime.tree.ParseTree
 import org.antlr.v4.runtime.tree.RuleNode
 import org.antlr.v4.runtime.tree.TerminalNode
 
-typealias ParseException = Protobuf3ParserException
+typealias ParseException = ProtobufParserException
 
 class ProtobufModelBuilderVisitor(
     private val filePath: String,
@@ -42,7 +43,8 @@ class ProtobufModelBuilderVisitor(
         messages: List<ProtoMessage>,
         topLevelEnums: List<ProtoEnum>,
         services: List<ProtoService>,
-        packages: List<String>
+        packages: List<String>,
+        extensionDefinitions: List<ProtoExtensionDefinition>
     ): ProtoFile {
         if (packages.size > 1) throw CompilationException.DuplicatePackageStatement(
             "Found more than one package statements",
@@ -58,7 +60,8 @@ class ProtobufModelBuilderVisitor(
             enums = topLevelEnums,
             services = services,
             options = options,
-            imports = imports
+            imports = imports,
+            extensionDefinitions = extensionDefinitions
         )
     }
 
@@ -69,6 +72,7 @@ class ProtobufModelBuilderVisitor(
         val messages = ctx.topLevelDef().mapNotNull { it.messageDef() }.map { visitMessageDef(it) }
         val topLevelEnums = ctx.topLevelDef().mapNotNull { it.enumDef() }.map { visitEnumDef(it) }
         val services = ctx.topLevelDef().mapNotNull { it.serviceDef() }.map { visitServiceDef(it) }
+        val extensionDefinitions = ctx.topLevelDef().mapNotNull { it.extendDef() }.map { visitExtendDef(it) }
 
         val packages = ctx.packageStatement().mapNotNull { it.fullIdent()?.text }
 
@@ -79,7 +83,8 @@ class ProtobufModelBuilderVisitor(
             messages = messages,
             topLevelEnums = topLevelEnums,
             services = services,
-            packages = packages
+            packages = packages,
+            extensionDefinitions = extensionDefinitions
         )
     }
 
@@ -90,6 +95,7 @@ class ProtobufModelBuilderVisitor(
         val messages = ctx.topLevelDef().mapNotNull { it.messageDef() }.map { visitMessageDef(it) }
         val topLevelEnums = ctx.topLevelDef().mapNotNull { it.enumDef() }.map { visitEnumDef(it) }
         val services = ctx.topLevelDef().mapNotNull { it.serviceDef() }.map { visitServiceDef(it) }
+        val extensionDefinitions = ctx.topLevelDef().mapNotNull { it.extendDef() }.map { visitExtendDef(it) }
 
         val packages = ctx.packageStatement().mapNotNull { it.fullIdent()?.text }
 
@@ -100,7 +106,8 @@ class ProtobufModelBuilderVisitor(
             messages = messages,
             topLevelEnums = topLevelEnums,
             services = services,
-            packages = packages
+            packages = packages,
+            extensionDefinitions = extensionDefinitions
         )
     }
 
@@ -150,6 +157,8 @@ class ProtobufModelBuilderVisitor(
         val reservation = elements.mapNotNull { it.reserved() }.map { visitReserved(it) }.fold()
         val options = elements.mapNotNull { it.option() }.map { visitOption(it) }
 
+        val extensionDefinitions = elements.mapNotNull { it.extendDef() }.map { visitExtendDef(it) }
+
         return ProtoMessage(
             name = name,
             messages = messages,
@@ -159,6 +168,7 @@ class ProtobufModelBuilderVisitor(
             mapFields = mapFields,
             reservation = reservation,
             options = options,
+            extensionDefinitions = extensionDefinitions,
             ctx = ctx
         )
     }
@@ -179,6 +189,8 @@ class ProtobufModelBuilderVisitor(
         val reservation = elements.mapNotNull { it.reserved() }.map { visitReserved(it) }.fold()
         val options = elements.mapNotNull { it.optionStatement() }.map { visitOptionStatement(it) }
 
+        val extensionDefinitions = elements.mapNotNull { it.extendDef() }.map { visitExtendDef(it) }
+
         return ProtoMessage(
             name = name,
             messages = messages,
@@ -188,6 +200,7 @@ class ProtobufModelBuilderVisitor(
             mapFields = mapFields,
             reservation = reservation,
             options = options,
+            extensionDefinitions = extensionDefinitions,
             ctx = ctx
         )
     }
@@ -566,6 +579,20 @@ class ProtobufModelBuilderVisitor(
 
     // Extensions
 
+    override fun visitExtendDef(ctx: ProtobufEditionsParser.ExtendDefContext): ProtoExtensionDefinition {
+        val messageDef = ctx.messageType().text
+        val fields = ctx.field().mapNotNull { visitField(it) }
+
+        return ProtoExtensionDefinition(ProtoType.DefType(messageDef, ctx.messageType()), fields)
+    }
+
+    override fun visitExtendDef(ctx: Protobuf3Parser.ExtendDefContext): ProtoExtensionDefinition {
+        val messageDef = ctx.messageType().text
+        val fields = ctx.field().mapNotNull { visitField(it) }
+
+        return ProtoExtensionDefinition(ProtoType.DefType(messageDef, ctx.messageType()), fields)
+    }
+
     // TODO
     override fun visitExtensions(ctx: ProtobufEditionsParser.ExtensionsContext): Any = Unit
 
@@ -690,9 +717,6 @@ class ProtobufModelBuilderVisitor(
 
     override fun visitEnumElement(ctx: ProtobufEditionsParser.EnumElementContext?): Any = Unit
     override fun visitEnumElement(ctx: Protobuf3Parser.EnumElementContext?): Any = Unit
-
-    override fun visitExtendDef(ctx: ProtobufEditionsParser.ExtendDefContext?): Any = Unit
-    override fun visitExtendDef(ctx: Protobuf3Parser.ExtendDefContext?): Any = Unit
 
     override fun visitConstant(ctx: ProtobufEditionsParser.ConstantContext?): Any = Unit
     override fun visitConstant(ctx: Protobuf3Parser.ConstantContext?): Any = Unit

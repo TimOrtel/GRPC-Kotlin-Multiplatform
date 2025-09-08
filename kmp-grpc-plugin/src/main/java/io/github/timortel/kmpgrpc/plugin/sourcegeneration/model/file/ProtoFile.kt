@@ -20,8 +20,9 @@ data class ProtoFile(
     val enums: List<ProtoEnum>,
     val services: List<ProtoService>,
     override val options: List<ProtoOption>,
-    val imports: List<ProtoImport>
-) : FileBasedDeclarationResolver, ProtoOptionsHolder, ProtoVisibilityHolder {
+    val imports: List<ProtoImport>,
+    override val extensionDefinitions: List<ProtoExtensionDefinition>
+) : FileBasedDeclarationResolver, ProtoOptionsHolder, ProtoVisibilityHolder, ProtoExtensionDefinitionHolder {
     lateinit var folder: ProtoFolder
     lateinit var protoPackage: ProtoPackage
 
@@ -73,6 +74,7 @@ data class ProtoFile(
         services.forEach { it.file = this }
         messages.forEach { it.parent = parent }
         enums.forEach { it.parent = parent }
+        extensionDefinitions.forEach { it.parent = ProtoExtensionDefinition.Parent.File(this) }
     }
 
     override fun resolveDeclarationInParent(type: ProtoType.DefType): ProtoDeclaration? {

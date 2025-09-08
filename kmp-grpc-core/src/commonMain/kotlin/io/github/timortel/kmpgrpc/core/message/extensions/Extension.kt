@@ -47,22 +47,20 @@ sealed class Extension<M : Message, T>(
     /**
      * Class for [Extension]s that are defined as repeated on types that are packable.
      */
-    class PackableRepeatedValueExtension<M : Message, T>
     @InternalKmpGrpcApi
-    constructor(
+    class PackableRepeatedValueExtension<M : Message, T>(
         messageClass: KClass<M>,
         fieldNumber: Int,
         override val fieldType: FieldType.PackableFieldType<T>,
-        val isPacked: Boolean,
+        internal val isPacked: Boolean,
         internal val tag: UInt
     ) : RepeatedValueExtension<M, T>(messageClass, fieldNumber)
 
     /**
      * Class for [Extension]s that are defined as repeated on types that are not packable.
      */
-    class NonPackableRepeatedValueExtension<M : Message, T>
     @InternalKmpGrpcApi
-    constructor(
+    class NonPackableRepeatedValueExtension<M : Message, T>(
         messageClass: KClass<M>,
         fieldNumber: Int,
         override val fieldType: FieldType.NonPackableFieldType<T>

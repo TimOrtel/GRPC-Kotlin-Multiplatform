@@ -2,7 +2,8 @@ package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type
 
 import com.squareup.kotlinpoet.*
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.CompilationException
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.byteArrayListEquals
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.*
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoExtensionDefinition
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoProject
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoDeclaration
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoEnum
@@ -44,6 +45,11 @@ sealed interface ProtoType {
      */
     val wireType: DataType
 
+    /**
+     * The field type of this message, as defined in the core.
+     */
+    val fieldType: TypeName
+
     fun resolve(): TypeName
 
     /**
@@ -76,8 +82,12 @@ sealed interface ProtoType {
         EMPTY
     }
 
-    sealed class NonDeclType(val type: ClassName, private val defaultValue: CodeBlock, override val wireType: DataType) :
-        ProtoType {
+    sealed class NonDeclType(
+        val type: ClassName,
+        private val defaultValue: CodeBlock,
+        override val wireType: DataType,
+        override val fieldType: TypeName
+    ) : ProtoType {
 
         override lateinit var parent: Parent
 
@@ -91,23 +101,24 @@ sealed interface ProtoType {
         override fun defaultValue(messageDefaultValue: MessageDefaultValue): CodeBlock = defaultValue
     }
 
-    sealed class MapKeyType(type: ClassName, defaultValue: CodeBlock, wireType: DataType) : NonDeclType(type, defaultValue, wireType)
+    sealed class MapKeyType(type: ClassName, defaultValue: CodeBlock, wireType: DataType, fieldType: TypeName) :
+        NonDeclType(type, defaultValue, wireType, fieldType)
 
-    data object DoubleType : NonDeclType(DOUBLE, CodeBlock.of("0.0"), DataType.DOUBLE), DefaultInequalityProvider
-    data object FloatType : NonDeclType(FLOAT, CodeBlock.of("0.0f"), DataType.FLOAT), DefaultInequalityProvider
-    data object Int32Type : MapKeyType(INT, CodeBlock.of("0"), DataType.INT32), DefaultInequalityProvider
-    data object Int64Type : MapKeyType(LONG, CodeBlock.of("0L"), DataType.INT64), DefaultInequalityProvider
-    data object UInt32Type : MapKeyType(U_INT, CodeBlock.of("0u"), DataType.UINT32), DefaultInequalityProvider
-    data object UInt64Type : MapKeyType(U_LONG, CodeBlock.of("0uL"), DataType.UINT64), DefaultInequalityProvider
-    data object SInt32Type : MapKeyType(INT, CodeBlock.of("0"), DataType.SINT32), DefaultInequalityProvider
-    data object SInt64Type : MapKeyType(LONG, CodeBlock.of("0L"), DataType.SINT64), DefaultInequalityProvider
-    data object Fixed32Type : MapKeyType(U_INT, CodeBlock.of("0u"), DataType.FIXED32), DefaultInequalityProvider
-    data object Fixed64Type : MapKeyType(U_LONG, CodeBlock.of("0uL"), DataType.FIXED64), DefaultInequalityProvider
-    data object SFixed32Type : MapKeyType(INT, CodeBlock.of("0"), DataType.SFIXED32), DefaultInequalityProvider
-    data object SFixed64Type : MapKeyType(LONG, CodeBlock.of("0L"), DataType.SFIXED64), DefaultInequalityProvider
-    data object StringType : MapKeyType(STRING, CodeBlock.of("\"\""), DataType.STRING), DefaultInequalityProvider
+    data object DoubleType : NonDeclType(DOUBLE, CodeBlock.of("0.0"), DataType.DOUBLE, fieldTypeDouble), DefaultInequalityProvider
+    data object FloatType : NonDeclType(FLOAT, CodeBlock.of("0.0f"), DataType.FLOAT, fieldTypeFloat), DefaultInequalityProvider
+    data object Int32Type : MapKeyType(INT, CodeBlock.of("0"), DataType.INT32, fieldTypeInt32), DefaultInequalityProvider
+    data object Int64Type : MapKeyType(LONG, CodeBlock.of("0L"), DataType.INT64, fieldTypeInt64), DefaultInequalityProvider
+    data object UInt32Type : MapKeyType(U_INT, CodeBlock.of("0u"), DataType.UINT32, fieldTypeUInt32), DefaultInequalityProvider
+    data object UInt64Type : MapKeyType(U_LONG, CodeBlock.of("0uL"), DataType.UINT64, fieldTypeUInt64), DefaultInequalityProvider
+    data object SInt32Type : MapKeyType(INT, CodeBlock.of("0"), DataType.SINT32, fieldTypeSInt32), DefaultInequalityProvider
+    data object SInt64Type : MapKeyType(LONG, CodeBlock.of("0L"), DataType.SINT64, fieldTypeSInt64), DefaultInequalityProvider
+    data object Fixed32Type : MapKeyType(U_INT, CodeBlock.of("0u"), DataType.FIXED32, fieldTypeFixed32), DefaultInequalityProvider
+    data object Fixed64Type : MapKeyType(U_LONG, CodeBlock.of("0uL"), DataType.FIXED64, fieldTypeFixed64), DefaultInequalityProvider
+    data object SFixed32Type : MapKeyType(INT, CodeBlock.of("0"), DataType.SFIXED32, fieldTypeSFixed32), DefaultInequalityProvider
+    data object SFixed64Type : MapKeyType(LONG, CodeBlock.of("0L"), DataType.SFIXED64, fieldTypeSFixed64), DefaultInequalityProvider
+    data object StringType : MapKeyType(STRING, CodeBlock.of("\"\""), DataType.STRING, fieldTypeString), DefaultInequalityProvider
 
-    data object BoolType : MapKeyType(BOOLEAN, CodeBlock.of("false"), DataType.BOOL), DefaultInequalityProvider {
+    data object BoolType : MapKeyType(BOOLEAN, CodeBlock.of("false"), DataType.BOOL, fieldTypeBool), DefaultInequalityProvider {
         override fun isDefaultValueCode(
             attributeName: String,
             isRepeated: Boolean,
@@ -133,7 +144,7 @@ sealed interface ProtoType {
         }
     }
 
-    data object BytesType : NonDeclType(BYTE_ARRAY, CodeBlock.of("byteArrayOf()"), DataType.BYTES) {
+    data object BytesType : NonDeclType(BYTE_ARRAY, CodeBlock.of("byteArrayOf()"), DataType.BYTES, fieldTypeBytes) {
         override fun inequalityCode(attributeName: String, otherParamName: String, isRepeated: Boolean): CodeBlock {
             return if (isRepeated) {
                 CodeBlock.of("!%1M(%2N, %3N.%2N)", byteArrayListEquals, attributeName, otherParamName)
@@ -186,6 +197,12 @@ sealed interface ProtoType {
                 DeclarationType.ENUM -> DataType.ENUM
             }
 
+        override val fieldType: TypeName
+            get() = when (declType) {
+                DeclarationType.MESSAGE -> fieldTypeMessage
+                DeclarationType.ENUM -> fieldTypeEnum
+            }
+
         override fun defaultValue(messageDefaultValue: MessageDefaultValue): CodeBlock {
             return when (val decl = resolveDeclaration()) {
                 is ProtoEnum -> {
@@ -216,6 +233,10 @@ sealed interface ProtoType {
                 is Parent.MapField -> p.field.message.resolveDeclaration(this)
                 is Parent.OneOfField -> p.field.parent.message.resolveDeclaration(this)
                 is Parent.Rpc -> p.rpc.file.resolveDeclaration(this)
+                is Parent.ExtensionDefinition -> when (val ep = p.extensionDefinition.parent) {
+                    is ProtoExtensionDefinition.Parent.File -> ep.file.resolveDeclaration(this)
+                    is ProtoExtensionDefinition.Parent.Message -> ep.message.resolveDeclaration(this)
+                }
             }
 
             if (decl == null) {
@@ -298,6 +319,11 @@ sealed interface ProtoType {
         data class Rpc(val rpc: ProtoRpc) : Parent {
             override val file: ProtoFile
                 get() = rpc.file
+        }
+
+        data class ExtensionDefinition(val extensionDefinition: ProtoExtensionDefinition) : Parent {
+            override val file: ProtoFile
+                get() = extensionDefinition.file
         }
     }
 

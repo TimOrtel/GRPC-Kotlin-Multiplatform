@@ -24,8 +24,9 @@ data class ProtoMessage(
     val mapFields: List<ProtoMapField>,
     override val reservation: ProtoReservation,
     override val options: List<ProtoOption>,
+    override val extensionDefinitions: List<ProtoExtensionDefinition>,
     override val ctx: ParserRuleContext
-) : ProtoDeclaration, FileBasedDeclarationResolver, ProtoFieldHolder, ProtoChildPropertyNameResolver {
+) : ProtoDeclaration, FileBasedDeclarationResolver, ProtoFieldHolder, ProtoChildPropertyNameResolver, ProtoExtensionDefinitionHolder {
 
     override lateinit var parent: ProtoDeclParent
 
@@ -81,6 +82,8 @@ data class ProtoMessage(
         oneOfs.forEach { it.message = this }
         fields.forEach { it.parent = this }
         mapFields.forEach { it.message = this }
+
+        extensionDefinitions.forEach { it.parent = ProtoExtensionDefinition.Parent.Message(this) }
     }
 
     override fun resolveDeclarationInParent(type: ProtoType.DefType): ProtoDeclaration? {
