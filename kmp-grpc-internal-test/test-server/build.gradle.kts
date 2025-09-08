@@ -25,6 +25,7 @@ dependencies {
         exclude("org.antlr")
     }
 
+    runtimeOnly(libs.slf4j.simple)
 
     implementation(libs.google.protobuf.kotlin)
     implementation(libs.google.protobuf.java.util)
@@ -96,4 +97,8 @@ java {
 
 application {
     mainClass.set("io.github.timortel.kmpgrpc.testserver.MainKt")
+}
+
+tasks.named("run", JavaExec::class) {
+    jvmArgs = listOf("-Dorg.slf4j.simpleLogger.defaultLogLevel=trace")
 }
