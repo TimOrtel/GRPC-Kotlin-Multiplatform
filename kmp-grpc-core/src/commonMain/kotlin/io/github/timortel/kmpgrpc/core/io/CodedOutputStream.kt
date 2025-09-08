@@ -2,9 +2,13 @@ package io.github.timortel.kmpgrpc.core.io
 
 import io.github.timortel.kmpgrpc.core.message.Message
 import io.github.timortel.kmpgrpc.core.message.Enum
+import io.github.timortel.kmpgrpc.core.message.FieldType
 import io.github.timortel.kmpgrpc.core.message.UnknownField
+import io.github.timortel.kmpgrpc.core.message.extensions.MessageExtensions
 import io.github.timortel.kmpgrpc.shared.internal.InternalKmpGrpcApi
 import io.github.timortel.kmpgrpc.shared.internal.io.WireFormat
+import kotlin.collections.component1
+import kotlin.collections.component2
 
 /**
  * Interface that encodes messages to send them over the network connection. Counterpart to [CodedInputStream].
@@ -23,7 +27,7 @@ interface CodedOutputStream {
 
     fun writeBytes(fieldNumber: Int, value: ByteArray)
 
-    fun writeBytesArray(fieldNumber: Int, values: List<ByteArray>,)
+    fun writeBytesArray(fieldNumber: Int, values: List<ByteArray>)
 
     fun writeDouble(fieldNumber: Int, value: Double)
 
@@ -34,6 +38,8 @@ interface CodedOutputStream {
     fun writeEnum(fieldNumber: Int, value: Int)
 
     fun writeEnum(fieldNumber: Int, value: Enum)
+
+    fun writeEnumArrayRaw(fieldNumber: Int, values: List<Int>, tag: UInt)
 
     fun writeEnumArray(fieldNumber: Int, values: List<Enum>, tag: UInt)
 
@@ -157,4 +163,22 @@ interface CodedOutputStream {
         writeKey: CodedOutputStream.(fieldNumber: Int, K) -> Unit,
         writeValue: CodedOutputStream.(fieldNumber: Int, V) -> Unit
     )
+
+    fun <M : Message> writeMessageExtensions(messageExtensions: MessageExtensions<M>) {
+        messageExtensions.scalarMap.forEach { (key, value) ->
+            key.fieldType.writeScalar(this, key.fieldNumber, value)
+        }
+
+        messageExtensions.repeatedMap.forEach { (key, value) ->
+            when (val fieldType = key.fieldType) {
+                is FieldType.PackableFieldType<Any> -> {
+                    fieldType.writeRepeated(this, key.fieldNumber, value, key.tag)
+                }
+
+                is FieldType.NonPackableFieldType -> {
+                    fieldType.writeRepeated(this, key.fieldNumber, value)
+                }
+            }
+        }
+    }
 }
