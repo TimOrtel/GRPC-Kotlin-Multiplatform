@@ -15,13 +15,18 @@ val MessageDeserializer = ClassName(PACKAGE_MESSAGE, "MessageDeserializer")
 val MessageCompanion = ClassName(PACKAGE_MESSAGE, "MessageCompanion")
 
 val kmMessage = ClassName(PACKAGE_MESSAGE, "Message")
+val kmMessageWithExtensions = ClassName(PACKAGE_MESSAGE, "MessageWithExtensions")
 val kmEnum = ClassName(PACKAGE_MESSAGE, "Enum")
 
-private val kmExtension = ClassName("$PACKAGE_MESSAGE.extensions", "Extension")
+private val kmExtension = ClassName(PACKAGE_MESSAGE_EXTENSIONS, "Extension")
 val kmExtensionScalar = kmExtension.nestedClass("ScalarValueExtension")
 val kmExtensionRepeated = kmExtension.nestedClass("RepeatedValueExtension")
 val kmExtensionRepeatedPackable = kmExtension.nestedClass("PackableRepeatedValueExtension")
 val kmExtensionRepeatedNonPackable = kmExtension.nestedClass("NonPackableRepeatedValueExtension")
+
+val kmMessageExtensions = ClassName(PACKAGE_MESSAGE_EXTENSIONS, "MessageExtensions")
+val kmExtensionRegistry = ClassName(PACKAGE_MESSAGE_EXTENSIONS, "ExtensionRegistry")
+val kmExtensionBuilder = ClassName(PACKAGE_MESSAGE_EXTENSIONS, "MessageExtensionsBuilder")
 
 val unknownField = ClassName(PACKAGE_MESSAGE, "UnknownField")
 
@@ -58,3 +63,6 @@ val fieldTypeString = fieldType.nestedClass("String")
 val fieldTypeMessage = fieldType.nestedClass("Message")
 val fieldTypeEnum = fieldType.nestedClass("Enum")
 val fieldTypeBytes = fieldType.nestedClass("Bytes")
+
+// util
+val mergeUnknownFieldOrExtension = MemberName(PACKAGE_MESSAGE, "mergeUnknownFieldOrExtension")

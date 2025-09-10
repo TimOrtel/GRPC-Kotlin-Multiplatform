@@ -139,18 +139,19 @@ abstract class CodedInputStream {
     fun <M : Message> readUnknownFieldOrExtension(
         tag: Int,
         extensionRegistry: ExtensionRegistry<M>
-    ): UnknownFieldOrExtension? {
+    ): UnknownFieldOrExtension<M, Any>? {
         val number = wireFormatGetTagFieldNumber(tag)
 
         val extension = extensionRegistry.getExtensionForFieldNumber(number)
+        @Suppress("UNCHECKED_CAST")
         return if (extension != null) {
             readExtension(extension)
         } else {
-            readUnknownField(tag)?.let(UnknownFieldOrExtension::UnknownField)
-        }
+            readUnknownField(tag)?.let(UnknownFieldOrExtension<M, Any>::UnknownField)
+        } as UnknownFieldOrExtension<M, Any>?
     }
 
-    private fun <M : Message, T> readExtension(extension: Extension<M, T>): UnknownFieldOrExtension.Extension<M, T> {
+    private fun <M : Message, T : Any> readExtension(extension: Extension<M, T>): UnknownFieldOrExtension.Extension<M, T> {
         // Read the field as an extension
         return when (extension) {
             is Extension.ScalarValueExtension -> {

@@ -20,7 +20,7 @@ object Const {
             object WithDeadlineAfter {
                 const val NAME = "withDeadlineAfter"
 
-                val ParamDuration = Property("duration", Duration::class.asTypeName())
+                val ParamDuration = Property.of("duration", Duration::class.asTypeName())
             }
         }
 
@@ -34,10 +34,11 @@ object Const {
     object Message {
         val reservedAttributeNames = setOf("fullName", "requiredSize", Companion.WrapperDeserializationFunction.TAG_LOCAL_VARIABLE, Constructor.UnknownFields.name)
 
-        val fullNameProperty = Property("fullName", STRING)
+        val fullNameProperty = Property.of("fullName", STRING)
 
         object Constructor {
-            val UnknownFields = Property("unknownFields", LIST.parameterizedBy(unknownField))
+            val UnknownFields = Property.of("unknownFields", LIST.parameterizedBy(unknownField))
+            val MessageExtensions = Property.of("extensions", kmMessageExtensions)
         }
 
         object SerializeFunction {
@@ -66,13 +67,17 @@ object Const {
         }
 
         object Companion {
-            val fullNameProperty = Property("fullName", STRING)
+            val fullNameProperty = Property.of("fullName", STRING)
 
             object WrapperDeserializationFunction {
                 const val NAME = "deserialize"
-                const val STREAM_PARAM = "stream"
+
+                val STREAM_PARAM = Property.of("stream", CodedInputStream)
+                val EXTENSION_REGISTRY_PARAM = Property.of("extensionRegistry", kmExtensionRegistry)
+
                 const val TAG_LOCAL_VARIABLE = "tag_"
                 const val UNKNOWN_FIELDS_LOCAL_VARIABLE = "unknownFields"
+                const val EXTENSION_BUILDER_LOCAL_VARIABLE = "extensionBuilder"
             }
         }
     }

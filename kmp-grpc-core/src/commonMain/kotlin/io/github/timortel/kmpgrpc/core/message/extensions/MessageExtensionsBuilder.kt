@@ -73,7 +73,8 @@ class MessageExtensionsBuilder<M : Message> @InternalKmpGrpcApi constructor() {
         repeatedMap += extensions.repeatedMap
     }
 
-    internal fun build(): MessageExtensions<M> {
+    @InternalKmpGrpcApi
+    fun build(): MessageExtensions<M> {
         return MessageExtensions(scalarMap, repeatedMap)
     }
 }

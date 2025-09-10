@@ -14,7 +14,7 @@ import kotlin.reflect.KClass
  * @property messageClass The class type of the protocol buffer message this extension is associated with.
  * @property fieldNumber The field number in the protocol buffer schema for the extension.
  */
-sealed class Extension<M : Message, T>(
+sealed class Extension<M : Message, T : Any>(
     internal val messageClass: KClass<M>,
     internal val fieldNumber: Int
 ) {
@@ -24,7 +24,7 @@ sealed class Extension<M : Message, T>(
     /**
      * Class for [Extension]s that are defined non-repeated.
      */
-    class ScalarValueExtension<M : Message, T>
+    class ScalarValueExtension<M : Message, T : Any>
     @InternalKmpGrpcApi
     constructor(
         messageClass: KClass<M>,
@@ -35,7 +35,7 @@ sealed class Extension<M : Message, T>(
     /**
      * Class for [Extension]s that are defined as repeated.
      */
-    sealed class RepeatedValueExtension<M : Message, T>
+    sealed class RepeatedValueExtension<M : Message, T : Any>
     @InternalKmpGrpcApi
     constructor(
         messageClass: KClass<M>,
@@ -48,7 +48,7 @@ sealed class Extension<M : Message, T>(
      * Class for [Extension]s that are defined as repeated on types that are packable.
      */
     @InternalKmpGrpcApi
-    class PackableRepeatedValueExtension<M : Message, T>(
+    class PackableRepeatedValueExtension<M : Message, T : Any>(
         messageClass: KClass<M>,
         fieldNumber: Int,
         override val fieldType: FieldType.PackableFieldType<T>,
@@ -60,7 +60,7 @@ sealed class Extension<M : Message, T>(
      * Class for [Extension]s that are defined as repeated on types that are not packable.
      */
     @InternalKmpGrpcApi
-    class NonPackableRepeatedValueExtension<M : Message, T>(
+    class NonPackableRepeatedValueExtension<M : Message, T : Any>(
         messageClass: KClass<M>,
         fieldNumber: Int,
         override val fieldType: FieldType.NonPackableFieldType<T>

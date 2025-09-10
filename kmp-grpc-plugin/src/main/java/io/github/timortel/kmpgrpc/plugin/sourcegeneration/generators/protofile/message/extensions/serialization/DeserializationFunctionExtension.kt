@@ -20,7 +20,7 @@ import io.github.timortel.kmpgrpc.shared.internal.io.wireFormatMakeTag
  */
 class DeserializationFunctionExtension : BaseSerializationExtension() {
 
-    private val wrapperParamName = Const.Message.Companion.WrapperDeserializationFunction.STREAM_PARAM
+    private val wrapperParamName = Const.Message.Companion.WrapperDeserializationFunction.STREAM_PARAM.name
 
     override fun applyToCompanionObject(builder: TypeSpec.Builder, message: ProtoMessage, sourceTarget: SourceTarget) {
         builder.addFunction(
@@ -28,9 +28,11 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
             FunSpec
                 .builder(Const.Message.Companion.WrapperDeserializationFunction.NAME)
                 .addModifiers(KModifier.OVERRIDE)
+                .addParameter(Const.Message.Companion.WrapperDeserializationFunction.STREAM_PARAM.toParamSpec())
                 .addParameter(
-                    Const.Message.Companion.WrapperDeserializationFunction.STREAM_PARAM,
-                    CodedInputStream
+                    Const.Message.Companion.WrapperDeserializationFunction.EXTENSION_REGISTRY_PARAM
+                        .parametrizedBy(message.className)
+                        .toParamSpec()
                 )
                 .returns(message.className)
                 .apply {
@@ -47,13 +49,21 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
         builder: FunSpec.Builder,
         message: ProtoMessage
     ) {
-        // declare unknownFields variable
+        // declare unknownFields and extension builder variables
         declareLocalVariable(
             builder = builder,
             fieldName = Const.Message.Companion.WrapperDeserializationFunction.UNKNOWN_FIELDS_LOCAL_VARIABLE,
             type = MUTABLE_LIST.parameterizedBy(unknownField),
             isMutable = false,
             defaultValue = CodeBlock.of("mutableListOf()")
+        )
+
+        declareLocalVariable(
+            builder = builder,
+            fieldName = Const.Message.Companion.WrapperDeserializationFunction.EXTENSION_BUILDER_LOCAL_VARIABLE,
+            type = kmExtensionBuilder.parameterizedBy(message.className),
+            isMutable = false,
+            defaultValue = CodeBlock.of("%T()", kmExtensionBuilder)
         )
 
         // declare variables for each field
@@ -87,14 +97,17 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
 
             declareWhenEntriesForOneOfs(message)
 
-            // Unknown field
+            // Unknown field or extension
             addStatement(
-                "else -> %N.%N(%N)?.let { unknownFields.add(it) }",
+                "else -> %M(%N.%N(%N, %N), %N, %N)",
+                mergeUnknownFieldOrExtension,
                 wrapperParamName,
-                "readUnknownField",
-                tagLocalFieldName
+                "readUnknownFieldOrExtension",
+                tagLocalFieldName,
+                Const.Message.Companion.WrapperDeserializationFunction.EXTENSION_REGISTRY_PARAM.name,
+                Const.Message.Companion.WrapperDeserializationFunction.UNKNOWN_FIELDS_LOCAL_VARIABLE,
+                Const.Message.Companion.WrapperDeserializationFunction.EXTENSION_BUILDER_LOCAL_VARIABLE,
             )
-            // Unknown field
 
             endControlFlow()
 
@@ -230,7 +243,7 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
 
             addCode(
                 "%N.%N(%N, %T.%N, %T.%N, ",
-                Const.Message.Companion.WrapperDeserializationFunction.STREAM_PARAM,
+                wrapperParamName,
                 "readMapEntry",
                 mapField.attributeName,
                 DataType::class.asTypeName(),
@@ -283,7 +296,19 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
                     Const.Message.Companion.WrapperDeserializationFunction.UNKNOWN_FIELDS_LOCAL_VARIABLE
                 )
 
-            addCode(listOf(fieldsBlock, unknownFieldsBlock).joinCodeBlocks(separator))
+            val extensionsBlock =
+                CodeBlock.of(
+                    "%N·=·%N.build()",
+                    Const.Message.Constructor.MessageExtensions.name,
+                    Const.Message.Companion.WrapperDeserializationFunction.EXTENSION_BUILDER_LOCAL_VARIABLE
+                )
+
+            val codeBlocks = listOf(
+                fieldsBlock,
+                unknownFieldsBlock
+            ) + if (message.isExtendable) listOf(extensionsBlock) else emptyList()
+
+            addCode(codeBlocks.joinCodeBlocks(separator))
 
             addCode(")\n")
         }

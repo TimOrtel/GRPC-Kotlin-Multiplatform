@@ -13,5 +13,5 @@ interface MessageWithExtensions<M : Message> : Message {
     /**
      * Holds the collection of values for the extensions associated with this message.
      */
-    val messageExtensions: MessageExtensions<M>
+    val extensions: MessageExtensions<M>
 }
