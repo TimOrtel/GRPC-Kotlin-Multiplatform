@@ -223,15 +223,15 @@ sealed interface ProtoType {
             return resolveDeclaration().className
         }
 
-        private fun resolveDeclaration(): ProtoDeclaration {
+        fun resolveDeclaration(): ProtoDeclaration {
             val decl = if (declaration.startsWith('.')) {
                 val fullyQualifiedName = declaration.substring(1)
 
                 parent.project.resolveDeclarationFullyQualified(copy(declaration = fullyQualifiedName))
             } else when (val p = parent) {
-                is Parent.MessageField -> p.field.parent.resolveDeclaration(this)
-                is Parent.MapField -> p.field.message.resolveDeclaration(this)
-                is Parent.OneOfField -> p.field.parent.message.resolveDeclaration(this)
+                is Parent.MessageField -> p.field.declarationResolver.resolveDeclaration(this)
+                is Parent.MapField -> p.field.declarationResolver.resolveDeclaration(this)
+                is Parent.OneOfField -> p.field.parent.declarationResolver.resolveDeclaration(this)
                 is Parent.Rpc -> p.rpc.file.resolveDeclaration(this)
                 is Parent.ExtensionDefinition -> when (val ep = p.extensionDefinition.parent) {
                     is ProtoExtensionDefinition.Parent.File -> ep.file.resolveDeclaration(this)

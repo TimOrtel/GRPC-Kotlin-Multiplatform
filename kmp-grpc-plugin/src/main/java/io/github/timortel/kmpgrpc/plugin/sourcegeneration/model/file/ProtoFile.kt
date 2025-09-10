@@ -16,13 +16,14 @@ data class ProtoFile(
     val `package`: String?,
     val fileName: String,
     val fileNameWithoutExtension: String,
-    val messages: List<ProtoMessage>,
+    override val messages: List<ProtoMessage>,
     val enums: List<ProtoEnum>,
     val services: List<ProtoService>,
     override val options: List<ProtoOption>,
     val imports: List<ProtoImport>,
     override val extensionDefinitions: List<ProtoExtensionDefinition>
-) : FileBasedDeclarationResolver, ProtoOptionsHolder, ProtoVisibilityHolder, ProtoExtensionDefinitionHolder {
+) : FileBasedDeclarationResolver, ProtoOptionsHolder, ProtoVisibilityHolder, ProtoExtensionDefinitionHolder,
+    ProtoExtensionDefinitionFinder {
     lateinit var folder: ProtoFolder
     lateinit var protoPackage: ProtoPackage
 
@@ -31,7 +32,11 @@ data class ProtoFile(
      */
     val path: String
         get() {
-            return folder.path + fileName
+            return if (folder.path != null) {
+                "${folder.path}/$fileName"
+            } else {
+                fileName
+            }
         }
 
     override val project: ProtoProject
@@ -84,6 +89,7 @@ data class ProtoFile(
     override fun validate() {
         super<FileBasedDeclarationResolver>.validate()
         super<ProtoOptionsHolder>.validate()
+        super<ProtoExtensionDefinitionHolder>.validate()
 
         messages.forEach { it.validate() }
         enums.forEach { it.validate() }

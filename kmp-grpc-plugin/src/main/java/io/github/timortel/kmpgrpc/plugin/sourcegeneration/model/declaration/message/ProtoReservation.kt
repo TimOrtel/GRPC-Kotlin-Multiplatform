@@ -2,7 +2,7 @@ package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.mes
 
 data class ProtoReservation(
     val nums: List<Int> = emptyList(),
-    val ranges: List<IntRange> = emptyList(),
+    val ranges: List<ProtoRange> = emptyList(),
     val names: List<String> = emptyList()
 ) {
 

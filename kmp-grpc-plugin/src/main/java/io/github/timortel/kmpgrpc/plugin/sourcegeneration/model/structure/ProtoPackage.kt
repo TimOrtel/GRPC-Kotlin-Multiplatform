@@ -1,6 +1,8 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.structure
 
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.DeclarationResolver
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoExtensionDefinition
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoExtensionDefinitionFinder
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoNode
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoProject
@@ -8,7 +10,7 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoDeclaration
 
 data class ProtoPackage(val name: String, val packages: List<ProtoPackage>, val files: List<ProtoFile>) :
-    DeclarationResolver, ProtoNode {
+    DeclarationResolver, ProtoNode, ProtoExtensionDefinitionFinder {
 
     lateinit var parent: Parent
 
@@ -38,6 +40,10 @@ data class ProtoPackage(val name: String, val packages: List<ProtoPackage>, val 
             // Base package reached, no more resolution possible
             is Parent.Project -> null
         }
+    }
+
+    override fun findExtensionDefinitions(): List<ProtoExtensionDefinition> {
+        return packages.flatMap { it.findExtensionDefinitions() } + files.flatMap { it.findExtensionDefinitions() }
     }
 
     sealed interface Parent {

@@ -5,7 +5,9 @@ import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.LIST
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.TypeName
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.DeclarationResolver
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.Options
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoExtensionDefinition
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOption
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoChildProperty
@@ -26,12 +28,24 @@ data class ProtoMessageField(
     override val ctx: ParserRuleContext
 ) : ProtoRegularField(), ProtoMessageProperty {
 
-    lateinit var parent: ProtoMessage
+    lateinit var parent: Parent
 
     override val message: ProtoMessage
-        get() = parent
+        get() = when (val p = parent) {
+            is Parent.Message -> p.message
+            is Parent.ExtensionDefinition -> p.ext.messageType.resolveDeclaration() as ProtoMessage
+        }
 
-    override val file: ProtoFile get() = parent.file
+    override val file: ProtoFile get() = when (val p = parent) {
+        is Parent.ExtensionDefinition -> p.ext.file
+        is Parent.Message -> p.message.file
+    }
+
+    override val declarationResolver: DeclarationResolver
+        get() = when (val p = parent) {
+            is Parent.ExtensionDefinition -> p.ext.parent
+            is Parent.Message -> p.message
+        }
 
     override val desiredAttributeName: String = when (cardinality) {
         ProtoFieldCardinality.Implicit, ProtoFieldCardinality.Optional -> name
@@ -57,7 +71,7 @@ data class ProtoMessageField(
     val isSetProperty: ExtraProperty
         get() = ExtraProperty(
             desiredAttributeName = "is${name.capitalize()}Set",
-            resolvingParent = message,
+            resolvingParent = resolvingParent,
             priority = number,
             propertyType = BOOLEAN
         )
@@ -103,5 +117,10 @@ data class ProtoMessageField(
     ) : ProtoChildProperty {
         override val name: String
             get() = desiredAttributeName
+    }
+
+    sealed interface Parent {
+        data class Message(val message: ProtoMessage) : Parent
+        data class ExtensionDefinition(val ext: ProtoExtensionDefinition) : Parent
     }
 }

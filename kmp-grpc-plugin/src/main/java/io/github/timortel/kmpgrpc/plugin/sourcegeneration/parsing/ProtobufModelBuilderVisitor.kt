@@ -13,7 +13,10 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoEnum
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoMessage
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.enumeration.ProtoEnumField
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.ProtoExtensionRanges
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.ProtoExtensionRanges.Companion.fold
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.ProtoOneOf
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.ProtoRange
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.ProtoReservation
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.ProtoReservation.Companion.fold
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoFieldCardinality
@@ -158,6 +161,7 @@ class ProtobufModelBuilderVisitor(
         val options = elements.mapNotNull { it.option() }.map { visitOption(it) }
 
         val extensionDefinitions = elements.mapNotNull { it.extendDef() }.map { visitExtendDef(it) }
+        val extensionRange = elements.mapNotNull { it.extensions() }.map { visitExtensions(it) }.fold()
 
         return ProtoMessage(
             name = name,
@@ -169,6 +173,7 @@ class ProtobufModelBuilderVisitor(
             reservation = reservation,
             options = options,
             extensionDefinitions = extensionDefinitions,
+            extensionRange = extensionRange,
             ctx = ctx
         )
     }
@@ -201,13 +206,14 @@ class ProtobufModelBuilderVisitor(
             reservation = reservation,
             options = options,
             extensionDefinitions = extensionDefinitions,
+            extensionRange = ProtoExtensionRanges(),
             ctx = ctx
         )
     }
 
     override fun visitReserved(ctx: ProtobufEditionsParser.ReservedContext): ProtoReservation {
         return when {
-            ctx.ranges() != null -> visitRanges(ctx.ranges())
+            ctx.ranges() != null -> ProtoReservation(ranges = visitRanges(ctx.ranges()))
             ctx.reservedFieldNames() != null -> visitReservedFieldNames(ctx.reservedFieldNames())
             else -> throw ParseException("Could not read reserved field", ctx)
         }
@@ -215,32 +221,32 @@ class ProtobufModelBuilderVisitor(
 
     override fun visitReserved(ctx: Protobuf3Parser.ReservedContext): ProtoReservation {
         return when {
-            ctx.ranges() != null -> visitRanges(ctx.ranges())
+            ctx.ranges() != null -> ProtoReservation(ranges = visitRanges(ctx.ranges()))
             ctx.reservedFieldNames() != null -> visitReservedFieldNames(ctx.reservedFieldNames())
             else -> throw ParseException("Could not read reserved field", ctx)
         }
     }
 
-    override fun visitRanges(ctx: ProtobufEditionsParser.RangesContext): ProtoReservation {
-        return ctx.range_().map { visitRange_(it) }.fold()
+    override fun visitRanges(ctx: ProtobufEditionsParser.RangesContext): List<ProtoRange> {
+        return ctx.range_().map { visitRange_(it) }
     }
 
-    override fun visitRanges(ctx: Protobuf3Parser.RangesContext): ProtoReservation {
-        return ctx.range_().map { visitRange_(it) }.fold()
+    override fun visitRanges(ctx: Protobuf3Parser.RangesContext): List<ProtoRange> {
+        return ctx.range_().map { visitRange_(it) }
     }
 
-    private fun visitRange(start: Int, end: Int?): ProtoReservation {
+    private fun visitRange(start: Int, end: Int?, ctx: ParserRuleContext): ProtoRange {
         val end = end ?: start
 
-        return ProtoReservation(ranges = listOf(start..end))
+        return ProtoRange(start..end, ctx)
     }
 
-    override fun visitRange_(ctx: ProtobufEditionsParser.Range_Context): ProtoReservation {
-        return visitRange(ctx.intLit(0).parseInt(), ctx.intLit(1)?.parseInt())
+    override fun visitRange_(ctx: ProtobufEditionsParser.Range_Context): ProtoRange {
+        return visitRange(ctx.intLit(0).parseInt(), ctx.intLit(1)?.parseInt(), ctx)
     }
 
-    override fun visitRange_(ctx: Protobuf3Parser.Range_Context): ProtoReservation {
-        return visitRange(ctx.intLit(0).parseInt(), ctx.intLit(1)?.parseInt())
+    override fun visitRange_(ctx: Protobuf3Parser.Range_Context): ProtoRange {
+        return visitRange(ctx.intLit(0).parseInt(), ctx.intLit(1)?.parseInt(), ctx)
     }
 
     private fun visitReservedFieldNames(names: List<String>): ProtoReservation {
@@ -583,18 +589,19 @@ class ProtobufModelBuilderVisitor(
         val messageDef = ctx.messageType().text
         val fields = ctx.field().mapNotNull { visitField(it) }
 
-        return ProtoExtensionDefinition(ProtoType.DefType(messageDef, ctx.messageType()), fields)
+        return ProtoExtensionDefinition(ProtoType.DefType(messageDef, ctx.messageType()), fields, ctx)
     }
 
     override fun visitExtendDef(ctx: Protobuf3Parser.ExtendDefContext): ProtoExtensionDefinition {
         val messageDef = ctx.messageType().text
         val fields = ctx.field().mapNotNull { visitField(it) }
 
-        return ProtoExtensionDefinition(ProtoType.DefType(messageDef, ctx.messageType()), fields)
+        return ProtoExtensionDefinition(ProtoType.DefType(messageDef, ctx.messageType()), fields, ctx)
     }
 
-    // TODO
-    override fun visitExtensions(ctx: ProtobufEditionsParser.ExtensionsContext): Any = Unit
+    override fun visitExtensions(ctx: ProtobufEditionsParser.ExtensionsContext): ProtoExtensionRanges {
+        return ProtoExtensionRanges(ranges = visitRanges(ctx.ranges()))
+    }
 
     // Type parsing
 

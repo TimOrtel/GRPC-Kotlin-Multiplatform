@@ -1,9 +1,11 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model
 
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.CompilationException
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoMessage
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoMessageField
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
+import org.antlr.v4.runtime.ParserRuleContext
 
 /**
  * Represents the definition of a Protocol Buffers extension.
@@ -13,8 +15,9 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
  */
 data class ProtoExtensionDefinition(
     val messageType: ProtoType.DefType,
-    val fields: List<ProtoMessageField>
-) {
+    val fields: List<ProtoMessageField>,
+    val ctx: ParserRuleContext
+) : ProtoNode {
     lateinit var parent: Parent
 
     val file: ProtoFile
@@ -22,14 +25,27 @@ data class ProtoExtensionDefinition(
 
     init {
         messageType.parent = ProtoType.Parent.ExtensionDefinition(this)
+
+        fields.forEach { it.parent = ProtoMessageField.Parent.ExtensionDefinition(this) }
     }
 
-    sealed interface Parent {
+    override fun validate() {
+        val declType = messageType.declType
+        when (declType) {
+            ProtoType.DefType.DeclarationType.ENUM -> {
+                val message = "Expected extension to reference a message, but instead references an enum."
+                throw CompilationException.ExtensionInvalidReference(message, file, ctx)
+            }
+            ProtoType.DefType.DeclarationType.MESSAGE -> {} // Good case
+        }
+    }
+
+    sealed interface Parent : DeclarationResolver {
         val file: ProtoFile
 
-        data class File(override val file: ProtoFile) : Parent
+        data class File(override val file: ProtoFile) : Parent, DeclarationResolver by file
 
-        data class Message(val message: ProtoMessage) : Parent {
+        data class Message(val message: ProtoMessage) : Parent, DeclarationResolver by message {
             override val file: ProtoFile
                 get() = message.file
         }
