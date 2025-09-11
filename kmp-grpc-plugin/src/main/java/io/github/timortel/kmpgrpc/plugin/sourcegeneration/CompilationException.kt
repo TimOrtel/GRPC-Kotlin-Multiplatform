@@ -12,6 +12,7 @@ sealed class CompilationException(val msg: String, val filePath: String, val ctx
     class ReservedFieldNumberUsed(message: String, file: ProtoFile, ctx: ParserRuleContext) : CompilationException(message, file, ctx)
     class ReservedFieldNameUsed(message: String, file: ProtoFile, ctx: ParserRuleContext) : CompilationException(message, file, ctx)
     class FieldNumberConflict(message: String, file: ProtoFile, ctx: ParserRuleContext) : CompilationException(message, file, ctx)
+    class IllegalFieldNumber(message: String, file: ProtoFile, ctx: ParserRuleContext) : CompilationException(message, file, ctx)
 
     // Imports
     class UnresolvedImport(message: String, file: ProtoFile, ctx: ParserRuleContext) : CompilationException(message, file, ctx)
@@ -37,6 +38,7 @@ sealed class CompilationException(val msg: String, val filePath: String, val ctx
     class ExtensionDefinedOutOfExtensionRange(message: String, file: ProtoFile, ctx: ParserRuleContext) : CompilationException(message, file, ctx)
     class ExtensionRangeOverlap(message: String, file: ProtoFile, ctx: ParserRuleContext) : CompilationException(message, file, ctx)
     class ExtensionInvalidReference(message: String, file: ProtoFile, ctx: ParserRuleContext) : CompilationException(message, file, ctx)
+    class ExtensionInvalidRange(message: String, file: ProtoFile, ctx: ParserRuleContext) : CompilationException(message, file, ctx)
 
     override val message: String
         get() = if (ctx == null) {

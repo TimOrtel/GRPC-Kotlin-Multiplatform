@@ -5,6 +5,8 @@ import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.LIST
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.TypeName
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.CompilationException
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.Const
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.DeclarationResolver
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.Options
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoExtensionDefinition
@@ -36,10 +38,11 @@ data class ProtoMessageField(
             is Parent.ExtensionDefinition -> p.ext.messageType.resolveDeclaration() as ProtoMessage
         }
 
-    override val file: ProtoFile get() = when (val p = parent) {
-        is Parent.ExtensionDefinition -> p.ext.file
-        is Parent.Message -> p.message.file
-    }
+    override val file: ProtoFile
+        get() = when (val p = parent) {
+            is Parent.ExtensionDefinition -> p.ext.file
+            is Parent.Message -> p.message.file
+        }
 
     override val declarationResolver: DeclarationResolver
         get() = when (val p = parent) {
@@ -106,6 +109,16 @@ data class ProtoMessageField(
                 cardinality == ProtoFieldCardinality.Repeated && type.isPackable
             }
             else -> super.isSupportedOptionValid(option)
+        }
+    }
+
+    override fun validate() {
+        if (number < 1 || number > Const.FIELD_NUMBER_MAX_VALUE) {
+            throw CompilationException.IllegalFieldNumber(
+                message = "Field $name declared illegal field number ${number}. Must be >= 1 and <= ${Const.FIELD_NUMBER_MAX_VALUE}",
+                file = file,
+                ctx = ctx
+            )
         }
     }
 

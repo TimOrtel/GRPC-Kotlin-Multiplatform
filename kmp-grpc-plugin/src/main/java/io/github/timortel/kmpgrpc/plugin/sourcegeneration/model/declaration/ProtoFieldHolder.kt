@@ -21,6 +21,8 @@ interface ProtoFieldHolder : ProtoNode {
      * Validate for duplicated fields and reserved field usages.
      */
     override fun validate() {
+        heldFields.forEach { it.validate() }
+
         // Look for duplicated fields
         heldFields
             .groupBy { it.name }

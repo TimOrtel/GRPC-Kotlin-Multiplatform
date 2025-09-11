@@ -1,6 +1,7 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message
 
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.CompilationException
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.Const
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoNode
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoMessage
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.toFilePositionString
@@ -39,5 +40,15 @@ data class ProtoExtensionRanges(val ranges: List<ProtoRange> = emptyList()) : Pr
                 )
             }
         }
+
+        ranges
+            .filter { it.range.first < 1 || it.range.last > Const.FIELD_NUMBER_MAX_VALUE }
+            .forEach { range ->
+                throw CompilationException.ExtensionInvalidRange(
+                    message = "Extension range is defined out of legal bounds. Minimum value is 1 and maximum value is ${Const.FIELD_NUMBER_MAX_VALUE}",
+                    file = message.file,
+                    ctx = range.ctx
+                )
+            }
     }
 }

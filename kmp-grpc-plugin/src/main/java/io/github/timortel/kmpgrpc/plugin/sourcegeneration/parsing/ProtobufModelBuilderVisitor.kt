@@ -5,6 +5,7 @@ import io.github.timortel.kmpgrpc.anltr.Protobuf3Visitor
 import io.github.timortel.kmpgrpc.anltr.ProtobufEditionsParser
 import io.github.timortel.kmpgrpc.anltr.ProtobufEditionsVisitor
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.CompilationException
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.Const
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoExtensionDefinition
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoImport
@@ -235,18 +236,22 @@ class ProtobufModelBuilderVisitor(
         return ctx.range_().map { visitRange_(it) }
     }
 
-    private fun visitRange(start: Int, end: Int?, ctx: ParserRuleContext): ProtoRange {
-        val end = end ?: start
+    private fun visitRange(start: Int, end: Int?, isMax: Boolean, ctx: ParserRuleContext): ProtoRange {
+        val end = when {
+            isMax -> Const.FIELD_NUMBER_MAX_VALUE
+            end != null -> end
+            else -> start
+        }
 
         return ProtoRange(start..end, ctx)
     }
 
     override fun visitRange_(ctx: ProtobufEditionsParser.Range_Context): ProtoRange {
-        return visitRange(ctx.intLit(0).parseInt(), ctx.intLit(1)?.parseInt(), ctx)
+        return visitRange(ctx.intLit(0).parseInt(), ctx.intLit(1)?.parseInt(), ctx.MAX() != null, ctx)
     }
 
     override fun visitRange_(ctx: Protobuf3Parser.Range_Context): ProtoRange {
-        return visitRange(ctx.intLit(0).parseInt(), ctx.intLit(1)?.parseInt(), ctx)
+        return visitRange(ctx.intLit(0).parseInt(), ctx.intLit(1)?.parseInt(), ctx.MAX() != null, ctx)
     }
 
     private fun visitReservedFieldNames(names: List<String>): ProtoReservation {

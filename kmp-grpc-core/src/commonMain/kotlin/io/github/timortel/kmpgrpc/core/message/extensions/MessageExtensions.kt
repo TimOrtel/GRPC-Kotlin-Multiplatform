@@ -6,8 +6,8 @@ import io.github.timortel.kmpgrpc.core.message.Message
  * Represents the extensions set for an instance of a message. Use [get] to retrieve the value for an extension.
  */
 class MessageExtensions<M : Message>(
-    internal val scalarMap: Map<Extension.ScalarValueExtension<M, Any>, Any>,
-    internal val repeatedMap: Map<Extension.RepeatedValueExtension<M, Any>, List<Any>>,
+    internal val scalarMap: Map<Extension.ScalarValueExtension<M, Any>, Any> = emptyMap(),
+    internal val repeatedMap: Map<Extension.RepeatedValueExtension<M, Any>, List<Any>> = emptyMap(),
 ) {
 
     /**
@@ -17,7 +17,7 @@ class MessageExtensions<M : Message>(
      * @return The value associated with the specified scalar extension, or null if no value is found.
      */
     @Suppress("UNCHECKED_CAST")
-    operator fun <T> get(extension: Extension.ScalarValueExtension<M, T>): T? {
+    operator fun <T : Any> get(extension: Extension.ScalarValueExtension<M, T>): T? {
         return scalarMap[extension as Extension.ScalarValueExtension<M, Any>] as T?
     }
 
@@ -28,7 +28,7 @@ class MessageExtensions<M : Message>(
      * @return A list of values associated with the specified repeated extension, or an empty list if no values are found.
      */
     @Suppress("UNCHECKED_CAST")
-    operator fun <T> get(extension: Extension.RepeatedValueExtension<M, T>): List<T> {
+    operator fun <T : Any> get(extension: Extension.RepeatedValueExtension<M, T>): List<T> {
         return repeatedMap[extension as Extension.RepeatedValueExtension<M, Any>].orEmpty() as List<T>
     }
 }

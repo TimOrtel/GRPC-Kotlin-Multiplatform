@@ -144,4 +144,40 @@ class ExtensionDefinitionValidationTests : BaseValidationTest() {
             runGenerator(listOf(folder))
         }
     }
+
+    @Test
+    fun `test WHEN message has a extension definition with a minimum field number smaller than 1 THEN a compilation exception is thrown`() {
+        assertThrows<CompilationException.ExtensionInvalidRange> {
+            runGenerator(
+                """
+                    message A {
+                        extensions 0 to 5;
+                    }
+                    
+                    extend A {
+                        string a = 1;
+                    }
+                """.trimIndent(),
+                protoVersion = ProtoVersion.EDITION2023
+            )
+        }
+    }
+
+    @Test
+    fun `test WHEN message has field with field number greater than max field number THEN a compilation exception is thrown`() {
+        assertThrows<CompilationException.ExtensionInvalidRange> {
+            runGenerator(
+                """
+                    message A {
+                        extensions 1 to 536870912;
+                    }
+                    
+                    extend A {
+                        string a = 1;
+                    }
+                """.trimIndent(),
+                protoVersion = ProtoVersion.EDITION2023
+            )
+        }
+    }
 }

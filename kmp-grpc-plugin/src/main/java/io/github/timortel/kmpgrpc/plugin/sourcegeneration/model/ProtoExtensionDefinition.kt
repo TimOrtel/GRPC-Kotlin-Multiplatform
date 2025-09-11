@@ -38,6 +38,8 @@ data class ProtoExtensionDefinition(
             }
             ProtoType.DefType.DeclarationType.MESSAGE -> {} // Good case
         }
+
+        fields.forEach { it.validate() }
     }
 
     sealed interface Parent : DeclarationResolver {

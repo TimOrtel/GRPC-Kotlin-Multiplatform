@@ -1,5 +1,7 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.test
 
+import ExtensionsTest
+import io.github.timortel.kmpgrpc.core.message.extensions.buildExtensions
 import io.github.timortel.kmpgrpc.test.*
 
 fun createScalarMessage() = scalarTypes {
@@ -62,6 +64,52 @@ fun createMessageWithAllTypes() = messageWithEverything {
     field35List += listOf(-154L, 0L, 4514124121L)
     field36List += listOf(byteArrayOf(0, -127, 127), byteArrayOf(-123, 1, 2), byteArrayOf(3, 3, -6))
 }
+
+fun createMessageWithAllExtensions() = ExtensionsTest.MessageWithEveryExtension(
+    extensions = buildExtensions {
+        put(ExtensionsTest.field1, "Test")
+        put(ExtensionsTest.field2, true)
+        put(ExtensionsTest.field3, 12)
+        put(ExtensionsTest.field4, 25L)
+        put(ExtensionsTest.field5, 3f)
+        put(ExtensionsTest.field6, 7.0)
+        put(ExtensionsTest.field7, SimpleEnum.ONE)
+        put(ExtensionsTest.field8, simpleMessage { field1 = "Foo" })
+
+        put(ExtensionsTest.field9, listOf("Foo", "Bar", "Baz"))
+        put(ExtensionsTest.field10, listOf(true, false, true, true))
+        put(ExtensionsTest.field11, listOf(1, 2, 3, 4, -12, 1341))
+        put(ExtensionsTest.field12, listOf(12L, 23424L, 10312313L, -123131L))
+        put(ExtensionsTest.field13, listOf(-1f, 2f, 2.5f, -0.5f))
+        put(ExtensionsTest.field14, listOf(-0.5, 15.0))
+        put(ExtensionsTest.field15, listOf(SimpleEnum.ZERO, SimpleEnum.ZERO, SimpleEnum.ONE, SimpleEnum.TWO))
+
+        put(ExtensionsTest.field19, 12u)
+        put(ExtensionsTest.field20, 14uL)
+        put(ExtensionsTest.field21, 2421)
+        put(ExtensionsTest.field22, 1413414L)
+        put(ExtensionsTest.field23, 1245124u)
+        put(ExtensionsTest.field24, 124123122423123uL)
+        put(ExtensionsTest.field25, -13)
+        put(ExtensionsTest.field26, -1353532131L)
+        put(ExtensionsTest.field27, byteArrayOf(0, -13, 127))
+
+        put(ExtensionsTest.field28, listOf(0u, 134u, 35311u))
+        put(ExtensionsTest.field29, listOf(0uL, 134uL, 353111345134uL))
+        put(ExtensionsTest.field30, listOf(-134, -145129, 34521431))
+        put(ExtensionsTest.field31, listOf(-1L, 141341413413L, -134134314131L))
+        put(ExtensionsTest.field32, listOf(0u, 14234u, 1413413413u))
+        put(ExtensionsTest.field33, listOf(0uL, 134uL, 353111345134uL))
+        put(ExtensionsTest.field34, listOf(-14, 0, 1241522))
+        put(ExtensionsTest.field35, listOf(-154L, 0L, 4514124121L))
+        put(ExtensionsTest.field36, listOf(
+            byteArrayOf(0, -127, 127),
+            byteArrayOf(-123, 1, 2),
+            byteArrayOf(3, 3, -6)
+        ))
+    }
+)
+
 
 private val field1 = listOf(0, 1, -13, 5000)
 private val field2 = listOf(0L, 1L, -13L, 5000L)

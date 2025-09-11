@@ -7,6 +7,12 @@ import com.squareup.kotlinpoet.asTypeName
 import kotlin.time.Duration
 
 object Const {
+
+    /**
+     * Maximum value of a field number
+     */
+    const val FIELD_NUMBER_MAX_VALUE = 536870911
+
     object Service {
 
         const val CHANNEL_PROPERTY_NAME = "channel"

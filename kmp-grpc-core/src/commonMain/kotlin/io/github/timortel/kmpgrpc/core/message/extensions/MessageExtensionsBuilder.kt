@@ -19,7 +19,7 @@ class MessageExtensionsBuilder<M : Message> @InternalKmpGrpcApi constructor() {
      * @param extension The scalar value extension which defines the field and message type.
      * @param value The scalar value to associate with the provided extension.
      */
-    fun <T> put(extension: Extension.ScalarValueExtension<M, T>, value: T) {
+    fun <T : Any> put(extension: Extension.ScalarValueExtension<M, T>, value: T) {
         @Suppress("UNCHECKED_CAST")
         scalarMap[extension as Extension.ScalarValueExtension<M, Any>] = value as Any
     }
@@ -32,7 +32,7 @@ class MessageExtensionsBuilder<M : Message> @InternalKmpGrpcApi constructor() {
      * @param extension The repeated value extension that defines the field and message type.
      * @param value The value to append or associate with the provided extension.
      */
-    fun <T> putOrAppend(extension: Extension.RepeatedValueExtension<M, T>, value: T) {
+    fun <T : Any> putOrAppend(extension: Extension.RepeatedValueExtension<M, T>, value: T) {
         putOrAppend(extension, listOf(value))
     }
 
@@ -44,7 +44,7 @@ class MessageExtensionsBuilder<M : Message> @InternalKmpGrpcApi constructor() {
      * @param values The list of values to append or associate with the provided extension.
      */
     @Suppress("UNCHECKED_CAST")
-    fun <T> putOrAppend(extension: Extension.RepeatedValueExtension<M, T>, values: List<T>) {
+    fun <T : Any> putOrAppend(extension: Extension.RepeatedValueExtension<M, T>, values: List<T>) {
         val ext = extension as Extension.RepeatedValueExtension<M, Any>
 
         val existingValue = repeatedMap[ext]
@@ -62,7 +62,7 @@ class MessageExtensionsBuilder<M : Message> @InternalKmpGrpcApi constructor() {
      * @param extension The repeated value extension that defines the field and message type.
      * @param values The list of values to associate with the provided extension.
      */
-    fun <T> put(extension: Extension.RepeatedValueExtension<M, T>, values: List<T>) {
+    fun <T : Any> put(extension: Extension.RepeatedValueExtension<M, T>, values: List<T>) {
         @Suppress("UNCHECKED_CAST")
         repeatedMap[extension as Extension.RepeatedValueExtension<M, Any>] = (values.toList() as List<Any>)
     }

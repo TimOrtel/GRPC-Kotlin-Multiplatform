@@ -9,6 +9,7 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.kmExtensionS
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoExtensionDefinition
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoFieldCardinality
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoMessageField
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
 import io.github.timortel.kmpgrpc.shared.internal.io.wireFormatMakeTag
 
 object ProtoExtensionWriter {
@@ -60,38 +61,51 @@ object ProtoExtensionWriter {
         messageTypeName: TypeName,
         valueTypeName: TypeName
     ): CodeBlock {
-        return when (field.cardinality) {
-            is ProtoFieldCardinality.Singular -> {
+        val fieldTypeBlock = when (field.type) {
+            is ProtoType.DefType -> {
                 CodeBlock.of(
-                    "%T(%T::class, %L, %T)",
-                    kmExtensionScalar.parameterizedBy(messageTypeName, valueTypeName),
-                    messageTypeName,
-                    field.number,
-                    field.type.fieldType
+                    "%T(%T.Companion)",
+                    field.type.fieldType,
+                    field.type.resolve()
                 )
             }
 
-            ProtoFieldCardinality.Repeated -> {
-                if (field.type.isPackable) {
-                    CodeBlock.of(
-                        "%T(%T::class, %L, %T, %L, %L)",
-                        kmExtensionRepeatedPackable.parameterizedBy(messageTypeName, valueTypeName),
-                        messageTypeName,
-                        field.number,
-                        field.type.fieldType,
-                        field.isPacked,
-                        wireFormatMakeTag(field.number, field.type.wireType, true)
-                    )
-                } else {
-                    CodeBlock.of(
-                        "%T(%T::class, %L, %T)",
-                        kmExtensionRepeatedNonPackable.parameterizedBy(messageTypeName, valueTypeName),
-                        messageTypeName,
-                        field.number,
-                        field.type.fieldType
-                    )
-                }
+            else -> {
+                CodeBlock.of("%T", field.type.fieldType)
             }
+        }
+
+        return if (field.cardinality is ProtoFieldCardinality.Singular || !field.type.isPackable) {
+            val extension = when (field.cardinality) {
+                is ProtoFieldCardinality.Singular -> kmExtensionScalar
+                is ProtoFieldCardinality.Repeated -> kmExtensionRepeatedNonPackable
+            }
+
+            CodeBlock.builder()
+                .add(
+                    "%T(%T::class, %L, ",
+                    extension.parameterizedBy(messageTypeName, valueTypeName),
+                    messageTypeName,
+                    field.number
+                )
+                .add(fieldTypeBlock)
+                .add(")")
+                .build()
+        } else {
+            CodeBlock.builder()
+                .add(
+                    "%T(%T::class, %L, ",
+                    kmExtensionRepeatedPackable.parameterizedBy(messageTypeName, valueTypeName),
+                    messageTypeName,
+                    field.number,
+                )
+                .add(fieldTypeBlock)
+                .add(
+                    ", %L, %Lu)",
+                    field.isPacked,
+                    wireFormatMakeTag(field.number, field.type.wireType, true)
+                )
+                .build()
         }
     }
 }
