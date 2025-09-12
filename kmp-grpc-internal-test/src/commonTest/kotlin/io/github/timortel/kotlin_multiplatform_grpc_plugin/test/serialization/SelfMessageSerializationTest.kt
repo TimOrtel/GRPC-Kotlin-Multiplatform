@@ -16,6 +16,7 @@ import io.github.timortel.kmpgrpc.test.oneOfMessage
 import io.github.timortel.kmpgrpc.test.repeatedLongMessage
 import io.github.timortel.kmpgrpc.test.simpleMessage
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.createComplexRepeated
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.createMessageWithAllExtensions
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.createMessageWithAllTypes
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.createNonPackedTypesMessage
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.createScalarMessage
@@ -124,6 +125,17 @@ class SelfMessageSerializationTest {
         val msg = createNonPackedTypesMessage()
 
         val reconstructed = NonPackedTypesMessage.deserialize(msg.serialize())
+
+        assertEquals(msg, reconstructed)
+    }
+
+    @Test
+    fun testExtensionsSerialization() {
+        val msg = createMessageWithAllExtensions()
+
+        val reconstructed = ExtensionsTest.MessageWithEveryExtension.deserialize(
+            msg.serialize(),
+        )
 
         assertEquals(msg, reconstructed)
     }

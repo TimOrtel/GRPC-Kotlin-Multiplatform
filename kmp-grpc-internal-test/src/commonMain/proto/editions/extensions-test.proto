@@ -1,9 +1,57 @@
 edition = "2023";
 
+import "basicMessages.proto";
+
+option java_outer_classname = "ExtensionsTest";
+
 message MessageWithExtension {
   extensions 1 to 10;
 }
 
 extend MessageWithExtension {
   string extension = 1;
+}
+
+message MessageWithEveryExtension {
+  extensions 1 to max;
+}
+
+extend MessageWithEveryExtension {
+  string field1 = 1;
+  bool field2 = 2;
+  int32 field3 = 3;
+  int64 field4 = 4;
+  float field5 = 5;
+  double field6 = 6;
+
+  io.github.timortel.kmpgrpc.test.SimpleEnum field7 = 7;
+  io.github.timortel.kmpgrpc.test.SimpleMessage field8 = 8;
+
+  repeated string field9 = 9;
+  repeated bool field10 = 10;
+  repeated int32 field11 = 11;
+  repeated int64 field12 = 12;
+  repeated float field13 = 13;
+  repeated double field14 = 14;
+  repeated io.github.timortel.kmpgrpc.test.SimpleEnum field15 = 15;
+
+  uint32 field19 = 19;
+  uint64 field20 = 20;
+  sint32 field21 = 21;
+  sint64 field22 = 22;
+  fixed32 field23 = 23;
+  fixed64 field24 = 24;
+  sfixed32 field25 = 25;
+  sfixed64 field26 = 26;
+  bytes field27 = 27;
+
+  repeated uint32 field28 = 28;
+  repeated uint64 field29 = 29;
+  repeated sint32 field30 = 30;
+  repeated sint64 field31 = 31;
+  repeated fixed32 field32 = 32;
+  repeated fixed64 field33 = 33;
+  repeated sfixed32 field34 = 34;
+  repeated sfixed64 field35 = 35;
+  repeated bytes field36 = 36;
 }

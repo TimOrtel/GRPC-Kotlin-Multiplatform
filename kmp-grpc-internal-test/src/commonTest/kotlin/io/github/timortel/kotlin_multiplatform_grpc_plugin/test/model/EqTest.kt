@@ -92,7 +92,7 @@ class EqTest {
         val msg1 = createMessageWithAllExtensions()
         val msg2 = ExtensionsTest.MessageWithEveryExtension(
             extensions = buildExtensions {
-                put(ExtensionsTest.field1, "Foo")
+                set(ExtensionsTest.field1, "Foo")
             }
         )
 

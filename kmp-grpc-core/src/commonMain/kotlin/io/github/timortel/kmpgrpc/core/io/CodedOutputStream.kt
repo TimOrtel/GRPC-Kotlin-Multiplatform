@@ -173,7 +173,6 @@ interface CodedOutputStream {
             when (extension) {
                 is Extension.PackableRepeatedValueExtension -> {
                     extension.fieldType.writeRepeated(this, extension.fieldNumber, value, extension.tag)
-
                 }
 
                 is Extension.NonPackableRepeatedValueExtension -> {

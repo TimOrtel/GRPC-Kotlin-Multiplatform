@@ -81,9 +81,16 @@ object EqualsFunctionExtension : MessageWriterExtension {
                 otherParamName
             )
 
-            addCode(
-                listOf(fieldsCodeBlock, mapFieldCodeBlock, oneOfCodeBlock, unknownFieldsBlock).joinCodeBlocks(separator)
+            val extensionsBlock = CodeBlock.of(
+                "if (%1N != %2N.%1N) return false",
+                Const.Message.Constructor.MessageExtensions.name,
+                otherParamName
             )
+
+            val codeBlocks = listOf(fieldsCodeBlock, mapFieldCodeBlock, oneOfCodeBlock, unknownFieldsBlock) +
+                    if (message.isExtendable) listOf(extensionsBlock) else emptyList()
+
+            addCode(codeBlocks.joinCodeBlocks(separator))
 
             addCode("\n")
 

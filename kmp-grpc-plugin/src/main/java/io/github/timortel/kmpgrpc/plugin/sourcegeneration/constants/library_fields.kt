@@ -18,6 +18,8 @@ val kmMessage = ClassName(PACKAGE_MESSAGE, "Message")
 val kmMessageWithExtensions = ClassName(PACKAGE_MESSAGE, "MessageWithExtensions")
 val kmEnum = ClassName(PACKAGE_MESSAGE, "Enum")
 
+val EnumCompanion = ClassName(PACKAGE_MESSAGE, "EnumCompanion")
+
 private val kmExtension = ClassName(PACKAGE_MESSAGE_EXTENSIONS, "Extension")
 val kmExtensionScalar = kmExtension.nestedClass("ScalarValueExtension")
 val kmExtensionRepeated = kmExtension.nestedClass("RepeatedValueExtension")

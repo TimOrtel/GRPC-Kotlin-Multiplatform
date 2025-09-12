@@ -15,8 +15,9 @@ import kotlin.reflect.KClass
  * @property fieldNumber The field number in the protocol buffer schema for the extension.
  */
 sealed class Extension<M : Message, T : Any>(
-    internal val messageClass: KClass<M>,
-    internal val fieldNumber: Int
+    val fullName: String,
+    val fieldNumber: Int,
+    internal val messageClass: KClass<M>
 ) {
 
     internal abstract val fieldType: FieldType<T>
@@ -27,10 +28,11 @@ sealed class Extension<M : Message, T : Any>(
     class ScalarValueExtension<M : Message, T : Any>
     @InternalKmpGrpcApi
     constructor(
-        messageClass: KClass<M>,
+        fullName: String,
         fieldNumber: Int,
+        messageClass: KClass<M>,
         override val fieldType: FieldType<T>
-    ) : Extension<M, T>(messageClass = messageClass, fieldNumber = fieldNumber)
+    ) : Extension<M, T>(fullName = fullName, messageClass = messageClass, fieldNumber = fieldNumber)
 
     /**
      * Class for [Extension]s that are defined as repeated.
@@ -38,9 +40,10 @@ sealed class Extension<M : Message, T : Any>(
     sealed class RepeatedValueExtension<M : Message, T : Any>
     @InternalKmpGrpcApi
     constructor(
-        messageClass: KClass<M>,
-        fieldNumber: Int
-    ) : Extension<M, T>(messageClass = messageClass, fieldNumber = fieldNumber) {
+        fullName: String,
+        fieldNumber: Int,
+        messageClass: KClass<M>
+    ) : Extension<M, T>(fullName = fullName, messageClass = messageClass, fieldNumber = fieldNumber) {
         abstract override val fieldType: FieldType.RepeatableFieldType<T>
     }
 
@@ -49,20 +52,26 @@ sealed class Extension<M : Message, T : Any>(
      */
     @InternalKmpGrpcApi
     class PackableRepeatedValueExtension<M : Message, T : Any>(
-        messageClass: KClass<M>,
+        fullName: String,
         fieldNumber: Int,
+        messageClass: KClass<M>,
         override val fieldType: FieldType.PackableFieldType<T>,
         internal val isPacked: Boolean,
         internal val tag: UInt
-    ) : RepeatedValueExtension<M, T>(messageClass, fieldNumber)
+    ) : RepeatedValueExtension<M, T>(fullName = fullName, fieldNumber = fieldNumber, messageClass = messageClass)
 
     /**
      * Class for [Extension]s that are defined as repeated on types that are not packable.
      */
     @InternalKmpGrpcApi
     class NonPackableRepeatedValueExtension<M : Message, T : Any>(
-        messageClass: KClass<M>,
+        fullName: String,
         fieldNumber: Int,
+        messageClass: KClass<M>,
         override val fieldType: FieldType.NonPackableFieldType<T>
-    ) : RepeatedValueExtension<M, T>(messageClass, fieldNumber)
+    ) : RepeatedValueExtension<M, T>(fullName = fullName, fieldNumber = fieldNumber, messageClass = messageClass)
+
+    override fun toString(): String {
+        return fullName
+    }
 }

@@ -70,6 +70,14 @@ object Const {
             object HashCodeFunction {
                 const val NAME = "hashCode"
             }
+
+            object CopyFunction {
+                const val NAME = "copy"
+            }
+
+            object ToStringFunction {
+                const val NAME = "toString"
+            }
         }
 
         object Companion {
@@ -90,6 +98,7 @@ object Const {
 
     object DSL {
         const val BUILD_FUNCTION_NAME: String = "build"
+        val MessageExtensions = Property.of("extensions", kmExtensionBuilder)
     }
 
     object Enum {

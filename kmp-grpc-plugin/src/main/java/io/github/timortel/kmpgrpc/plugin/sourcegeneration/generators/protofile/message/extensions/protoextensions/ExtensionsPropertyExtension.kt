@@ -1,4 +1,4 @@
-package io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions
+package io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.protoextensions
 
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.KModifier
@@ -6,9 +6,10 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.SourceTarget
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.Const
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.Property
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.kmMessageExtensions
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.SharedFieldExtension
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoMessage
 
-object ExtensionsExtension : SharedFieldExtension() {
+object ExtensionsPropertyExtension : SharedFieldExtension() {
 
     override fun getProperty(message: ProtoMessage, sourceTarget: SourceTarget): Property {
         return Const.Message.Constructor.MessageExtensions.parametrizedBy(message.className)

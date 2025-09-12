@@ -19,7 +19,7 @@ class MessageExtensionsBuilder<M : Message> @InternalKmpGrpcApi constructor() {
      * @param extension The scalar value extension which defines the field and message type.
      * @param value The scalar value to associate with the provided extension.
      */
-    fun <T : Any> put(extension: Extension.ScalarValueExtension<M, T>, value: T) {
+    operator fun <T : Any> set(extension: Extension.ScalarValueExtension<M, T>, value: T) {
         @Suppress("UNCHECKED_CAST")
         scalarMap[extension as Extension.ScalarValueExtension<M, Any>] = value as Any
     }
@@ -32,8 +32,8 @@ class MessageExtensionsBuilder<M : Message> @InternalKmpGrpcApi constructor() {
      * @param extension The repeated value extension that defines the field and message type.
      * @param value The value to append or associate with the provided extension.
      */
-    fun <T : Any> putOrAppend(extension: Extension.RepeatedValueExtension<M, T>, value: T) {
-        putOrAppend(extension, listOf(value))
+    fun <T : Any> setOrAppend(extension: Extension.RepeatedValueExtension<M, T>, value: T) {
+        setOrAppend(extension, listOf(value))
     }
 
     /**
@@ -44,7 +44,7 @@ class MessageExtensionsBuilder<M : Message> @InternalKmpGrpcApi constructor() {
      * @param values The list of values to append or associate with the provided extension.
      */
     @Suppress("UNCHECKED_CAST")
-    fun <T : Any> putOrAppend(extension: Extension.RepeatedValueExtension<M, T>, values: List<T>) {
+    fun <T : Any> setOrAppend(extension: Extension.RepeatedValueExtension<M, T>, values: List<T>) {
         val ext = extension as Extension.RepeatedValueExtension<M, Any>
 
         val existingValue = repeatedMap[ext]
@@ -62,15 +62,30 @@ class MessageExtensionsBuilder<M : Message> @InternalKmpGrpcApi constructor() {
      * @param extension The repeated value extension that defines the field and message type.
      * @param values The list of values to associate with the provided extension.
      */
-    fun <T : Any> put(extension: Extension.RepeatedValueExtension<M, T>, values: List<T>) {
+    operator fun <T : Any> set(extension: Extension.RepeatedValueExtension<M, T>, values: List<T>) {
         @Suppress("UNCHECKED_CAST")
         repeatedMap[extension as Extension.RepeatedValueExtension<M, Any>] = (values.toList() as List<Any>)
     }
 
-    @InternalKmpGrpcApi
-    fun putAll(extensions: MessageExtensions<M>) {
+    /**
+     * Adds all extensions from the provided [MessageExtensions] to the current builder.
+     * Any existing entries in the scalar or repeated maps will be updated with the corresponding entries
+     * from the provided extensions.
+     *
+     * @param extensions The [MessageExtensions] instance containing the scalar and repeated extensions
+     * to be added to the current builder.
+     */
+    fun setAll(extensions: MessageExtensions<M>) {
         scalarMap += extensions.scalarMap
         repeatedMap += extensions.repeatedMap
+    }
+
+    /**
+     * Clears all extensions stored in the builder, effectively resetting the builder to an empty state.
+     */
+    fun clear() {
+        scalarMap.clear()
+        repeatedMap.clear()
     }
 
     @InternalKmpGrpcApi

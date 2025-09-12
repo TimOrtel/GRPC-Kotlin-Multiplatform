@@ -25,6 +25,13 @@ object ProtoExtensionWriter {
                     val messageTypeName = extensionDefinition.messageType.resolve()
                     val valueTypeName = field.type.resolve()
 
+                    val parentName = when(val p = extensionDefinition.parent) {
+                        is ProtoExtensionDefinition.Parent.File -> p.file.protoPackage.packageIdentifier
+                        is ProtoExtensionDefinition.Parent.Message -> p.message.fullName
+                    }
+
+                    val fullName = "$parentName.${field.name}"
+
                     val propertyType = when (field.cardinality) {
                         is ProtoFieldCardinality.Singular -> kmExtensionScalar
                         ProtoFieldCardinality.Repeated -> {
@@ -40,11 +47,13 @@ object ProtoExtensionWriter {
                         )
                             .apply {
                                 if (isActual) {
+
                                     initializer(
                                         buildPropertyInitializer(
                                             field = field,
                                             messageTypeName = messageTypeName,
-                                            valueTypeName = valueTypeName
+                                            valueTypeName = valueTypeName,
+                                            fullName = fullName
                                         )
                                     )
                                 }
@@ -59,7 +68,8 @@ object ProtoExtensionWriter {
     private fun buildPropertyInitializer(
         field: ProtoMessageField,
         messageTypeName: TypeName,
-        valueTypeName: TypeName
+        valueTypeName: TypeName,
+        fullName: String,
     ): CodeBlock {
         val fieldTypeBlock = when (field.type) {
             is ProtoType.DefType -> {
@@ -83,10 +93,11 @@ object ProtoExtensionWriter {
 
             CodeBlock.builder()
                 .add(
-                    "%T(%T::class, %L, ",
+                    "%T(%S, %L, %T::class, ",
                     extension.parameterizedBy(messageTypeName, valueTypeName),
-                    messageTypeName,
-                    field.number
+                    fullName,
+                    field.number,
+                    messageTypeName
                 )
                 .add(fieldTypeBlock)
                 .add(")")
@@ -94,10 +105,11 @@ object ProtoExtensionWriter {
         } else {
             CodeBlock.builder()
                 .add(
-                    "%T(%T::class, %L, ",
+                    "%T(%S, %L, %T::class, ",
                     kmExtensionRepeatedPackable.parameterizedBy(messageTypeName, valueTypeName),
-                    messageTypeName,
+                    fullName,
                     field.number,
+                    messageTypeName,
                 )
                 .add(fieldTypeBlock)
                 .add(

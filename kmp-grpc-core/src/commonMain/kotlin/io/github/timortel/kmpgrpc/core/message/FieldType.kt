@@ -140,16 +140,16 @@ sealed class FieldType<T>(
 
     @InternalKmpGrpcApi
     data class Message<M : io.github.timortel.kmpgrpc.core.message.Message>(internal val deserializer: MessageDeserializer<M>) :
-        NonPackableFieldType<io.github.timortel.kmpgrpc.core.message.Message>(
+        NonPackableFieldType<M>(
             CodedOutputStream::writeMessage,
             CodedOutputStream::writeMessageArray,
             { readMessage(deserializer) }
         )
 
     @InternalKmpGrpcApi
-    data object Enum : PackableFieldType<Int>(
+    class Enum<T : io.github.timortel.kmpgrpc.core.message.Enum>(companion: EnumCompanion<T>) : PackableFieldType<T>(
         CodedOutputStream::writeEnum,
-        CodedOutputStream::writeEnumArrayRaw,
-        CodedInputStream::readEnum
+        { fieldNumber, values, tag -> writeEnumArrayRaw(fieldNumber, values.map { it.number }, tag) },
+        { companion.getEnumForNumber(readEnum()) }
     )
 }

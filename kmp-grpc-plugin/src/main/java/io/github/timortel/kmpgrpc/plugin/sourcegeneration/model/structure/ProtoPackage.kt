@@ -16,8 +16,8 @@ data class ProtoPackage(val name: String, val packages: List<ProtoPackage>, val 
 
     val packageIdentifier: String
         get() = when (val p = parent) {
-            is Parent.Package -> "${p.`package`}.$name"
-            is Parent.Project -> "."
+            is Parent.Package -> "${p.`package`.packageIdentifier}.$name"
+            is Parent.Project -> ""
         }
 
     override val candidates: List<DeclarationResolver.Candidate>
