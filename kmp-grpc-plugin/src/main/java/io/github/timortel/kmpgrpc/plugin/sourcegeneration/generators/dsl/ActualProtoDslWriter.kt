@@ -1,12 +1,11 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.dsl
 
+import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FunSpec
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.Const
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.joinToCodeBlock
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoMessage
 
-/**
- * For JVM, JS and iOS
- */
 object ActualProtoDslWriter : ProtoDslWriter(true) {
 
     override fun modifyBuildFunction(builder: FunSpec.Builder, message: ProtoMessage) {
@@ -32,13 +31,24 @@ object ActualProtoDslWriter : ProtoDslWriter(true) {
                 )
             }
 
+            val extensionBlock = CodeBlock.of(
+                "%N = %N.build()",
+                Const.Message.Constructor.MessageExtensions.name,
+                Const.DSL.MessageExtensions.name
+            )
+
+            val blocks = listOf(fields, mapFields, oneOfFields) +
+                    if (message.isExtendable) listOf(extensionBlock) else emptyList()
+
             addCode(
-                listOf(fields, mapFields, oneOfFields)
+                blocks
                     .filter { it.isNotEmpty() }
                     .joinToCodeBlock(separator) { add(it) }
             )
 
-            if (fields.isNotEmpty() || mapFields.isNotEmpty() || oneOfFields.isNotEmpty()) addCode("\n")
+            if (fields.isNotEmpty() || mapFields.isNotEmpty() || oneOfFields.isNotEmpty() || message.isExtendable) {
+                addCode("\n")
+            }
 
             addCode(")")
         }

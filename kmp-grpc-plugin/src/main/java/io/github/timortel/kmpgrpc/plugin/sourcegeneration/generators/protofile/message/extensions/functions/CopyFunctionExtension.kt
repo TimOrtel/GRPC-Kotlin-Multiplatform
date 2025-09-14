@@ -15,7 +15,7 @@ object CopyFunctionExtension : MessageWriterExtension {
         val isActual = sourceTarget is SourceTarget.Actual
 
         builder.addFunction(
-            FunSpec.builder("copy")
+            FunSpec.builder(Const.Message.BasicFunctions.CopyFunction.NAME)
                 .returns(message.className)
                 .apply {
                     (message.fields + message.mapFields + message.oneOfs)
@@ -40,6 +40,17 @@ object CopyFunctionExtension : MessageWriterExtension {
                             .build()
                     )
 
+                    if (message.isExtendable) {
+                        addParameter(
+                            Const.Message.Constructor.MessageExtensions.parametrizedBy(message.className)
+                                .toParamSpecBuilder()
+                                .apply {
+                                    if (!isActual) defaultValue("this.%N", Const.Message.Constructor.MessageExtensions.name)
+                                }
+                                .build()
+                        )
+                    }
+
                     if (isActual) {
                         addModifiers(KModifier.ACTUAL)
                         writeCopyFunctionCode(this, message)
@@ -61,6 +72,11 @@ object CopyFunctionExtension : MessageWriterExtension {
                             .forEach { messageProperty ->
                                 add("%1N = %1N,\n", messageProperty.attributeName)
                             }
+
+                        if (message.isExtendable) {
+                            add("%1N = %1N,\n", Const.Message.Constructor.MessageExtensions.name)
+                        }
+
                         add("%1N = %1N\n", Const.Message.Constructor.UnknownFields.name)
                     }
                     .unindent()

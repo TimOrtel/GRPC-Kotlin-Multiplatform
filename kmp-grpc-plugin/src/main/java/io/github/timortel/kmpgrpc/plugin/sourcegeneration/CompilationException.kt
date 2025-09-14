@@ -5,12 +5,14 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.toFilePositionStr
 import org.antlr.v4.runtime.ParserRuleContext
 
 sealed class CompilationException(val msg: String, val filePath: String, val ctx: ParserRuleContext?) : Exception() {
-    constructor(message: String, file: ProtoFile, ctx: ParserRuleContext) : this(message, file.fileName, ctx)
-    constructor(message: String, file: ProtoFile) : this(message, file.fileName, null)
+    constructor(message: String, file: ProtoFile, ctx: ParserRuleContext) : this(message, file.path, ctx)
+    constructor(message: String, file: ProtoFile) : this(message, file.path, null)
 
     // General
     class ReservedFieldNumberUsed(message: String, file: ProtoFile, ctx: ParserRuleContext) : CompilationException(message, file, ctx)
     class ReservedFieldNameUsed(message: String, file: ProtoFile, ctx: ParserRuleContext) : CompilationException(message, file, ctx)
+    class FieldNumberConflict(message: String, file: ProtoFile, ctx: ParserRuleContext) : CompilationException(message, file, ctx)
+    class IllegalFieldNumber(message: String, file: ProtoFile, ctx: ParserRuleContext) : CompilationException(message, file, ctx)
 
     // Imports
     class UnresolvedImport(message: String, file: ProtoFile, ctx: ParserRuleContext) : CompilationException(message, file, ctx)
@@ -30,6 +32,13 @@ sealed class CompilationException(val msg: String, val filePath: String, val ctx
 
     // Options
     class OptionFailedParse(message: String, file: ProtoFile, ctx: ParserRuleContext) : CompilationException(message, file, ctx)
+
+    // Extensions
+    class ExtensionDefinedOnNonExtendableMessage(message: String, file: ProtoFile, ctx: ParserRuleContext) : CompilationException(message, file, ctx)
+    class ExtensionDefinedOutOfExtensionRange(message: String, file: ProtoFile, ctx: ParserRuleContext) : CompilationException(message, file, ctx)
+    class ExtensionRangeOverlap(message: String, file: ProtoFile, ctx: ParserRuleContext) : CompilationException(message, file, ctx)
+    class ExtensionInvalidReference(message: String, file: ProtoFile, ctx: ParserRuleContext) : CompilationException(message, file, ctx)
+    class ExtensionInvalidRange(message: String, file: ProtoFile, ctx: ParserRuleContext) : CompilationException(message, file, ctx)
 
     override val message: String
         get() = if (ctx == null) {

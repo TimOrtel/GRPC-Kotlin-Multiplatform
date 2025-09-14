@@ -3,9 +3,15 @@ package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.mes
 import com.squareup.kotlinpoet.BOOLEAN
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.LIST
+import com.squareup.kotlinpoet.MemberName
+import com.squareup.kotlinpoet.MemberName.Companion.member
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.TypeName
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.CompilationException
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.Const
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.DeclarationResolver
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.Options
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoExtensionDefinition
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOption
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoChildProperty
@@ -26,12 +32,25 @@ data class ProtoMessageField(
     override val ctx: ParserRuleContext
 ) : ProtoRegularField(), ProtoMessageProperty {
 
-    lateinit var parent: ProtoMessage
+    lateinit var parent: Parent
 
     override val message: ProtoMessage
-        get() = parent
+        get() = when (val p = parent) {
+            is Parent.Message -> p.message
+            is Parent.ExtensionDefinition -> p.ext.messageType.resolveDeclaration() as ProtoMessage
+        }
 
-    override val file: ProtoFile get() = parent.file
+    override val file: ProtoFile
+        get() = when (val p = parent) {
+            is Parent.ExtensionDefinition -> p.ext.file
+            is Parent.Message -> p.message.file
+        }
+
+    override val declarationResolver: DeclarationResolver
+        get() = when (val p = parent) {
+            is Parent.ExtensionDefinition -> p.ext.parent
+            is Parent.Message -> p.message
+        }
 
     override val desiredAttributeName: String = when (cardinality) {
         ProtoFieldCardinality.Implicit, ProtoFieldCardinality.Optional -> name
@@ -57,7 +76,7 @@ data class ProtoMessageField(
     val isSetProperty: ExtraProperty
         get() = ExtraProperty(
             desiredAttributeName = "is${name.capitalize()}Set",
-            resolvingParent = message,
+            resolvingParent = resolvingParent,
             priority = number,
             propertyType = BOOLEAN
         )
@@ -73,6 +92,16 @@ data class ProtoMessageField(
      */
     override val isPacked: Boolean
         get() = cardinality == ProtoFieldCardinality.Repeated && type.isPackable && Options.packed.get(this)
+
+    val memberName: MemberName
+        get() {
+            val parentClassName =  when (val p = parent) {
+                is Parent.ExtensionDefinition -> p.ext.parent.className
+                is Parent.Message -> p.message.className
+            }
+
+            return parentClassName.member(name)
+        }
 
     init {
         type.parent = ProtoType.Parent.MessageField(this)
@@ -95,6 +124,16 @@ data class ProtoMessageField(
         }
     }
 
+    override fun validate() {
+        if (number < 1 || number > Const.FIELD_NUMBER_MAX_VALUE) {
+            throw CompilationException.IllegalFieldNumber(
+                message = "Field $name declared illegal field number ${number}. Must be >= 1 and <= ${Const.FIELD_NUMBER_MAX_VALUE}",
+                file = file,
+                ctx = ctx
+            )
+        }
+    }
+
     data class ExtraProperty(
         override val desiredAttributeName: String,
         override val resolvingParent: ProtoChildPropertyNameResolver,
@@ -103,5 +142,10 @@ data class ProtoMessageField(
     ) : ProtoChildProperty {
         override val name: String
             get() = desiredAttributeName
+    }
+
+    sealed interface Parent {
+        data class Message(val message: ProtoMessage) : Parent
+        data class ExtensionDefinition(val ext: ProtoExtensionDefinition) : Parent
     }
 }

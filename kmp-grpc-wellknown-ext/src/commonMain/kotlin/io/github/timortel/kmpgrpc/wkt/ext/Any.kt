@@ -5,6 +5,7 @@ import com.google.protobuf.any
 import io.github.timortel.kmpgrpc.core.message.Message
 import io.github.timortel.kmpgrpc.core.message.MessageCompanion
 import io.github.timortel.kmpgrpc.core.message.MessageDeserializer
+import io.github.timortel.kmpgrpc.core.message.extensions.ExtensionRegistry
 
 private const val DEFAULT_TYPE_URL_PREFIX = "type.googleapis.com"
 
@@ -19,10 +20,11 @@ public fun <T : Message> Any.Companion.wrap(message: T, typeUrlPrefix: String = 
 /**
  * Constructs a message of type [T] by using the data held by this [Any] object.
  * @param deserializer typically the companion object of [T].
+ * @param extensionRegistry the extension registry. By default, an empty registry is used.
  * @return a message of type [T]
  */
-public fun <T : Message, DES : MessageDeserializer<T>> Any.unwrap(deserializer: DES): T {
-    return deserializer.deserialize(value)
+public fun <T : Message, DES : MessageDeserializer<T>> Any.unwrap(deserializer: DES, extensionRegistry: ExtensionRegistry<T> = ExtensionRegistry.empty()): T {
+    return deserializer.deserialize(value, extensionRegistry)
 }
 
 /**
