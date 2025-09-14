@@ -62,8 +62,8 @@ abstract class CodedInputStream {
      *                     data into an instance of type [M].
      * @return An instance of type [M], which extends [Message], deserialized from the input stream.
      */
-    fun <M : Message> readMessage(deserializer: MessageDeserializer<M>): M {
-        return recursiveRead { deserializer.deserialize(this) }
+    fun <M : Message> readMessage(deserializer: MessageDeserializer<M>, extensionRegistry: ExtensionRegistry<M>): M {
+        return recursiveRead { deserializer.deserialize(this, extensionRegistry) }
     }
 
     // Adapted version of https://github.com/protocolbuffers/protobuf/blob/520c601c99012101c816b6ccc89e8d6fc28fdbb8/objectivec/GPBDictionary.m#L455
@@ -162,11 +162,13 @@ abstract class CodedInputStream {
             is Extension.PackableRepeatedValueExtension -> {
                 if (extension.isPacked) {
                     val length = readInt32()
-                    val list = buildList<T> {
-                        repeat(length) {
+                    val oldLimit = pushLimit(length)
+                    val list = buildList {
+                        while (!isAtEnd) {
                             add(extension.fieldType.read(this@CodedInputStream))
                         }
                     }
+                    popLimit(oldLimit)
 
                     UnknownFieldOrExtension.RepeatedExtension(extension, list)
                 } else {

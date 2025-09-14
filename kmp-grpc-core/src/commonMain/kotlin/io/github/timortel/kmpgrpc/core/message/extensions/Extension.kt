@@ -1,5 +1,6 @@
 package io.github.timortel.kmpgrpc.core.message.extensions
 
+import io.github.timortel.kmpgrpc.core.io.DataSize
 import io.github.timortel.kmpgrpc.core.message.FieldType
 import io.github.timortel.kmpgrpc.core.message.Message
 import io.github.timortel.kmpgrpc.shared.internal.InternalKmpGrpcApi
@@ -32,7 +33,11 @@ sealed class Extension<M : Message, T : Any>(
         fieldNumber: Int,
         messageClass: KClass<M>,
         override val fieldType: FieldType<T>
-    ) : Extension<M, T>(fullName = fullName, messageClass = messageClass, fieldNumber = fieldNumber)
+    ) : Extension<M, T>(fullName = fullName, messageClass = messageClass, fieldNumber = fieldNumber) {
+
+        internal fun computeRequiredSize(value: T): Int =
+            DataSize.computeTagSize(fieldNumber) + fieldType.computeSizeNoTag(value)
+    }
 
     /**
      * Class for [Extension]s that are defined as repeated.
@@ -45,6 +50,22 @@ sealed class Extension<M : Message, T : Any>(
         messageClass: KClass<M>
     ) : Extension<M, T>(fullName = fullName, messageClass = messageClass, fieldNumber = fieldNumber) {
         abstract override val fieldType: FieldType.RepeatableFieldType<T>
+
+        internal fun computeRequiredSize(values: List<T>): Int {
+            val isPacked = when (this) {
+                is PackableRepeatedValueExtension<*, *> -> isPacked
+                is NonPackableRepeatedValueExtension<*, *> -> false
+            }
+
+            val tagSize = DataSize.computeTagSize(fieldNumber)
+            val dataSize = values.sumOf { fieldType.computeSizeNoTag(it) }
+
+            return if (isPacked) {
+                dataSize + tagSize + DataSize.computeInt32SizeNoTag(tagSize)
+            } else {
+                dataSize + values.size * tagSize
+            }
+        }
     }
 
     /**

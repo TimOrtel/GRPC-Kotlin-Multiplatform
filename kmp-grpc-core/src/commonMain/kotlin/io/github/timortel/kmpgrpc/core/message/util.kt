@@ -13,7 +13,7 @@ fun <M : Message> mergeUnknownFieldOrExtension(
     when (fieldOrExtension) {
         is UnknownFieldOrExtension.UnknownField -> unknownFields.add(fieldOrExtension.field)
         is UnknownFieldOrExtension.RepeatedExtension<M, Any> -> {
-            extensionBuilder[fieldOrExtension.extension] = fieldOrExtension.value
+            extensionBuilder.setOrAppend(fieldOrExtension.extension, fieldOrExtension.value)
         }
         is UnknownFieldOrExtension.ScalarExtension<M, Any> -> {
             extensionBuilder[fieldOrExtension.extension] = fieldOrExtension.value

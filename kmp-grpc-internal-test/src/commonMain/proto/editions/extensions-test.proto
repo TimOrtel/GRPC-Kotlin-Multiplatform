@@ -16,6 +16,10 @@ message MessageWithEveryExtension {
   extensions 1 to max;
 }
 
+message MessageWithEveryExtensionWrapper {
+  MessageWithEveryExtension field1 = 1;
+}
+
 extend MessageWithEveryExtension {
   string field1 = 1;
   bool field2 = 2;

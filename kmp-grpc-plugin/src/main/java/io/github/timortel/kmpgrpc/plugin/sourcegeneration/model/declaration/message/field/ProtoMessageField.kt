@@ -3,6 +3,8 @@ package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.mes
 import com.squareup.kotlinpoet.BOOLEAN
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.LIST
+import com.squareup.kotlinpoet.MemberName
+import com.squareup.kotlinpoet.MemberName.Companion.member
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.TypeName
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.CompilationException
@@ -90,6 +92,16 @@ data class ProtoMessageField(
      */
     override val isPacked: Boolean
         get() = cardinality == ProtoFieldCardinality.Repeated && type.isPackable && Options.packed.get(this)
+
+    val memberName: MemberName
+        get() {
+            val parentClassName =  when (val p = parent) {
+                is Parent.ExtensionDefinition -> p.ext.parent.className
+                is Parent.Message -> p.message.className
+            }
+
+            return parentClassName.member(name)
+        }
 
     init {
         type.parent = ProtoType.Parent.MessageField(this)

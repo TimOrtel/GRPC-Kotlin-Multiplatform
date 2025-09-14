@@ -1,9 +1,11 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.serialization
 
 import com.squareup.kotlinpoet.*
+import com.squareup.kotlinpoet.MemberName.Companion.member
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.SourceTarget
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.*
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoEnum
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoMessage
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoFieldCardinality
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoMessageField
@@ -159,14 +161,20 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
                 beginControlFlow("{")
 
                 when {
-                    field.type.isMessage -> {
+                    field.type is ProtoType.DefType && field.type.isMessage -> {
+                        val message = field.type.resolveDeclaration() as ProtoMessage
+
                         addCode(
-                            "%N·+=·%N.%N(%T.Companion)\n",
+                            "%N·+=·%N.%N(%T.Companion, ",
                             field.attributeName,
                             wrapperParamName,
                             "readMessage",
                             field.type.resolve()
                         )
+
+                        addCode(buildExtensionRegistryCodeForMessage(message))
+
+                        addCode(")\n")
                     }
 
                     isPacked -> {
@@ -403,17 +411,21 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
             }
 
             is ProtoType.DefType -> {
-                when (type.declType) {
-                    ProtoType.DefType.DeclarationType.MESSAGE -> {
-                        CodeBlock.of(
-                            "%N.%N(%T.Companion)",
-                            wrapperParamName,
-                            "readMessage",
-                            field.type.resolve()
-                        )
+                when (val decl = type.resolveDeclaration()) {
+                    is ProtoMessage -> {
+                        CodeBlock.builder()
+                            .add(
+                                "%N.%N(%T.Companion, ",
+                                wrapperParamName,
+                                "readMessage",
+                                field.type.resolve()
+                            )
+                            .add(buildExtensionRegistryCodeForMessage(decl))
+                            .add(")")
+                            .build()
                     }
 
-                    ProtoType.DefType.DeclarationType.ENUM -> {
+                    is ProtoEnum -> {
                         CodeBlock.of(
                             "%T.%N(%N.readEnum())",
                             field.type.resolve(),
@@ -436,16 +448,20 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
             }
 
             is ProtoType.DefType -> {
-                when (type.declType) {
-                    ProtoType.DefType.DeclarationType.MESSAGE -> {
-                        CodeBlock.of(
-                            "{·%N(%T.Companion)}",
-                            "readMessage",
-                            type.resolve()
-                        )
+                when (val decl = type.resolveDeclaration()) {
+                    is ProtoMessage -> {
+                        CodeBlock.builder()
+                            .add(
+                                "{·%N(%T.Companion, ",
+                                "readMessage",
+                                type.resolve()
+                            )
+                            .add(buildExtensionRegistryCodeForMessage(decl))
+                            .add(")}")
+                            .build()
                     }
 
-                    ProtoType.DefType.DeclarationType.ENUM -> {
+                    is ProtoEnum -> {
                         CodeBlock.of(
                             "{·%T.%N(readEnum())·}",
                             type.resolve(),
@@ -480,6 +496,17 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
                     ProtoType.DefType.DeclarationType.ENUM -> "readEnum"
                 }
             }
+        }
+    }
+
+    private fun buildExtensionRegistryCodeForMessage(message: ProtoMessage): CodeBlock {
+        return if (message.isExtendable) {
+            CodeBlock.of(
+                "%M",
+                message.className.nestedClass("Companion").member(Const.Message.Companion.defaultExtensionRegistryProperty.name)
+            )
+        } else {
+            CodeBlock.of("%T.empty()", kmExtensionRegistry)
         }
     }
 }

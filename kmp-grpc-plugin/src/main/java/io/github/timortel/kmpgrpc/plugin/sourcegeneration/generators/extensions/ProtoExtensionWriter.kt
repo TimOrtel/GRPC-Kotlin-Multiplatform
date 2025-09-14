@@ -2,11 +2,14 @@ package io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.extensions
 
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.Const
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.kmExtensionRegistry
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.kmExtensionRepeated
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.kmExtensionRepeatedNonPackable
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.kmExtensionRepeatedPackable
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.kmExtensionScalar
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoExtensionDefinition
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoMessage
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoFieldCardinality
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoMessageField
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
@@ -25,7 +28,7 @@ object ProtoExtensionWriter {
                     val messageTypeName = extensionDefinition.messageType.resolve()
                     val valueTypeName = field.type.resolve()
 
-                    val parentName = when(val p = extensionDefinition.parent) {
+                    val parentName = when (val p = extensionDefinition.parent) {
                         is ProtoExtensionDefinition.Parent.File -> p.file.protoPackage.packageIdentifier
                         is ProtoExtensionDefinition.Parent.Message -> p.message.fullName
                     }
@@ -73,11 +76,37 @@ object ProtoExtensionWriter {
     ): CodeBlock {
         val fieldTypeBlock = when (field.type) {
             is ProtoType.DefType -> {
-                CodeBlock.of(
-                    "%T(%T.Companion)",
-                    field.type.fieldType,
-                    field.type.resolve()
-                )
+                when (val decl = field.type.resolveDeclaration()) {
+                    is ProtoMessage -> {
+                        CodeBlock.builder()
+                            .add(
+                                "%1T(%2T.Companion, ",
+                                field.type.fieldType,
+                                field.type.resolve(),
+                            )
+                            .apply {
+                                if (decl.isExtendable) {
+                                    add(
+                                        "%T.Companion.%N",
+                                        field.type.resolve(),
+                                        Const.Message.Companion.defaultExtensionRegistryProperty.name
+                                    )
+                                } else {
+                                    add("%T.empty()", kmExtensionRegistry)
+                                }
+                            }
+                            .add(")")
+                            .build()
+                    }
+
+                    else -> {
+                        CodeBlock.of(
+                            "%T(%T.Companion)",
+                            field.type.fieldType,
+                            field.type.resolve()
+                        )
+                    }
+                }
             }
 
             else -> {

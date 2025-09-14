@@ -1,5 +1,6 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model
 
+import com.squareup.kotlinpoet.ClassName
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.CompilationException
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoMessage
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoMessageField
@@ -44,12 +45,19 @@ data class ProtoExtensionDefinition(
 
     sealed interface Parent : DeclarationResolver {
         val file: ProtoFile
+        val className: ClassName
 
-        data class File(override val file: ProtoFile) : Parent, DeclarationResolver by file
+        data class File(override val file: ProtoFile) : Parent, DeclarationResolver by file {
+            override val className: ClassName
+                get() = file.className
+        }
 
         data class Message(val message: ProtoMessage) : Parent, DeclarationResolver by message {
             override val file: ProtoFile
                 get() = message.file
+
+            override val className: ClassName
+                get() = message.className
         }
     }
 }

@@ -29,6 +29,16 @@ This projects implements client-side gRPC for Android, JVM, Native (including iO
 | `Server-streaming` | ✅           | ✅                      | ✅                              | ✅                          |
 | `Bidi-streaming`   | ✅           | ✅                      | ❌                              | ❌                          |
 
+### Supported protobuf versions
+|               | Support status |
+|---------------|----------------|
+| Proto2        | ⏳ Planned      |
+| Proto3        | ✅ Supported    |
+| Editions 2023 | ✅ Supported    |
+| Editions 2024 | ⏳ Planned      |
+
+Please note that not all features may be available even if the protobuf version is marked as _supported_.
+
 ### Supported proto types:
 | Proto Type   | Kotlin Type  |
 |-------------|-------------|
@@ -48,7 +58,9 @@ This projects implements client-side gRPC for Android, JVM, Native (including iO
 | `string`    | `String`    |
 | `bytes`     | `ByteArray` |
 
-### Supported proto options:
+### Supported proto options and features:
+### Proto3
+
 | Proto Option          | Support Status |
 |----------------------|---------------|
 | `java_package`       | ✅ Supported  |
@@ -57,6 +69,9 @@ This projects implements client-side gRPC for Android, JVM, Native (including iO
 | `deprecated`        | ✅ Supported    |
 | `packed`           | ✅ Supported    |
 | `optimize_for`       | ❌ Not Supported |
+
+### Editions 2023
+
 
 ### Code generation:
 | Proto Struct | Support Status |
@@ -243,6 +258,46 @@ val channel = Channel.Builder
     .withInterceptors(loggingInterceptor)
     .build()
 ```
+
+### Using extensions
+**Forward declarations are currently not supported.**
+
+Proto editions support [extensions](https://protobuf.dev/programming-guides/editions/#extensions). Extension fields are not generated
+as part of the message itself, but must instead be set indirectly on the `extensions` property.
+
+As an example, consider the following proto file:
+```protobuf
+// sample.proto
+
+edition = "2023";
+
+message MyMessage {
+  string regularField = 1;
+  extensions 2 to 5;
+}
+
+extend MyMessage {
+  string myExtension = 2;
+}
+```
+
+You can construct a message of type `MyMessage` like this:
+```kotlin
+val msg = Sample.MyMessage(
+    regularField = "val1", 
+    extensions = buildExtensions {
+        set[Sample.myExtension] = "val2"
+    }
+)
+```
+
+The values from extensions can be read from a message like this:
+```kotlin
+val msg: Sample.MyMessage = // ...
+val value = msg.extensions[Sample.myExtension]
+```
+
+When deserializing a message received from the server, all known extensions for the message type are considered.
 
 ## Setup
 In your top-level build.gradle.kts, add the following:

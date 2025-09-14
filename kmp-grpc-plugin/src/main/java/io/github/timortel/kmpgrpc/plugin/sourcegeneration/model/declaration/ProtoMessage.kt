@@ -78,6 +78,9 @@ data class ProtoMessage(
     override val reservedAttributeNames: Set<String>
         get() = Const.Message.reservedAttributeNames
 
+    val extensionsInProject: List<ProtoExtensionDefinition>
+        get() = project.findExtensionDefinitionsForMessage(this)
+
     val isExtendable: Boolean = extensionRange.ranges.isNotEmpty()
 
     init {
@@ -115,7 +118,7 @@ data class ProtoMessage(
         mapFields.forEach { it.validate() }
         oneOfs.forEach { it.validate() }
 
-        val extensionsInProject = project.findExtensionDefinitionsForMessage(this)
+        val extensionsInProject = extensionsInProject
         if (!isExtendable && extensionsInProject.isNotEmpty()) {
             val message = buildString {
                 append("Message $name is not extendable, but the following extensions are defined: \n")

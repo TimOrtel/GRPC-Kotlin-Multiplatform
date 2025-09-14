@@ -26,7 +26,7 @@ object ProtoSourceGenerator {
     private val proto3Regex =
         "^\\s*(?:(?://[^\\n]*|/\\*[\\s\\S]*?\\*/)\\s*|\\s*\\n)*syntax\\s*=\\s*[\"']proto3[\"']\\s*;[\\s\\S]*$".toRegex()
     private val protoEditionsRegex =
-        "^\\s*(?:(?://[^\\n]*|/\\*[\\s\\S]*?\\*/)\\s*|\\s*\\n)*edition\\s*=\\s*[\"']\\d+[\"']\\s*;[\\s\\S]*$".toRegex()
+        "^\\s*(?:(?://[^\\n]*|/\\*[\\s\\S]*?\\*/)\\s*|\\s*\\n)*edition\\s*=\\s*[\"'](\\d+)[\"']\\s*;[\\s\\S]*$".toRegex()
 
     fun writeProtoFiles(
         logger: Logger,

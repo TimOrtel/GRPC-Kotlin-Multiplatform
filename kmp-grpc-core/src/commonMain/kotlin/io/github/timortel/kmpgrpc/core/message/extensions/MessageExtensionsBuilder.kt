@@ -25,18 +25,6 @@ class MessageExtensionsBuilder<M : Message> @InternalKmpGrpcApi constructor() {
     }
 
     /**
-     * Adds the given value to the list of values associated with the specified repeated extension.
-     * If the extension already exists in the map, the value is appended to the existing list.
-     * If the extension does not exist in the map, a new list is created with the given value as its sole entry.
-     *
-     * @param extension The repeated value extension that defines the field and message type.
-     * @param value The value to append or associate with the provided extension.
-     */
-    fun <T : Any> setOrAppend(extension: Extension.RepeatedValueExtension<M, T>, value: T) {
-        setOrAppend(extension, listOf(value))
-    }
-
-    /**
      * Adds the given values to the list of values associated with the specified repeated extension.
      * If the extension already exists in the map, the values are appended to the existing list.
      *

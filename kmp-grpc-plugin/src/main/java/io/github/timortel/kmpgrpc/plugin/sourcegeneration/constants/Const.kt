@@ -82,6 +82,7 @@ object Const {
 
         object Companion {
             val fullNameProperty = Property.of("fullName", STRING)
+            val defaultExtensionRegistryProperty = Property.of("defaultExtensionRegistry", kmExtensionRegistry)
 
             object WrapperDeserializationFunction {
                 const val NAME = "deserialize"

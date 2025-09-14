@@ -10,6 +10,10 @@ class MessageExtensions<M : Message>(
     internal val repeatedMap: Map<Extension.RepeatedValueExtension<M, Any>, List<Any>> = emptyMap(),
 ) {
 
+    val requiredSize: Int =
+        scalarMap.entries.sumOf { (ext, value) -> ext.computeRequiredSize(value) } +
+                repeatedMap.entries.sumOf { (ext, value) -> ext.computeRequiredSize(value) }
+
     /**
      * Retrieves the scalar value associated with the given scalar extension.
      *

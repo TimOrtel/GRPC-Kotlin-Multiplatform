@@ -40,7 +40,12 @@ class RequiredSizePropertyExtension : BaseSerializationExtension() {
                     when {
                         field.cardinality == ProtoFieldCardinality.Optional || (field.type.isMessage && field.cardinality != ProtoFieldCardinality.Repeated) -> {
                             add("if·(%N)·{·", field.isSetProperty.attributeName)
-                            add(getCodeForRequiredSizeForScalarAttributeC(field, field.cardinality == ProtoFieldCardinality.Optional))
+                            add(
+                                getCodeForRequiredSizeForScalarAttributeC(
+                                    field,
+                                    field.cardinality == ProtoFieldCardinality.Optional
+                                )
+                            )
                             add("}·else·{·0·}")
                         }
 
@@ -134,10 +139,15 @@ class RequiredSizePropertyExtension : BaseSerializationExtension() {
                     Const.Message.Constructor.UnknownFields.name
                 )
 
-                add(
-                    listOf(fieldsCodeBlock, mapFieldsCodeBlock, oneOfsBlock, unknownFieldsBlock)
-                        .joinCodeBlocks(separator)
+                val extensionsBlock = CodeBlock.of(
+                    "%N.requiredSize",
+                    Const.Message.Constructor.MessageExtensions.name
                 )
+
+                val blocks = listOf(fieldsCodeBlock, mapFieldsCodeBlock, oneOfsBlock, unknownFieldsBlock) +
+                        if (message.isExtendable) listOf(extensionsBlock) else emptyList()
+
+                add(blocks.joinCodeBlocks(separator))
             }
             .build()
     }

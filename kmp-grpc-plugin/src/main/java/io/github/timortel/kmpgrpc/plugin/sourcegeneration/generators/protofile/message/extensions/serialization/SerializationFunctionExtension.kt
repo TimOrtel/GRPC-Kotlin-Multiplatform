@@ -126,6 +126,15 @@ class SerializationFunctionExtension : BaseSerializationExtension() {
                 "writeUnknownFields",
                 Const.Message.Constructor.UnknownFields.name
             )
+
+            if (message.isExtendable) {
+                addStatement(
+                    "%N.%N(%N)",
+                    Const.Message.SerializeFunction.STREAM_PARAM,
+                    "writeMessageExtensions",
+                    Const.Message.Constructor.MessageExtensions.name
+                )
+            }
         }
     }
 

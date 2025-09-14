@@ -13,6 +13,7 @@ val nativeJsCallOptions = ClassName(PACKAGE_BASE, "CallOptions")
 
 val MessageDeserializer = ClassName(PACKAGE_MESSAGE, "MessageDeserializer")
 val MessageCompanion = ClassName(PACKAGE_MESSAGE, "MessageCompanion")
+val MessageWithExtensionsCompanion = ClassName(PACKAGE_MESSAGE, "MessageWithExtensionsCompanion")
 
 val kmMessage = ClassName(PACKAGE_MESSAGE, "Message")
 val kmMessageWithExtensions = ClassName(PACKAGE_MESSAGE, "MessageWithExtensions")

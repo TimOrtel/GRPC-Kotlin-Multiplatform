@@ -1,6 +1,7 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.test.serialization
 
 import io.github.timortel.kmpgrpc.core.message.UnknownField
+import io.github.timortel.kmpgrpc.core.message.extensions.buildExtensions
 import io.github.timortel.kmpgrpc.test.ComplexRepeatedMessage
 import io.github.timortel.kmpgrpc.test.LongMessage
 import io.github.timortel.kmpgrpc.test.MessageWithEverything
@@ -131,12 +132,41 @@ class SelfMessageSerializationTest {
 
     @Test
     fun testExtensionsSerialization() {
+        val msg = ExtensionsTest.MessageWithExtension(
+            extensions = buildExtensions {
+                set(ExtensionsTest.extension, "test")
+            }
+        )
+
+        val reconstructed = ExtensionsTest.MessageWithExtension.deserialize(
+            msg.serialize(),
+            ExtensionsTest.MessageWithExtension.defaultExtensionRegistry
+        )
+
+        assertEquals(msg, reconstructed)
+    }
+
+    @Test
+    fun testExtensionsSerializationEverything() {
         val msg = createMessageWithAllExtensions()
 
         val reconstructed = ExtensionsTest.MessageWithEveryExtension.deserialize(
             msg.serialize(),
+            ExtensionsTest.MessageWithEveryExtension.defaultExtensionRegistry
         )
 
         assertEquals(msg, reconstructed)
+    }
+
+    @Test
+    fun testWrappedExtensionsSerializationEverything() {
+        val msg = ExtensionsTest.MessageWithEveryExtensionWrapper(
+            field1 = createMessageWithAllExtensions()
+        )
+
+        val reconstructed = ExtensionsTest.MessageWithEveryExtensionWrapper.deserialize(msg.serialize())
+
+        assertEquals(msg, reconstructed)
+        assertEquals(createMessageWithAllExtensions(), reconstructed.field1)
     }
 }
