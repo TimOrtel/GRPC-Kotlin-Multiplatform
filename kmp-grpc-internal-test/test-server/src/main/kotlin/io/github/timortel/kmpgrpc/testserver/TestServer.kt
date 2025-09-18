@@ -2,6 +2,7 @@ package io.github.timortel.kmpgrpc.testserver
 
 import io.github.timortel.kmpgrpc.test.*
 import io.grpc.*
+import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts
 import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder
 import io.grpc.protobuf.services.ProtoReflectionServiceV1
 import kotlinx.coroutines.delay
@@ -11,11 +12,47 @@ import kotlin.time.Duration.Companion.seconds
 
 object TestServer {
 
-    fun start(): Server {
+    fun start() {
+        val nonSslServer = buildServer(17888)
+            .start()
+
+        val sslServer = buildServer(17889) {
+            sslContext(
+                GrpcSslContexts.forServer(
+                    TestServer::class.java.classLoader.getResourceAsStream("server.pem"),
+                    TestServer::class.java.classLoader.getResourceAsStream("server.key")
+                )
+                    .build()
+            )
+        }
+            .start()
+
+        nonSslServer.awaitTermination()
+        sslServer.awaitTermination()
+    }
+
+    private class CustomResponseCall<R, S>(delegate: ServerCall<R, S>) :
+        ForwardingServerCall.SimpleForwardingServerCall<R, S>(delegate) {
+
+        override fun sendHeaders(headers: Metadata) {
+            val asciiKey = Metadata.Key.of("custom-header-1", Metadata.ASCII_STRING_MARSHALLER)
+            headers.put(asciiKey, "value1")
+            headers.put(asciiKey, "value2")
+
+            val binaryKey = Metadata.Key.of("custom-header-1-bin", Metadata.BINARY_BYTE_MARSHALLER)
+            headers.put(binaryKey, "value1".encodeToByteArray())
+            headers.put(binaryKey, "value2".encodeToByteArray())
+
+            super.sendHeaders(headers)
+        }
+    }
+
+    private fun buildServer(port: Int, configure: NettyServerBuilder.() -> Unit = {}): Server {
         val metadataKey = Context.key<Map<String, String>>("metadata")
 
         return NettyServerBuilder
-            .forPort(17888)
+            .forPort(port)
+            .apply { configure() }
             .addService(ProtoReflectionServiceV1.newInstance())
             .addService(
                 object : TestServiceGrpcKt.TestServiceCoroutineImplBase() {
@@ -189,22 +226,5 @@ object TestServer {
                 }
             )
             .build()
-            .start()
-    }
-
-    private class CustomResponseCall<R, S>(delegate: ServerCall<R, S>) :
-        ForwardingServerCall.SimpleForwardingServerCall<R, S>(delegate) {
-
-        override fun sendHeaders(headers: Metadata) {
-            val asciiKey = Metadata.Key.of("custom-header-1", Metadata.ASCII_STRING_MARSHALLER)
-            headers.put(asciiKey, "value1")
-            headers.put(asciiKey, "value2")
-
-            val binaryKey = Metadata.Key.of("custom-header-1-bin", Metadata.BINARY_BYTE_MARSHALLER)
-            headers.put(binaryKey, "value1".encodeToByteArray())
-            headers.put(binaryKey, "value2".encodeToByteArray())
-
-            super.sendHeaders(headers)
-        }
     }
 }

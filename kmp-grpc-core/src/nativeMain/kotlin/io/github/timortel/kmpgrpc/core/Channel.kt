@@ -4,6 +4,9 @@ import io.github.timortel.kmpgrpc.core.internal.CallInterceptorChain
 import io.github.timortel.kmpgrpc.core.internal.EmptyCallInterceptor
 import io.github.timortel.kmpgrpc.native.*
 import kotlinx.cinterop.CPointer
+import kotlinx.cinterop.addressOf
+import kotlinx.cinterop.cstr
+import kotlinx.cinterop.usePinned
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.newSingleThreadContext
@@ -12,6 +15,7 @@ actual class Channel private constructor(
     internal val name: String,
     internal val port: Int,
     private val usePlaintext: Boolean,
+    private val certificates: List<Certificate>?,
     /**
      * The interceptor associated with this channel, or null.
      */
@@ -29,7 +33,35 @@ actual class Channel private constructor(
     init {
         val host = (if (usePlaintext) "http://" else "https://") + "$name:$port"
 
-        channel = channel_create(host, usePlaintext)
+        val builder = channel_builder_create(host)
+        if (!usePlaintext) {
+            val tlsConfig = tls_config_create()
+            if (certificates != null) {
+                certificates
+                    .forEach { certificate ->
+                        certificate
+                            .pemContent
+                            .encodeToByteArray()
+                            .toUByteArray()
+                            .usePinned { pinned ->
+                                if (pinned.get().isNotEmpty()) {
+                                    tls_config_install_certificate(
+                                        tlsConfig,
+                                        pinned.addressOf(0),
+                                        pinned.get().size.toULong()
+                                    )
+                                }
+                            }
+                    }
+            } else {
+                tls_config_use_webpki_roots(tlsConfig)
+            }
+
+            channel_builder_use_tls_config(builder, tlsConfig)
+        }
+
+        channel = channel_builder_build(builder)
+
         if (channel == null) {
             throw IllegalArgumentException("$host is not a valid uri.")
         }
@@ -38,6 +70,7 @@ actual class Channel private constructor(
     actual class Builder(private val name: String, private val port: Int) {
 
         private var usePlaintext = false
+        private var certificates: List<Certificate>? = null
 
         private var interceptor: CallInterceptor = EmptyCallInterceptor
 
@@ -50,6 +83,7 @@ actual class Channel private constructor(
 
         actual fun usePlaintext(): Builder {
             usePlaintext = true
+            certificates = null
             return this
         }
 
@@ -64,7 +98,23 @@ actual class Channel private constructor(
             }
         }
 
-        actual fun build(): Channel = Channel(name, port, usePlaintext, interceptor)
+        actual fun withTrustedCertificates(vararg certificates: Certificate): Builder {
+            return withTrustedCertificates(certificates.toList())
+        }
+
+        actual fun withTrustedCertificates(certificates: List<Certificate>): Builder {
+            usePlaintext = false
+            this.certificates = certificates
+            return this
+        }
+
+        actual fun build(): Channel = Channel(
+            name = name,
+            port = port,
+            usePlaintext = usePlaintext,
+            certificates = certificates,
+            interceptor = interceptor
+        )
     }
 
     override fun cleanupResources() {

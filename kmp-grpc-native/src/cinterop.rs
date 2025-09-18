@@ -12,7 +12,7 @@ use tonic::metadata::{
     AsciiMetadataKey, AsciiMetadataValue, BinaryMetadataKey, BinaryMetadataValue, KeyRef,
     MetadataMap,
 };
-use tonic::transport::{Channel, ClientTlsConfig};
+use tonic::transport::{Certificate, Channel, ClientTlsConfig, Endpoint};
 
 /**
  * Holds the channel used to send messages into the RPC.
@@ -35,6 +35,14 @@ impl RequestChannel {
     }
 }
 
+pub struct RustChannelBuilder {
+    pub _endpoint: Option<Endpoint>,
+}
+
+pub struct RustTlsConfigBuilder {
+    pub _config: Option<ClientTlsConfig>,
+}
+
 /**
  * Holds the actual channel implementation in Rust
  */
@@ -50,12 +58,9 @@ pub struct RpcTask {
     pub _sender: watch::Sender<bool>,
 }
 
-/**
- * Create a new channel from the given host. Returns null if the channel could not be created.
- */
 #[unsafe(no_mangle)]
-pub extern "C" fn channel_create(host: *const c_char, use_plaintext: bool) -> *mut RustChannel {
-    trace!("channel_create()");
+pub extern "C" fn channel_builder_create(host: *const c_char) -> *mut RustChannelBuilder {
+    trace!("channel_builder_create()");
 
     let _guard = TOKIO_RT.enter();
 
@@ -68,23 +73,146 @@ pub extern "C" fn channel_create(host: *const c_char, use_plaintext: bool) -> *m
         }
     };
 
-    match Channel::from_shared(host)
-        .ok()
-        .and_then(|x| {
-            if use_plaintext {
-                Some(x)
-            } else {
-                x.tls_config(ClientTlsConfig::new().with_webpki_roots()).ok()
-            }
-        })
-    {
-        Some(endpoint) => {
-            Box::into_raw(Box::new(RustChannel {
-                _channel: endpoint.connect_lazy(),
-            }))
-        }
+    match Channel::from_shared(host).ok() {
         None => null_mut(),
+        Some(endpoint) => Box::into_raw(Box::new(RustChannelBuilder {
+            _endpoint: Some(endpoint),
+        })),
     }
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn tls_config_create() -> *mut RustTlsConfigBuilder {
+    trace!("tls_config_create()");
+    Box::into_raw(Box::new(RustTlsConfigBuilder {
+        _config: Some(ClientTlsConfig::new()),
+    }))
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn tls_config_use_webpki_roots(config: *mut RustTlsConfigBuilder) {
+    trace!("channel_builder_use_plaintext()");
+
+    unsafe {
+        match config.as_mut() {
+            Some(c) => {
+                let config = c._config.take();
+                match config {
+                    None => {
+                        trace!("tls_config_use_webpki_roots() -> no tls config set");
+                    }
+                    Some(tls) => {
+                        c._config = Some(tls.with_webpki_roots());
+                    }
+                }
+            }
+            None => {
+                trace!("tls_config_use_webpki_roots() -> config is null");
+            }
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn tls_config_install_certificate(
+    config: *mut RustTlsConfigBuilder,
+    data: *const u8,
+    len: usize,
+) {
+    trace!("tls_config_install_certificate()");
+
+    unsafe {
+        match config.as_mut() {
+            Some(c) => {
+                let config = c._config.take();
+                match config {
+                    None => {
+                        trace!("tls_config_install_certificate() -> no tls config set");
+                    }
+                    Some(tls) => {
+                        let cert = Certificate::from_pem(std::slice::from_raw_parts(data, len));
+
+                        c._config = Some(tls.trust_anchor(TrustAnchor);
+                    }
+                }
+            }
+            None => {
+                trace!("tls_config_install_certificate() -> builder is null");
+            }
+        }
+    }
+}
+
+/**
+ * Set the tls config for the channel builder. The config will be dropped after this call.
+ */
+#[unsafe(no_mangle)]
+pub extern "C" fn channel_builder_use_tls_config(
+    builder: *mut RustChannelBuilder,
+    config: *mut RustTlsConfigBuilder,
+) {
+    trace!("channel_builder_use_tls_config()");
+
+    unsafe {
+        match builder
+            .as_mut()
+            .and_then(|b| config.as_mut().map(|c| (b, c)))
+        {
+            None => {
+                trace!("channel_builder_use_tls_config() -> either no builder or no config set");
+            }
+            Some((b, c)) => {
+                let endpoint = b._endpoint.take();
+                let config = c._config.take();
+                match endpoint.and_then(|e| config.map(|c| (e, c))) {
+                    None => {
+                        trace!(
+                            "channel_builder_use_tls_config() -> either no builder or no config provided in option"
+                        );
+                    }
+                    Some((endpoint, config)) => match endpoint.tls_config(config).ok() {
+                        None => {
+                            trace!("channel_builder_use_tls_config() -> could not set tls config");
+                        }
+                        Some(e) => {
+                            b._endpoint = Some(e);
+                        }
+                    },
+                }
+            }
+        }
+
+        drop(Box::from_raw(config));
+    }
+}
+
+/**
+ * Create a new channel from the given host. Returns null if the channel could not be created.
+ */
+#[unsafe(no_mangle)]
+pub extern "C" fn channel_builder_build(builder: *mut RustChannelBuilder) -> *mut RustChannel {
+    trace!("channel_builder_build()");
+
+    let _guard = TOKIO_RT.enter();
+
+    let channel = unsafe {
+        match builder.as_mut().and_then(|b| b._endpoint.take()) {
+            Some(endpoint) => {
+                Box::into_raw(Box::new(RustChannel {
+                    _channel: endpoint.connect_lazy(),
+                }))
+            },
+            None => null_mut(),
+        }
+    };
+
+    trace!("channel_builder_build() -> built channel");
+
+    unsafe {
+        drop(Box::from_raw(builder));
+    }
+
+    channel
 }
 
 #[unsafe(no_mangle)]

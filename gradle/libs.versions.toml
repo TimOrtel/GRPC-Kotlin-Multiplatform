@@ -54,6 +54,7 @@ grpc-services = { group = "io.grpc", name = "grpc-services", version.ref = "grpc
 grpc-kotlin-stub = { group = "io.grpc", name = "grpc-kotlin-stub", version.ref = "grpcKotlin" }
 grpc-netty = { group = "io.grpc", name = "grpc-netty", version.ref = "grpcJvm" }
 grpc-netty-shaded = { group = "io.grpc", name = "grpc-netty-shaded", version.ref = "grpcJvm" }
+grpc-okhttp = { group = "io.grpc", name = "grpc-okhttp", version.ref = "grpcJvm" }
 
 ktor-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 

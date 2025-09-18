@@ -38,3 +38,6 @@ test-outputs
 playground
 
 .DS_Store
+
+/kmp-grpc-internal-test/test-server/src/main/resources/server.key
+/kmp-grpc-internal-test/test-server/src/main/resources/server.pem

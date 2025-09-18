@@ -90,6 +90,7 @@ kotlin {
                 api(libs.grpc.stub)
                 api(libs.grpc.protobuf.lite)
                 api(libs.grpc.kotlin.stub)
+                implementation(libs.grpc.okhttp)
             }
         }
 

@@ -24,6 +24,10 @@ expect class Channel {
          */
         fun withInterceptors(vararg interceptors: CallInterceptor): Builder
 
+        fun withTrustedCertificates(vararg certificates: Certificate): Builder
+
+        fun withTrustedCertificates(certificates: List<Certificate>): Builder
+
         /**
          * Construct the channel
          */
