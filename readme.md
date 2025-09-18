@@ -1,6 +1,6 @@
 [![GitHub license](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg?style=flat)](http://www.apache.org/licenses/LICENSE-2.0)
 [![Download](https://img.shields.io/maven-central/v/io.github.timortel/kmp-grpc-core) ](https://central.sonatype.com/artifact/io.github.timortel/kmp-grpc-core)
-![version](https://img.shields.io/badge/version-1.2.0-blue)
+![version](https://img.shields.io/badge/version-1.3.0-blue)
 
 ![badge][badge-android]
 ![badge][badge-jvm]
@@ -293,6 +293,9 @@ kmpGrpc {
     // Optional: if the protobuf well known types should be included
     // https://protobuf.dev/reference/protobuf/google.protobuf/
     includeWellKnownTypes = true
+    
+    // Optional: if all generated source files should have 'internal' visibility.
+    internalVisibility = true
     
     // Specify the folders where your proto files are located, you can list multiple.
     protoSourceFolders = project.files("<source to your protos>")
