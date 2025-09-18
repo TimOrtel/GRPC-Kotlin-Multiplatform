@@ -88,7 +88,6 @@ kotlin {
 
             dependencies {
                 api(libs.grpc.stub)
-                api(libs.grpc.protobuf.lite)
                 api(libs.grpc.kotlin.stub)
             }
         }
