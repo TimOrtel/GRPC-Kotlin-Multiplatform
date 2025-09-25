@@ -3,6 +3,8 @@ package io.github.timortel.kmpgrpc.core
 import io.github.timortel.kmpgrpc.core.internal.CallInterceptorChain
 import io.github.timortel.kmpgrpc.core.internal.EmptyCallInterceptor
 import io.github.timortel.kmpgrpc.native.*
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.cinterop.CPointer
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -16,11 +18,14 @@ actual class Channel private constructor(
      * The interceptor associated with this channel, or null.
      */
     internal val interceptor: CallInterceptor,
+    keepAliveTime: Duration,
+    keepAliveTimeout: Duration,
+    keepAliveWithoutCalls: Boolean
 ) : NativeJsChannel() {
 
     /*
     grpc.ready().await throws a Segfault when we do not execute all rpcs on the same thread.
-     */
+    */
     @OptIn(DelicateCoroutinesApi::class, ExperimentalCoroutinesApi::class)
     internal val context = newSingleThreadContext("native channel executor - $name:$port")
 
@@ -29,17 +34,25 @@ actual class Channel private constructor(
     init {
         val host = (if (usePlaintext) "http://" else "https://") + "$name:$port"
 
-        channel = channel_create(host, usePlaintext)
-        if (channel == null) {
-            throw IllegalArgumentException("$host is not a valid uri.")
-        }
+        channel = channel_create(
+            host,
+            usePlaintext,
+            keepAliveTime.inWholeNanoseconds.toULong(),
+            keepAliveTimeout.inWholeNanoseconds.toULong(),
+            keepAliveWithoutCalls
+        ) ?: throw IllegalArgumentException("$host is not a valid uri.")
     }
+
 
     actual class Builder(private val name: String, private val port: Int) {
 
         private var usePlaintext = false
 
         private var interceptor: CallInterceptor = EmptyCallInterceptor
+
+        private var keepAliveTime: Duration = Duration.INFINITE
+        private var keepAliveTimeout: Duration = 20.seconds
+        private var keepAliveWithoutCalls: Boolean = false
 
         actual companion object {
             actual fun forAddress(
@@ -64,7 +77,29 @@ actual class Channel private constructor(
             }
         }
 
-        actual fun build(): Channel = Channel(name, port, usePlaintext, interceptor)
+        actual fun keepAliveTime(duration: Duration): Builder = apply {
+            keepAliveTime = duration
+        }
+
+        actual fun keepAliveTimeout(duration: Duration): Builder = apply {
+            keepAliveTimeout = duration
+        }
+
+        actual fun keepAliveWithoutCalls(keepAliveWithoutCalls: Boolean): Builder = apply {
+            this.keepAliveWithoutCalls = keepAliveWithoutCalls
+        }
+
+        actual fun build(): Channel {
+            return Channel(
+                name,
+                port,
+                usePlaintext,
+                interceptor,
+                keepAliveTime,
+                keepAliveTimeout,
+                keepAliveWithoutCalls
+            )
+        }
     }
 
     override fun cleanupResources() {

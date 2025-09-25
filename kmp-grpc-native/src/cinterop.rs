@@ -51,10 +51,16 @@ pub struct RpcTask {
 }
 
 /**
- * Create a new channel from the given host. Returns null if the channel could not be created.
+ * Create a new channel from the given host with optional keepalive settings. Returns null if the channel could not be created.
  */
 #[unsafe(no_mangle)]
-pub extern "C" fn channel_create(host: *const c_char, use_plaintext: bool) -> *mut RustChannel {
+pub extern "C" fn channel_create(
+    host: *const c_char,
+    use_plaintext: bool,
+    keepalive_time_nanos: u64,
+    keepalive_timeout_nanos: u64,
+    keepalive_without_calls: bool
+) -> *mut RustChannel {
     trace!("channel_create()");
 
     let _guard = TOKIO_RT.enter();
@@ -80,7 +86,11 @@ pub extern "C" fn channel_create(host: *const c_char, use_plaintext: bool) -> *m
     {
         Some(endpoint) => {
             Box::into_raw(Box::new(RustChannel {
-                _channel: endpoint.connect_lazy(),
+                _channel: endpoint
+                    .keep_alive_timeout(std::time::Duration::from_nanos(keepalive_timeout_nanos))
+                    .http2_keep_alive_interval(std::time::Duration::from_nanos(keepalive_time_nanos))
+                    .keep_alive_while_idle(keepalive_without_calls)
+                    .connect_lazy(),
             }))
         }
         None => null_mut(),

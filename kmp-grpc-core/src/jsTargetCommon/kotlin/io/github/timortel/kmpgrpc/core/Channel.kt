@@ -2,6 +2,7 @@ package io.github.timortel.kmpgrpc.core
 
 import io.ktor.client.*
 import io.ktor.client.plugins.*
+import kotlin.time.Duration
 
 actual class Channel private constructor(
     private val name: String,
@@ -38,6 +39,12 @@ actual class Channel private constructor(
         actual fun withInterceptors(vararg interceptors: CallInterceptor): Builder = apply {
             this.interceptors += interceptors.toList()
         }
+
+        actual fun keepAliveTime(duration: Duration): Builder = this
+
+        actual fun keepAliveTimeout(duration: Duration): Builder = this
+
+        actual fun keepAliveWithoutCalls(keepAliveWithoutCalls: Boolean): Builder = this
 
         actual fun build(): Channel {
             return Channel(

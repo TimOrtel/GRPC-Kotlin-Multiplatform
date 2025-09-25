@@ -3,6 +3,8 @@ package io.github.timortel.kmpgrpc.core
 import io.github.timortel.kmpgrpc.core.internal.ClientInterceptorImpl
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
+import kotlin.time.Duration
+import java.util.concurrent.TimeUnit
 
 /**
  * The Jvm [Channel] wraps the grpc [ManagedChannel] and delegates its operations to the wrapped native channel.
@@ -27,6 +29,18 @@ actual class Channel private constructor(val channel: ManagedChannel) {
 
         actual fun usePlaintext(): Builder = apply {
             impl.usePlaintext()
+        }
+
+        actual fun keepAliveTime(duration: Duration): Builder = apply {
+            impl.keepAliveTime(duration.inWholeNanoseconds, TimeUnit.NANOSECONDS)
+        }
+
+        actual fun keepAliveTimeout(duration: Duration): Builder = apply {
+            impl.keepAliveTimeout(duration.inWholeNanoseconds, TimeUnit.NANOSECONDS)
+        }
+
+        actual fun keepAliveWithoutCalls(keepAliveWithoutCalls: Boolean): Builder = apply {
+            impl.keepAliveWithoutCalls(keepAliveWithoutCalls)
         }
 
         actual fun build(): Channel = Channel(impl.build())

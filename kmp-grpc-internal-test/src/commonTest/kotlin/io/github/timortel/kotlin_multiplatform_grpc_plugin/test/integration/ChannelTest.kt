@@ -15,6 +15,7 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 abstract class ChannelTest : ServerTest {
 
@@ -72,5 +73,24 @@ abstract class ChannelTest : ServerTest {
         // Now it should be terminated, as all rpcs are done
         assertTrue("Expected the rpc job to have finished") { rpcJob.isCompleted }
         assertTrue("Expected the channel to be terminated") { channel.isTerminated }
+    }
+
+    @Test
+    fun testKeepAliveConfiguration() = runTest {
+        val channel = Channel.Builder.forAddress(address, port)
+            .usePlaintext()
+            .keepAliveTime(30.seconds)
+            .keepAliveTimeout(5.seconds)
+            .keepAliveWithoutCalls(true)
+            .build()
+
+        val stub = TestServiceStub(channel)
+
+        // Test that the channel works with keepAlive configuration
+        val response = stub.simpleRpc(simpleMessage { })
+        assertTrue("Channel should work with keepAlive configuration") { response != null }
+
+        channel.shutdown()
+        assertTrue("Channel should be terminated after shutdown") { channel.isTerminated }
     }
 }

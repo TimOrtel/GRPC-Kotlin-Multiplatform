@@ -1,5 +1,7 @@
 package io.github.timortel.kmpgrpc.core
 
+import kotlin.time.Duration
+
 /**
  * Wraps around the gRPC-Channel. Create a channel using [Builder.forAddress].
  * For more information about grpc channels, please refer to [the official grpc channel documentation](https://grpc.io/docs/what-is-grpc/core-concepts/#channels).
@@ -23,6 +25,27 @@ expect class Channel {
          * Interceptors run in reverse order for sending events and in normal order on receiving events.
          */
         fun withInterceptors(vararg interceptors: CallInterceptor): Builder
+
+        /**
+         * Sets the keepalive time, the delay between keepalive pings.
+         * @param duration The keepalive time duration (defaults to infinite/disabled if not set)
+         * @note Supported on JVM/Android and Native platforms only.
+         */
+        fun keepAliveTime(duration: Duration): Builder
+
+        /**
+         * Sets the keepalive timeout, the timeout for keepalive ping requests.
+         * @param duration The keepalive timeout duration (defaults to 20 seconds if not set)
+         * @note Supported on JVM/Android and Native platforms only.
+         */
+        fun keepAliveTimeout(duration: Duration): Builder
+
+        /**
+         * Sets whether keepalive will be performed during idle periods and when there are no outstanding RPCs on a connection.
+         * @param keepAliveWithoutCalls true if keepalive should be performed even when there are no calls (defaults to false if not set)
+         * @note Supported on JVM/Android and Native platforms only.
+         */
+        fun keepAliveWithoutCalls(keepAliveWithoutCalls: Boolean): Builder
 
         /**
          * Construct the channel
