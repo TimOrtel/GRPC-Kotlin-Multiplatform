@@ -18,9 +18,9 @@ actual class Channel private constructor(
      * The interceptor associated with this channel, or null.
      */
     internal val interceptor: CallInterceptor,
-    keepAliveTime: Duration,
-    keepAliveTimeout: Duration,
-    keepAliveWithoutCalls: Boolean
+    internal val keepAliveTime: Duration,
+    internal val keepAliveTimeout: Duration,
+    internal val keepAliveWithoutCalls: Boolean
 ) : NativeJsChannel() {
 
     /*

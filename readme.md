@@ -168,7 +168,7 @@ val channel = Channel.Builder()
 **Platform Support:**
 - **JVM/Android**: Full keepAlive support via gRPC Java
 - **Native (iOS)**: Full keepAlive support via Tonic (Rust)
-- **JavaScript/WASM**: KeepAlive not supported - delegates to underlying gRPC libraries
+- **JavaScript/WASM**: KeepAlive not supported
 
 ### Working with well known types
 
