@@ -79,9 +79,11 @@ abstract class ChannelTest : ServerTest {
     fun testKeepAliveConfiguration() = runTest {
         val channel = Channel.Builder.forAddress(address, port)
             .usePlaintext()
-            .keepAliveTime(30.seconds)
-            .keepAliveTimeout(5.seconds)
-            .keepAliveWithoutCalls(true)
+            .withKeepAliveConfig(KeepAliveConfig.Enabled(
+                time = 30.seconds,
+                timeout = 5.seconds,
+                withoutCalls = true
+            ))
             .build()
 
         val stub = TestServiceStub(channel)

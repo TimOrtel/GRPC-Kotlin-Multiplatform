@@ -147,14 +147,20 @@ The request syntax is very similar to the one provided by gRPC Java. Add this co
 
 ### KeepAlive Configuration
 You can configure keepAlive settings to maintain active connections and detect broken connections:
+
 ```kotlin
 val channel = Channel.Builder()
     .forAddress("localhost", 8082)
     .usePlaintext()
-    .keepAliveTime(30.seconds)        // Send keepalive ping every 30 seconds
-    .keepAliveTimeout(10.seconds)     // Wait 10 seconds for ping response
-    .keepAliveWithoutCalls(true)                // Send keepalive even when no RPCs are active
+    .withKeepAliveConfig(KeepAliveConfig.Enabled(
+        time = 30.seconds,           // Send keepalive ping every 30 seconds
+        timeout = 10.seconds,         // Wait 10 seconds for ping response
+        withoutCalls = true          // Send keepalive even when no RPCs are active
+    ))
     .build()
+
+// Or use constructor with defaults
+.withKeepAliveConfig(KeepAliveConfig.Enabled()) // Uses default values
 ```
 
 **KeepAlive Parameters:**

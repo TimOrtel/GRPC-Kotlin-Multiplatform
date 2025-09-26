@@ -18,9 +18,7 @@ actual class Channel private constructor(
      * The interceptor associated with this channel, or null.
      */
     internal val interceptor: CallInterceptor,
-    internal val keepAliveTime: Duration,
-    internal val keepAliveTimeout: Duration,
-    internal val keepAliveWithoutCalls: Boolean
+    internal val keepAliveConfig: KeepAliveConfig
 ) : NativeJsChannel() {
 
     /*
@@ -33,6 +31,14 @@ actual class Channel private constructor(
 
     init {
         val host = (if (usePlaintext) "http://" else "https://") + "$name:$port"
+
+        val (keepAliveTime, keepAliveTimeout, keepAliveWithoutCalls) = when (keepAliveConfig) {
+            is KeepAliveConfig.Disabled -> {
+                val defaults = KeepAliveConfig.Enabled()
+                Triple(defaults.time, defaults.timeout, defaults.withoutCalls)
+            }
+            is KeepAliveConfig.Enabled -> Triple(keepAliveConfig.time, keepAliveConfig.timeout, keepAliveConfig.withoutCalls)
+        }
 
         channel = channel_create(
             host,
@@ -50,9 +56,7 @@ actual class Channel private constructor(
 
         private var interceptor: CallInterceptor = EmptyCallInterceptor
 
-        private var keepAliveTime: Duration = Duration.INFINITE
-        private var keepAliveTimeout: Duration = 20.seconds
-        private var keepAliveWithoutCalls: Boolean = false
+        private var keepAliveConfig: KeepAliveConfig = KeepAliveConfig.Disabled
 
         actual companion object {
             actual fun forAddress(
@@ -77,16 +81,8 @@ actual class Channel private constructor(
             }
         }
 
-        actual fun keepAliveTime(duration: Duration): Builder = apply {
-            keepAliveTime = duration
-        }
-
-        actual fun keepAliveTimeout(duration: Duration): Builder = apply {
-            keepAliveTimeout = duration
-        }
-
-        actual fun keepAliveWithoutCalls(keepAliveWithoutCalls: Boolean): Builder = apply {
-            this.keepAliveWithoutCalls = keepAliveWithoutCalls
+        actual fun withKeepAliveConfig(config: KeepAliveConfig): Builder = apply {
+            keepAliveConfig = config
         }
 
         actual fun build(): Channel {
@@ -95,9 +91,7 @@ actual class Channel private constructor(
                 port,
                 usePlaintext,
                 interceptor,
-                keepAliveTime,
-                keepAliveTimeout,
-                keepAliveWithoutCalls
+                keepAliveConfig
             )
         }
     }

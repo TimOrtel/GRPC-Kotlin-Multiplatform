@@ -40,11 +40,10 @@ actual class Channel private constructor(
             this.interceptors += interceptors.toList()
         }
 
-        actual fun keepAliveTime(duration: Duration): Builder = this
-
-        actual fun keepAliveTimeout(duration: Duration): Builder = this
-
-        actual fun keepAliveWithoutCalls(keepAliveWithoutCalls: Boolean): Builder = this
+        actual fun withKeepAliveConfig(config: KeepAliveConfig): Builder = apply {
+            // JavaScript/WASM: KeepAlive not supported - delegate to underlying gRPC libraries
+            // No-op implementation
+        }
 
         actual fun build(): Channel {
             return Channel(

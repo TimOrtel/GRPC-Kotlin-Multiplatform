@@ -31,16 +31,17 @@ actual class Channel private constructor(val channel: ManagedChannel) {
             impl.usePlaintext()
         }
 
-        actual fun keepAliveTime(duration: Duration): Builder = apply {
-            impl.keepAliveTime(duration.inWholeNanoseconds, TimeUnit.NANOSECONDS)
-        }
-
-        actual fun keepAliveTimeout(duration: Duration): Builder = apply {
-            impl.keepAliveTimeout(duration.inWholeNanoseconds, TimeUnit.NANOSECONDS)
-        }
-
-        actual fun keepAliveWithoutCalls(keepAliveWithoutCalls: Boolean): Builder = apply {
-            impl.keepAliveWithoutCalls(keepAliveWithoutCalls)
+        actual fun withKeepAliveConfig(config: KeepAliveConfig): Builder = apply {
+            when (config) {
+                is KeepAliveConfig.Disabled -> {
+                    // KeepAlive is disabled by default in gRPC Java
+                }
+                is KeepAliveConfig.Enabled -> {
+                    impl.keepAliveTime(config.time.inWholeNanoseconds, TimeUnit.NANOSECONDS)
+                    impl.keepAliveTimeout(config.timeout.inWholeNanoseconds, TimeUnit.NANOSECONDS)
+                    impl.keepAliveWithoutCalls(config.withoutCalls)
+                }
+            }
         }
 
         actual fun build(): Channel = Channel(impl.build())
