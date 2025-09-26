@@ -90,7 +90,12 @@ abstract class ChannelTest : ServerTest {
         val response = stub.simpleRpc(simpleMessage { })
         assertTrue("Channel should work with keepAlive configuration") { response != null }
 
-        channel.shutdown()
+        // Shutdown the channel and wait for completion
+        val shutdownJob = launch {
+            channel.shutdown()
+        }
+        shutdownJob.join()
+
         assertTrue("Channel should be terminated after shutdown") { channel.isTerminated }
     }
 }
