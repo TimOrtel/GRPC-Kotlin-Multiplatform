@@ -1,8 +1,8 @@
 package io.github.timortel.kmpgrpc.core
 
+import io.github.timortel.kmpgrpc.core.config.KeepAliveConfig
 import io.ktor.client.*
 import io.ktor.client.plugins.*
-import kotlin.time.Duration
 
 actual class Channel private constructor(
     private val name: String,

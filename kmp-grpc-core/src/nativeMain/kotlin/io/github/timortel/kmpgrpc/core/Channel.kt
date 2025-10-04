@@ -1,9 +1,9 @@
 package io.github.timortel.kmpgrpc.core
 
+import io.github.timortel.kmpgrpc.core.config.KeepAliveConfig
 import io.github.timortel.kmpgrpc.core.internal.CallInterceptorChain
 import io.github.timortel.kmpgrpc.core.internal.EmptyCallInterceptor
 import io.github.timortel.kmpgrpc.native.*
-import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.cinterop.CPointer
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -32,20 +32,23 @@ actual class Channel private constructor(
     init {
         val host = (if (usePlaintext) "http://" else "https://") + "$name:$port"
 
+        val enableKeepalive = when (keepAliveConfig) {
+            is KeepAliveConfig.Enabled -> true
+            KeepAliveConfig.Disabled -> false
+        }
+
         val (keepAliveTime, keepAliveTimeout, keepAliveWithoutCalls) = when (keepAliveConfig) {
-            is KeepAliveConfig.Disabled -> {
-                val defaults = KeepAliveConfig.Enabled()
-                Triple(defaults.time, defaults.timeout, defaults.withoutCalls)
-            }
+            is KeepAliveConfig.Disabled -> Triple(0.seconds, 0.seconds, false)
             is KeepAliveConfig.Enabled -> Triple(keepAliveConfig.time, keepAliveConfig.timeout, keepAliveConfig.withoutCalls)
         }
 
         channel = channel_create(
-            host,
-            usePlaintext,
-            keepAliveTime.inWholeNanoseconds.toULong(),
-            keepAliveTimeout.inWholeNanoseconds.toULong(),
-            keepAliveWithoutCalls
+            host = host,
+            use_plaintext = usePlaintext,
+            enable_keepalive = enableKeepalive,
+            keepalive_time_nanos = keepAliveTime.inWholeNanoseconds.toULong(),
+            keepalive_timeout_nanos = keepAliveTimeout.inWholeNanoseconds.toULong(),
+            keepalive_without_calls = keepAliveWithoutCalls
         ) ?: throw IllegalArgumentException("$host is not a valid uri.")
     }
 

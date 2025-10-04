@@ -1,6 +1,6 @@
 package io.github.timortel.kmpgrpc.core
 
-import kotlin.time.Duration
+import io.github.timortel.kmpgrpc.core.config.KeepAliveConfig
 
 /**
  * Wraps around the gRPC-Channel. Create a channel using [Builder.forAddress].

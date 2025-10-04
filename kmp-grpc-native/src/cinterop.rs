@@ -5,6 +5,7 @@ use std::ffi::{CStr, CString};
 use std::os::raw::{c_char, c_void};
 use std::ptr::null_mut;
 use std::str::FromStr;
+use std::time::Duration;
 use tokio::sync::mpsc::error::TrySendError;
 use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::sync::watch;
@@ -57,6 +58,7 @@ pub struct RpcTask {
 pub extern "C" fn channel_create(
     host: *const c_char,
     use_plaintext: bool,
+    enable_keepalive: bool,
     keepalive_time_nanos: u64,
     keepalive_timeout_nanos: u64,
     keepalive_without_calls: bool
@@ -85,12 +87,17 @@ pub extern "C" fn channel_create(
         })
     {
         Some(endpoint) => {
-            Box::into_raw(Box::new(RustChannel {
-                _channel: endpoint
-                    .keep_alive_timeout(std::time::Duration::from_nanos(keepalive_timeout_nanos))
-                    .http2_keep_alive_interval(std::time::Duration::from_nanos(keepalive_time_nanos))
+            let endpoint = if enable_keepalive {
+                endpoint
+                    .keep_alive_timeout(Duration::from_nanos(keepalive_timeout_nanos))
+                    .http2_keep_alive_interval(Duration::from_nanos(keepalive_time_nanos))
                     .keep_alive_while_idle(keepalive_without_calls)
-                    .connect_lazy(),
+            } else {
+                endpoint
+            };
+
+            Box::into_raw(Box::new(RustChannel {
+                _channel: endpoint.connect_lazy(),
             }))
         }
         None => null_mut(),

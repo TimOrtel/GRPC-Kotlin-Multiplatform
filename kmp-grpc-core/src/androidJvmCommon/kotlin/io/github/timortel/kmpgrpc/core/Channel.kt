@@ -1,9 +1,9 @@
 package io.github.timortel.kmpgrpc.core
 
+import io.github.timortel.kmpgrpc.core.config.KeepAliveConfig
 import io.github.timortel.kmpgrpc.core.internal.ClientInterceptorImpl
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
-import kotlin.time.Duration
 import java.util.concurrent.TimeUnit
 
 /**
@@ -34,7 +34,7 @@ actual class Channel private constructor(val channel: ManagedChannel) {
         actual fun withKeepAliveConfig(config: KeepAliveConfig): Builder = apply {
             when (config) {
                 is KeepAliveConfig.Disabled -> {
-                    // KeepAlive is disabled by default in gRPC Java
+                    impl.keepAliveTime(Long.MAX_VALUE, TimeUnit.NANOSECONDS)
                 }
                 is KeepAliveConfig.Enabled -> {
                     impl.keepAliveTime(config.time.inWholeNanoseconds, TimeUnit.NANOSECONDS)
