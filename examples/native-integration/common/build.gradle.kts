@@ -5,7 +5,7 @@ val appleTargetsOnly = if (project.hasProperty(appleTargetsOnlyProperty)) {
 
 plugins {
     kotlin("multiplatform")
-    id("io.github.timortel.kmpgrpc.plugin") version "1.3.0"
+    id("io.github.timortel.kmpgrpc.plugin") version "1.4.0"
 }
 
 if (!appleTargetsOnly) {
