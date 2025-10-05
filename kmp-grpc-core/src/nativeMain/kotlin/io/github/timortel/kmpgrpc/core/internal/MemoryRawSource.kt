@@ -27,7 +27,7 @@ internal class MemoryRawSource(
         val actualReadCount = minOf(byteCount.toULong(), size - position)
 
         for (i in 0uL until actualReadCount) {
-            sink.writeUByte(pointer[i.toInt()])
+            sink.writeUByte(pointer[(position + i).toInt()])
         }
 
         position += actualReadCount
