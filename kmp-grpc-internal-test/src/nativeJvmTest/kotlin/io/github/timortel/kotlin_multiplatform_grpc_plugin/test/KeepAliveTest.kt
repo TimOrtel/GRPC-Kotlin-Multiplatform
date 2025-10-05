@@ -4,13 +4,14 @@ import io.github.timortel.kmpgrpc.core.Channel
 import io.github.timortel.kmpgrpc.core.config.KeepAliveConfig
 import io.github.timortel.kmpgrpc.test.SimpleMessage
 import io.github.timortel.kmpgrpc.test.TestServiceStub
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 class KeepAliveTest : ServerTestImpl {
@@ -21,8 +22,8 @@ class KeepAliveTest : ServerTestImpl {
             .usePlaintext()
             .withKeepAliveConfig(
                 KeepAliveConfig.Enabled(
-                    time = 500.milliseconds,
-                    timeout = 1.seconds,
+                    time = 15.seconds,
+                    timeout = 20.seconds,
                     withoutCalls = true
                 )
             )
@@ -35,7 +36,9 @@ class KeepAliveTest : ServerTestImpl {
             flow {
                 emit(SimpleMessage())
 
-                delay(5.seconds)
+                withContext(Dispatchers.Default) {
+                    delay(60.seconds)
+                }
 
                 emit(SimpleMessage())
             }

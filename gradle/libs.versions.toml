@@ -28,6 +28,8 @@ kotlinPoet = "2.2.0"
 protobufJvm = "3.25.6"
 protobufGradlePlugin = "0.9.5"
 
+slf4jSimple = "2.0.17"
+
 junit = "5.13.4"
 mockk = "1.14.5"
 
@@ -53,6 +55,8 @@ grpc-services = { group = "io.grpc", name = "grpc-services", version.ref = "grpc
 grpc-kotlin-stub = { group = "io.grpc", name = "grpc-kotlin-stub", version.ref = "grpcKotlin" }
 grpc-netty = { group = "io.grpc", name = "grpc-netty", version.ref = "grpcJvm" }
 grpc-netty-shaded = { group = "io.grpc", name = "grpc-netty-shaded", version.ref = "grpcJvm" }
+
+slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4jSimple" }
 
 ktor-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 
