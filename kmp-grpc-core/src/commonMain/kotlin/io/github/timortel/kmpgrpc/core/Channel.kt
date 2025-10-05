@@ -1,5 +1,7 @@
 package io.github.timortel.kmpgrpc.core
 
+import io.github.timortel.kmpgrpc.core.config.KeepAliveConfig
+
 /**
  * Wraps around the gRPC-Channel. Create a channel using [Builder.forAddress].
  * For more information about grpc channels, please refer to [the official grpc channel documentation](https://grpc.io/docs/what-is-grpc/core-concepts/#channels).
@@ -23,6 +25,13 @@ expect class Channel {
          * Interceptors run in reverse order for sending events and in normal order on receiving events.
          */
         fun withInterceptors(vararg interceptors: CallInterceptor): Builder
+
+        /**
+         * Configure keep-alive. By default disabled.
+         * @param config The keepAlive configuration.
+         * @note Supported on JVM/Android and Native targets only. Calling this method has no effect on JS targets.
+         */
+        fun withKeepAliveConfig(config: KeepAliveConfig): Builder
 
         /**
          * Construct the channel

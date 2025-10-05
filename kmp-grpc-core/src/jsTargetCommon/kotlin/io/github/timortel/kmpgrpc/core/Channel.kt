@@ -1,5 +1,6 @@
 package io.github.timortel.kmpgrpc.core
 
+import io.github.timortel.kmpgrpc.core.config.KeepAliveConfig
 import io.ktor.client.*
 import io.ktor.client.plugins.*
 
@@ -37,6 +38,11 @@ actual class Channel private constructor(
 
         actual fun withInterceptors(vararg interceptors: CallInterceptor): Builder = apply {
             this.interceptors += interceptors.toList()
+        }
+
+        actual fun withKeepAliveConfig(config: KeepAliveConfig): Builder = apply {
+            // JavaScript/WASM: KeepAlive not supported - delegate to underlying gRPC libraries
+            // No-op implementation
         }
 
         actual fun build(): Channel {

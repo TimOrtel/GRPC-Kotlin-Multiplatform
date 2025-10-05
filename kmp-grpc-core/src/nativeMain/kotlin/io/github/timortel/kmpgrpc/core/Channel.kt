@@ -1,8 +1,10 @@
 package io.github.timortel.kmpgrpc.core
 
+import io.github.timortel.kmpgrpc.core.config.KeepAliveConfig
 import io.github.timortel.kmpgrpc.core.internal.CallInterceptorChain
 import io.github.timortel.kmpgrpc.core.internal.EmptyCallInterceptor
 import io.github.timortel.kmpgrpc.native.*
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.cinterop.CPointer
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -16,11 +18,12 @@ actual class Channel private constructor(
      * The interceptor associated with this channel, or null.
      */
     internal val interceptor: CallInterceptor,
+    internal val keepAliveConfig: KeepAliveConfig
 ) : NativeJsChannel() {
 
     /*
     grpc.ready().await throws a Segfault when we do not execute all rpcs on the same thread.
-     */
+    */
     @OptIn(DelicateCoroutinesApi::class, ExperimentalCoroutinesApi::class)
     internal val context = newSingleThreadContext("native channel executor - $name:$port")
 
@@ -29,17 +32,34 @@ actual class Channel private constructor(
     init {
         val host = (if (usePlaintext) "http://" else "https://") + "$name:$port"
 
-        channel = channel_create(host, usePlaintext)
-        if (channel == null) {
-            throw IllegalArgumentException("$host is not a valid uri.")
+        val enableKeepalive = when (keepAliveConfig) {
+            is KeepAliveConfig.Enabled -> true
+            KeepAliveConfig.Disabled -> false
         }
+
+        val (keepAliveTime, keepAliveTimeout, keepAliveWithoutCalls) = when (keepAliveConfig) {
+            is KeepAliveConfig.Disabled -> Triple(0.seconds, 0.seconds, false)
+            is KeepAliveConfig.Enabled -> Triple(keepAliveConfig.time, keepAliveConfig.timeout, keepAliveConfig.withoutCalls)
+        }
+
+        channel = channel_create(
+            host = host,
+            use_plaintext = usePlaintext,
+            enable_keepalive = enableKeepalive,
+            keepalive_time_nanos = keepAliveTime.inWholeNanoseconds.toULong(),
+            keepalive_timeout_nanos = keepAliveTimeout.inWholeNanoseconds.toULong(),
+            keepalive_without_calls = keepAliveWithoutCalls
+        ) ?: throw IllegalArgumentException("$host is not a valid uri.")
     }
+
 
     actual class Builder(private val name: String, private val port: Int) {
 
         private var usePlaintext = false
 
         private var interceptor: CallInterceptor = EmptyCallInterceptor
+
+        private var keepAliveConfig: KeepAliveConfig = KeepAliveConfig.Disabled
 
         actual companion object {
             actual fun forAddress(
@@ -64,7 +84,19 @@ actual class Channel private constructor(
             }
         }
 
-        actual fun build(): Channel = Channel(name, port, usePlaintext, interceptor)
+        actual fun withKeepAliveConfig(config: KeepAliveConfig): Builder = apply {
+            keepAliveConfig = config
+        }
+
+        actual fun build(): Channel {
+            return Channel(
+                name,
+                port,
+                usePlaintext,
+                interceptor,
+                keepAliveConfig
+            )
+        }
     }
 
     override fun cleanupResources() {

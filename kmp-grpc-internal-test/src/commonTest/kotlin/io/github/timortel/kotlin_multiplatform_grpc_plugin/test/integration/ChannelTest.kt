@@ -4,12 +4,8 @@ import io.github.timortel.kmpgrpc.core.Channel
 import io.github.timortel.kmpgrpc.core.StatusException
 import io.github.timortel.kmpgrpc.test.TestServiceStub
 import io.github.timortel.kmpgrpc.test.simpleMessage
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancelAndJoin
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeout
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
@@ -40,6 +36,7 @@ abstract class ChannelTest : ServerTest {
         assertFalse("Channel cannot be terminated already") { channel.isTerminated }
 
         rpcJob.cancelAndJoin()
+        closeJob.join()
 
         // Now it should be terminated, as all rpcs are done
         assertTrue("Expected the close job to have finished") { closeJob.isCompleted }
