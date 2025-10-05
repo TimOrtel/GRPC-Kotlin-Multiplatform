@@ -37,7 +37,7 @@ class KeepAliveTest : ServerTestImpl {
                 emit(SimpleMessage())
 
                 withContext(Dispatchers.Default) {
-                    delay(60.seconds)
+                    delay(5.seconds)
                 }
 
                 emit(SimpleMessage())
