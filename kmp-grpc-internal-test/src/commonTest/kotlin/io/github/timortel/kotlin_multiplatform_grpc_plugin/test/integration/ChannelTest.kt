@@ -36,6 +36,7 @@ abstract class ChannelTest : ServerTest {
         assertFalse("Channel cannot be terminated already") { channel.isTerminated }
 
         rpcJob.cancelAndJoin()
+        closeJob.join()
 
         // Now it should be terminated, as all rpcs are done
         assertTrue("Expected the close job to have finished") { closeJob.isCompleted }
