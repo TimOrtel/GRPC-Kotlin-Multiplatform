@@ -27,9 +27,9 @@ expect class Channel {
         fun withInterceptors(vararg interceptors: CallInterceptor): Builder
 
         /**
-         * Configure keepAlive settings using a single configuration object.
-         * @param config The keepAlive configuration (defaults to disabled if not set)
-         * @note Supported on JVM/Android and Native platforms only.
+         * Configure keep-alive. By default disabled.
+         * @param config The keepAlive configuration.
+         * @note Supported on JVM/Android and Native targets only. Calling this method has no effect on JS targets.
          */
         fun withKeepAliveConfig(config: KeepAliveConfig): Builder
 
