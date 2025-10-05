@@ -6,6 +6,7 @@ import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder
 import io.grpc.protobuf.services.ProtoReflectionServiceV1
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
+import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.seconds
 
 
@@ -16,6 +17,7 @@ object TestServer {
 
         return NettyServerBuilder
             .forPort(17888)
+            .permitKeepAliveTime(10, TimeUnit.SECONDS)
             .addService(ProtoReflectionServiceV1.newInstance())
             .addService(
                 object : TestServiceGrpcKt.TestServiceCoroutineImplBase() {

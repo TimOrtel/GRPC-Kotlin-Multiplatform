@@ -146,35 +146,23 @@ The request syntax is very similar to the one provided by gRPC Java. Add this co
 ```
 
 ### KeepAlive Configuration
-You can configure keepAlive settings to maintain active connections and detect broken connections:
+You can configure keep-alive to maintain active connections and detect broken connections:
 
 ```kotlin
 val channel = Channel.Builder()
-    .forAddress("localhost", 8082)
-    .usePlaintext()
-    .withKeepAliveConfig(KeepAliveConfig.Enabled(
-        time = 30.seconds,           // Send keepalive ping every 30 seconds
-        timeout = 10.seconds,         // Wait 10 seconds for ping response
-        withoutCalls = true          // Send keepalive even when no RPCs are active
-    ))
+    .forAddress(/*...*/)
+    .withKeepAliveConfig(
+        // Exemplary configuration
+        KeepAliveConfig.Enabled(
+            time = 30.seconds,           // Send keepalive ping every 30 seconds
+            timeout = 10.seconds,         // Wait 10 seconds for ping response
+            withoutCalls = true          // Send keepalive even when no RPCs are active
+        )
+    )
     .build()
-
-// Or use constructor with defaults
-.withKeepAliveConfig(KeepAliveConfig.Enabled()) // Uses default values
 ```
 
-**KeepAlive Parameters:**
-
-| Parameter | Type | Description | Default | Platform Support |
-|-----------|------|-------------|---------|------------------|
-| `keepAliveTime` | `Duration` | The interval between keepalive pings | infinite/disabled if not set | JVM/Android and Native only |
-| `keepAliveTimeout` | `Duration` | The timeout for receiving a ping acknowledgment | 20 seconds if not set | JVM/Android and Native only |
-| `keepAliveWithoutCalls` | `Boolean` | Whether to send keepalive pings when there are no active RPCs | false if not set | JVM/Android and Native only |
-
-**Platform Support:**
-- **JVM/Android**: Full keepAlive support via gRPC Java
-- **Native (iOS)**: Full keepAlive support via Tonic (Rust)
-- **JavaScript/WASM**: KeepAlive not supported
+The keep-alive configuration has no effect on JS/WasmJs. 
 
 ### Working with well known types
 
