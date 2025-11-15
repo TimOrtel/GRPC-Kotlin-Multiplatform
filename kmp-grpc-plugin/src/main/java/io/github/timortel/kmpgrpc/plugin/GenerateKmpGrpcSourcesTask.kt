@@ -5,9 +5,11 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.SystemInputFile
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectories
 import org.gradle.api.tasks.TaskAction
@@ -19,11 +21,11 @@ abstract class GenerateKmpGrpcSourcesTask : DefaultTask() {
         fun getOutputFolder(project: Project): File =
             project.layout.buildDirectory.dir("generated/source/kmp-grpc/").get().asFile
 
-        fun getCommonOutputFolder(project: Project): File = getOutputFolder(project).resolve("commonMain/kotlin")
-        fun getJVMOutputFolder(project: Project): File = getOutputFolder(project).resolve("jvmMain/kotlin")
-        fun getJSOutputFolder(project: Project): File = getOutputFolder(project).resolve("jsMain/kotlin")
-        fun getWasmJsOutputFolder(project: Project): File = getOutputFolder(project).resolve("wasmJsMain/kotlin")
-        fun getNativeOutputFolder(project: Project): File = getOutputFolder(project).resolve("nativeMain/kotlin")
+        fun getCommonOutputFolder(outputFolder: File): File = outputFolder.resolve("commonMain/kotlin")
+        fun getJVMOutputFolder(outputFolder: File): File = outputFolder.resolve("jvmMain/kotlin")
+        fun getJSOutputFolder(outputFolder: File): File = outputFolder.resolve("jsMain/kotlin")
+        fun getWasmJsOutputFolder(outputFolder: File): File = outputFolder.resolve("wasmJsMain/kotlin")
+        fun getNativeOutputFolder(outputFolder: File): File = outputFolder.resolve("nativeMain/kotlin")
 
         fun getWellKnownTypesFolder(project: Project): File =
             project.layout.buildDirectory.dir("well-known-protos").get().asFile
@@ -41,19 +43,40 @@ abstract class GenerateKmpGrpcSourcesTask : DefaultTask() {
     @get:Input
     abstract val internalVisibility: Property<Boolean>
 
+    @get:Input
+    abstract val skipWellKnownExtensions: Property<Boolean>
+
+    @get:InputDirectory
+    abstract val generatedSourcesOutputFolder: DirectoryProperty
+
+    @get:InputDirectory
+    abstract val wellKnownTypesFolder: DirectoryProperty
+
     @get:OutputDirectories
     val outputFolders: ConfigurableFileCollection = project.objects.fileCollection()
 
     init {
+        val projectOutputFolder = getOutputFolder(project)
+        projectOutputFolder.mkdirs()
+
+        generatedSourcesOutputFolder.set(projectOutputFolder)
+
+        val projectWellKnownTypesFolder = getWellKnownTypesFolder(project)
+        projectWellKnownTypesFolder.mkdirs()
+        wellKnownTypesFolder.set(projectWellKnownTypesFolder)
+
         outputFolders.setFrom(
             listOf(
-                getCommonOutputFolder(project),
-                getJVMOutputFolder(project),
-                getJSOutputFolder(project),
-                getNativeOutputFolder(project),
-                getWasmJsOutputFolder(project)
+                getCommonOutputFolder(projectOutputFolder),
+                getJVMOutputFolder(projectOutputFolder),
+                getJSOutputFolder(projectOutputFolder),
+                getNativeOutputFolder(projectOutputFolder),
+                getWasmJsOutputFolder(projectOutputFolder)
             )
         )
+
+        val skipExtensionLibPropName = "io.github.timortel.kmp-grpc.internal.${project.name}.skip-wkt-ext"
+        skipWellKnownExtensions.set(project.providers.gradleProperty(skipExtensionLibPropName).orNull != "true")
     }
 
     @TaskAction
@@ -64,11 +87,11 @@ abstract class GenerateKmpGrpcSourcesTask : DefaultTask() {
             tsm[target].orEmpty().isNotEmpty()
         }
 
-        val outputFolder = getOutputFolder(project)
+        val outputFolder = generatedSourcesOutputFolder.get().asFile
         outputFolder.mkdirs()
 
         val wellKnownTypeFolders = if (includeWellKnownTypes.get()) {
-            listOf(SystemInputFile(getWellKnownTypesFolder(project)))
+            listOf(SystemInputFile(wellKnownTypesFolder.get().asFile))
         } else emptyList()
 
         val protoFolders = sourceFolders.files.toList().map(::SystemInputFile) + wellKnownTypeFolders
@@ -77,16 +100,16 @@ abstract class GenerateKmpGrpcSourcesTask : DefaultTask() {
             logger = logger,
             protoFolders = protoFolders,
             shouldGenerateTargetMap = shouldGenerateTargetMap,
-            commonOutputFolder = getCommonOutputFolder(project),
-            jvmOutputFolder = getJVMOutputFolder(project),
-            jsOutputFolder = getJSOutputFolder(project),
-            wasmJsFolder = getWasmJsOutputFolder(project),
-            nativeOutputDir = getNativeOutputFolder(project),
+            commonOutputFolder = getCommonOutputFolder(outputFolder),
+            jvmOutputFolder = getJVMOutputFolder(outputFolder),
+            jsOutputFolder = getJSOutputFolder(outputFolder),
+            wasmJsFolder = getWasmJsOutputFolder(outputFolder),
+            nativeOutputDir = getNativeOutputFolder(outputFolder),
             internalVisibility = internalVisibility.get()
         )
 
-        val skipExtensionLibPropName = "io.github.timortel.kmp-grpc.internal.${project.name}.skip-wkt-ext"
-        if (includeWellKnownTypes.get() && project.providers.gradleProperty(skipExtensionLibPropName).orNull != "true") {
+
+        if (includeWellKnownTypes.get() && skipWellKnownExtensions.get()) {
             copyWellKnownExtensions()
         }
     }
@@ -95,7 +118,7 @@ abstract class GenerateKmpGrpcSourcesTask : DefaultTask() {
         val path = "io/github/timortel/kmpgrpc/wkt/ext"
         val files = listOf("Any.kt", "Duration.kt", "Timestamp.kt", "Wrappers.kt")
 
-        val outputDir = getCommonOutputFolder(project).resolve(path)
+        val outputDir = getCommonOutputFolder(generatedSourcesOutputFolder.get().asFile).resolve(path)
         outputDir.mkdirs()
 
         files.forEach { file ->

@@ -41,10 +41,12 @@ object GrpcProtobufConfiguration {
 
                 val targetSourceMap = kmpGrpcExtension.targetSourcesMap.getOrElse(emptyMap())
 
+                val baseGeneratedSourcesOutputFolder = GenerateKmpGrpcSourcesTask.getOutputFolder(project)
+
                 targetSourceMap[KmpGrpcExtension.COMMON].orEmpty().forEach {
                     kotlinExtension.sourceSets.findByName(it)?.kotlin?.srcDir(
                         GenerateKmpGrpcSourcesTask.getCommonOutputFolder(
-                            project
+                            baseGeneratedSourcesOutputFolder
                         )
                     )
                 }
@@ -52,7 +54,7 @@ object GrpcProtobufConfiguration {
                 targetSourceMap[KmpGrpcExtension.JVM].orEmpty().forEach {
                     kotlinExtension.sourceSets.findByName(it)?.kotlin?.srcDir(
                         GenerateKmpGrpcSourcesTask.getJVMOutputFolder(
-                            project
+                            baseGeneratedSourcesOutputFolder
                         )
                     )
                 }
@@ -60,7 +62,7 @@ object GrpcProtobufConfiguration {
                 targetSourceMap[KmpGrpcExtension.JS].orEmpty().forEach {
                     kotlinExtension.sourceSets.findByName(it)?.kotlin?.srcDir(
                         GenerateKmpGrpcSourcesTask.getJSOutputFolder(
-                            project
+                            baseGeneratedSourcesOutputFolder
                         )
                     )
                 }
@@ -68,7 +70,7 @@ object GrpcProtobufConfiguration {
                 targetSourceMap[KmpGrpcExtension.WASMJS].orEmpty().forEach {
                     kotlinExtension.sourceSets.findByName(it)?.kotlin?.srcDir(
                         GenerateKmpGrpcSourcesTask.getWasmJsOutputFolder(
-                            project
+                            baseGeneratedSourcesOutputFolder
                         )
                     )
                 }
@@ -76,7 +78,7 @@ object GrpcProtobufConfiguration {
                 targetSourceMap[KmpGrpcExtension.NATIVE].orEmpty().forEach {
                     kotlinExtension.sourceSets.findByName(it)?.kotlin?.srcDir(
                         GenerateKmpGrpcSourcesTask.getNativeOutputFolder(
-                            project
+                            baseGeneratedSourcesOutputFolder
                         )
                     )
                 }
