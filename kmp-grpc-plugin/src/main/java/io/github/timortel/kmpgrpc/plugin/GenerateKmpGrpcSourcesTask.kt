@@ -5,7 +5,7 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.SystemInputFile
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
@@ -47,19 +47,23 @@ abstract class GenerateKmpGrpcSourcesTask : DefaultTask() {
     abstract val skipWellKnownExtensions: Property<Boolean>
 
     @get:InputDirectory
-    abstract val generatedSourcesOutputFolder: RegularFileProperty
+    abstract val generatedSourcesOutputFolder: DirectoryProperty
 
     @get:InputDirectory
-    abstract val wellKnownTypesFolder: RegularFileProperty
+    abstract val wellKnownTypesFolder: DirectoryProperty
 
     @get:OutputDirectories
     val outputFolders: ConfigurableFileCollection = project.objects.fileCollection()
 
     init {
         val projectOutputFolder = getOutputFolder(project)
+        projectOutputFolder.mkdirs()
+
         generatedSourcesOutputFolder.set(projectOutputFolder)
 
-        wellKnownTypesFolder.set(getWellKnownTypesFolder(project))
+        val projectWellKnownTypesFolder = getWellKnownTypesFolder(project)
+        projectWellKnownTypesFolder.mkdirs()
+        wellKnownTypesFolder.set(projectWellKnownTypesFolder)
 
         outputFolders.setFrom(
             listOf(
