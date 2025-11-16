@@ -13,7 +13,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-abstract class NativeJvmCertificateRpcTest : ServerTest {
+abstract class CustomCertificatesRpcTest : ServerTest {
 
     override val address: String
         get() = "localhost"
@@ -47,14 +47,14 @@ abstract class NativeJvmCertificateRpcTest : ServerTest {
     }
 }
 
-class CaCertNativeJvmCertificateRpcTest : NativeJvmCertificateRpcTest() {
+class CaCertCustomCertificatesRpcTest : CustomCertificatesRpcTest() {
     override val port: Int
         get() = 17889
 
     override fun getCertificate(): String = CA_CERTIFICATE
 }
 
-class StandaloneCertNativeJvmCertificateRpcTest : NativeJvmCertificateRpcTest() {
+class StandaloneCertCustomCertificatesRpcTest : CustomCertificatesRpcTest() {
     override val port: Int
         get() = 17890
 

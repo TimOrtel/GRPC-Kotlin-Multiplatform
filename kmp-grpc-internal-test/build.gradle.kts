@@ -1,3 +1,4 @@
+import com.github.gmazzo.buildconfig.BuildConfigTask
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 
@@ -117,12 +118,28 @@ buildConfig {
     }
 
     forClass("ServerCertificate") {
-        val leafCertificateContent = projectDir.resolve("test-server/src/main/resources/standalone_leaf.pem").readText()
-        val caCertificateContent = projectDir.resolve("test-server/src/main/resources/ca.pem").readText()
+        val leafCertificateFile = projectDir.resolve("test-server/src/main/resources/standalone_leaf.pem")
+        val caCertificateFile = projectDir.resolve("test-server/src/main/resources/ca.pem")
 
-        buildConfigField("String", "STANDALONE_LEAF_CERTIFICATE", "\"\"\"\n$leafCertificateContent\"\"\"")
-        buildConfigField("String", "CA_CERTIFICATE", "\"\"\"\n$caCertificateContent\"\"\"")
+        buildConfigField("String", "STANDALONE_LEAF_CERTIFICATE", provider {
+            "\"\"\"\n${leafCertificateFile.readText()}\"\"\""
+        })
+        buildConfigField("String", "CA_CERTIFICATE", provider {
+            "\"\"\"\n${caCertificateFile.readText()}\"\"\""
+        })
     }
+}
+
+val generateCertificatesTask = tasks.register<Exec>("generateServerCertificates") {
+    commandLine( "$projectDir/gencertificates.sh")
+
+    outputs.upToDateWhen {
+        projectDir.resolve("test-server/src/main/resources/ca.key").exists()
+    }
+}
+
+tasks.withType<BuildConfigTask>().all {
+    dependsOn(generateCertificatesTask.get())
 }
 
 tasks.withType(Test::class) {
