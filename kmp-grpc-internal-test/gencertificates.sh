@@ -6,10 +6,26 @@ cd test-server/src/main/resources/
 
 # generate standalone cert
 openssl req -x509 -newkey rsa:2048 -nodes \
--keyout standalone_leaf.key -out standalone_leaf.pem \
--subj "/" \
--addext "subjectAltName=DNS:localhost" \
--days 365
+  -keyout standalone_leaf.key \
+  -out standalone_leaf.pem \
+  -days 365 \
+  -config <(cat <<EOF
+[ req ]
+distinguished_name = dn
+x509_extensions = ext
+prompt = no
+
+[ dn ]
+CN = localhost
+
+[ ext ]
+basicConstraints = CA:FALSE
+subjectAltName = @alt_names
+
+[ alt_names ]
+DNS.1 = localhost
+EOF
+)
 
 # generate root ca
 openssl req -x509 -newkey rsa:2048 -nodes \
