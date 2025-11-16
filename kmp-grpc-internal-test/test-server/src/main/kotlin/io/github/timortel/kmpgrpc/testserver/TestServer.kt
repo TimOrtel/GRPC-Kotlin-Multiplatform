@@ -30,8 +30,8 @@ object TestServer {
         val key = TestServer::class.java.classLoader.getResourceAsStream("$certFileBaseName.key")?.use { it.bufferedReader().use { it.readText() } }
 
         println("Printing cert info for $certFileBaseName")
-        println("${cert?.length}")
-        println("${key?.length}")
+        println("$cert")
+        println("$key")
 
         return buildServer(port) {
             sslContext(
