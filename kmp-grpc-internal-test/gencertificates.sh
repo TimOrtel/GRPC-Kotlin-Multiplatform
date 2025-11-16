@@ -10,14 +10,14 @@ openssl req -x509 -newkey rsa:2048 -nodes \
 -subj "/CN=localhost" \
 -addext "subjectAltName=DNS:localhost" \
 -addext "basicConstraints=CA:FALSE" \
--days 365
+-days 1000
 
 # generate root ca
 openssl req -x509 -newkey rsa:2048 -nodes \
   -keyout ca.key \
   -out ca.pem \
   -subj "/CN=Test CA" \
-  -days 365 \
+  -days 1000 \
   -addext "basicConstraints=CA:TRUE" \
 
 #generate leaf private key
@@ -35,7 +35,7 @@ openssl x509 -req \
   -CAkey ca.key \
   -CAcreateserial \
   -out ca_leaf.pem \
-  -days 365 \
+  -days 1000 \
   -extfile <(printf "\
 basicConstraints=CA:FALSE
 subjectAltName=DNS:localhost

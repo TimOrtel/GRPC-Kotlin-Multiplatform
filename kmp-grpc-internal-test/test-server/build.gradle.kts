@@ -100,19 +100,6 @@ application {
     mainClass.set("io.github.timortel.kmpgrpc.testserver.MainKt")
 }
 
-val generateCertificatesTask = tasks.register<Exec>("generateServerCertificates") {
-    workingDir = projectDir.parentFile
-    commandLine("./gencertificates.sh")
-
-    onlyIf {
-        !projectDir.resolve("src/main/resources/ca.key").exists()
-    }
-}
-
-tasks.withType<KotlinCompile>().all {
-    dependsOn(generateCertificatesTask.get())
-}
-
 tasks.named("run", JavaExec::class) {
     jvmArgs = listOf("-Dorg.slf4j.simpleLogger.defaultLogLevel=trace")
 }

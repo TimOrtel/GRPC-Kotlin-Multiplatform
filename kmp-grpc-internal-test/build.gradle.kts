@@ -1,4 +1,3 @@
-import com.github.gmazzo.buildconfig.BuildConfigTask
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 
@@ -142,18 +141,6 @@ buildConfig {
         buildConfigField("String", "CLIENT_KEY", pemProvider(clientKeyFile))
 
     }
-}
-
-val generateCertificatesTask = tasks.register<Exec>("generateServerCertificates") {
-    commandLine( "$projectDir/gencertificates.sh")
-
-    onlyIf {
-        !projectDir.resolve("test-server/src/main/resources/ca.key").exists()
-    }
-}
-
-tasks.withType<BuildConfigTask>().all {
-    dependsOn(generateCertificatesTask.get())
 }
 
 tasks.withType(Test::class) {
