@@ -7,9 +7,8 @@ cd test-server/src/main/resources/
 # generate standalone cert
 openssl req -x509 -newkey rsa:2048 -nodes \
 -keyout standalone_leaf.key -out standalone_leaf.pem \
--subj "/CN=localhost" \
+-subj "/" \
 -addext "subjectAltName=DNS:localhost" \
--addext "basicConstraints=CA:FALSE" \
 -days 365
 
 # generate root ca

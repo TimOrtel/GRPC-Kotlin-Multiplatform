@@ -26,13 +26,6 @@ object TestServer {
     }
 
     private fun buildSslServer(port: Int, certFileBaseName: String): Server {
-        val cert = TestServer::class.java.classLoader.getResourceAsStream("$certFileBaseName.pem")?.use { it.bufferedReader().use { it.readText() } }
-        val key = TestServer::class.java.classLoader.getResourceAsStream("$certFileBaseName.key")?.use { it.bufferedReader().use { it.readText() } }
-
-        println("Printing cert info for $certFileBaseName")
-        println("$cert")
-        println("$key")
-
         return buildServer(port) {
             sslContext(
                 GrpcSslContexts.forServer(
