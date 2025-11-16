@@ -10,7 +10,7 @@ import kotlin.io.encoding.Base64
  * and `-----END CERTIFICATE-----` block with valid Base64-encoded DER data
  * inside.
  */
-class Certificate internal constructor(pemContent: String) {
+class Certificate internal constructor(internal val pemContent: String) {
 
     private val pemBody: String
     internal val bytes: ByteArray get() = Base64.decode(pemBody)
