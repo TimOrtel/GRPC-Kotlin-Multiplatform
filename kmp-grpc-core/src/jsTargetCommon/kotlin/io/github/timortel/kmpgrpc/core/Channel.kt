@@ -51,6 +51,8 @@ actual class Channel private constructor(
 
         actual fun trustOnlyProvidedCertificates(): Builder = this
 
+        actual fun withClientIdentity(certificate: Certificate, key: PrivateKey): Builder = this
+
         actual fun build(): Channel {
             return Channel(
                 name = name,

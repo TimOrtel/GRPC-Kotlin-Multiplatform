@@ -41,3 +41,13 @@ basicConstraints=CA:FALSE
 subjectAltName=DNS:localhost
 authorityKeyIdentifier=keyid,issuer
 ")
+
+# generate client key
+openssl genrsa -out client.key 2048
+
+openssl req -new -key client.key -out client.csr \
+    -subj "/CN=client"
+
+# sign client key
+openssl x509 -req -in client.csr -CA ca.pem -CAkey ca.key \
+    -CAcreateserial -out client.pem -days 365 -sha256

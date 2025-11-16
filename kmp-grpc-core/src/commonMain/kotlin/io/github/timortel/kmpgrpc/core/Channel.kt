@@ -60,6 +60,16 @@ expect class Channel {
         fun trustOnlyProvidedCertificates(): Builder
 
         /**
+         * Configures the channel to present a client identity during the TLS handshake.
+         *
+         * This method has no effect on JavaScript targets.
+         *
+         * @param certificate The X.509 client certificate sent to the server.
+         * @param key The private key corresponding to the certificate’s public key.
+         */
+        fun withClientIdentity(certificate: Certificate, key: PrivateKey): Builder
+
+        /**
          * Construct the channel
          */
         fun build(): Channel

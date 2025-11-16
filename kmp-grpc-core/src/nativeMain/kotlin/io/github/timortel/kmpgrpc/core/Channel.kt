@@ -18,6 +18,7 @@ actual class Channel private constructor(
     private val usePlaintext: Boolean,
     private val certificates: List<Certificate>?,
     private val trustOnlyProvidedCertificates: Boolean,
+    private val identity: ClientIdentity?,
     /**
      * The interceptor associated with this channel, or null.
      */
@@ -43,7 +44,11 @@ actual class Channel private constructor(
 
         val (keepAliveTime, keepAliveTimeout, keepAliveWithoutCalls) = when (keepAliveConfig) {
             is KeepAliveConfig.Disabled -> Triple(0.seconds, 0.seconds, false)
-            is KeepAliveConfig.Enabled -> Triple(keepAliveConfig.time, keepAliveConfig.timeout, keepAliveConfig.withoutCalls)
+            is KeepAliveConfig.Enabled -> Triple(
+                keepAliveConfig.time,
+                keepAliveConfig.timeout,
+                keepAliveConfig.withoutCalls
+            )
         }
 
         val builder = channel_builder_create(
@@ -64,6 +69,20 @@ actual class Channel private constructor(
                 tls_config_use_webpki_roots(tlsConfig)
             }
 
+            if (identity != null) {
+                identity.key.asPem.encodeToByteArray().toUByteArray().usePinned { key ->
+                    identity.cert.asPem.encodeToByteArray().toUByteArray().usePinned { cert ->
+                        tls_config_use_client_credentials(
+                            config = tlsConfig,
+                            key_data = key.addressOf(0),
+                            key_len = key.get().size.toULong(),
+                            cert_data = cert.addressOf(0),
+                            cert_len = cert.get().size.toULong()
+                        )
+                    }
+                }
+            }
+
             channel_builder_use_tls_config(builder, tlsConfig)
         }
 
@@ -79,6 +98,7 @@ actual class Channel private constructor(
         private var usePlaintext = false
         private var certificates: List<Certificate>? = null
         private var trustOnlyProvidedCertificates = false
+        private var identity: ClientIdentity? = null
 
         private var interceptor: CallInterceptor = EmptyCallInterceptor
 
@@ -127,6 +147,10 @@ actual class Channel private constructor(
             return this
         }
 
+        actual fun withClientIdentity(certificate: Certificate, key: PrivateKey): Builder = apply {
+            identity = ClientIdentity(key, certificate)
+        }
+
         actual fun build(): Channel {
             return Channel(
                 name = name,
@@ -134,6 +158,7 @@ actual class Channel private constructor(
                 usePlaintext = usePlaintext,
                 certificates = certificates,
                 trustOnlyProvidedCertificates = trustOnlyProvidedCertificates,
+                identity = identity,
                 interceptor = interceptor,
                 keepAliveConfig = keepAliveConfig
             )
@@ -152,11 +177,14 @@ actual class Channel private constructor(
     }
 }
 
-private fun installCertificates(certificates: List<Certificate>, tlsConfig: CPointer<cnames.structs.RustTlsConfigBuilder>?) {
+private fun installCertificates(
+    certificates: List<Certificate>,
+    tlsConfig: CPointer<cnames.structs.RustTlsConfigBuilder>?
+) {
     certificates
         .forEach { certificate ->
             certificate
-                .bytes
+                .data
                 .toUByteArray()
                 .usePinned { pinned ->
                     if (pinned.get().isNotEmpty()) {
@@ -171,3 +199,5 @@ private fun installCertificates(certificates: List<Certificate>, tlsConfig: CPoi
                 }
         }
 }
+
+private data class ClientIdentity(val key: PrivateKey, val cert: Certificate)

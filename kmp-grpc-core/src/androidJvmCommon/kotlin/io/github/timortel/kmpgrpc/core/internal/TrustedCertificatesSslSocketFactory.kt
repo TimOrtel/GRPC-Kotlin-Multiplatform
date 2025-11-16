@@ -1,31 +1,47 @@
 package io.github.timortel.kmpgrpc.core.internal
 
 import io.github.timortel.kmpgrpc.core.Certificate
+import io.github.timortel.kmpgrpc.core.PrivateKey
 import java.io.ByteArrayInputStream
+import java.security.KeyFactory
 import java.security.KeyStore
+import java.security.NoSuchAlgorithmException
+import java.security.Security
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
+import java.security.spec.InvalidKeySpecException
+import java.security.spec.PKCS8EncodedKeySpec
+import javax.net.ssl.KeyManager
+import javax.net.ssl.KeyManagerFactory
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocketFactory
 import javax.net.ssl.TrustManagerFactory
 import javax.net.ssl.X509TrustManager
 
+private val availableAlgorithms =
+    Security.getProviders()
+        .flatMap { it.services }
+        .filter { it.type == "KeyPairGenerator" }
+        .map { it.algorithm }
+
 internal fun buildSslSocketFactory(
     certificates: List<Certificate>,
-    useDefaultTrustManager: Boolean
+    useDefaultTrustManager: Boolean,
+    keyManagers: Array<KeyManager>?
 ): SSLSocketFactory {
     val trustManager: X509TrustManager? = when {
         certificates.isNotEmpty() && useDefaultTrustManager -> CombinedTrustManager(
             trustedCertificatesTrustManager = buildTrustedCertificatesTrustManager(certificates),
             defaultTrustManager = getDefaultTrustManager()
         )
+
         certificates.isNotEmpty() -> buildTrustedCertificatesTrustManager(certificates)
         useDefaultTrustManager -> getDefaultTrustManager()
         else -> null
     }
 
     val sslContext = SSLContext.getInstance("TLS")
-    sslContext.init(null, if (trustManager != null) arrayOf(trustManager) else emptyArray(), null)
+    sslContext.init(keyManagers, if (trustManager != null) arrayOf(trustManager) else emptyArray(), null)
 
     return sslContext.socketFactory
 }
@@ -64,9 +80,7 @@ private fun buildTrustedCertificatesTrustManager(certificates: List<Certificate>
     }
 
     certificates.forEachIndexed { index, cert ->
-        val cert = certFactory.generateCertificate(
-            ByteArrayInputStream(cert.pemContent.toByteArray(Charsets.UTF_8))
-        ) as X509Certificate
+        val cert = parseCertificate(certFactory, cert)
         keyStore.setCertificateEntry("cert-$index", cert)
     }
 
@@ -82,4 +96,34 @@ private fun getDefaultTrustManager(): X509TrustManager {
     tmf.init(null as KeyStore?)
 
     return tmf.trustManagers.filterIsInstance<X509TrustManager>().first()
+}
+
+internal fun buildClientIdentityKeyManager(cert: Certificate, key: PrivateKey): Array<KeyManager> {
+    val keySpec = PKCS8EncodedKeySpec(key.data)
+    val key = availableAlgorithms.asSequence().mapNotNull { algorithm ->
+        try {
+            KeyFactory.getInstance(algorithm).generatePrivate(keySpec)
+        } catch (_: NoSuchAlgorithmException) {
+            null
+        } catch (_: InvalidKeySpecException) {
+            null
+        }
+    }.firstOrNull() ?: throw IllegalArgumentException("Could not parse private key.")
+
+    val certificate = parseCertificate(CertificateFactory.getInstance("X.509"), cert)
+
+    val keyStore = KeyStore.getInstance("PKCS12")
+    keyStore.load(null, null)
+    keyStore.setKeyEntry("client", key, "".toCharArray(), arrayOf(certificate))
+
+    val factory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm())
+    factory.init(keyStore, "".toCharArray())
+
+    return factory.keyManagers
+}
+
+private fun parseCertificate(certificateFactory: CertificateFactory, cert: Certificate): X509Certificate {
+    return certificateFactory.generateCertificate(
+        ByteArrayInputStream(cert.asPem.toByteArray(Charsets.UTF_8))
+    ) as X509Certificate
 }

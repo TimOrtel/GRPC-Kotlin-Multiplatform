@@ -4,6 +4,7 @@ use log::trace;
 use std::ffi::{CStr, CString};
 use std::os::raw::{c_char, c_void};
 use std::ptr::null_mut;
+use std::slice;
 use std::str::FromStr;
 use std::time::Duration;
 use tokio::sync::mpsc::error::TrySendError;
@@ -13,7 +14,7 @@ use tonic::metadata::{
     AsciiMetadataKey, AsciiMetadataValue, BinaryMetadataKey, BinaryMetadataValue, KeyRef,
     MetadataMap,
 };
-use tonic::transport::{CertificateDer, Channel, ClientTlsConfig, Endpoint};
+use tonic::transport::{CertificateDer, Channel, ClientTlsConfig, Endpoint, Identity};
 
 /**
  * Holds the channel used to send messages into the RPC.
@@ -174,6 +175,52 @@ pub extern "C" fn tls_config_install_certificate(
             }
             None => {
                 trace!("tls_config_install_certificate() -> builder is null");
+                false
+            }
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn tls_config_use_client_credentials(
+    config: *mut RustTlsConfigBuilder,
+    key_data: *const u8,
+    key_len: usize,
+    cert_data: *const u8,
+    cert_len: usize,
+) -> bool {
+    trace!("tls_config_use_client_credentials()");
+
+    if key_data.is_null() || cert_data.is_null() || config.is_null() {
+        trace!("tls_config_use_client_credentials() -> no config or no key_data or no cert_data");
+        return false;
+    }
+
+    let key_bytes = unsafe { slice::from_raw_parts(key_data, key_len) };
+    let cert_bytes = unsafe { slice::from_raw_parts(cert_data, cert_len) };
+
+    let identity = Identity::from_pem(
+        cert_bytes,
+        key_bytes
+    );
+
+    unsafe {
+        match config.as_mut() {
+            Some(c) => {
+                let config = c._config.take();
+                match config {
+                    None => {
+                        trace!("tls_config_use_client_credentials() -> no tls config set");
+                        false
+                    }
+                    Some(tls) => {
+                        c._config = Some(tls.identity(identity));
+                        true
+                    }
+                }
+            }
+            None => {
+                trace!("tls_config_use_client_credentials() -> builder is null");
                 false
             }
         }

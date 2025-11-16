@@ -129,13 +129,18 @@ buildConfig {
     forClass("ServerCertificate") {
         val leafCertificateFile = projectDir.resolve("test-server/src/main/resources/standalone_leaf.pem")
         val caCertificateFile = projectDir.resolve("test-server/src/main/resources/ca.pem")
+        val clientCertificateFile = projectDir.resolve("test-server/src/main/resources/client.pem")
+        val clientKeyFile = projectDir.resolve("test-server/src/main/resources/client.key")
 
-        buildConfigField("String", "STANDALONE_LEAF_CERTIFICATE", provider {
-            "\"\"\"\n${leafCertificateFile.readText()}\"\"\""
-        })
-        buildConfigField("String", "CA_CERTIFICATE", provider {
-            "\"\"\"\n${caCertificateFile.readText()}\"\"\""
-        })
+        val pemProvider = { file: File -> provider {
+            "\"\"\"\n${file.readText()}\"\"\""
+        }}
+
+        buildConfigField("String", "STANDALONE_LEAF_CERTIFICATE", pemProvider(leafCertificateFile))
+        buildConfigField("String", "CA_CERTIFICATE", pemProvider(caCertificateFile))
+        buildConfigField("String", "CLIENT_CERTIFICATE", pemProvider(clientCertificateFile))
+        buildConfigField("String", "CLIENT_KEY", pemProvider(clientKeyFile))
+
     }
 }
 

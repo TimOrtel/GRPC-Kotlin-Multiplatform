@@ -2,11 +2,13 @@ package io.github.timortel.kmpgrpc.core
 
 import io.github.timortel.kmpgrpc.core.config.KeepAliveConfig
 import io.github.timortel.kmpgrpc.core.internal.ClientInterceptorImpl
+import io.github.timortel.kmpgrpc.core.internal.buildClientIdentityKeyManager
 import io.github.timortel.kmpgrpc.core.internal.buildSslSocketFactory
 import io.grpc.ManagedChannel
 import io.grpc.okhttp.OkHttpChannelBuilder
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.util.concurrent.TimeUnit
+import javax.net.ssl.KeyManager
 import javax.net.ssl.SSLSocketFactory
 import kotlin.concurrent.thread
 import kotlin.coroutines.resume
@@ -21,6 +23,7 @@ actual class Channel private constructor(val channel: ManagedChannel) {
         private var trustOnlyProvidedCertificates = false
         private var customSslSocketFactory: SSLSocketFactory? = null
         private var usePlaintext: Boolean = false
+        private var keyManagers: Array<KeyManager>? = null
 
         actual companion object {
             actual fun forAddress(
@@ -75,12 +78,17 @@ actual class Channel private constructor(val channel: ManagedChannel) {
             customSslSocketFactory = sslSocketFactory
         }
 
+        actual fun withClientIdentity(certificate: Certificate, key: PrivateKey): Builder = apply {
+            keyManagers = buildClientIdentityKeyManager(certificate, key)
+        }
+
         actual fun build(): Channel {
             if (!usePlaintext) {
                 impl.sslSocketFactory(
                     customSslSocketFactory ?: buildSslSocketFactory(
                         certificates = trustedCertificates,
-                        useDefaultTrustManager = !trustOnlyProvidedCertificates
+                        useDefaultTrustManager = !trustOnlyProvidedCertificates,
+                        keyManagers = keyManagers
                     )
                 )
             }
