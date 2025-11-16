@@ -133,8 +133,8 @@ buildConfig {
 val generateCertificatesTask = tasks.register<Exec>("generateServerCertificates") {
     commandLine( "$projectDir/gencertificates.sh")
 
-    outputs.upToDateWhen {
-        projectDir.resolve("test-server/src/main/resources/ca.key").exists()
+    onlyIf {
+        !projectDir.resolve("test-server/src/main/resources/ca.key").exists()
     }
 }
 

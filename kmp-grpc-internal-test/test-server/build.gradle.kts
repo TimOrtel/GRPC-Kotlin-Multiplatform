@@ -104,8 +104,8 @@ val generateCertificatesTask = tasks.register<Exec>("generateServerCertificates"
     workingDir = projectDir.parentFile
     commandLine("./gencertificates.sh")
 
-    outputs.upToDateWhen {
-        projectDir.resolve("src/main/resources/ca.key").exists()
+    onlyIf {
+        !projectDir.resolve("src/main/resources/ca.key").exists()
     }
 }
 
