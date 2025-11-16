@@ -20,6 +20,7 @@ actual class Channel private constructor(val channel: ManagedChannel) {
         private val trustedCertificates: MutableList<Certificate> = mutableListOf()
         private var trustOnlyProvidedCertificates = false
         private var customSslSocketFactory: SSLSocketFactory? = null
+        private var usePlaintext: Boolean = false
 
         actual companion object {
             actual fun forAddress(
@@ -38,6 +39,7 @@ actual class Channel private constructor(val channel: ManagedChannel) {
 
         actual fun usePlaintext(): Builder = apply {
             impl.usePlaintext()
+            usePlaintext = true
         }
 
         actual fun withKeepAliveConfig(config: KeepAliveConfig): Builder = apply {
@@ -74,12 +76,14 @@ actual class Channel private constructor(val channel: ManagedChannel) {
         }
 
         actual fun build(): Channel {
-            impl.sslSocketFactory(
-                customSslSocketFactory ?: buildSslSocketFactory(
-                    certificates = trustedCertificates,
-                    useDefaultTrustManager = !trustOnlyProvidedCertificates
+            if (!usePlaintext) {
+                impl.sslSocketFactory(
+                    customSslSocketFactory ?: buildSslSocketFactory(
+                        certificates = trustedCertificates,
+                        useDefaultTrustManager = !trustOnlyProvidedCertificates
+                    )
                 )
-            )
+            }
 
             return Channel(impl.build())
         }
