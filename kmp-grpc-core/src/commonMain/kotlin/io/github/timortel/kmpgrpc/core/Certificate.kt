@@ -2,7 +2,15 @@ package io.github.timortel.kmpgrpc.core
 
 import kotlin.io.encoding.Base64
 
-class Certificate internal constructor(val pemContent: String) {
+/**
+ * Represents an X.509 certificate provided in PEM format.
+ *
+ * This class parses and validates the PEM content upon construction. The
+ * certificate must contain a properly formatted `-----BEGIN CERTIFICATE-----`
+ * and `-----END CERTIFICATE-----` block with valid Base64-encoded DER data
+ * inside.
+ */
+class Certificate internal constructor(pemContent: String) {
 
     private val pemBody: String
     internal val bytes: ByteArray get() = Base64.decode(pemBody)
@@ -16,6 +24,19 @@ class Certificate internal constructor(val pemContent: String) {
         private val pemRegex =
             "-----BEGIN CERTIFICATE-----(\\s*([A-Za-z0-9+/=\\r\\n]+?)\\s*)-----END CERTIFICATE-----(\\r?\\n)?".toRegex()
 
+        /**
+         * Creates a [Certificate] instance from the given PEM-formatted text.
+         *
+         * This method validates that the input string contains a single
+         * certificate enclosed in the standard PEM markers. If validation
+         * succeeds, the certificate is parsed and returned.
+         *
+         * @param content The PEM-encoded certificate string.
+         * @return A parsed [Certificate] instance.
+         *
+         * @throws IllegalArgumentException If the input does not contain a valid
+         * PEM certificate.
+         */
         fun fromPem(content: String): Certificate {
             return Certificate(content)
         }

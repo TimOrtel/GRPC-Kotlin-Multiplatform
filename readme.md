@@ -164,6 +164,35 @@ val channel = Channel.Builder()
 
 The keep-alive configuration has no effect on JS/WasmJs. 
 
+### Trusted Certificates Configuration
+
+By default, on JVM targets the default device certificates are trusted. On Native targets, all certificates from [webpki-roots](https://github.com/rustls/webpki-roots) are trusted.
+Furthermore, you can provide additional certificates that the channel should trust when establishing TLS connections.
+Both CA certificates and leaf/self-signed certificates are accepted:
+
+```kotlin
+val channel = Channel.Builder()
+    .forAddress(/*...*/)
+    .withTrustedCertificates(
+        listOf(
+            Certificate.fromPem(/* PEM string */),
+            Certificate.fromPem(/* another PEM */)
+        )
+    )
+    .build()
+```
+
+If only the certificates added using `withTrustedCertificates` should be trusted, call `trustOnlyProvidedCertificates`:
+```kotlin
+val channel = Channel.Builder()
+    .forAddress(/*...*/)
+    .withTrustedCertificates(/*...*/)
+    .trustOnlyProvidedCertificates()
+    .build()
+```
+
+The trusted certificate configuration has no effect on JS/WasmJs.
+
 ### Working with well known types
 
 #### `Any` Message Extensions
