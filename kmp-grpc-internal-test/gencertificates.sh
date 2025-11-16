@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 set -e
+
+mkdir -p test-server/src/main/resources/
 cd test-server/src/main/resources/
 
 # generate standalone cert
