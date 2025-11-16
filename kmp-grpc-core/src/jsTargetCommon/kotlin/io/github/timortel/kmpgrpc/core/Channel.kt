@@ -39,13 +39,11 @@ actual class Channel private constructor(
             this.interceptors += interceptors.toList()
         }
 
-        actual fun withTrustedCertificates(vararg certificates: Certificate): Builder {
-            return withTrustedCertificates(certificates.toList())
-        }
+        actual fun withTrustedCertificates(vararg certificates: Certificate): Builder = this
 
-        actual fun withTrustedCertificates(certificates: List<Certificate>): Builder {
-            return this
-        }
+        actual fun withTrustedCertificates(certificates: List<Certificate>): Builder = this
+
+        actual fun trustOnlyProvidedCertificates(): Builder = this
 
         actual fun build(): Channel {
             return Channel(

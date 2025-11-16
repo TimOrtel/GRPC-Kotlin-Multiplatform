@@ -15,6 +15,7 @@ actual class Channel private constructor(
     internal val port: Int,
     private val usePlaintext: Boolean,
     private val certificates: List<Certificate>?,
+    private val trustOnlyProvidedCertificates: Boolean,
     /**
      * The interceptor associated with this channel, or null.
      */
@@ -37,7 +38,9 @@ actual class Channel private constructor(
             val tlsConfig = tls_config_create()
             if (certificates != null) {
                 installCertificates(certificates, tlsConfig)
-            } else {
+            }
+
+            if (!trustOnlyProvidedCertificates) {
                 tls_config_use_webpki_roots(tlsConfig)
             }
 
@@ -55,6 +58,7 @@ actual class Channel private constructor(
 
         private var usePlaintext = false
         private var certificates: List<Certificate>? = null
+        private var trustOnlyProvidedCertificates = false
 
         private var interceptor: CallInterceptor = EmptyCallInterceptor
 
@@ -92,11 +96,17 @@ actual class Channel private constructor(
             return this
         }
 
+        actual fun trustOnlyProvidedCertificates(): Builder {
+            trustOnlyProvidedCertificates = true
+            return this
+        }
+
         actual fun build(): Channel = Channel(
             name = name,
             port = port,
             usePlaintext = usePlaintext,
             certificates = certificates,
+            trustOnlyProvidedCertificates = trustOnlyProvidedCertificates,
             interceptor = interceptor
         )
     }
