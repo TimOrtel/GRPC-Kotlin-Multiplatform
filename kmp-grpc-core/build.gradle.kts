@@ -67,7 +67,6 @@ kotlin {
             kotlin.srcDir(layout.projectDirectory.dir("../kmp-grpc-shared/src/commonMain"))
 
             dependencies {
-                implementation(kotlin("stdlib-common"))
                 implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.kotlinx.io.core)
                 implementation(libs.squareup.okio)
@@ -88,7 +87,6 @@ kotlin {
 
             dependencies {
                 api(libs.grpc.stub)
-                api(libs.grpc.protobuf.lite)
                 api(libs.grpc.kotlin.stub)
                 implementation(libs.grpc.okhttp)
             }

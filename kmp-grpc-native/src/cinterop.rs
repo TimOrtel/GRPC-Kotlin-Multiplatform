@@ -5,6 +5,7 @@ use std::ffi::{CStr, CString};
 use std::os::raw::{c_char, c_void};
 use std::ptr::{null_mut};
 use std::str::FromStr;
+use std::time::Duration;
 use tokio::sync::mpsc::error::TrySendError;
 use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::sync::watch;
@@ -58,8 +59,17 @@ pub struct RpcTask {
     pub _sender: watch::Sender<bool>,
 }
 
+/**
+ * Create a new channel from the given host with optional keepalive settings. Returns null if the channel could not be created.
+ */
 #[unsafe(no_mangle)]
-pub extern "C" fn channel_builder_create(host: *const c_char) -> *mut RustChannelBuilder {
+pub extern "C" fn channel_builder_create(
+    host: *const c_char,
+    enable_keepalive: bool,
+    keepalive_time_nanos: u64,
+    keepalive_timeout_nanos: u64,
+    keepalive_without_calls: bool
+) -> *mut RustChannelBuilder {
     trace!("channel_builder_create()");
 
     let _guard = TOKIO_RT.enter();
@@ -75,9 +85,20 @@ pub extern "C" fn channel_builder_create(host: *const c_char) -> *mut RustChanne
 
     match Channel::from_shared(host).ok() {
         None => null_mut(),
-        Some(endpoint) => Box::into_raw(Box::new(RustChannelBuilder {
-            _endpoint: Some(endpoint),
-        })),
+        Some(endpoint) => {
+            let endpoint = if enable_keepalive {
+                endpoint
+                    .keep_alive_timeout(Duration::from_nanos(keepalive_timeout_nanos))
+                    .http2_keep_alive_interval(Duration::from_nanos(keepalive_time_nanos))
+                    .keep_alive_while_idle(keepalive_without_calls)
+            } else {
+                endpoint
+            };
+
+            Box::into_raw(Box::new(RustChannelBuilder {
+                _endpoint: Some(endpoint),
+            }))
+        },
     }
 }
 

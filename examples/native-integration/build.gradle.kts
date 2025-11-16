@@ -1,8 +1,8 @@
 plugins {
     id("com.android.application") version "8.11.0" apply false
     id("com.android.library") version "8.11.0" apply false
-    kotlin("android") version "2.2.0" apply false
-    kotlin("plugin.compose") version "2.2.0" apply false
+    kotlin("android") version "2.2.20" apply false
+    kotlin("plugin.compose") version "2.2.20" apply false
 }
 
 buildscript {
@@ -14,8 +14,8 @@ buildscript {
     }
 
     dependencies {
-        classpath(kotlin("gradle-plugin", version = "2.2.0"))
-        classpath(kotlin("serialization", version = "2.2.0"))
+        classpath(kotlin("gradle-plugin", version = "2.2.20"))
+        classpath(kotlin("serialization", version = "2.2.20"))
 
         classpath("com.google.protobuf:protobuf-gradle-plugin:0.9.5")
     }

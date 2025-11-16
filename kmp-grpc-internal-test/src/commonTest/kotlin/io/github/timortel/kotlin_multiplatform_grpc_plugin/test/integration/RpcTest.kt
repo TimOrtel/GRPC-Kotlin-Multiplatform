@@ -44,6 +44,15 @@ abstract class RpcTest : ServerTest {
     }
 
     @Test
+    fun testUtf8CharacterMessage() = runTest {
+        val message = simpleMessage { field1 = "ś, ß, \uD83D\uDC4B".repeat(20) }
+
+        val response = stub.simpleRpc(message)
+
+        assertEquals(message, response)
+    }
+
+    @Test
     fun testSimple() = runTest {
         val message = simpleMessage { field1 = "Test" }
 

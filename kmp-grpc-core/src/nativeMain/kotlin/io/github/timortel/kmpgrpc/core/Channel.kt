@@ -1,8 +1,10 @@
 package io.github.timortel.kmpgrpc.core
 
+import io.github.timortel.kmpgrpc.core.config.KeepAliveConfig
 import io.github.timortel.kmpgrpc.core.internal.CallInterceptorChain
 import io.github.timortel.kmpgrpc.core.internal.EmptyCallInterceptor
 import io.github.timortel.kmpgrpc.native.*
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.cinterop.CPointer
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.usePinned
@@ -20,11 +22,12 @@ actual class Channel private constructor(
      * The interceptor associated with this channel, or null.
      */
     internal val interceptor: CallInterceptor,
+    internal val keepAliveConfig: KeepAliveConfig
 ) : NativeJsChannel() {
 
     /*
     grpc.ready().await throws a Segfault when we do not execute all rpcs on the same thread.
-     */
+    */
     @OptIn(DelicateCoroutinesApi::class, ExperimentalCoroutinesApi::class)
     internal val context = newSingleThreadContext("native channel executor - $name:$port")
 
@@ -33,7 +36,25 @@ actual class Channel private constructor(
     init {
         val host = (if (usePlaintext) "http://" else "https://") + "$name:$port"
 
-        val builder = channel_builder_create(host)
+        val enableKeepalive = when (keepAliveConfig) {
+            is KeepAliveConfig.Enabled -> true
+            KeepAliveConfig.Disabled -> false
+        }
+
+        val (keepAliveTime, keepAliveTimeout, keepAliveWithoutCalls) = when (keepAliveConfig) {
+            is KeepAliveConfig.Disabled -> Triple(0.seconds, 0.seconds, false)
+            is KeepAliveConfig.Enabled -> Triple(keepAliveConfig.time, keepAliveConfig.timeout, keepAliveConfig.withoutCalls)
+        }
+
+        val builder = channel_builder_create(
+            host = host,
+            use_plaintext = usePlaintext,
+            enable_keepalive = enableKeepalive,
+            keepalive_time_nanos = keepAliveTime.inWholeNanoseconds.toULong(),
+            keepalive_timeout_nanos = keepAliveTimeout.inWholeNanoseconds.toULong(),
+            keepalive_without_calls = keepAliveWithoutCalls
+        ) ?: throw IllegalArgumentException("$host is not a valid uri.")
+
         if (!usePlaintext) {
             val tlsConfig = tls_config_create()
             if (certificates != null) {
@@ -62,6 +83,8 @@ actual class Channel private constructor(
 
         private var interceptor: CallInterceptor = EmptyCallInterceptor
 
+        private var keepAliveConfig: KeepAliveConfig = KeepAliveConfig.Disabled
+
         actual companion object {
             actual fun forAddress(
                 name: String,
@@ -86,6 +109,10 @@ actual class Channel private constructor(
             }
         }
 
+        actual fun withKeepAliveConfig(config: KeepAliveConfig): Builder = apply {
+            keepAliveConfig = config
+        }
+
         actual fun withTrustedCertificates(vararg certificates: Certificate): Builder {
             return withTrustedCertificates(certificates.toList())
         }
@@ -101,14 +128,17 @@ actual class Channel private constructor(
             return this
         }
 
-        actual fun build(): Channel = Channel(
-            name = name,
-            port = port,
-            usePlaintext = usePlaintext,
-            certificates = certificates,
-            trustOnlyProvidedCertificates = trustOnlyProvidedCertificates,
-            interceptor = interceptor
-        )
+        actual fun build(): Channel {
+            return Channel(
+                name = name,
+                port = port,
+                usePlaintext = usePlaintext,
+                certificates = certificates,
+                trustOnlyProvidedCertificates = trustOnlyProvidedCertificates,
+                interceptor = interceptor,
+                keepAliveConfig = keepAliveConfig
+            )
+        }
     }
 
     override fun cleanupResources() {

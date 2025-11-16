@@ -30,6 +30,7 @@ import kotlinx.io.writeString
 import kotlinx.io.writeUByte
 import kotlinx.io.writeUIntLe
 import kotlinx.io.writeULongLe
+import okio.utf8Size
 
 internal class CodedOutputStreamImpl(private val sink: Sink) : CodedOutputStream {
 
@@ -321,7 +322,7 @@ internal class CodedOutputStreamImpl(private val sink: Sink) : CodedOutputStream
     }
 
     override fun writeStringNoTag(value: String) {
-        writeVarUInt32(value.length.toUInt())
+        writeVarUInt32(value.utf8Size().toUInt())
         sink.writeString(value)
     }
 
