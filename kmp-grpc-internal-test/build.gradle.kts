@@ -52,6 +52,10 @@ kotlin {
             }
         }
 
+        val jvmMacOsTest by creating {
+            dependsOn(commonTest.get())
+        }
+
         jsTest {
             dependsOn(jsTestTargetCommon)
         }
@@ -66,10 +70,15 @@ kotlin {
 
         jvmTest {
             dependsOn(nativeJvmTest)
+            dependsOn(jvmMacOsTest)
 
             dependencies {
                 runtimeOnly(libs.grpc.netty)
             }
+        }
+
+        macosTest {
+            dependsOn(jvmMacOsTest)
         }
     }
 }

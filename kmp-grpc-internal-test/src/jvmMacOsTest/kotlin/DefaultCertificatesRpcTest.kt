@@ -1,5 +1,3 @@
-package io.github.timortel.kotlin_multiplatform_grpc_plugin.test
-
 import hello.HelloRequest
 import hello.HelloServiceStub
 import io.github.timortel.kmpgrpc.core.Channel
@@ -9,7 +7,7 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
 
-class DefaultCertificatesRpcTest : ServerTest {
+abstract class DefaultCertificatesRpcTest : ServerTest {
 
     override val address: String = "grpcb.in"
     override val port: Int = 9001
