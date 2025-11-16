@@ -3,7 +3,7 @@ use crate::rpc::TOKIO_RT;
 use log::trace;
 use std::ffi::{CStr, CString};
 use std::os::raw::{c_char, c_void};
-use std::ptr::null_mut;
+use std::ptr::{null_mut};
 use std::str::FromStr;
 use tokio::sync::mpsc::error::TrySendError;
 use tokio::sync::mpsc::{Receiver, Sender};
@@ -12,7 +12,7 @@ use tonic::metadata::{
     AsciiMetadataKey, AsciiMetadataValue, BinaryMetadataKey, BinaryMetadataValue, KeyRef,
     MetadataMap,
 };
-use tonic::transport::{Certificate, Channel, ClientTlsConfig, Endpoint};
+use tonic::transport::{CertificateDer, Channel, ClientTlsConfig, Endpoint};
 
 /**
  * Holds the channel used to send messages into the RPC.
@@ -118,8 +118,23 @@ pub extern "C" fn tls_config_install_certificate(
     config: *mut RustTlsConfigBuilder,
     data: *const u8,
     len: usize,
-) {
+) -> bool {
     trace!("tls_config_install_certificate()");
+
+    if data.is_null() || config.is_null() {
+        trace!("tls_config_install_certificate() -> no config or no data");
+        return false;
+    }
+
+    let slice = unsafe { std::slice::from_raw_parts(data, len).to_vec() };
+    let cert = CertificateDer::from(slice);
+    let trust_anchor = match webpki::anchor_from_trusted_cert(&cert) {
+        Ok(trust_anchor) => trust_anchor.to_owned(),
+        Err(e) => {
+            trace!("tls_config_install_certificate() -> failed creating trust anchor {e}");
+            return false;
+        }
+    };
 
     unsafe {
         match config.as_mut() {
@@ -128,16 +143,17 @@ pub extern "C" fn tls_config_install_certificate(
                 match config {
                     None => {
                         trace!("tls_config_install_certificate() -> no tls config set");
+                        false
                     }
                     Some(tls) => {
-                        let cert = Certificate::from_pem(std::slice::from_raw_parts(data, len));
-
-                        c._config = Some(tls.trust_anchor(TrustAnchor);
+                        c._config = Some(tls.trust_anchor(trust_anchor));
+                        true
                     }
                 }
             }
             None => {
                 trace!("tls_config_install_certificate() -> builder is null");
+                false
             }
         }
     }
@@ -197,11 +213,9 @@ pub extern "C" fn channel_builder_build(builder: *mut RustChannelBuilder) -> *mu
 
     let channel = unsafe {
         match builder.as_mut().and_then(|b| b._endpoint.take()) {
-            Some(endpoint) => {
-                Box::into_raw(Box::new(RustChannel {
-                    _channel: endpoint.connect_lazy(),
-                }))
-            },
+            Some(endpoint) => Box::into_raw(Box::new(RustChannel {
+                _channel: endpoint.connect_lazy(),
+            })),
             None => null_mut(),
         }
     };

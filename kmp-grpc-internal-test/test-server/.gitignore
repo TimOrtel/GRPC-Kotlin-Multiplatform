@@ -1,0 +1,4 @@
+/src/main/resources/*.key
+/src/main/resources/*.pem
+/src/main/resources/*.csr
+/src/main/resources/*.srl

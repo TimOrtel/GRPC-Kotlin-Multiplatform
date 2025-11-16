@@ -6,6 +6,7 @@ plugins {
     kotlin("multiplatform")
 
     id("io.github.timortel.kmpgrpc.plugin")
+    alias(libs.plugins.buildConfig)
 }
 
 version = "dev"
@@ -105,6 +106,23 @@ kmpGrpc {
     includeWellKnownTypes = true
 
     protoSourceFolders = project.files("src/commonMain/proto/general", "src/commonMain/proto/unknownfield")
+}
+
+buildConfig {
+    packageName("iio.github.timortel.kmpgrpc.internal.test")
+
+    useKotlinOutput {
+        internalVisibility = true
+        topLevelConstants = true
+    }
+
+    forClass("ServerCertificate") {
+        val leafCertificateContent = projectDir.resolve("test-server/src/main/resources/standalone_leaf.pem").readText()
+        val caCertificateContent = projectDir.resolve("test-server/src/main/resources/ca.pem").readText()
+
+        buildConfigField("String", "STANDALONE_LEAF_CERTIFICATE", "\"\"\"\n$leafCertificateContent\"\"\"")
+        buildConfigField("String", "CA_CERTIFICATE", "\"\"\"\n$caCertificateContent\"\"\"")
+    }
 }
 
 tasks.withType(Test::class) {

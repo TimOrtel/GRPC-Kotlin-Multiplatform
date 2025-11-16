@@ -16,19 +16,24 @@ object TestServer {
         val nonSslServer = buildServer(17888)
             .start()
 
-        val sslServer = buildServer(17889) {
+        val caLeafServer = buildSslServer(17889, "ca_leaf").start()
+        val standaloneLeafServer = buildSslServer(17890, "standalone_leaf").start()
+
+        nonSslServer.awaitTermination()
+        caLeafServer.awaitTermination()
+        standaloneLeafServer.awaitTermination()
+    }
+
+    private fun buildSslServer(port: Int, certFileBaseName: String): Server {
+        return buildServer(port) {
             sslContext(
                 GrpcSslContexts.forServer(
-                    TestServer::class.java.classLoader.getResourceAsStream("server.pem"),
-                    TestServer::class.java.classLoader.getResourceAsStream("server.key")
+                    TestServer::class.java.classLoader.getResourceAsStream("$certFileBaseName.pem"),
+                    TestServer::class.java.classLoader.getResourceAsStream("$certFileBaseName.key")
                 )
                     .build()
             )
         }
-            .start()
-
-        nonSslServer.awaitTermination()
-        sslServer.awaitTermination()
     }
 
     private class CustomResponseCall<R, S>(delegate: ServerCall<R, S>) :

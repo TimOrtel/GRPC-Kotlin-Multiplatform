@@ -5,7 +5,6 @@ import io.github.timortel.kmpgrpc.core.internal.EmptyCallInterceptor
 import io.github.timortel.kmpgrpc.native.*
 import kotlinx.cinterop.CPointer
 import kotlinx.cinterop.addressOf
-import kotlinx.cinterop.cstr
 import kotlinx.cinterop.usePinned
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -37,22 +36,7 @@ actual class Channel private constructor(
         if (!usePlaintext) {
             val tlsConfig = tls_config_create()
             if (certificates != null) {
-                certificates
-                    .forEach { certificate ->
-                        certificate
-                            .pemContent
-                            .encodeToByteArray()
-                            .toUByteArray()
-                            .usePinned { pinned ->
-                                if (pinned.get().isNotEmpty()) {
-                                    tls_config_install_certificate(
-                                        tlsConfig,
-                                        pinned.addressOf(0),
-                                        pinned.get().size.toULong()
-                                    )
-                                }
-                            }
-                    }
+                installCertificates(certificates, tlsConfig)
             } else {
                 tls_config_use_webpki_roots(tlsConfig)
             }
@@ -127,4 +111,24 @@ actual class Channel private constructor(
             init(ENABLE_TRACE_LOGGING)
         }
     }
+}
+
+private fun installCertificates(certificates: List<Certificate>, tlsConfig: CPointer<cnames.structs.RustTlsConfigBuilder>?) {
+    certificates
+        .forEach { certificate ->
+            certificate
+                .bytes
+                .toUByteArray()
+                .usePinned { pinned ->
+                    if (pinned.get().isNotEmpty()) {
+                        val isSuccessful = tls_config_install_certificate(
+                            tlsConfig,
+                            pinned.addressOf(0),
+                            pinned.get().size.toULong()
+                        )
+
+                        if (!isSuccessful) throw IllegalArgumentException("Failed to install certificate. Invalid TLS certificate supplied: $certificate")
+                    }
+                }
+        }
 }
