@@ -4,13 +4,12 @@ import io.github.timortel.kmpgrpc.core.config.KeepAliveConfig
 import io.github.timortel.kmpgrpc.core.internal.ClientInterceptorImpl
 import io.github.timortel.kmpgrpc.core.internal.buildSslSocketFactory
 import io.grpc.ManagedChannel
-import io.grpc.ManagedChannelBuilder
+import io.grpc.okhttp.OkHttpChannelBuilder
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.util.concurrent.TimeUnit
+import javax.net.ssl.SSLSocketFactory
 import kotlin.concurrent.thread
 import kotlin.coroutines.resume
-import io.grpc.okhttp.OkHttpChannelBuilder
-import javax.net.ssl.SSLSocketFactory
 
 /**
  * The Jvm [Channel] wraps the grpc [ManagedChannel] and delegates its operations to the wrapped native channel.

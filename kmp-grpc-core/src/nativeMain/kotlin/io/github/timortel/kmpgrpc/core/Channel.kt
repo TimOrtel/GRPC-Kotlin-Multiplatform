@@ -48,7 +48,6 @@ actual class Channel private constructor(
 
         val builder = channel_builder_create(
             host = host,
-            use_plaintext = usePlaintext,
             enable_keepalive = enableKeepalive,
             keepalive_time_nanos = keepAliveTime.inWholeNanoseconds.toULong(),
             keepalive_timeout_nanos = keepAliveTimeout.inWholeNanoseconds.toULong(),

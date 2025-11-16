@@ -3,7 +3,7 @@ use crate::rpc::TOKIO_RT;
 use log::trace;
 use std::ffi::{CStr, CString};
 use std::os::raw::{c_char, c_void};
-use std::ptr::{null_mut};
+use std::ptr::null_mut;
 use std::str::FromStr;
 use std::time::Duration;
 use tokio::sync::mpsc::error::TrySendError;
@@ -68,7 +68,7 @@ pub extern "C" fn channel_builder_create(
     enable_keepalive: bool,
     keepalive_time_nanos: u64,
     keepalive_timeout_nanos: u64,
-    keepalive_without_calls: bool
+    keepalive_without_calls: bool,
 ) -> *mut RustChannelBuilder {
     trace!("channel_builder_create()");
 
@@ -98,7 +98,7 @@ pub extern "C" fn channel_builder_create(
             Box::into_raw(Box::new(RustChannelBuilder {
                 _endpoint: Some(endpoint),
             }))
-        },
+        }
     }
 }
 
