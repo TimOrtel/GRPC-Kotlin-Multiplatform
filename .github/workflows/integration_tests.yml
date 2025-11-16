@@ -25,11 +25,16 @@ jobs:
 
       - name: Start test-server
         run: |
-          nohup ./gradlew :kmp-grpc-internal-test:test-server:run &
+          nohup ./gradlew :kmp-grpc-internal-test:test-server:run > server.log 2>&1 &
           echo $! > gradle_pid.txt
 
       - name: Start envoy service
-        run: docker run -d --rm --name envoy --network host -v $(pwd)/kmp-grpc-internal-test/envoy.yml:/etc/envoy/envoy.yaml -p 8082:8082 envoyproxy/envoy-dev:latest
+        run: |
+          docker run -d --rm --name envoy --network host \
+          -v $(pwd)/kmp-grpc-internal-test/envoy.yml:/etc/envoy/envoy.yaml \
+          -p 8082:8082 envoyproxy/envoy-dev:latest \
+          -c /etc/envoy/envoy.yaml \
+          -l trace
 
       - name: Wait for test-server to be healthy
         timeout-minutes: 10
@@ -66,8 +71,16 @@ jobs:
           kill $PID
         if: always()
 
+      - name: Print Envoy Logs
+        run: docker logs envoy
+        if: always()
+
       - name: Stop docker services
         run: docker stop envoy
+        if: always()
+
+      - name: Print Server Logs
+        run: cat server.log
         if: always()
 
   test-apple:
@@ -87,7 +100,7 @@ jobs:
 
       - name: Start test-server
         run: |
-          nohup ./gradlew :kmp-grpc-internal-test:test-server:run &
+          nohup ./gradlew :kmp-grpc-internal-test:test-server:run > server.log 2>&1 &
           echo $! > gradle_pid.txt
 
       - name: Wait for test-server to be healthy
@@ -122,4 +135,8 @@ jobs:
         run: |
           PID=$(cat gradle_pid.txt)
           kill $PID
+        if: always()
+
+      - name: Print Server Logs
+        run: cat server.log
         if: always()
