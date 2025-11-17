@@ -4,6 +4,7 @@ import io.github.timortel.kmpgrpc.test.*
 import io.grpc.*
 import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts
 import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder
+import io.grpc.netty.shaded.io.netty.handler.ssl.ClientAuth
 import io.grpc.protobuf.services.ProtoReflectionServiceV1
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
@@ -19,19 +20,27 @@ object TestServer {
 
         val caLeafServer = buildSslServer(17889, "ca_leaf").start()
         val standaloneLeafServer = buildSslServer(17890, "standalone_leaf").start()
+        val caLeafServerWithCredentials = buildSslServer(17891, "ca_leaf", true).start()
 
         nonSslServer.awaitTermination()
         caLeafServer.awaitTermination()
         standaloneLeafServer.awaitTermination()
+        caLeafServerWithCredentials.awaitTermination()
     }
 
-    private fun buildSslServer(port: Int, certFileBaseName: String): Server {
+    private fun buildSslServer(port: Int, certFileBaseName: String, useTrustManager: Boolean = false): Server {
         return buildServer(port) {
             sslContext(
                 GrpcSslContexts.forServer(
                     TestServer::class.java.classLoader.getResourceAsStream("$certFileBaseName.pem"),
                     TestServer::class.java.classLoader.getResourceAsStream("$certFileBaseName.key")
                 )
+                    .let {
+                        if (useTrustManager) {
+                            it.trustManager(TestServer::class.java.classLoader.getResourceAsStream("ca.pem"))
+                            it.clientAuth(ClientAuth.REQUIRE)
+                        } else it
+                    }
                     .build()
             )
         }

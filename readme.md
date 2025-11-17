@@ -193,6 +193,25 @@ val channel = Channel.Builder()
 
 The trusted certificate configuration has no effect on JS/WasmJs.
 
+### Client Identity Configuration
+
+The `withClientIdentity` function allows the client to present its own certificate and private key during the TLS handshake.
+This identity pair is used by the server to authenticate the client before allowing requests.
+
+You can configure the channel to use a client identity as follows:
+
+```kotlin
+val channel = Channel.Builder()
+    .forAddress(/*...*/)
+    .withClientIdentity(
+        certificate = Certificate.fromPem(/* client certificate PEM */),
+        key = PrivateKey.fromPem(/* private key PEM */)
+    )
+    .build()
+```
+
+The client identity configuration has no effect on JS/WasmJs.
+
 ### Working with well known types
 
 #### `Any` Message Extensions

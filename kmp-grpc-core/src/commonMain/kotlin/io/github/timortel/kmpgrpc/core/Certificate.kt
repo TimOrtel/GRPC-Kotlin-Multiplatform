@@ -1,28 +1,17 @@
 package io.github.timortel.kmpgrpc.core
 
-import kotlin.io.encoding.Base64
+import io.github.timortel.kmpgrpc.core.util.bytesAsPemContent
+import io.github.timortel.kmpgrpc.core.util.parseBytesFromPemContent
 
 /**
- * Represents an X.509 certificate provided in PEM format.
- *
- * This class parses and validates the PEM content upon construction. The
- * certificate must contain a properly formatted `-----BEGIN CERTIFICATE-----`
- * and `-----END CERTIFICATE-----` block with valid Base64-encoded DER data
- * inside.
+ * Represents an X.509 certificate.
  */
-class Certificate internal constructor(internal val pemContent: String) {
+class Certificate internal constructor(internal val data: ByteArray)  {
 
-    private val pemBody: String
-    internal val bytes: ByteArray get() = Base64.decode(pemBody)
-
-    init {
-        val matchResult = pemRegex.matchEntire(pemContent) ?: throw IllegalArgumentException("Input does not contain a valid PEM-encoded certificate.")
-        pemBody = (matchResult.groups[1]?.value!!).replace("\n", "")
-    }
+    internal val asPem: String get() = bytesAsPemContent(data, PEM_CONTAINER)
 
     companion object {
-        private val pemRegex =
-            "-----BEGIN CERTIFICATE-----(\\s*([A-Za-z0-9+/=\\r\\n]+?)\\s*)-----END CERTIFICATE-----(\\r?\\n)?".toRegex()
+        private const val PEM_CONTAINER = "CERTIFICATE"
 
         /**
          * Creates a [Certificate] instance from the given PEM-formatted text.
@@ -38,7 +27,21 @@ class Certificate internal constructor(internal val pemContent: String) {
          * PEM certificate.
          */
         fun fromPem(content: String): Certificate {
-            return Certificate(content)
+            return Certificate(parseBytesFromPemContent(content, PEM_CONTAINER))
+        }
+
+        /**
+         * Creates a [Certificate] instance from the given DER-encoded byte array.
+         *
+         * The provided data must contain a valid X.509 certificate in binary
+         * DER format. No PEM parsing is performed by this method; the bytes are
+         * used as-is.
+         *
+         * @param byteArray The DER-encoded X.509 certificate bytes.
+         * @return A parsed [Certificate] instance.
+         */
+        fun fromByteArray(byteArray: ByteArray): Certificate {
+            return Certificate(byteArray)
         }
     }
 }
