@@ -6,6 +6,8 @@ import io.github.timortel.kmpgrpc.core.internal.EmptyCallInterceptor
 import io.github.timortel.kmpgrpc.native.*
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.cinterop.CPointer
+import kotlinx.cinterop.addressOf
+import kotlinx.cinterop.usePinned
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.newSingleThreadContext
@@ -14,6 +16,8 @@ actual class Channel private constructor(
     internal val name: String,
     internal val port: Int,
     private val usePlaintext: Boolean,
+    private val certificates: List<Certificate>?,
+    private val trustOnlyProvidedCertificates: Boolean,
     /**
      * The interceptor associated with this channel, or null.
      */
@@ -42,20 +46,39 @@ actual class Channel private constructor(
             is KeepAliveConfig.Enabled -> Triple(keepAliveConfig.time, keepAliveConfig.timeout, keepAliveConfig.withoutCalls)
         }
 
-        channel = channel_create(
+        val builder = channel_builder_create(
             host = host,
-            use_plaintext = usePlaintext,
             enable_keepalive = enableKeepalive,
             keepalive_time_nanos = keepAliveTime.inWholeNanoseconds.toULong(),
             keepalive_timeout_nanos = keepAliveTimeout.inWholeNanoseconds.toULong(),
             keepalive_without_calls = keepAliveWithoutCalls
         ) ?: throw IllegalArgumentException("$host is not a valid uri.")
-    }
 
+        if (!usePlaintext) {
+            val tlsConfig = tls_config_create()
+            if (certificates != null) {
+                installCertificates(certificates, tlsConfig)
+            }
+
+            if (!trustOnlyProvidedCertificates) {
+                tls_config_use_webpki_roots(tlsConfig)
+            }
+
+            channel_builder_use_tls_config(builder, tlsConfig)
+        }
+
+        channel = channel_builder_build(builder)
+
+        if (channel == null) {
+            throw IllegalArgumentException("$host is not a valid uri.")
+        }
+    }
 
     actual class Builder(private val name: String, private val port: Int) {
 
         private var usePlaintext = false
+        private var certificates: List<Certificate>? = null
+        private var trustOnlyProvidedCertificates = false
 
         private var interceptor: CallInterceptor = EmptyCallInterceptor
 
@@ -70,6 +93,7 @@ actual class Channel private constructor(
 
         actual fun usePlaintext(): Builder {
             usePlaintext = true
+            certificates = null
             return this
         }
 
@@ -88,13 +112,30 @@ actual class Channel private constructor(
             keepAliveConfig = config
         }
 
+        actual fun withTrustedCertificates(vararg certificates: Certificate): Builder {
+            return withTrustedCertificates(certificates.toList())
+        }
+
+        actual fun withTrustedCertificates(certificates: List<Certificate>): Builder {
+            usePlaintext = false
+            this.certificates = certificates
+            return this
+        }
+
+        actual fun trustOnlyProvidedCertificates(): Builder {
+            trustOnlyProvidedCertificates = true
+            return this
+        }
+
         actual fun build(): Channel {
             return Channel(
-                name,
-                port,
-                usePlaintext,
-                interceptor,
-                keepAliveConfig
+                name = name,
+                port = port,
+                usePlaintext = usePlaintext,
+                certificates = certificates,
+                trustOnlyProvidedCertificates = trustOnlyProvidedCertificates,
+                interceptor = interceptor,
+                keepAliveConfig = keepAliveConfig
             )
         }
     }
@@ -109,4 +150,24 @@ actual class Channel private constructor(
             init(ENABLE_TRACE_LOGGING)
         }
     }
+}
+
+private fun installCertificates(certificates: List<Certificate>, tlsConfig: CPointer<cnames.structs.RustTlsConfigBuilder>?) {
+    certificates
+        .forEach { certificate ->
+            certificate
+                .bytes
+                .toUByteArray()
+                .usePinned { pinned ->
+                    if (pinned.get().isNotEmpty()) {
+                        val isSuccessful = tls_config_install_certificate(
+                            tlsConfig,
+                            pinned.addressOf(0),
+                            pinned.get().size.toULong()
+                        )
+
+                        if (!isSuccessful) throw IllegalArgumentException("Failed to install certificate. Invalid TLS certificate supplied: $certificate")
+                    }
+                }
+        }
 }

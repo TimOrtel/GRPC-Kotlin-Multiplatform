@@ -88,6 +88,7 @@ kotlin {
             dependencies {
                 api(libs.grpc.stub)
                 api(libs.grpc.kotlin.stub)
+                implementation(libs.grpc.okhttp)
             }
         }
 

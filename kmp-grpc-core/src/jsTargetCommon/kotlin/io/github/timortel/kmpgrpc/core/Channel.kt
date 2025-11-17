@@ -45,6 +45,12 @@ actual class Channel private constructor(
             // No-op implementation
         }
 
+        actual fun withTrustedCertificates(vararg certificates: Certificate): Builder = this
+
+        actual fun withTrustedCertificates(certificates: List<Certificate>): Builder = this
+
+        actual fun trustOnlyProvidedCertificates(): Builder = this
+
         actual fun build(): Channel {
             return Channel(
                 name = name,

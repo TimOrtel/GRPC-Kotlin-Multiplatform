@@ -16,7 +16,7 @@ expect class Channel {
         }
 
         /**
-         * If called, the constructed channel will use http-
+         * If called, the constructed channel will use http.
          */
         fun usePlaintext(): Builder
 
@@ -32,6 +32,32 @@ expect class Channel {
          * @note Supported on JVM/Android and Native targets only. Calling this method has no effect on JS targets.
          */
         fun withKeepAliveConfig(config: KeepAliveConfig): Builder
+
+        /**
+         * Adds all given [certificates] to the set of trusted root certificates used
+         * by this channel. Both CA certificates and self-signed/leaf certificates are
+         * accepted.
+         *
+         * This method has no effect on JavaScript targets.
+         */
+        fun withTrustedCertificates(vararg certificates: Certificate): Builder
+
+        /**
+         * Adds all given [certificates] to the set of trusted root certificates used
+         * by this channel. Both CA certificates and self-signed/leaf certificates are
+         * accepted.
+         *
+         * This method has no effect on JavaScript targets.
+         */
+        fun withTrustedCertificates(certificates: List<Certificate>): Builder
+
+        /**
+         * Configures the channel to trust only the certificates explicitly provided via
+         * [withTrustedCertificates]. System or platform root certificates will not be used.
+         *
+         * This method has no effect on JavaScript targets.
+         */
+        fun trustOnlyProvidedCertificates(): Builder
 
         /**
          * Construct the channel

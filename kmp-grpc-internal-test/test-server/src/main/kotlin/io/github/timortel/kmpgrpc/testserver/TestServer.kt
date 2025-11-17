@@ -2,6 +2,7 @@ package io.github.timortel.kmpgrpc.testserver
 
 import io.github.timortel.kmpgrpc.test.*
 import io.grpc.*
+import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts
 import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder
 import io.grpc.protobuf.services.ProtoReflectionServiceV1
 import kotlinx.coroutines.delay
@@ -12,11 +13,52 @@ import kotlin.time.Duration.Companion.seconds
 
 object TestServer {
 
-    fun start(): Server {
+    fun start() {
+        val nonSslServer = buildServer(17888)
+            .start()
+
+        val caLeafServer = buildSslServer(17889, "ca_leaf").start()
+        val standaloneLeafServer = buildSslServer(17890, "standalone_leaf").start()
+
+        nonSslServer.awaitTermination()
+        caLeafServer.awaitTermination()
+        standaloneLeafServer.awaitTermination()
+    }
+
+    private fun buildSslServer(port: Int, certFileBaseName: String): Server {
+        return buildServer(port) {
+            sslContext(
+                GrpcSslContexts.forServer(
+                    TestServer::class.java.classLoader.getResourceAsStream("$certFileBaseName.pem"),
+                    TestServer::class.java.classLoader.getResourceAsStream("$certFileBaseName.key")
+                )
+                    .build()
+            )
+        }
+    }
+
+    private class CustomResponseCall<R, S>(delegate: ServerCall<R, S>) :
+        ForwardingServerCall.SimpleForwardingServerCall<R, S>(delegate) {
+
+        override fun sendHeaders(headers: Metadata) {
+            val asciiKey = Metadata.Key.of("custom-header-1", Metadata.ASCII_STRING_MARSHALLER)
+            headers.put(asciiKey, "value1")
+            headers.put(asciiKey, "value2")
+
+            val binaryKey = Metadata.Key.of("custom-header-1-bin", Metadata.BINARY_BYTE_MARSHALLER)
+            headers.put(binaryKey, "value1".encodeToByteArray())
+            headers.put(binaryKey, "value2".encodeToByteArray())
+
+            super.sendHeaders(headers)
+        }
+    }
+
+    private fun buildServer(port: Int, configure: NettyServerBuilder.() -> Unit = {}): Server {
         val metadataKey = Context.key<Map<String, String>>("metadata")
 
         return NettyServerBuilder
-            .forPort(17888)
+            .forPort(port)
+            .apply { configure() }
             .permitKeepAliveTime(10, TimeUnit.SECONDS)
             .addService(ProtoReflectionServiceV1.newInstance())
             .addService(
@@ -191,22 +233,5 @@ object TestServer {
                 }
             )
             .build()
-            .start()
-    }
-
-    private class CustomResponseCall<R, S>(delegate: ServerCall<R, S>) :
-        ForwardingServerCall.SimpleForwardingServerCall<R, S>(delegate) {
-
-        override fun sendHeaders(headers: Metadata) {
-            val asciiKey = Metadata.Key.of("custom-header-1", Metadata.ASCII_STRING_MARSHALLER)
-            headers.put(asciiKey, "value1")
-            headers.put(asciiKey, "value2")
-
-            val binaryKey = Metadata.Key.of("custom-header-1-bin", Metadata.BINARY_BYTE_MARSHALLER)
-            headers.put(binaryKey, "value1".encodeToByteArray())
-            headers.put(binaryKey, "value2".encodeToByteArray())
-
-            super.sendHeaders(headers)
-        }
     }
 }
