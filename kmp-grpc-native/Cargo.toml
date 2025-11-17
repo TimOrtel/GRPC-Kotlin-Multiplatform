@@ -5,7 +5,7 @@ edition = "2024"
 
 [dependencies]
 tonic = { version = "0.14.2", features = ["channel", "tls-ring", "tls-webpki-roots"] }
-tokio = { version = "1.48.0", features = ["rt-multi-thread"] }
+tokio = { version = "1.47.1", features = ["rt-multi-thread"] }
 rustls-webpki = "0.103.8"
 bytes = "1.11.0"
 once_cell = "1.21.3"
