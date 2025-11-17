@@ -113,7 +113,7 @@ pub extern "C" fn tls_config_create() -> *mut RustTlsConfigBuilder {
 
 #[unsafe(no_mangle)]
 pub extern "C" fn tls_config_use_webpki_roots(config: *mut RustTlsConfigBuilder) {
-    trace!("channel_builder_use_plaintext()");
+    trace!("tls_config_use_webpki_roots()");
 
     unsafe {
         match config.as_mut() {
