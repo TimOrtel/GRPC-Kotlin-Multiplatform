@@ -171,15 +171,20 @@ Furthermore, you can provide additional certificates that the channel should tru
 Both CA certificates and leaf/self-signed certificates are accepted:
 
 ```kotlin
-val channel = Channel.Builder()
-    .forAddress(/*...*/)
-    .withTrustedCertificates(
-        listOf(
-            Certificate.fromPem(/* PEM string */),
-            Certificate.fromPem(/* another PEM */)
+try {
+    val channel = Channel.Builder()
+        .forAddress(/*...*/)
+        .withTrustedCertificates(
+            listOf(
+                Certificate.fromPem(/* PEM string */),
+                Certificate.fromPem(/* another PEM */)
+            )
         )
-    )
-    .build()
+        .build()
+} catch (e: IllegalArgumentException) {
+    // Handle invalid certificate configuration
+    logger.error("Failed to configure certificates: ${e.message}")
+}
 ```
 
 If only the certificates added using `withTrustedCertificates` should be trusted, call `trustOnlyProvidedCertificates`:
@@ -192,6 +197,8 @@ val channel = Channel.Builder()
 ```
 
 The trusted certificate configuration has no effect on JS/WasmJs.
+
+**Note**: Invalid certificate formats will throw `IllegalArgumentException` during channel construction (not during the first RPC call), allowing for early detection of configuration issues.
 
 ### Client Identity Configuration
 

@@ -72,13 +72,16 @@ actual class Channel private constructor(
             if (identity != null) {
                 identity.key.asPem.encodeToByteArray().toUByteArray().usePinned { key ->
                     identity.cert.asPem.encodeToByteArray().toUByteArray().usePinned { cert ->
-                        tls_config_use_client_credentials(
+                        val success = tls_config_use_client_credentials(
                             config = tlsConfig,
                             key_data = key.addressOf(0),
                             key_len = key.get().size.toULong(),
                             cert_data = cert.addressOf(0),
                             cert_len = cert.get().size.toULong()
                         )
+                        if (!success) {
+                            throw IllegalArgumentException("Failed to configure client identity. Invalid certificate or private key.")
+                        }
                     }
                 }
             }
@@ -182,19 +185,23 @@ private fun installCertificates(
     tlsConfig: CPointer<cnames.structs.RustTlsConfigBuilder>?
 ) {
     certificates
-        .forEach { certificate ->
+        .forEachIndexed { index, certificate ->
+            if (certificate.data.isEmpty()) {
+                throw IllegalArgumentException("Certificate data is empty at index $index")
+            }
+            
             certificate
                 .data
                 .toUByteArray()
                 .usePinned { pinned ->
-                    if (pinned.get().isNotEmpty()) {
-                        val isSuccessful = tls_config_install_certificate(
-                            tlsConfig,
-                            pinned.addressOf(0),
-                            pinned.get().size.toULong()
-                        )
+                    val isSuccessful = tls_config_install_certificate(
+                        tlsConfig,
+                        pinned.addressOf(0),
+                        pinned.get().size.toULong()
+                    )
 
-                        if (!isSuccessful) throw IllegalArgumentException("Failed to install certificate. Invalid TLS certificate supplied: $certificate")
+                    if (!isSuccessful) {
+                        throw IllegalArgumentException("Failed to install certificate at index $index. Invalid TLS certificate format.")
                     }
                 }
         }
