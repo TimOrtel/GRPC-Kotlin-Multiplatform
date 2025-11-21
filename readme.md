@@ -384,7 +384,7 @@ To build the native targets locally, you will need to have rust installed on you
 1. To build the library `gradle kmp-grpc-core:publishToMavenLocal`
 2. To build the plugin `gradle kmp-grpc-plugin:publishToMavenLocal`
 
-By default, kmp-grpc-core prints trace logs. To deactivate, build the library with `-Pio.github.timortel.kmp-grpc.internal.native.release=true`.
+By default, kmp-grpc-core is built in release mode without trace logs. To enable debug trace logging, build the library with `-Pio.github.timortel.kmp-grpc.internal.native.release=false`.
 
 ## Contributing
 Feel free to implement improvements, bug fixes and features and create a pull request.
