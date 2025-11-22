@@ -6,6 +6,7 @@ plugins {
     kotlin("multiplatform")
 
     id("io.github.timortel.kmpgrpc.plugin")
+    alias(libs.plugins.buildConfig)
 }
 
 version = "dev"
@@ -50,6 +51,10 @@ kotlin {
             }
         }
 
+        val jvmMacOsTest by creating {
+            dependsOn(commonTest.get())
+        }
+
         jsTest {
             dependsOn(jsTestTargetCommon)
         }
@@ -64,10 +69,15 @@ kotlin {
 
         jvmTest {
             dependsOn(nativeJvmTest)
+            dependsOn(jvmMacOsTest)
 
             dependencies {
                 runtimeOnly(libs.grpc.netty)
             }
+        }
+
+        macosTest {
+            dependsOn(jvmMacOsTest)
         }
     }
 }
@@ -105,6 +115,32 @@ kmpGrpc {
     includeWellKnownTypes = true
 
     protoSourceFolders = project.files("src/commonMain/proto/general", "src/commonMain/proto/unknownfield", "src/commonMain/proto/editions")
+}
+
+buildConfig {
+    packageName("iio.github.timortel.kmpgrpc.internal.test")
+
+    useKotlinOutput {
+        internalVisibility = true
+        topLevelConstants = true
+    }
+
+    forClass("ServerCertificate") {
+        val leafCertificateFile = projectDir.resolve("test-server/src/main/resources/standalone_leaf.pem")
+        val caCertificateFile = projectDir.resolve("test-server/src/main/resources/ca.pem")
+        val clientCertificateFile = projectDir.resolve("test-server/src/main/resources/client.pem")
+        val clientKeyFile = projectDir.resolve("test-server/src/main/resources/client.key")
+
+        val pemProvider = { file: File -> provider {
+            "\"\"\"\n${file.readText()}\"\"\""
+        }}
+
+        buildConfigField("String", "STANDALONE_LEAF_CERTIFICATE", pemProvider(leafCertificateFile))
+        buildConfigField("String", "CA_CERTIFICATE", pemProvider(caCertificateFile))
+        buildConfigField("String", "CLIENT_CERTIFICATE", pemProvider(clientCertificateFile))
+        buildConfigField("String", "CLIENT_KEY", pemProvider(clientKeyFile))
+
+    }
 }
 
 tasks.withType(Test::class) {

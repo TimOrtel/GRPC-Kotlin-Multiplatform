@@ -10,6 +10,7 @@ import io.github.timortel.kmpgrpc.test.NonPackedTypesMessage
 import io.github.timortel.kmpgrpc.test.OneOfMessage
 import io.github.timortel.kmpgrpc.test.RepeatedLongMessage
 import io.github.timortel.kmpgrpc.test.ScalarTypes
+import io.github.timortel.kmpgrpc.test.SimpleMessage
 import io.github.timortel.kmpgrpc.test.Unknownfield
 import io.github.timortel.kmpgrpc.test.longMessage
 import io.github.timortel.kmpgrpc.test.messageWithSubMessage
@@ -127,6 +128,17 @@ class SelfMessageSerializationTest {
 
         val reconstructed = NonPackedTypesMessage.deserialize(msg.serialize())
 
+        assertEquals(msg, reconstructed)
+    }
+
+    @Test
+    fun testUtf8CharacterSerialization() {
+        val text = "ś, ß, \uD83D\uDC4B".repeat(20)
+        val msg = SimpleMessage(field1 = text)
+
+        val reconstructed = SimpleMessage.deserialize(msg.serialize())
+
+        assertEquals(text, reconstructed.field1)
         assertEquals(msg, reconstructed)
     }
 

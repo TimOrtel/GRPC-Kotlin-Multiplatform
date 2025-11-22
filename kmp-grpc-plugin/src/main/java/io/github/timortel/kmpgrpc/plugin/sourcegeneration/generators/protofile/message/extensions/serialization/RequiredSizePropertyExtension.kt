@@ -180,7 +180,7 @@ class RequiredSizePropertyExtension : BaseSerializationExtension() {
 
                         ProtoType.DefType.DeclarationType.ENUM -> {
                             CodeBlock.of(
-                                "%M(%L, %N.%N)",
+                                "%M(%L, this.%N.%N)",
                                 computeEnumSize,
                                 field.number,
                                 field.attributeName,

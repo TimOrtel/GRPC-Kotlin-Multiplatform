@@ -1,6 +1,6 @@
 [![GitHub license](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg?style=flat)](http://www.apache.org/licenses/LICENSE-2.0)
 [![Download](https://img.shields.io/maven-central/v/io.github.timortel/kmp-grpc-core) ](https://central.sonatype.com/artifact/io.github.timortel/kmp-grpc-core)
-![version](https://img.shields.io/badge/version-1.2.0-blue)
+![version](https://img.shields.io/badge/version-1.4.0-blue)
 
 ![badge][badge-android]
 ![badge][badge-jvm]
@@ -159,6 +159,73 @@ The request syntax is very similar to the one provided by gRPC Java. Add this co
      }
 }
 ```
+
+### KeepAlive Configuration
+You can configure keep-alive to maintain active connections and detect broken connections:
+
+```kotlin
+val channel = Channel.Builder()
+    .forAddress(/*...*/)
+    .withKeepAliveConfig(
+        // Exemplary configuration
+        KeepAliveConfig.Enabled(
+            time = 30.seconds,           // Send keepalive ping every 30 seconds
+            timeout = 10.seconds,         // Wait 10 seconds for ping response
+            withoutCalls = true          // Send keepalive even when no RPCs are active
+        )
+    )
+    .build()
+```
+
+The keep-alive configuration has no effect on JS/WasmJs. 
+
+### Trusted Certificates Configuration
+
+By default, on JVM targets the default device certificates are trusted. On Native targets, all certificates from [webpki-roots](https://github.com/rustls/webpki-roots) are trusted.
+Furthermore, you can provide additional certificates that the channel should trust when establishing TLS connections.
+Both CA certificates and leaf/self-signed certificates are accepted:
+
+```kotlin
+val channel = Channel.Builder()
+    .forAddress(/*...*/)
+    .withTrustedCertificates(
+        listOf(
+            Certificate.fromPem(/* PEM string */),
+            Certificate.fromPem(/* another PEM */)
+        )
+    )
+    .build()
+```
+
+If only the certificates added using `withTrustedCertificates` should be trusted, call `trustOnlyProvidedCertificates`:
+```kotlin
+val channel = Channel.Builder()
+    .forAddress(/*...*/)
+    .withTrustedCertificates(/*...*/)
+    .trustOnlyProvidedCertificates()
+    .build()
+```
+
+The trusted certificate configuration has no effect on JS/WasmJs.
+
+### Client Identity Configuration
+
+The `withClientIdentity` function allows the client to present its own certificate and private key during the TLS handshake.
+This identity pair is used by the server to authenticate the client before allowing requests.
+
+You can configure the channel to use a client identity as follows:
+
+```kotlin
+val channel = Channel.Builder()
+    .forAddress(/*...*/)
+    .withClientIdentity(
+        certificate = Certificate.fromPem(/* client certificate PEM */),
+        key = PrivateKey.fromPem(/* private key PEM */)
+    )
+    .build()
+```
+
+The client identity configuration has no effect on JS/WasmJs.
 
 ### Working with well known types
 
@@ -348,6 +415,9 @@ kmpGrpc {
     // Optional: if the protobuf well known types should be included
     // https://protobuf.dev/reference/protobuf/google.protobuf/
     includeWellKnownTypes = true
+    
+    // Optional: if all generated source files should have 'internal' visibility.
+    internalVisibility = true
     
     // Specify the folders where your proto files are located, you can list multiple.
     protoSourceFolders = project.files("<source to your protos>")

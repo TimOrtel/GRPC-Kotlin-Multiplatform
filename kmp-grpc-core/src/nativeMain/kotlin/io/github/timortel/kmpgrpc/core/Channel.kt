@@ -1,9 +1,13 @@
 package io.github.timortel.kmpgrpc.core
 
+import io.github.timortel.kmpgrpc.core.config.KeepAliveConfig
 import io.github.timortel.kmpgrpc.core.internal.CallInterceptorChain
 import io.github.timortel.kmpgrpc.core.internal.EmptyCallInterceptor
 import io.github.timortel.kmpgrpc.native.*
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.cinterop.CPointer
+import kotlinx.cinterop.addressOf
+import kotlinx.cinterop.usePinned
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.newSingleThreadContext
@@ -12,15 +16,19 @@ actual class Channel private constructor(
     internal val name: String,
     internal val port: Int,
     private val usePlaintext: Boolean,
+    private val certificates: List<Certificate>?,
+    private val trustOnlyProvidedCertificates: Boolean,
+    private val identity: ClientIdentity?,
     /**
      * The interceptor associated with this channel, or null.
      */
     internal val interceptor: CallInterceptor,
+    internal val keepAliveConfig: KeepAliveConfig
 ) : NativeJsChannel() {
 
     /*
     grpc.ready().await throws a Segfault when we do not execute all rpcs on the same thread.
-     */
+    */
     @OptIn(DelicateCoroutinesApi::class, ExperimentalCoroutinesApi::class)
     internal val context = newSingleThreadContext("native channel executor - $name:$port")
 
@@ -29,7 +37,57 @@ actual class Channel private constructor(
     init {
         val host = (if (usePlaintext) "http://" else "https://") + "$name:$port"
 
-        channel = channel_create(host, usePlaintext)
+        val enableKeepalive = when (keepAliveConfig) {
+            is KeepAliveConfig.Enabled -> true
+            KeepAliveConfig.Disabled -> false
+        }
+
+        val (keepAliveTime, keepAliveTimeout, keepAliveWithoutCalls) = when (keepAliveConfig) {
+            is KeepAliveConfig.Disabled -> Triple(0.seconds, 0.seconds, false)
+            is KeepAliveConfig.Enabled -> Triple(
+                keepAliveConfig.time,
+                keepAliveConfig.timeout,
+                keepAliveConfig.withoutCalls
+            )
+        }
+
+        val builder = channel_builder_create(
+            host = host,
+            enable_keepalive = enableKeepalive,
+            keepalive_time_nanos = keepAliveTime.inWholeNanoseconds.toULong(),
+            keepalive_timeout_nanos = keepAliveTimeout.inWholeNanoseconds.toULong(),
+            keepalive_without_calls = keepAliveWithoutCalls
+        ) ?: throw IllegalArgumentException("$host is not a valid uri.")
+
+        if (!usePlaintext) {
+            val tlsConfig = tls_config_create()
+            if (certificates != null) {
+                installCertificates(certificates, tlsConfig)
+            }
+
+            if (!trustOnlyProvidedCertificates) {
+                tls_config_use_webpki_roots(tlsConfig)
+            }
+
+            if (identity != null) {
+                identity.key.asPem.encodeToByteArray().toUByteArray().usePinned { key ->
+                    identity.cert.asPem.encodeToByteArray().toUByteArray().usePinned { cert ->
+                        tls_config_use_client_credentials(
+                            config = tlsConfig,
+                            key_data = key.addressOf(0),
+                            key_len = key.get().size.toULong(),
+                            cert_data = cert.addressOf(0),
+                            cert_len = cert.get().size.toULong()
+                        )
+                    }
+                }
+            }
+
+            channel_builder_use_tls_config(builder, tlsConfig)
+        }
+
+        channel = channel_builder_build(builder)
+
         if (channel == null) {
             throw IllegalArgumentException("$host is not a valid uri.")
         }
@@ -38,8 +96,13 @@ actual class Channel private constructor(
     actual class Builder(private val name: String, private val port: Int) {
 
         private var usePlaintext = false
+        private var certificates: List<Certificate>? = null
+        private var trustOnlyProvidedCertificates = false
+        private var identity: ClientIdentity? = null
 
         private var interceptor: CallInterceptor = EmptyCallInterceptor
+
+        private var keepAliveConfig: KeepAliveConfig = KeepAliveConfig.Disabled
 
         actual companion object {
             actual fun forAddress(
@@ -50,6 +113,7 @@ actual class Channel private constructor(
 
         actual fun usePlaintext(): Builder {
             usePlaintext = true
+            certificates = null
             return this
         }
 
@@ -64,7 +128,41 @@ actual class Channel private constructor(
             }
         }
 
-        actual fun build(): Channel = Channel(name, port, usePlaintext, interceptor)
+        actual fun withKeepAliveConfig(config: KeepAliveConfig): Builder = apply {
+            keepAliveConfig = config
+        }
+
+        actual fun withTrustedCertificates(vararg certificates: Certificate): Builder {
+            return withTrustedCertificates(certificates.toList())
+        }
+
+        actual fun withTrustedCertificates(certificates: List<Certificate>): Builder {
+            usePlaintext = false
+            this.certificates = certificates
+            return this
+        }
+
+        actual fun trustOnlyProvidedCertificates(): Builder {
+            trustOnlyProvidedCertificates = true
+            return this
+        }
+
+        actual fun withClientIdentity(certificate: Certificate, key: PrivateKey): Builder = apply {
+            identity = ClientIdentity(key, certificate)
+        }
+
+        actual fun build(): Channel {
+            return Channel(
+                name = name,
+                port = port,
+                usePlaintext = usePlaintext,
+                certificates = certificates,
+                trustOnlyProvidedCertificates = trustOnlyProvidedCertificates,
+                identity = identity,
+                interceptor = interceptor,
+                keepAliveConfig = keepAliveConfig
+            )
+        }
     }
 
     override fun cleanupResources() {
@@ -78,3 +176,28 @@ actual class Channel private constructor(
         }
     }
 }
+
+private fun installCertificates(
+    certificates: List<Certificate>,
+    tlsConfig: CPointer<cnames.structs.RustTlsConfigBuilder>?
+) {
+    certificates
+        .forEach { certificate ->
+            certificate
+                .data
+                .toUByteArray()
+                .usePinned { pinned ->
+                    if (pinned.get().isNotEmpty()) {
+                        val isSuccessful = tls_config_install_certificate(
+                            tlsConfig,
+                            pinned.addressOf(0),
+                            pinned.get().size.toULong()
+                        )
+
+                        if (!isSuccessful) throw IllegalArgumentException("Failed to install certificate. Invalid TLS certificate supplied: $certificate")
+                    }
+                }
+        }
+}
+
+private data class ClientIdentity(val key: PrivateKey, val cert: Certificate)

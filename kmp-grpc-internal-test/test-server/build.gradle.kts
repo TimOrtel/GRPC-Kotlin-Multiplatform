@@ -1,5 +1,6 @@
 import com.google.protobuf.gradle.*
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm")
@@ -25,6 +26,7 @@ dependencies {
         exclude("org.antlr")
     }
 
+    runtimeOnly(libs.slf4j.simple)
 
     implementation(libs.google.protobuf.kotlin)
     implementation(libs.google.protobuf.java.util)
@@ -83,7 +85,7 @@ protobuf {
     }
 }
 
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+tasks.withType<KotlinCompile> {
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_17)
     }
@@ -96,4 +98,8 @@ java {
 
 application {
     mainClass.set("io.github.timortel.kmpgrpc.testserver.MainKt")
+}
+
+tasks.named("run", JavaExec::class) {
+    jvmArgs = listOf("-Dorg.slf4j.simpleLogger.defaultLogLevel=trace")
 }

@@ -23,16 +23,31 @@ abstract class RpcTest : ServerTest {
     protected val channel: Channel
         get() = Channel.Builder
             .forAddress(address, port)
-            .usePlaintext()
+            .apply {
+                buildChannel(this)
+            }
             .build()
 
     protected val stub: TestServiceStub get() = TestServiceStub(channel)
+
+    protected open fun buildChannel(builder: Channel.Builder) {
+        builder.usePlaintext()
+    }
 
     @Test
     fun testEmpty() = runTest {
         val message = emptyMessage { }
         val response = stub
             .emptyRpc(message)
+
+        assertEquals(message, response)
+    }
+
+    @Test
+    fun testUtf8CharacterMessage() = runTest {
+        val message = simpleMessage { field1 = "ś, ß, \uD83D\uDC4B".repeat(20) }
+
+        val response = stub.simpleRpc(message)
 
         assertEquals(message, response)
     }

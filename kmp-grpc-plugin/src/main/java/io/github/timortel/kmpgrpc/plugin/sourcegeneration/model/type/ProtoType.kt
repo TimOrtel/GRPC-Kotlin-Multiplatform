@@ -207,7 +207,7 @@ sealed interface ProtoType {
             return when (val decl = resolveDeclaration()) {
                 is ProtoEnum -> {
                     val defaultField = decl.defaultField
-                    CodeBlock.of("%T.%M", decl.className, defaultField.memberName)
+                    CodeBlock.of("%T.%N", decl.className, defaultField.name)
                 }
 
                 is ProtoMessage -> {
