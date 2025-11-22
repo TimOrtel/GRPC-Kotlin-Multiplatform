@@ -7,6 +7,7 @@ import java.security.KeyFactory
 import java.security.KeyStore
 import java.security.NoSuchAlgorithmException
 import java.security.Security
+import java.security.cert.CertificateException
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
 import java.security.spec.InvalidKeySpecException
@@ -123,7 +124,11 @@ internal fun buildClientIdentityKeyManager(cert: Certificate, key: PrivateKey): 
 }
 
 private fun parseCertificate(certificateFactory: CertificateFactory, cert: Certificate): X509Certificate {
-    return certificateFactory.generateCertificate(
-        ByteArrayInputStream(cert.asPem.toByteArray(Charsets.UTF_8))
-    ) as X509Certificate
+    return try {
+        certificateFactory.generateCertificate(
+            ByteArrayInputStream(cert.asPem.toByteArray(Charsets.UTF_8))
+        ) as X509Certificate
+    } catch (e: CertificateException) {
+        throw IllegalArgumentException("Failed to parse certificate", e)
+    }
 }
