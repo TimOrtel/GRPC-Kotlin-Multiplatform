@@ -21,10 +21,13 @@ internal fun bytesAsPemContent(bytes: ByteArray, container: String): String {
         append(container)
         append("-----\n")
 
-        Base64.encode(bytes).chunked(64).forEach { chunk ->
-            append(chunk)
-            append("\n")
-        }
+        Base64
+            .encode(bytes)
+            .chunkedSequence(64)
+            .forEach { chunk ->
+                append(chunk)
+                append("\n")
+            }
 
         append("-----END ")
         append(container)

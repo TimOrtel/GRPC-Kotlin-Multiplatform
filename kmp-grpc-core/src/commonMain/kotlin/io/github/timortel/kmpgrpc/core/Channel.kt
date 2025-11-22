@@ -71,6 +71,9 @@ expect class Channel {
 
         /**
          * Construct the channel
+         *
+         * @throws IllegalArgumentException if any provided certificate or private key could not
+         * be parsed or installed in the channel.
          */
         fun build(): Channel
     }

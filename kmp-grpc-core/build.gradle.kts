@@ -96,6 +96,10 @@ kotlin {
             dependsOn(commonMain.get())
         }
 
+        val nativeJvmTest by creating {
+            dependsOn(commonTest.get())
+        }
+
         jvmMain {
             dependsOn(androidJvmCommon)
 
@@ -104,12 +108,20 @@ kotlin {
             }
         }
 
+        jvmTest {
+            dependsOn(nativeJvmTest)
+        }
+
         androidMain {
             dependsOn(androidJvmCommon)
         }
 
         nativeMain {
             dependsOn(nativeJsCommon)
+        }
+
+        nativeTest {
+            dependsOn(nativeJvmTest)
         }
 
         val jsTargetCommon by creating {
