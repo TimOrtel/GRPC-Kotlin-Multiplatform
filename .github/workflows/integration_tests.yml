@@ -11,7 +11,7 @@ on:
       - develop
 
 jobs:
-  test-non-apple:
+  test-js:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -47,22 +47,22 @@ jobs:
           echo "Service is healthy!"
 
       - name: Run tests in plugin module
-        run: ./gradlew :kmp-grpc-internal-test:othersTest --info -Pio.github.timortel.kmp-grpc.internal.native.targets=othersTest
+        run: ./gradlew :kmp-grpc-internal-test:jsTest --info -Pio.github.timortel.kmp-grpc.internal.targets=JS
 
       - name: Upload JUnit Test Results
         if: success() || failure()
         uses: actions/upload-artifact@v4
         with:
-          name: Non-Apple Test Results
+          name: JS Test Results
           if-no-files-found: error
-          path: kmp-grpc-internal-test/build/test-results/**/*.xml
+          path: test-outputs/kmp-grpc-internal-test/**/*.xml
 
       - name: Report Test Results
         uses: dorny/test-reporter@v2
         if: success() || failure()
         with:
-          name: Tests
-          path: 'kmp-grpc-internal-test/build/test-results/**/*.xml'
+          name: JS Tests
+          path: 'test-outputs/kmp-grpc-internal-test/**/*.xml'
           reporter: java-junit
 
       - name: Kill test-server
@@ -83,7 +83,119 @@ jobs:
         run: cat server.log
         if: always()
 
-  test-apple:
+  test-jvm:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Start test-server
+        run: |
+          nohup ./gradlew :kmp-grpc-internal-test:test-server:run > server.log 2>&1 &
+          echo $! > gradle_pid.txt
+
+      - name: Wait for test-server to be healthy
+        timeout-minutes: 10
+        run: |
+          docker pull fullstorydev/grpcurl:latest
+          echo "Waiting for service..."
+          while ! docker run --network host fullstorydev/grpcurl -plaintext localhost:17888 io.github.timortel.kmpgrpc.test.TestService/emptyRpc | grep -q "{}"; do
+            sleep 5
+          done
+          echo "Service is healthy!"
+
+      - name: Run tests in plugin module
+        run: ./gradlew :kmp-grpc-internal-test:jvmTest --info -Pio.github.timortel.kmp-grpc.internal.targets=JVM
+
+      - name: Upload JUnit Test Results
+        if: success() || failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: JVM Test Results
+          if-no-files-found: error
+          path: test-outputs/kmp-grpc-internal-test/**/*.xml
+
+      - name: Report Test Results
+        uses: dorny/test-reporter@v2
+        if: success() || failure()
+        with:
+          name: JVM Tests
+          path: 'test-outputs/kmp-grpc-internal-test/**/*.xml'
+          reporter: java-junit
+
+      - name: Kill test-server
+        run: |
+          PID=$(cat gradle_pid.txt)
+          kill $PID
+        if: always()
+
+      - name: Print Server Logs
+        run: cat server.log
+        if: always()
+
+  test-native-non-apple:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Start test-server
+        run: |
+          nohup ./gradlew :kmp-grpc-internal-test:test-server:run > server.log 2>&1 &
+          echo $! > gradle_pid.txt
+
+      - name: Wait for test-server to be healthy
+        timeout-minutes: 10
+        run: |
+          docker pull fullstorydev/grpcurl:latest
+          echo "Waiting for service..."
+          while ! docker run --network host fullstorydev/grpcurl -plaintext localhost:17888 io.github.timortel.kmpgrpc.test.TestService/emptyRpc | grep -q "{}"; do
+            sleep 5
+          done
+          echo "Service is healthy!"
+
+      - name: Run tests in plugin module
+        run: ./gradlew :kmp-grpc-internal-test:othersTest --info -Pio.github.timortel.kmp-grpc.internal.targets=NATIVE_OTHERS_TESTABLE
+
+      - name: Upload JUnit Test Results
+        if: success() || failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Non-Apple Test Results
+          if-no-files-found: error
+          path: test-outputs/kmp-grpc-internal-test/**/*.xml
+
+      - name: Report Test Results
+        uses: dorny/test-reporter@v2
+        if: success() || failure()
+        with:
+          name: Tests
+          path: 'test-outputs/kmp-grpc-internal-test/**/*.xml'
+          reporter: java-junit
+
+      - name: Kill test-server
+        run: |
+          PID=$(cat gradle_pid.txt)
+          kill $PID
+        if: always()
+
+      - name: Print Server Logs
+        run: cat server.log
+        if: always()
+
+  test-native-apple:
     runs-on: macos-latest
     steps:
       - name: Checkout repository
@@ -113,7 +225,7 @@ jobs:
           echo "Service is healthy!"
 
       - name: Run tests in plugin module
-        run: ./gradlew :kmp-grpc-internal-test:appleTest --info -Pio.github.timortel.kmp-grpc.internal.native.targets=appleTest
+        run: ./gradlew :kmp-grpc-internal-test:appleTest --info -Pio.github.timortel.kmp-grpc.internal.targets=NATIVE_APPLE
 
       - name: Upload JUnit Test Results
         if: success() || failure()
@@ -121,14 +233,14 @@ jobs:
         with:
           name: Apple Test Results
           if-no-files-found: error
-          path: kmp-grpc-internal-test/build/test-results/**/*.xml
+          path: test-outputs/kmp-grpc-internal-test/**/*.xml
 
       - name: Report Test Results
         uses: dorny/test-reporter@v2
         if: always()
         with:
           name: Tests
-          path: 'kmp-grpc-internal-test/build/test-results/**/*.xml'
+          path: 'test-outputs/kmp-grpc-internal-test/**/*.xml'
           reporter: java-junit
 
       - name: Kill test-server

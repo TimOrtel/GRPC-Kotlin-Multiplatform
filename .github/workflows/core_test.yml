@@ -24,7 +24,7 @@ jobs:
           java-version: '17'
 
       - name: Run tests in plugin module
-        run: ./gradlew :kmp-grpc-core:appleTest -Pio.github.timortel.kmp-grpc.internal.native.targets=appleTest
+        run: ./gradlew :kmp-grpc-core:appleTest -Pio.github.timortel.kmp-grpc.internal.native.targets=NATIVE_APPLE
 
   test-others:
     runs-on: ubuntu-latest
@@ -39,4 +39,4 @@ jobs:
           java-version: '17'
 
       - name: Run tests in plugin module
-        run: ./gradlew :kmp-grpc-core:othersTest -Pio.github.timortel.kmp-grpc.internal.native.targets=othersTest
+        run: ./gradlew :kmp-grpc-core:othersTest -Pio.github.timortel.kmp-grpc.internal.native.targets=NON_APPLE_TESTABLE
