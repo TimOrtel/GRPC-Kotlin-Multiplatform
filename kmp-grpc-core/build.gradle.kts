@@ -3,6 +3,7 @@
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import org.jetbrains.kotlin.gradle.tasks.CInteropProcess
+import java.util.Base64
 
 plugins {
     id("com.android.library")
@@ -237,10 +238,11 @@ val compileNativeCodeTask = tasks.register("compileNativeCode", Exec::class.java
     workingDir = project.layout.projectDirectory.dir("../kmp-grpc-native/").asFile
 
     val profile = if (buildAsRelease) "release" else "dev"
-    val targetGroup = when (project.getTargetGroup()) {
+    val targetGroup = when (val targetGroup = project.getTargetGroup()) {
         TargetGroup.ALL -> "all"
-        TargetGroup.APPLE_TEST -> "apple_test"
-        TargetGroup.OTHERS_TEST -> "other_test"
+        TargetGroup.NATIVE_APPLE -> "apple_test"
+        TargetGroup.NATIVE_OTHERS_TESTABLE -> "other_test"
+        else -> throw IllegalStateException("target group $targetGroup does not include any native targets")
     }
 
     commandLine = listOf("./compile.sh", profile, targetGroup)
@@ -348,6 +350,15 @@ tasks.withType<org.gradle.jvm.tasks.Jar>().configureEach {
 
 if (buildAsRelease) {
     signing {
+        val signingKey = findProperty("signingKey") as? String?
+        val signingPassword = findProperty("signingPassword") as? String?
+
+        if (signingKey != null && signingPassword != null) {
+            val key = Base64.getDecoder().decode(signingKey).toString(Charsets.UTF_8)
+
+            useInMemoryPgpKeys(key, signingPassword)
+        }
+
         sign(publishing.publications)
     }
 }

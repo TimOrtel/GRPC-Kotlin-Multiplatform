@@ -18,5 +18,11 @@ for target in "${targets[@]}"; do
   out_dir="target/${target}"
   mkdir -p "$out_dir"
   echo "Generating license file for target: $target"
-  cargo about generate about.hbs --target "${target}" > "${out_dir}/THIRD_PARTY_LICENSES.html"
+  output=$(cargo about generate about.hbs --target "${target}" 2>&1 > "${out_dir}/THIRD_PARTY_LICENSES.html")
+
+  if echo "$output" | grep -q "WARN" ; then
+    echo "Error: cargo-about emitted warnings:"
+    echo "$output"
+    exit 1
+  fi
 done
