@@ -3,6 +3,8 @@ name = "kmp-grpc-native"
 version = "0.1.0"
 edition = "2024"
 
+license = "Apache-2.0"
+
 [dependencies]
 tonic = { version = "0.14.2", features = ["channel", "tls-ring", "tls-webpki-roots"] }
 tokio = { version = "1.47.1", features = ["rt-multi-thread"] }

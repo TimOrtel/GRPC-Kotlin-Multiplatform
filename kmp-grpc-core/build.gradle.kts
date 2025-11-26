@@ -3,6 +3,7 @@
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import org.jetbrains.kotlin.gradle.tasks.CInteropProcess
+import java.util.Base64
 
 plugins {
     id("com.android.library")
@@ -349,6 +350,15 @@ tasks.withType<org.gradle.jvm.tasks.Jar>().configureEach {
 
 if (buildAsRelease) {
     signing {
+        val signingKey = findProperty("signingKey") as? String?
+        val signingPassword = findProperty("signingPassword") as? String?
+
+        if (signingKey != null && signingPassword != null) {
+            val key = Base64.getDecoder().decode(signingKey).toString(Charsets.UTF_8)
+
+            useInMemoryPgpKeys(key, signingPassword)
+        }
+
         sign(publishing.publications)
     }
 }
