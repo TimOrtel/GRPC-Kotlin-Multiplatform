@@ -1,6 +1,7 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option
 
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoFieldPresence
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoRepeatedFieldEncoding
 
 object Options {
 
@@ -60,6 +61,12 @@ object Options {
             parse = { value -> ProtoFieldPresence.entries.firstOrNull { it.name == value } },
             edition2023Config = LangConfig.Available(defaultValue = ProtoFieldPresence.EXPLICIT)
         )
+
+        val repeatedFieldEncoding = FeatureProtoOption(
+            name = "repeated_field_encoding",
+            parse = { value -> ProtoRepeatedFieldEncoding.entries.firstOrNull { it.name == value } },
+            edition2023Config = LangConfig.Available(defaultValue = ProtoRepeatedFieldEncoding.PACKED)
+        )
     }
 
     val options = listOf(
@@ -69,7 +76,8 @@ object Options {
         Basic.allowAlias,
         Basic.deprecated,
         Basic.packed,
-        Feature.fieldPresence
+        Feature.fieldPresence,
+        Feature.repeatedFieldEncoding
     )
 
     /**

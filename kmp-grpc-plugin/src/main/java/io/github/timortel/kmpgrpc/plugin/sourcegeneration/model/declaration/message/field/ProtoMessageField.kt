@@ -117,7 +117,13 @@ class ProtoMessageField(
      * True iff [cardinality] is [ProtoFieldCardinality.Repeated], the [type] is packable and the proto option packed is not set to false
      */
     override val isPacked: Boolean
-        get() = cardinality == ProtoFieldCardinality.Repeated && type.isPackable && Options.Basic.packed.get(this)
+        get() = cardinality == ProtoFieldCardinality.Repeated && type.isPackable && when (file.languageVersion) {
+            ProtoLanguageVersion.PROTO3 -> Options.Basic.packed.get(this)
+            ProtoLanguageVersion.EDITION2023 -> when (Options.Feature.repeatedFieldEncoding.get(this)) {
+                ProtoRepeatedFieldEncoding.PACKED -> true
+                ProtoRepeatedFieldEncoding.EXPANDED -> false
+            }
+        }
 
     val memberName: MemberName
         get() {

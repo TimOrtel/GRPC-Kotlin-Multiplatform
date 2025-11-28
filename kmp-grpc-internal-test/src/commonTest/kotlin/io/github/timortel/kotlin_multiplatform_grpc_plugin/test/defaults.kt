@@ -156,3 +156,35 @@ fun createNonPackedTypesMessage(): NonPackedTypesMessage = NonPackedTypesMessage
     field12List = field12,
     field13List = field13,
 )
+
+fun createEditionsPackedTypesMessage(): EditionsPackedTypesMessage = EditionsPackedTypesMessage(
+    field1List = field1,
+    field2List = field2,
+    field3List = field3,
+    field4List = field4,
+    field5List = field5,
+    field6List = field6,
+    field7List = field7,
+    field8List = field8,
+    field9List = field9,
+    field10List = field10,
+    field11List = field11,
+    field12List = field12,
+    field13List = field13,
+)
+
+fun createEditionsNonPackedTypesMessage(): EditionsNonPackedTypesMessage = EditionsNonPackedTypesMessage(
+    field1List = field1,
+    field2List = field2,
+    field3List = field3,
+    field4List = field4,
+    field5List = field5,
+    field6List = field6,
+    field7List = field7,
+    field8List = field8,
+    field9List = field9,
+    field10List = field10,
+    field11List = field11,
+    field12List = field12,
+    field13List = field13,
+)

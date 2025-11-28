@@ -71,9 +71,14 @@ Please note that not all features may be available even if the protobuf version 
 | `optimize_for`         | ❌      | ❌            |
 
 ### Features
-| Feature          | Edition 2023 |
-|------------------|--------------|
-| `field_presence` | ✅            | 
+| Feature                   | Edition 2023 |
+|---------------------------|--------------|
+| `field_presence`          | ✅            | 
+| `repeated_field_encoding` | ✅            | 
+| `enum_type`               | ❌            | 
+| `json_format`             | ❌            | 
+| `message_encoding`        | ❌            | 
+| `utf8_validation`         | ❌            | 
 
 
 
