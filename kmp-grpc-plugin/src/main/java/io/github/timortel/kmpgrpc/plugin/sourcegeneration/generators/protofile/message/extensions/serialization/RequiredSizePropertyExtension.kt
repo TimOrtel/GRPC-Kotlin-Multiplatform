@@ -38,12 +38,12 @@ class RequiredSizePropertyExtension : BaseSerializationExtension() {
 
                 val fieldsCodeBlock = message.fields.joinToCodeBlock(separator) { field ->
                     when {
-                        field.cardinality == ProtoFieldCardinality.Optional || (field.type.isMessage && field.cardinality != ProtoFieldCardinality.Repeated) -> {
+                        field.cardinality == ProtoFieldCardinality.Explicit || (field.type.isMessage && field.cardinality != ProtoFieldCardinality.Repeated) -> {
                             add("if·(%N)·{·", field.isSetProperty.attributeName)
                             add(
                                 getCodeForRequiredSizeForScalarAttributeC(
                                     field,
-                                    field.cardinality == ProtoFieldCardinality.Optional
+                                    field.cardinality == ProtoFieldCardinality.Explicit
                                 )
                             )
                             add("}·else·{·0·}")

@@ -10,7 +10,7 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.mess
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoMapField
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoMessageField
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.Option
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.OptionTarget
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.decapitalize
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.toFilePositionString
@@ -56,7 +56,7 @@ data class ProtoMessage(
     val isEmpty: Boolean =
         fields.isEmpty() && mapFields.isEmpty() && oneOfs.isEmpty()
 
-    override val supportedOptions: List<Option<*>> = emptyList()
+    override val optionTarget: OptionTarget = OptionTarget.MESSAGE
 
     override val parentOptionsHolder: ProtoOptionsHolder
         get() = when (val p = parent) {

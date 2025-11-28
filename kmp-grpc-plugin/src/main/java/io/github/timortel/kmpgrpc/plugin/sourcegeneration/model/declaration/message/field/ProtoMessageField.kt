@@ -1,31 +1,26 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field
 
-import com.squareup.kotlinpoet.BOOLEAN
-import com.squareup.kotlinpoet.CodeBlock
-import com.squareup.kotlinpoet.LIST
-import com.squareup.kotlinpoet.MemberName
+import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.MemberName.Companion.member
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
-import com.squareup.kotlinpoet.TypeName
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.CompilationException
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.Const
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.DeclarationResolver
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.Options
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoExtensionDefinition
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOption
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOptionsHolder
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoChildProperty
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoChildPropertyNameResolver
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoMessage
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.ProtoMessageProperty
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.Option
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.Options
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType.MessageDefaultValue
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.capitalize
 import org.antlr.v4.runtime.ParserRuleContext
 
-data class ProtoMessageField(
+class ProtoMessageField(
     override val type: ProtoType,
     override val name: String,
     override val number: Int,
@@ -64,7 +59,7 @@ data class ProtoMessageField(
         }
 
     override val desiredAttributeName: String = when (cardinality) {
-        ProtoFieldCardinality.Implicit, ProtoFieldCardinality.Optional -> name
+        ProtoFieldCardinality.Implicit, ProtoFieldCardinality.Explicit -> name
         ProtoFieldCardinality.Repeated -> "${name}List"
     }
 
@@ -82,7 +77,7 @@ data class ProtoMessageField(
     // See https://protobuf.dev/programming-guides/field_presence/#presence-in-proto3-apis
     // The "isSet" method is added for optional fields and message types.
     val needsIsSetProperty: Boolean
-        get() = cardinality is ProtoFieldCardinality.Optional || (type is ProtoType.DefType && type.isMessage)
+        get() = cardinality is ProtoFieldCardinality.Explicit || (type is ProtoType.DefType && type.isMessage)
 
     val isSetProperty: ExtraProperty
         get() = ExtraProperty(
@@ -95,14 +90,11 @@ data class ProtoMessageField(
     val childProperties: List<ProtoChildProperty>
         get() = if (needsIsSetProperty) listOf(isSetProperty) else emptyList()
 
-    override val supportedOptions: List<Option<*>>
-        get() = super.supportedOptions + listOf(Options.packed)
-
     /**
      * True iff [cardinality] is [ProtoFieldCardinality.Repeated], the [type] is packable and the proto option packed is not set to false
      */
     override val isPacked: Boolean
-        get() = cardinality == ProtoFieldCardinality.Repeated && type.isPackable && Options.packed.get(this)
+        get() = cardinality == ProtoFieldCardinality.Repeated && type.isPackable && Options.Basic.packed.get(this)
 
     val memberName: MemberName
         get() {
@@ -120,14 +112,14 @@ data class ProtoMessageField(
 
     fun defaultValue(messageDefaultValue: MessageDefaultValue = MessageDefaultValue.NULL): CodeBlock {
         return when (cardinality) {
-            ProtoFieldCardinality.Implicit, ProtoFieldCardinality.Optional -> type.defaultValue(messageDefaultValue)
+            ProtoFieldCardinality.Implicit, ProtoFieldCardinality.Explicit -> type.defaultValue(messageDefaultValue)
             ProtoFieldCardinality.Repeated -> CodeBlock.of("emptyList()")
         }
     }
 
     override fun isSupportedOptionValid(option: ProtoOption): Boolean {
         return when (option.name) {
-            Options.packed.name -> {
+            Options.Basic.packed.name -> {
                 // packed option is only valid on repeated fields that have a packable type
                 cardinality == ProtoFieldCardinality.Repeated && type.isPackable
             }

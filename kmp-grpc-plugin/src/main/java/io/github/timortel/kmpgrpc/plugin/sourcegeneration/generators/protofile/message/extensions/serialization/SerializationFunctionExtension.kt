@@ -48,7 +48,7 @@ class SerializationFunctionExtension : BaseSerializationExtension() {
         builder.apply {
             message.fields.forEach { field ->
                 when {
-                    field.cardinality == ProtoFieldCardinality.Optional || (field.type.isMessage && field.cardinality != ProtoFieldCardinality.Repeated) -> {
+                    field.cardinality == ProtoFieldCardinality.Explicit || (field.type.isMessage && field.cardinality != ProtoFieldCardinality.Repeated) -> {
                         addCode(
                             getWriteScalarFieldCode(
                                 field = field,

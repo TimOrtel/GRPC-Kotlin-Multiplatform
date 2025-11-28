@@ -1,12 +1,12 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file
 
 import com.squareup.kotlinpoet.ClassName
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.*
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.CompilationException
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.*
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoDeclaration
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoEnum
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoMessage
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.Option
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.OptionTarget
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.Options
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.service.ProtoService
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.structure.ProtoFolder
@@ -63,18 +63,17 @@ data class ProtoFile(
 
     val javaPackage: String
         get() {
-            return Options.javaPackage.get(this) ?: `package`.orEmpty()
+            return Options.Basic.javaPackage.get(this) ?: `package`.orEmpty()
         }
 
     val javaFileName: String
         get() {
-            return Options.javaOuterClassName.get(this) ?: fileNameWithoutExtension.snakeCaseToCamelCase()
+            return Options.Basic.javaOuterClassName.get(this) ?: fileNameWithoutExtension.snakeCaseToCamelCase()
         }
 
     val className: ClassName get() = ClassName(javaPackage, javaFileName)
 
-    override val supportedOptions: List<Option<*>> =
-        listOf(Options.javaMultipleFiles, Options.javaPackage, Options.javaOuterClassName)
+    override val optionTarget: OptionTarget = OptionTarget.FILE
 
     override val parentOptionsHolder: ProtoOptionsHolder? = null
 

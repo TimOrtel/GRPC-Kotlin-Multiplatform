@@ -11,21 +11,28 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.Options.L
 class FeatureProtoOption<T>(
     name: String,
     parse: (String) -> T?,
-    languageConfigurationMap: Map<ProtoLanguageVersion, LangConfig<T>>
-) : Option<T>(name, parse, languageConfigurationMap) {
+    languageConfigurationMap: Map<ProtoLanguageVersion, LangConfig<T>>,
+    targets: List<OptionTarget>
+) : Option<T>(
+    name = "features.$name",
+    parse = parse,
+    languageConfigurationMap = languageConfigurationMap,
+    targets = targets
+) {
 
     constructor(
         name: String,
         parse: (String) -> T?,
-        proto3Config: LangConfig<T>,
-        edition2023Config: LangConfig<T>
+        edition2023Config: LangConfig<T>,
+        targets: List<OptionTarget> = OptionTarget.entries
     ) : this(
         name = name,
         parse = parse,
         languageConfigurationMap = mapOf(
-            ProtoLanguageVersion.PROTO3 to proto3Config,
+            ProtoLanguageVersion.PROTO3 to LangConfig.Unavailable(),
             ProtoLanguageVersion.EDITION2023 to edition2023Config
-        )
+        ),
+        targets = targets
     )
 
     override fun get(optionsHolder: ProtoOptionsHolder): T {

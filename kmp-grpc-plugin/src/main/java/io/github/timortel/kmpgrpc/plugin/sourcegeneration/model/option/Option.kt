@@ -10,7 +10,8 @@ import org.antlr.v4.runtime.ParserRuleContext
 abstract class Option<T>(
     val name: String,
     val parse: (String) -> T?,
-    val languageConfigurationMap: Map<ProtoLanguageVersion, LangConfig<T>>
+    val languageConfigurationMap: Map<ProtoLanguageVersion, LangConfig<T>>,
+    val targets: List<OptionTarget>
 ) {
 
     init {

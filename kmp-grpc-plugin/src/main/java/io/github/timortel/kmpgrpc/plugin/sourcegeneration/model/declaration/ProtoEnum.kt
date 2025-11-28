@@ -2,11 +2,14 @@ package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration
 
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.CompilationException
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.Warnings
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.*
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.BaseDeclarationResolver
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoDeclParent
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOption
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOptionsHolder
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.enumeration.ProtoEnumField
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.ProtoReservation
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.Option
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.OptionTarget
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.Options
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.toFilePositionString
@@ -45,7 +48,7 @@ data class ProtoEnum(
     override val heldFields: List<ProtoField> =
         fields
 
-    override val supportedOptions: List<Option<*>> = listOf(Options.allowAlias)
+    override val optionTarget: OptionTarget = OptionTarget.ENUM
 
     override val parentOptionsHolder: ProtoOptionsHolder
         get() = when (val p = parent) {
@@ -73,7 +76,7 @@ data class ProtoEnum(
             ctx = ctx
         )
 
-        val allowAlias = Options.allowAlias.get(this)
+        val allowAlias = Options.Basic.allowAlias.get(this)
         fields
             .groupBy { it.number }
             .filter { it.value.size > 1 }

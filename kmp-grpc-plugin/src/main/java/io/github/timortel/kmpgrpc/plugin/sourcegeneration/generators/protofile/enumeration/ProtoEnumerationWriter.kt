@@ -56,7 +56,7 @@ abstract class ProtoEnumerationWriter(val isActual: Boolean) {
                                     addSuperclassConstructorParameter("%L", enumField.number)
                                 }
 
-                                if (Options.deprecated.get(enumField)) {
+                                if (Options.Basic.deprecated.get(enumField)) {
                                     addAnnotation(DefaultAnnotations.Deprecated)
                                 }
                             }

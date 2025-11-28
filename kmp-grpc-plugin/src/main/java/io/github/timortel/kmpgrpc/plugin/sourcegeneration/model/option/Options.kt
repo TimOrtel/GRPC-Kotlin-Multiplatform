@@ -1,47 +1,74 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option
 
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoFieldPresence
+
 object Options {
 
-    val javaMultipleFiles = SimpleProtoOption(
-        name = "java_multiple_files",
-        parse = String::toBooleanStrictOrNull,
-        proto3Config = LangConfig.Available(defaultValue = false),
-        edition2023Config = LangConfig.Available(defaultValue = false)
-    )
+    object Basic {
+        val javaMultipleFiles = SimpleProtoOption(
+            name = "java_multiple_files",
+            parse = String::toBooleanStrictOrNull,
+            targets = listOf(OptionTarget.FILE),
+            proto3Config = LangConfig.Available(defaultValue = false),
+            edition2023Config = LangConfig.Available(defaultValue = false)
+        )
 
-    val javaPackage = SimpleProtoOption(
-        name = "java_package",
-        parse = { it },
-        proto3Config = LangConfig.Available(defaultValue = null),
-        edition2023Config = LangConfig.Available(defaultValue = null)
-    )
+        val javaPackage = SimpleProtoOption(
+            name = "java_package",
+            parse = { it },
+            targets = listOf(OptionTarget.FILE),
+            proto3Config = LangConfig.Available(defaultValue = null),
+            edition2023Config = LangConfig.Available(defaultValue = null)
+        )
 
-    val javaOuterClassName = SimpleProtoOption(
-        name = "java_outer_classname",
-        parse = { it },
-        proto3Config = LangConfig.Available(defaultValue = null),
-        edition2023Config = LangConfig.Available(defaultValue = null)
-    )
+        val javaOuterClassName = SimpleProtoOption(
+            name = "java_outer_classname",
+            parse = { it },
+            targets = listOf(OptionTarget.FILE),
+            proto3Config = LangConfig.Available(defaultValue = null),
+            edition2023Config = LangConfig.Available(defaultValue = null)
+        )
 
-    val allowAlias = SimpleProtoOption(
-        name = "allow_alias",
-        parse = String::toBooleanStrictOrNull,
-        proto3Config = LangConfig.Available(defaultValue = false),
-        edition2023Config = LangConfig.Available(defaultValue = false)
-    )
+        val allowAlias = SimpleProtoOption(
+            name = "allow_alias",
+            parse = String::toBooleanStrictOrNull,
+            targets = listOf(OptionTarget.ENUM),
+            proto3Config = LangConfig.Available(defaultValue = false),
+            edition2023Config = LangConfig.Available(defaultValue = false)
+        )
 
-    val deprecated = SimpleProtoOption(
-        name = "deprecated",
-        parse = String::toBooleanStrictOrNull,
-        proto3Config = LangConfig.Available(defaultValue = false),
-        edition2023Config = LangConfig.Available(defaultValue = false)
-    )
+        val deprecated = SimpleProtoOption(
+            name = "deprecated",
+            parse = String::toBooleanStrictOrNull,
+            targets = listOf(OptionTarget.FIELD),
+            proto3Config = LangConfig.Available(defaultValue = false),
+            edition2023Config = LangConfig.Available(defaultValue = false)
+        )
 
-    val packed = SimpleProtoOption(
-        name = "packed",
-        parse = String::toBooleanStrictOrNull,
-        proto3Config = LangConfig.Available(defaultValue = true),
-        edition2023Config = LangConfig.Available(defaultValue = true, isLocked = true)
+        val packed = SimpleProtoOption(
+            name = "packed",
+            parse = String::toBooleanStrictOrNull,
+            targets = listOf(OptionTarget.FIELD),
+            proto3Config = LangConfig.Available(defaultValue = true),
+            edition2023Config = LangConfig.Available(defaultValue = true, isLocked = true)
+        )
+    }
+
+    object Feature {
+        val fieldPresence = FeatureProtoOption(
+            name = "field_presence",
+            parse = { value -> ProtoFieldPresence.entries.firstOrNull { it.name == value } },
+            edition2023Config = LangConfig.Available(defaultValue = ProtoFieldPresence.EXPLICIT)
+        )
+    }
+
+    val options = listOf(
+        Basic.javaMultipleFiles,
+        Basic.javaPackage,
+        Basic.javaOuterClassName,
+        Basic.allowAlias,
+        Basic.deprecated,
+        Basic.packed
     )
 
     /**

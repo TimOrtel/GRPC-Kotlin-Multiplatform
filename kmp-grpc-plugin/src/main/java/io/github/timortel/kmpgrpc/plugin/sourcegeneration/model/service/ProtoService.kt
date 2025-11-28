@@ -5,7 +5,7 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOption
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOptionsHolder
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoBaseDeclaration
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.Option
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.OptionTarget
 import org.antlr.v4.runtime.ParserRuleContext
 
 data class ProtoService(
@@ -23,7 +23,7 @@ data class ProtoService(
         rpcs.forEach { it.service = this }
     }
 
-    override val supportedOptions: List<Option<*>> = emptyList()
+    override val optionTarget: OptionTarget = OptionTarget.SERVICE
 
     override val parentOptionsHolder: ProtoOptionsHolder
         get() = file

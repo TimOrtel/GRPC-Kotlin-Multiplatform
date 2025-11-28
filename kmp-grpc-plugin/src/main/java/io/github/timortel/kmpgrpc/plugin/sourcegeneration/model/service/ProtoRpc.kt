@@ -3,7 +3,7 @@ package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.service
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOption
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOptionsHolder
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.Option
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.OptionTarget
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.capitalize
 
@@ -21,7 +21,7 @@ data class ProtoRpc(
 
     val jvmMethodDescriptorName: String = "methodDescriptor${name.capitalize()}"
 
-    override val supportedOptions: List<Option<*>> = emptyList()
+    override val optionTarget: OptionTarget = OptionTarget.METHOD
 
     override val parentOptionsHolder: ProtoOptionsHolder
         get() = service

@@ -8,7 +8,7 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.mess
 interface BaseProtoFieldWriter {
 
     fun PropertySpec.Builder.applyDeprecatedOption(field: ProtoBaseField) {
-        if (Options.deprecated.get(field)) {
+        if (Options.Basic.deprecated.get(field)) {
             addAnnotation(DefaultAnnotations.Deprecated)
         }
     }

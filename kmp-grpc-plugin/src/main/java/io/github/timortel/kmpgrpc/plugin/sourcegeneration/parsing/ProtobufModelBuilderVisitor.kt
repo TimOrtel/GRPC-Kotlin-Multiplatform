@@ -346,7 +346,7 @@ class ProtobufModelBuilderVisitor(
         val label = ctx.fieldLabel()
 
         val fieldCardinality = when {
-            label?.OPTIONAL() != null -> ProtoFieldCardinality.Optional
+            label?.OPTIONAL() != null -> ProtoFieldCardinality.Explicit
             label?.REPEATED() != null -> ProtoFieldCardinality.Repeated
             else -> ProtoFieldCardinality.Implicit
         }

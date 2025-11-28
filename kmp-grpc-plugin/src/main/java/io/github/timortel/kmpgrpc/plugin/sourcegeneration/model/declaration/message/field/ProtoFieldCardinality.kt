@@ -3,7 +3,7 @@ package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.mes
 sealed interface ProtoFieldCardinality {
     sealed interface Singular : ProtoFieldCardinality
 
-    data object Optional : ProtoFieldCardinality, Singular
+    data object Explicit : ProtoFieldCardinality, Singular
     data object Implicit : ProtoFieldCardinality, Singular
     data object Repeated : ProtoFieldCardinality
 }

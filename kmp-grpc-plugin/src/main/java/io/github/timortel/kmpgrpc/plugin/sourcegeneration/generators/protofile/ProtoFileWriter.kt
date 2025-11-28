@@ -17,7 +17,7 @@ abstract class ProtoFileWriter(val isActual: Boolean) {
     abstract val protoEnumWriter: ProtoEnumerationWriter
 
     fun generateFiles(file: ProtoFile): List<FileSpec> {
-        val files = if (Options.javaMultipleFiles.get(file)) {
+        val files = if (Options.Basic.javaMultipleFiles.get(file)) {
             val baseFile: List<FileSpec> = if (file.extensionDefinitions.isNotEmpty()) {
                 val file = buildKotlinFileAndClassForProtoFile(file) {}
 

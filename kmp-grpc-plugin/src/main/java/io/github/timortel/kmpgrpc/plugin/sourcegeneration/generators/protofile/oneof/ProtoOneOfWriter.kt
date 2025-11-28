@@ -46,7 +46,7 @@ abstract class ProtoOneOfWriter(private val isActual: Boolean) {
                                         addSuperinterface(protoOneOf.sealedClassName)
                                     }
 
-                                    if (Options.deprecated.get(field)) {
+                                    if (Options.Basic.deprecated.get(field)) {
                                         addAnnotation(DefaultAnnotations.Deprecated)
                                     }
 

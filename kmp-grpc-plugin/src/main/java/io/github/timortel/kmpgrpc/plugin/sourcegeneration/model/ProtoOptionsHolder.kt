@@ -3,7 +3,7 @@ package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.CompilationException
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.Warnings
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.Option
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.OptionTarget
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.Options
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.toFilePositionString
 
@@ -14,12 +14,12 @@ interface ProtoOptionsHolder : ProtoNode {
 
     val parentOptionsHolder: ProtoOptionsHolder?
 
-    val supportedOptions: List<Option<*>>
+    val optionTarget: OptionTarget
 
     override fun validate() {
         options.forEach { option ->
-            val relatedOption = supportedOptions.firstOrNull { it.name == option.name }
-            val isSupportedOnHolder = relatedOption != null
+            val relatedOption = Options.options.firstOrNull { it.name == option.name }
+            val isSupportedOnHolder = optionTarget in relatedOption?.targets.orEmpty()
             val isIgnored = option.name in Options.ignoredOptions
 
             val languageConfiguration = relatedOption?.languageConfigurationMap?.get(file.languageVersion)
