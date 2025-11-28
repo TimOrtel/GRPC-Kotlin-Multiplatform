@@ -6,7 +6,7 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.Const
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.EnumCompanion
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.kmEnum
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.DefaultAnnotations
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.Options
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.Options
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoEnum
 
 abstract class ProtoEnumerationWriter(val isActual: Boolean) {

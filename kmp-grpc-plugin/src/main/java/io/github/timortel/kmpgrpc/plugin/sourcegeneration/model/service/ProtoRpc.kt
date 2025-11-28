@@ -1,12 +1,11 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.service
 
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.Options
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.capitalize
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.decapitalize
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOption
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOptionsHolder
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.Option
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.capitalize
 
 data class ProtoRpc(
     val name: String,
@@ -21,9 +20,11 @@ data class ProtoRpc(
     override val file: ProtoFile get() = service.file
 
     val jvmMethodDescriptorName: String = "methodDescriptor${name.capitalize()}"
-    val jsMethodDescriptorName: String = "${name.decapitalize()}MethodDescriptor"
 
-    override val supportedOptions: List<Options.Option<*>> = emptyList()
+    override val supportedOptions: List<Option<*>> = emptyList()
+
+    override val parentOptionsHolder: ProtoOptionsHolder
+        get() = service
 
     val methodType: MethodType = when {
         isSendingStream && isReceivingStream -> MethodType.BIDI_STREAMING

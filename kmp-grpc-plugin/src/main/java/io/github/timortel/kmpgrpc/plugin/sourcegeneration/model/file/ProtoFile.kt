@@ -6,6 +6,8 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.CompilationException
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoDeclaration
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoEnum
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoMessage
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.Option
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.Options
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.service.ProtoService
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.structure.ProtoFolder
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.structure.ProtoPackage
@@ -16,6 +18,7 @@ data class ProtoFile(
     val `package`: String?,
     val fileName: String,
     val fileNameWithoutExtension: String,
+    val languageVersion: ProtoLanguageVersion,
     override val messages: List<ProtoMessage>,
     val enums: List<ProtoEnum>,
     val services: List<ProtoService>,
@@ -70,8 +73,10 @@ data class ProtoFile(
 
     val className: ClassName get() = ClassName(javaPackage, javaFileName)
 
-    override val supportedOptions: List<Options.Option<*>> =
+    override val supportedOptions: List<Option<*>> =
         listOf(Options.javaMultipleFiles, Options.javaPackage, Options.javaOuterClassName)
+
+    override val parentOptionsHolder: ProtoOptionsHolder? = null
 
     init {
         val parent = ProtoDeclParent.File(this)

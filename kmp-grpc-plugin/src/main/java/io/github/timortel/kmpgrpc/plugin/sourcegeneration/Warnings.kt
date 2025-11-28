@@ -6,6 +6,8 @@ object Warnings {
 
     val unsupportedOptionUsed = Warning("Unsupported option set")
 
+    val unsupportedOptionValueUsed = Warning("Locked option value overwritten")
+
     class Warning(prefix: String) {
         private val prefix: String = "Warning: $prefix"
 

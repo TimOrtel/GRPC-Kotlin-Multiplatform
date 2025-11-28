@@ -10,15 +10,17 @@ import com.squareup.kotlinpoet.TypeName
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.CompilationException
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.Const
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.DeclarationResolver
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.Options
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.Options
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoExtensionDefinition
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOption
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOptionsHolder
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoChildProperty
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoChildPropertyNameResolver
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoMessage
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.ProtoMessageProperty
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.Option
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType.MessageDefaultValue
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.capitalize
 import org.antlr.v4.runtime.ParserRuleContext
@@ -33,6 +35,15 @@ data class ProtoMessageField(
 ) : ProtoRegularField(), ProtoMessageProperty {
 
     lateinit var parent: Parent
+
+    override val parentOptionsHolder: ProtoOptionsHolder?
+        get() = when (val p = parent) {
+            is Parent.ExtensionDefinition -> when (val p2 = p.ext.parent) {
+                is ProtoExtensionDefinition.Parent.File -> p2.file
+                is ProtoExtensionDefinition.Parent.Message -> p2.message
+            }
+            is Parent.Message -> p.message
+        }
 
     override val message: ProtoMessage
         get() = when (val p = parent) {
@@ -84,7 +95,7 @@ data class ProtoMessageField(
     val childProperties: List<ProtoChildProperty>
         get() = if (needsIsSetProperty) listOf(isSetProperty) else emptyList()
 
-    override val supportedOptions: List<Options.Option<*>>
+    override val supportedOptions: List<Option<*>>
         get() = super.supportedOptions + listOf(Options.packed)
 
     /**

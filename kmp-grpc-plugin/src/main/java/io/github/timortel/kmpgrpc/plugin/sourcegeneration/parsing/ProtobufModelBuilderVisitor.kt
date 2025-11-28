@@ -7,6 +7,7 @@ import io.github.timortel.kmpgrpc.anltr.ProtobufEditionsVisitor
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.CompilationException
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.Const
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoExtensionDefinition
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoLanguageVersion
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoImport
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOption
@@ -42,6 +43,7 @@ class ProtobufModelBuilderVisitor(
 
     private fun visitProto(
         ctx: ParserRuleContext,
+        languageVersion: ProtoLanguageVersion,
         imports: List<ProtoImport>,
         options: List<ProtoOption>,
         messages: List<ProtoMessage>,
@@ -60,6 +62,7 @@ class ProtobufModelBuilderVisitor(
             `package` = packages.firstOrNull(),
             fileName = fileName,
             fileNameWithoutExtension = fileNameWithoutExtension,
+            languageVersion = languageVersion,
             messages = messages,
             enums = topLevelEnums,
             services = services,
@@ -82,6 +85,7 @@ class ProtobufModelBuilderVisitor(
 
         return visitProto(
             ctx = ctx,
+            languageVersion = ProtoLanguageVersion.EDITION2023,
             imports = imports,
             options = options,
             messages = messages,
@@ -105,6 +109,7 @@ class ProtobufModelBuilderVisitor(
 
         return visitProto(
             ctx = ctx,
+            languageVersion = ProtoLanguageVersion.PROTO3,
             imports = imports,
             options = options,
             messages = messages,
