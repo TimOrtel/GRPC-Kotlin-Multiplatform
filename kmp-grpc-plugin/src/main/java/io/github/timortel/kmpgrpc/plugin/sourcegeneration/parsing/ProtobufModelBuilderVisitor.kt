@@ -21,7 +21,6 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.mess
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.ProtoRange
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.ProtoReservation
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.ProtoReservation.Companion.fold
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoFieldCardinality
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoMapField
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoMessageField
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoOneOfField
@@ -132,7 +131,7 @@ class ProtobufModelBuilderVisitor(
         return visitImportStatement(ctx, ctx.strLit().text)
     }
 
-    private fun visitOption(ctx: ParserRuleContext, constant: String, name: String): ProtoOption {
+    private fun visitOption(ctx: ParserRuleContext, name: String, constant: String): ProtoOption {
         val value = if (constant.startsWith("\"") && constant.endsWith("\"")) {
             constant.substring(1, constant.length - 1)
         } else constant
@@ -141,11 +140,11 @@ class ProtobufModelBuilderVisitor(
     }
 
     override fun visitOption(ctx: ProtobufEditionsParser.OptionContext): ProtoOption {
-        return visitOption(ctx, ctx.constant().text, ctx.optionName().text)
+        return visitOption(ctx, ctx.optionName().text, ctx.constant().text)
     }
 
     override fun visitOptionStatement(ctx: Protobuf3Parser.OptionStatementContext): ProtoOption {
-        return visitOption(ctx, ctx.constant().text, ctx.optionName().text)
+        return visitOption(ctx, ctx.optionName().text, ctx.constant().text)
     }
 
     // Message parsing
@@ -322,8 +321,8 @@ class ProtobufModelBuilderVisitor(
         val label = ctx.fieldLabel()
 
         val fieldCardinality = when {
-            label?.REPEATED() != null -> ProtoFieldCardinality.Repeated
-            else -> ProtoFieldCardinality.Implicit
+            label?.REPEATED() != null -> ProtoMessageField.FieldCardinality.REPEATED
+            else -> ProtoMessageField.FieldCardinality.SINGULAR
         }
 
         val type = visitType_(ctx.type_())
@@ -337,7 +336,7 @@ class ProtobufModelBuilderVisitor(
             name = name,
             number = number,
             options = options,
-            cardinality = fieldCardinality,
+            fieldCardinality = fieldCardinality,
             ctx = ctx
         )
     }
@@ -346,9 +345,9 @@ class ProtobufModelBuilderVisitor(
         val label = ctx.fieldLabel()
 
         val fieldCardinality = when {
-            label?.OPTIONAL() != null -> ProtoFieldCardinality.Explicit
-            label?.REPEATED() != null -> ProtoFieldCardinality.Repeated
-            else -> ProtoFieldCardinality.Implicit
+            label?.OPTIONAL() != null -> ProtoMessageField.FieldCardinality.SINGULAR_OPTIONAL
+            label?.REPEATED() != null -> ProtoMessageField.FieldCardinality.REPEATED
+            else -> ProtoMessageField.FieldCardinality.SINGULAR
         }
 
         val type = visitType_(ctx.type_())
@@ -362,7 +361,7 @@ class ProtobufModelBuilderVisitor(
             name = name,
             number = number,
             options = options,
-            cardinality = fieldCardinality,
+            fieldCardinality = fieldCardinality,
             ctx = ctx
         )
     }

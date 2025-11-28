@@ -68,7 +68,8 @@ object Options {
         Basic.javaOuterClassName,
         Basic.allowAlias,
         Basic.deprecated,
-        Basic.packed
+        Basic.packed,
+        Feature.fieldPresence
     )
 
     /**

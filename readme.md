@@ -59,18 +59,22 @@ Please note that not all features may be available even if the protobuf version 
 | `bytes`     | `ByteArray` |
 
 ### Supported proto options and features:
-### Proto3
 
-| Proto Option          | Support Status |
-|----------------------|---------------|
-| `java_package`       | ✅ Supported  |
-| `java_outer_classname` | ✅ Supported  |
-| `java_multiple_files` | ✅ Supported  |
-| `deprecated`        | ✅ Supported    |
-| `packed`           | ✅ Supported    |
-| `optimize_for`       | ❌ Not Supported |
+### Legacy options
+| Proto Option           | Proto3 | Edition 2023 |
+|------------------------|--------|--------------|
+| `java_package`         | ✅      | ✅            | 
+| `java_outer_classname` | ✅      | ✅            | 
+| `java_multiple_files`  | ✅      | ✅            | 
+| `deprecated`           | ✅      | ✅            | 
+| `packed`               | ✅      | ✅            | 
+| `optimize_for`         | ❌      | ❌            |
 
-### Editions 2023
+### Features
+| Feature          | Edition 2023 |
+|------------------|--------------|
+| `field_presence` | ✅            | 
+
 
 
 ### Code generation:

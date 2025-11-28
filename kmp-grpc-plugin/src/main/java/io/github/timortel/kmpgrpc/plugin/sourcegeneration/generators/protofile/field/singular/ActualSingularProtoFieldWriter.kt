@@ -9,7 +9,7 @@ object ActualSingularProtoFieldWriter : SingularProtoFieldWriter() {
     override val attrs: List<KModifier> = listOf(KModifier.ACTUAL)
 
     override fun PropertySpec.Builder.modifyProperty(field: ProtoMessageField) {
-        if (field.needsIsSetProperty) {
+        if (field.isSingularExplicit) {
             initializer(
                 CodeBlock
                     .builder()

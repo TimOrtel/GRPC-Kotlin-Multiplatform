@@ -3,6 +3,7 @@ package io.github.timortel.kotlin_multiplatform_grpc_plugin.test.serialization
 import io.github.timortel.kmpgrpc.core.message.UnknownField
 import io.github.timortel.kmpgrpc.core.message.extensions.buildExtensions
 import io.github.timortel.kmpgrpc.test.ComplexRepeatedMessage
+import io.github.timortel.kmpgrpc.test.EditionsLegacyField
 import io.github.timortel.kmpgrpc.test.LongMessage
 import io.github.timortel.kmpgrpc.test.MessageWithEverything
 import io.github.timortel.kmpgrpc.test.MessageWithSubMessage
@@ -180,5 +181,13 @@ class SelfMessageSerializationTest {
 
         assertEquals(msg, reconstructed)
         assertEquals(createMessageWithAllExtensions(), reconstructed.field1)
+    }
+
+    @Test
+    fun testLegacyRequiredFieldSerialization() {
+        val msg = EditionsLegacyField(a = 12)
+        val reconstructed = EditionsLegacyField.deserialize(msg.serialize())
+
+        assertEquals(msg, reconstructed)
     }
 }

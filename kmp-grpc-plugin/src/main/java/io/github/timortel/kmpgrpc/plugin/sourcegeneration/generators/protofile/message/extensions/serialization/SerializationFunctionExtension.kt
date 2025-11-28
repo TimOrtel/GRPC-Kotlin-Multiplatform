@@ -7,10 +7,7 @@ import com.squareup.kotlinpoet.TypeSpec
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.SourceTarget
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.*
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoMessage
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoFieldCardinality
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoMapField
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoMessageField
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoRegularField
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.*
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
 import io.github.timortel.kmpgrpc.shared.internal.io.wireFormatMakeTag
 
@@ -48,7 +45,7 @@ class SerializationFunctionExtension : BaseSerializationExtension() {
         builder.apply {
             message.fields.forEach { field ->
                 when {
-                    field.cardinality == ProtoFieldCardinality.Explicit || (field.type.isMessage && field.cardinality != ProtoFieldCardinality.Repeated) -> {
+                    field.isSingularExplicit -> {
                         addCode(
                             getWriteScalarFieldCode(
                                 field = field,
@@ -58,7 +55,7 @@ class SerializationFunctionExtension : BaseSerializationExtension() {
                         )
                     }
 
-                    field.cardinality == ProtoFieldCardinality.Implicit -> {
+                    field.cardinality.isImplicit -> {
                         addCode("if·(")
                         addCode(field.type.isNotDefaultValueCode(field.attributeName, false))
                         beginControlFlow(")·{ ")
@@ -285,8 +282,8 @@ class SerializationFunctionExtension : BaseSerializationExtension() {
             return if (performIsFieldSetCheck && field is ProtoMessageField) {
                 CodeBlock.builder()
                     .beginControlFlow(
-                        "if (%N)",
-                        field.isSetProperty.attributeName
+                        "if (%N != null)",
+                        field.attributeName
                     )
                     .add(serializationCodeBlock)
                     .endControlFlow()

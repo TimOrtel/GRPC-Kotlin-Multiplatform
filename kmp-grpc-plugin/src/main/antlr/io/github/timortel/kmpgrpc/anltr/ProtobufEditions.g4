@@ -51,6 +51,7 @@ option
 
 optionName
     : ident
+    | fullIdent
     | LP DOT? fullIdent RP
     ;
 

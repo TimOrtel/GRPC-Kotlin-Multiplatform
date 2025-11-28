@@ -79,17 +79,10 @@ object ProtoSourceGenerator {
         shouldGenerateTargetMap: Map<SourceTarget, Boolean>,
         internalVisibility: Boolean
     ): Map<SourceTarget, List<FileSpec>> {
-        val folders = protoFolders.mapNotNull { sourceFolder ->
-            walkFolder(sourceFolder, logger)
-        }
-
-        val project = ProtoProject(
-            // All source folders are treated as if all of their files were in the same folder
-            rootFolder = folders.fold(ProtoFolder("", emptyList(), emptyList())) { l, r ->
-                ProtoFolder(name = "", folders = l.folders + r.folders, files = l.files + r.files)
-            },
+        val project = buildProtoProject(
             logger = logger,
-            defaultVisibility = if (internalVisibility) Visibility.INTERNAL else Visibility.PUBLIC
+            protoFolders = protoFolders,
+            internalVisibility = internalVisibility
         )
 
         // Before generating code, validate and print warnings / throw errors
@@ -112,6 +105,25 @@ object ProtoSourceGenerator {
                 put(SourceTarget.Native, NativeProtoProjectWriter.generateProjectFiles(project))
             }
         }
+    }
+
+    internal fun buildProtoProject(
+        logger: Logger,
+        protoFolders: List<InputFile>,
+        internalVisibility: Boolean
+    ): ProtoProject {
+        val folders = protoFolders.mapNotNull { sourceFolder ->
+            walkFolder(sourceFolder, logger)
+        }
+
+        return ProtoProject(
+            // All source folders are treated as if all of their files were in the same folder
+            rootFolder = folders.fold(ProtoFolder("", emptyList(), emptyList())) { l, r ->
+                ProtoFolder(name = "", folders = l.folders + r.folders, files = l.files + r.files)
+            },
+            logger = logger,
+            defaultVisibility = if (internalVisibility) Visibility.INTERNAL else Visibility.PUBLIC
+        )
     }
 
     /**

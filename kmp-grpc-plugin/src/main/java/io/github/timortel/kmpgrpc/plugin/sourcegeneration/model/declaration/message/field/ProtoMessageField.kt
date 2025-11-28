@@ -7,6 +7,7 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.CompilationException
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.Const
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.DeclarationResolver
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoExtensionDefinition
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoLanguageVersion
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOption
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOptionsHolder
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoChildProperty
@@ -25,7 +26,7 @@ class ProtoMessageField(
     override val name: String,
     override val number: Int,
     override val options: List<ProtoOption>,
-    val cardinality: ProtoFieldCardinality,
+    private val fieldCardinality: FieldCardinality,
     override val ctx: ParserRuleContext
 ) : ProtoRegularField(), ProtoMessageProperty {
 
@@ -58,8 +59,24 @@ class ProtoMessageField(
             is Parent.Message -> p.message
         }
 
-    override val desiredAttributeName: String = when (cardinality) {
-        ProtoFieldCardinality.Implicit, ProtoFieldCardinality.Explicit -> name
+    val cardinality: ProtoFieldCardinality
+        get() = when (file.languageVersion) {
+            ProtoLanguageVersion.PROTO3 -> when (fieldCardinality) {
+                FieldCardinality.SINGULAR -> ProtoFieldCardinality.Singular(ProtoFieldPresence.IMPLICIT)
+                FieldCardinality.SINGULAR_OPTIONAL -> ProtoFieldCardinality.Singular(ProtoFieldPresence.EXPLICIT)
+                FieldCardinality.REPEATED -> ProtoFieldCardinality.Repeated
+            }
+            ProtoLanguageVersion.EDITION2023 -> when (fieldCardinality) {
+                FieldCardinality.SINGULAR -> ProtoFieldCardinality.Singular(
+                    presence = Options.Feature.fieldPresence.get(this)
+                )
+                FieldCardinality.REPEATED -> ProtoFieldCardinality.Repeated
+                FieldCardinality.SINGULAR_OPTIONAL -> throw IllegalArgumentException("FieldCardinality.SINGULAR_OPTIONAL is illegal for edition versions.")
+            }
+        }
+
+    override val desiredAttributeName: String get() = when (cardinality) {
+        is ProtoFieldCardinality.Singular -> name
         ProtoFieldCardinality.Repeated -> "${name}List"
     }
 
@@ -77,7 +94,13 @@ class ProtoMessageField(
     // See https://protobuf.dev/programming-guides/field_presence/#presence-in-proto3-apis
     // The "isSet" method is added for optional fields and message types.
     val needsIsSetProperty: Boolean
-        get() = cardinality is ProtoFieldCardinality.Explicit || (type is ProtoType.DefType && type.isMessage)
+        get() = cardinality.isExplicit || (type is ProtoType.DefType && type.isMessage)
+
+    /**
+     * If cardinality is either explicit or legacy, or if the type is a message and it is not repeated
+     */
+    val isSingularExplicit: Boolean
+        get() = cardinality.isExplicitOrLegacy || (type is ProtoType.DefType && type.isMessage && cardinality != ProtoFieldCardinality.Repeated)
 
     val isSetProperty: ExtraProperty
         get() = ExtraProperty(
@@ -112,7 +135,7 @@ class ProtoMessageField(
 
     fun defaultValue(messageDefaultValue: MessageDefaultValue = MessageDefaultValue.NULL): CodeBlock {
         return when (cardinality) {
-            ProtoFieldCardinality.Implicit, ProtoFieldCardinality.Explicit -> type.defaultValue(messageDefaultValue)
+            is ProtoFieldCardinality.Singular -> type.defaultValue(messageDefaultValue)
             ProtoFieldCardinality.Repeated -> CodeBlock.of("emptyList()")
         }
     }
@@ -128,6 +151,8 @@ class ProtoMessageField(
     }
 
     override fun validate() {
+        super.validate()
+
         if (number < 1 || number > Const.FIELD_NUMBER_MAX_VALUE) {
             throw CompilationException.IllegalFieldNumber(
                 message = "Field $name declared illegal field number ${number}. Must be >= 1 and <= ${Const.FIELD_NUMBER_MAX_VALUE}",
@@ -150,5 +175,14 @@ class ProtoMessageField(
     sealed interface Parent {
         data class Message(val message: ProtoMessage) : Parent
         data class ExtensionDefinition(val ext: ProtoExtensionDefinition) : Parent
+    }
+
+    /**
+     * Used as a constructor parameter only.
+     */
+    enum class FieldCardinality {
+        SINGULAR,
+        SINGULAR_OPTIONAL,
+        REPEATED
     }
 }

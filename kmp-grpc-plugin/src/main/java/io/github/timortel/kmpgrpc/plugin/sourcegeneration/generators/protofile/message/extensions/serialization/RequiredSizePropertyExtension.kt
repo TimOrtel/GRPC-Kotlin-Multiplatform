@@ -6,6 +6,8 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.*
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoMessage
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoFieldCardinality
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoRegularField
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.isExplicitOrLegacy
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.isImplicit
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.joinCodeBlocks
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.joinToCodeBlock
@@ -38,18 +40,18 @@ class RequiredSizePropertyExtension : BaseSerializationExtension() {
 
                 val fieldsCodeBlock = message.fields.joinToCodeBlock(separator) { field ->
                     when {
-                        field.cardinality == ProtoFieldCardinality.Explicit || (field.type.isMessage && field.cardinality != ProtoFieldCardinality.Repeated) -> {
-                            add("if·(%N)·{·", field.isSetProperty.attributeName)
+                        field.isSingularExplicit -> {
+                            add("if·(%N != null)·{·", field.attributeName)
                             add(
                                 getCodeForRequiredSizeForScalarAttributeC(
                                     field,
-                                    field.cardinality == ProtoFieldCardinality.Explicit
+                                    field.cardinality.isExplicitOrLegacy
                                 )
                             )
                             add("}·else·{·0·}")
                         }
 
-                        field.cardinality == ProtoFieldCardinality.Implicit -> {
+                        field.cardinality.isImplicit -> {
                             add("if·(")
                             add(field.type.isDefaultValueCode(field.attributeName, false))
                             add(")·0·else·{ ")
