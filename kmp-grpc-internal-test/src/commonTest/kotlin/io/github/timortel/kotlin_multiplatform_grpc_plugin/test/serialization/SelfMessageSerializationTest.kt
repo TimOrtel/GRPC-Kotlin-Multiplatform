@@ -3,7 +3,7 @@ package io.github.timortel.kotlin_multiplatform_grpc_plugin.test.serialization
 import io.github.timortel.kmpgrpc.core.message.UnknownField
 import io.github.timortel.kmpgrpc.core.message.extensions.buildExtensions
 import io.github.timortel.kmpgrpc.test.ComplexRepeatedMessage
-import io.github.timortel.kmpgrpc.test.EditionsLegacyField
+import io.github.timortel.kmpgrpc.test.editions.EditionsLegacyField
 import io.github.timortel.kmpgrpc.test.LongMessage
 import io.github.timortel.kmpgrpc.test.MessageWithEverything
 import io.github.timortel.kmpgrpc.test.MessageWithSubMessage

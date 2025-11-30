@@ -1,0 +1,16 @@
+edition = "2023";
+
+package io.github.timortel.kmpgrpc.test;
+
+import "editions-packed-test-messages.proto";
+import "editions-declarations.proto";
+import "extensions-test.proto";
+
+option java_multiple_files = true;
+
+service EditionsTestService {
+  rpc sendPacked (EditionsPackedTypesMessage) returns (EditionsPackedTypesMessage);
+  rpc sendExpanded (EditionsNonPackedTypesMessage) returns (EditionsNonPackedTypesMessage);
+  rpc sendLegacyRequiredField (editions.EditionsLegacyField) returns (editions.EditionsLegacyField);
+  rpc sendMessageWithEveryExtension(MessageWithEveryExtension) returns (MessageWithEveryExtension);
+}

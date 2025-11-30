@@ -45,12 +45,22 @@ class SerializationFunctionExtension : BaseSerializationExtension() {
         builder.apply {
             message.fields.forEach { field ->
                 when {
-                    field.hasIsSetProperty -> {
+                    field.needsIsSetProperty -> {
                         addCode(
                             getWriteScalarFieldCode(
                                 field = field,
                                 streamParam = Const.Message.SerializeFunction.STREAM_PARAM,
                                 performIsFieldSetCheck = true
+                            )
+                        )
+                    }
+
+                    field.cardinality.isLegacyRequired -> {
+                        addCode(
+                            getWriteScalarFieldCode(
+                                field = field,
+                                streamParam = Const.Message.SerializeFunction.STREAM_PARAM,
+                                performIsFieldSetCheck = false
                             )
                         )
                     }

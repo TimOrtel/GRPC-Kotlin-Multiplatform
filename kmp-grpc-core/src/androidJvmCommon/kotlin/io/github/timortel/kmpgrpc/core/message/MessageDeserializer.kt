@@ -26,7 +26,15 @@ actual interface MessageDeserializer<T : Message> : MethodDescriptor.Marshaller<
         return ByteArrayInputStream(value.serialize())
     }
 
+    actual fun deserialize(data: ByteArray): T
+
+    actual fun deserialize(stream: CodedInputStream): T
+
+    fun parse(stream: CodedInputStream): T {
+        return deserialize(stream)
+    }
+
     override fun parse(stream: InputStream): T {
-        return deserialize(CodedInputStreamImpl(stream.asSource().buffered()))
+        return parse(CodedInputStreamImpl(stream.asSource().buffered()))
     }
 }

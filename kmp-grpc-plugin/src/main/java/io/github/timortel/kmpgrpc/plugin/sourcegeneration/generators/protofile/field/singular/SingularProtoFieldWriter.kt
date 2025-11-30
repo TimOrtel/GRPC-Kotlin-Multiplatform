@@ -11,7 +11,7 @@ abstract class SingularProtoFieldWriter : BaseProtoFieldWriter {
 
     protected abstract val attrs: List<KModifier>
 
-    open fun addField(builder: TypeSpec.Builder, field: ProtoMessageField) {
+    fun addField(builder: TypeSpec.Builder, field: ProtoMessageField) {
         with(builder) {
             addProperty(
                 PropertySpec
@@ -24,22 +24,19 @@ abstract class SingularProtoFieldWriter : BaseProtoFieldWriter {
                     }
                     .build()
             )
+
+
+            if (field.needsIsSetProperty) {
+                addProperty(
+                    PropertySpec
+                        .builder(field.isSetProperty.attributeName, BOOLEAN)
+                        .addKdoc(field.infoText)
+                        .addModifiers(attrs)
+                        .apply { modifyIsSetProperty(field) }
+                        .build()
+                )
+            }
         }
-    }
-
-    protected fun addIsSetProperty(builder: TypeSpec.Builder, field: ProtoMessageField) {
-        builder.addProperty(
-            PropertySpec
-                .builder(field.isSetProperty.attributeName, BOOLEAN)
-                .addKdoc(field.infoText)
-                .apply {
-                    if (!field.isIsSetPropertyPublic) addModifiers(KModifier.PRIVATE)
-                    else addModifiers(attrs)
-
-                    modifyIsSetProperty(field)
-                }
-                .build()
-        )
     }
 
     protected abstract fun PropertySpec.Builder.modifyProperty(field: ProtoMessageField)

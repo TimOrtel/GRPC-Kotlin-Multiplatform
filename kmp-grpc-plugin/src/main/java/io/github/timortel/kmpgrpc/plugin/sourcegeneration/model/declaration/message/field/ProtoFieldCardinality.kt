@@ -17,7 +17,7 @@ val ProtoFieldCardinality.isImplicit: Boolean get() = when (this) {
     ProtoFieldCardinality.Repeated -> false
 }
 
-val ProtoFieldCardinality.isExplicitOrLegacy: Boolean get() = when (this) {
-    is ProtoFieldCardinality.Singular -> presence == ProtoFieldPresence.EXPLICIT || presence == ProtoFieldPresence.LEGACY_REQUIRED
+val ProtoFieldCardinality.isLegacyRequired: Boolean get() = when (this) {
+    is ProtoFieldCardinality.Singular -> presence == ProtoFieldPresence.LEGACY_REQUIRED
     ProtoFieldCardinality.Repeated -> false
 }

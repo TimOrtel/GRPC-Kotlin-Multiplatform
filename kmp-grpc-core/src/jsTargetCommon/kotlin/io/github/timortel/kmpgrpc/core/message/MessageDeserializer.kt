@@ -16,4 +16,8 @@ actual interface MessageDeserializer<T : Message> {
     }
 
     actual fun deserialize(stream: CodedInputStream, extensionRegistry: ExtensionRegistry<T>): T
+
+    actual fun deserialize(data: ByteArray): T
+
+    actual fun deserialize(stream: CodedInputStream): T
 }

@@ -1,0 +1,37 @@
+name: 'Start Python Test Server'
+inputs:
+  port:
+    description: The port the server runs on
+    required: true
+  rpc:
+    description: The rpc to use as a health check
+    required: true
+
+
+
+runs:
+  using: "composite"
+  steps:
+    - name: Wait for test-server to be healthy
+      env:
+        $INPUT_PORT: ${{ inputs.port }}
+      run: |
+        docker pull fullstorydev/grpcurl:latest
+        echo "Waiting for service..."
+        
+        MAX_WAIT_SECONDS=$((10 * 60))
+        INTERVAL=5
+        ELAPSED=0
+
+        while ! docker run --network host fullstorydev/grpcurl -plaintext localhost:$INPUT_PORT $ {{ inputs.rpc }} | grep -q "{}"; do
+          if [ $ELAPSED -ge $MAX_WAIT_SECONDS ]; then
+            echo "❌ Service did not become healthy within 10 minutes."
+            exit 1
+          fi
+
+          echo "Service not ready yet... ($ELAPSED seconds elapsed)"
+          sleep $INTERVAL
+          ELAPSED=$((ELAPSED + INTERVAL))
+        done
+        
+        echo "Service is healthy!"

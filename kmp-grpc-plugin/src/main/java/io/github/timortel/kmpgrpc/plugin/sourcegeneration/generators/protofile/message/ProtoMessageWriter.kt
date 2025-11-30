@@ -6,14 +6,15 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.SourceTarget
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.MessageCompanion
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.MessageDeserializer
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.MessageWithExtensionsCompanion
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.DefaultMessageCompanion
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.DefaultMessageWithExtensionsCompanion
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.kmMessage
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.kmMessageWithExtensions
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.enumeration.ProtoEnumerationWriter
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.field.ProtoFieldWriter
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.*
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.FieldPropertyConstructorExtension
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.MessageWriterExtension
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.UnknownFieldsExtension
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.functions.CopyFunctionExtension
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.functions.EqualsFunctionExtension
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.functions.HashCodeFunctionExtension
@@ -116,12 +117,11 @@ abstract class ProtoMessageWriter(private val isActual: Boolean) {
                     addType(protoEnumerationWriter.generateProtoEnum(childEnum))
                 }
 
-                val companionType = if (message.isExtendable) { MessageWithExtensionsCompanion } else { MessageCompanion }
+                val companionType = if (message.isExtendable) { DefaultMessageWithExtensionsCompanion } else { DefaultMessageCompanion }
                     .parameterizedBy(message.className)
 
                 addType(
                     TypeSpec.companionObjectBuilder()
-                        .addSuperinterface(MessageDeserializer.parameterizedBy(message.className))
                         .addSuperinterface(companionType)
                         .apply {
                             applyToCompanionObject(this, message)

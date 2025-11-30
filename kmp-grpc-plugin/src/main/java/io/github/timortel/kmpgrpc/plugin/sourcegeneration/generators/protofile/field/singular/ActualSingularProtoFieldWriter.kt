@@ -8,16 +8,8 @@ object ActualSingularProtoFieldWriter : SingularProtoFieldWriter() {
 
     override val attrs: List<KModifier> = listOf(KModifier.ACTUAL)
 
-    override fun addField(builder: TypeSpec.Builder, field: ProtoMessageField) {
-        super.addField(builder, field)
-
-        if (field.hasIsSetProperty) {
-            addIsSetProperty(builder, field)
-        }
-    }
-
     override fun PropertySpec.Builder.modifyProperty(field: ProtoMessageField) {
-        if (field.hasIsSetProperty) {
+        if (field.needsIsSetProperty) {
             initializer(
                 CodeBlock
                     .builder()

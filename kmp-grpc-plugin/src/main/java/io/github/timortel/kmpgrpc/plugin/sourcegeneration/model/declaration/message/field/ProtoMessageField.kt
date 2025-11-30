@@ -94,11 +94,8 @@ class ProtoMessageField(
     /**
      * If cardinality is either explicit or legacy, or if the type is a message and it is not repeated
      */
-    val hasIsSetProperty: Boolean
-        get() = cardinality.isExplicitOrLegacy || (type is ProtoType.DefType && type.isMessage && cardinality != ProtoFieldCardinality.Repeated)
-
-    val isIsSetPropertyPublic: Boolean
-        get() = cardinality.isExplicit
+    val needsIsSetProperty: Boolean
+        get() = cardinality.isExplicit || (type is ProtoType.DefType && type.isMessage && cardinality != ProtoFieldCardinality.Repeated)
 
     val isSetProperty: ExtraProperty
         get() = ExtraProperty(
@@ -109,7 +106,7 @@ class ProtoMessageField(
         )
 
     val childProperties: List<ProtoChildProperty>
-        get() = if (hasIsSetProperty) listOf(isSetProperty) else emptyList()
+        get() = if (needsIsSetProperty) listOf(isSetProperty) else emptyList()
 
     /**
      * True iff [cardinality] is [ProtoFieldCardinality.Repeated], the [type] is packable and the proto option packed is not set to false

@@ -11,9 +11,8 @@ val kmChannel = ClassName(PACKAGE_BASE, "Channel")
 val nativeJsStub = ClassName(PACKAGE_STUB, "NativeJsStub")
 val nativeJsCallOptions = ClassName(PACKAGE_BASE, "CallOptions")
 
-val MessageDeserializer = ClassName(PACKAGE_MESSAGE, "MessageDeserializer")
-val MessageCompanion = ClassName(PACKAGE_MESSAGE, "MessageCompanion")
-val MessageWithExtensionsCompanion = ClassName(PACKAGE_MESSAGE, "MessageWithExtensionsCompanion")
+val DefaultMessageCompanion = ClassName(PACKAGE_MESSAGE_INTERNAL, "DefaultMessageCompanion")
+val DefaultMessageWithExtensionsCompanion = ClassName(PACKAGE_MESSAGE_INTERNAL, "DefaultMessageWithExtensionsCompanion")
 
 val kmMessage = ClassName(PACKAGE_MESSAGE, "Message")
 val kmMessageWithExtensions = ClassName(PACKAGE_MESSAGE, "MessageWithExtensions")
