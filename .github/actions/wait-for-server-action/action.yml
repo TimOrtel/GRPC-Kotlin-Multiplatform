@@ -7,12 +7,11 @@ inputs:
     description: The rpc to use as a health check
     required: true
 
-
-
 runs:
   using: "composite"
   steps:
     - name: Wait for test-server to be healthy
+      shell: bash
       env:
         $INPUT_PORT: ${{ inputs.port }}
       run: |

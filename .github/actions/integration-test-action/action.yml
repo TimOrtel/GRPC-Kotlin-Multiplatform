@@ -21,6 +21,7 @@ runs:
         java-version: '17'
 
     - name: Start test-server
+      shell: bash
       run: |
         nohup ./gradlew :kmp-grpc-internal-test:test-server:run > server.log 2>&1 &
         echo $! > gradle_pid.txt
@@ -31,22 +32,26 @@ runs:
         python-version: "3.13"
 
     - name: Install dependencies
+      shell: bash
       working-directory: kmp-grpc-internal-test/test-server-python
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
     - name: Generate protobuf code
+      shell: bash
       working-directory: kmp-grpc-internal-test/test-server-python
       run: ./gensources.sh
 
     - name: Run server
+      shell: bash
       working-directory: kmp-grpc-internal-test/test-server-python
       run: |
         nohup python server/app.py > python-server.log 2>&1 &
         echo $! > python_pid.txt
 
     - name: Start envoy service
+      shell: bash
       if: ${{ inputs.use-envoy }}
       run: |
         docker run -d --rm --name envoy --network host \
@@ -68,6 +73,7 @@ runs:
         rpc: io.github.timortel.kmpgrpc.test.TestService/emptyRpc
 
     - name: Run tests in plugin module
+      shell: bash
       run: ./gradlew :kmp-grpc-internal-test:${{ inputs.test-action }} --info -Pio.github.timortel.kmp-grpc.internal.targets=${{ inputs.target }}
 
     - name: Upload JUnit Test Results
@@ -87,6 +93,7 @@ runs:
         reporter: java-junit
 
     - name: Kill test servers
+      shell: bash
       run: |
         PID=$(cat gradle_pid.txt)
         kill $PID
@@ -96,15 +103,18 @@ runs:
       if: always()
 
     - name: Print Envoy Logs And Kill
+      shell: bash
       run: |
         docker logs envoy
         docker stop envoy
       if: ${{ inputs.use-envoy }} && always()
 
     - name: Print Server Logs
+      shell: bash
       run: cat server.log
       if: always()
 
     - name: Print Server Logs
+      shell: bash
       run: cat python-server.log
       if: always()
