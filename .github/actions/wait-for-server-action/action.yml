@@ -6,6 +6,8 @@ inputs:
   rpc:
     description: The rpc to use as a health check
     required: true
+  use-docker:
+    description: If a grpcurl docker image should be used. If no, homebrew
 
 runs:
   using: "composite"
@@ -15,15 +17,28 @@ runs:
       env:
         $INPUT_PORT: ${{ inputs.port }}
         $RPC: ${{ inputs.rpc }}
-      run: |
-        docker pull fullstorydev/grpcurl:latest
-        echo "Waiting for service..."
-        
-        MAX_WAIT_SECONDS=$((10 * 60))
+      run: |        
+        MAX_WAIT_SECONDS=$((2 * 60))
         INTERVAL=5
         ELAPSED=0
 
-        while ! docker run --network host fullstorydev/grpcurl -plaintext localhost:$INPUT_PORT $RPC | grep -q "{}"; do
+        if [[ "${{ runner.os }}" == "macOS" ]]; then
+          echo "Runner is macOS — using native grpcurl"
+        
+          if ! command -v grpcurl &> /dev/null; then
+            brew install grpcurl
+          fi
+        
+          check_cmd="grpcurl -plaintext localhost:$INPUT_PORT $RPC"
+        else
+          echo "Runner is Linux — using grpcurl Docker image"
+          docker pull fullstorydev/grpcurl:latest
+          check_cmd="docker run --network host fullstorydev/grpcurl -plaintext localhost:$INPUT_PORT $RPC"
+        fi
+
+        echo "Waiting for service..."
+
+        while ! eval "$check_cmd" | grep -q "{}"; do
           if [ $ELAPSED -ge $MAX_WAIT_SECONDS ]; then
             echo "❌ Service did not become healthy within 10 minutes."
             exit 1
@@ -34,4 +49,4 @@ runs:
           ELAPSED=$((ELAPSED + INTERVAL))
         done
         
-        echo "Service is healthy!"
+        echo "✅ Service is healthy!"
