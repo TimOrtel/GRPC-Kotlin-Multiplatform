@@ -91,16 +91,14 @@ class ProtoMessageField(
             }
         }
 
-    // See https://protobuf.dev/programming-guides/field_presence/#presence-in-proto3-apis
-    // The "isSet" method is added for optional fields and message types.
-    val needsIsSetProperty: Boolean
-        get() = cardinality.isExplicit || (type is ProtoType.DefType && type.isMessage)
-
     /**
      * If cardinality is either explicit or legacy, or if the type is a message and it is not repeated
      */
-    val isSingularExplicit: Boolean
+    val hasIsSetProperty: Boolean
         get() = cardinality.isExplicitOrLegacy || (type is ProtoType.DefType && type.isMessage && cardinality != ProtoFieldCardinality.Repeated)
+
+    val isIsSetPropertyPublic: Boolean
+        get() = cardinality.isExplicit
 
     val isSetProperty: ExtraProperty
         get() = ExtraProperty(
@@ -111,7 +109,7 @@ class ProtoMessageField(
         )
 
     val childProperties: List<ProtoChildProperty>
-        get() = if (needsIsSetProperty) listOf(isSetProperty) else emptyList()
+        get() = if (hasIsSetProperty) listOf(isSetProperty) else emptyList()
 
     /**
      * True iff [cardinality] is [ProtoFieldCardinality.Repeated], the [type] is packable and the proto option packed is not set to false

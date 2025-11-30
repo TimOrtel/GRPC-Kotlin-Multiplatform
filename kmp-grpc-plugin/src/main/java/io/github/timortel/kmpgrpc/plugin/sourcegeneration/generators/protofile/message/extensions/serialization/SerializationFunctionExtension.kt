@@ -45,7 +45,7 @@ class SerializationFunctionExtension : BaseSerializationExtension() {
         builder.apply {
             message.fields.forEach { field ->
                 when {
-                    field.isSingularExplicit -> {
+                    field.hasIsSetProperty -> {
                         addCode(
                             getWriteScalarFieldCode(
                                 field = field,
@@ -282,8 +282,8 @@ class SerializationFunctionExtension : BaseSerializationExtension() {
             return if (performIsFieldSetCheck && field is ProtoMessageField) {
                 CodeBlock.builder()
                     .beginControlFlow(
-                        "if (%N != null)",
-                        field.attributeName
+                        "if (%N)",
+                        field.isSetProperty.attributeName
                     )
                     .add(serializationCodeBlock)
                     .endControlFlow()

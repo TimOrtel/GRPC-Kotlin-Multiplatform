@@ -40,7 +40,7 @@ class RequiredSizePropertyExtension : BaseSerializationExtension() {
 
                 val fieldsCodeBlock = message.fields.joinToCodeBlock(separator) { field ->
                     when {
-                        field.isSingularExplicit -> {
+                        field.hasIsSetProperty -> {
                             add("if·(%N != null)·{·", field.attributeName)
                             add(
                                 getCodeForRequiredSizeForScalarAttributeC(
