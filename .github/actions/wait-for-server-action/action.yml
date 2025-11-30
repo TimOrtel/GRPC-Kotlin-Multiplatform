@@ -14,6 +14,7 @@ runs:
       shell: bash
       env:
         $INPUT_PORT: ${{ inputs.port }}
+        $RPC: ${{ inputs.rpc }}
       run: |
         docker pull fullstorydev/grpcurl:latest
         echo "Waiting for service..."
@@ -22,7 +23,7 @@ runs:
         INTERVAL=5
         ELAPSED=0
 
-        while ! docker run --network host fullstorydev/grpcurl -plaintext localhost:$INPUT_PORT $ {{ inputs.rpc }} | grep -q "{}"; do
+        while ! docker run --network host fullstorydev/grpcurl -plaintext localhost:$INPUT_PORT $RPC | grep -q "{}"; do
           if [ $ELAPSED -ge $MAX_WAIT_SECONDS ]; then
             echo "❌ Service did not become healthy within 10 minutes."
             exit 1
