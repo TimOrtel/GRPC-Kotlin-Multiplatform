@@ -12,13 +12,13 @@ runs:
   steps:
     - name: Wait for test-server to be healthy
       shell: bash
-      env:
-        $INPUT_PORT: ${{ inputs.port }}
-        $RPC: ${{ inputs.rpc }}
       run: |        
         MAX_WAIT_SECONDS=$((10 * 60))
         INTERVAL=5
         ELAPSED=0
+
+        INPUT_PORT=${{ inputs.port }}
+        RPC=${{ inputs.rpc }}
 
         echo "Waiting for server on port $INPUT_PORT with rpc $RPC"
 
