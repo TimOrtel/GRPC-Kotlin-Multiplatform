@@ -64,4 +64,40 @@ class MessageValidationTests : BaseValidationTest() {
             )
         }
     }
+
+    @Test
+    fun `test WHEN message has field with field number smaller than 1 THEN a compilation exception is thrown`() {
+        assertThrows<CompilationException.IllegalFieldNumber> {
+            runGenerator(
+                """
+                    message TestMessage {
+                       string a = 0;
+                    }
+                """.trimIndent()
+            )
+        }
+
+        assertThrows<CompilationException.IllegalFieldNumber> {
+            runGenerator(
+                """
+                    message TestMessage {
+                       string a = -3;
+                    }
+                """.trimIndent()
+            )
+        }
+    }
+
+    @Test
+    fun `test WHEN message has field with field number greater than max field number THEN a compilation exception is thrown`() {
+        assertThrows<CompilationException.IllegalFieldNumber> {
+            runGenerator(
+                """
+                    message TestMessage {
+                       string a = 536870912;
+                    }
+                """.trimIndent()
+            )
+        }
+    }
 }

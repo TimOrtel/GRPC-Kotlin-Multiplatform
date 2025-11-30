@@ -5,6 +5,7 @@ import com.squareup.kotlinpoet.TypeName
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.capitalize
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOption
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOptionsHolder
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoChildPropertyNameResolver
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.ProtoOneOf
@@ -19,6 +20,9 @@ data class ProtoOneOfField(
 ) : ProtoRegularField() {
 
     lateinit var parent: ProtoOneOf
+
+    override val parentOptionsHolder: ProtoOptionsHolder
+        get() = parent.message
 
     override val file: ProtoFile get() = parent.file
 

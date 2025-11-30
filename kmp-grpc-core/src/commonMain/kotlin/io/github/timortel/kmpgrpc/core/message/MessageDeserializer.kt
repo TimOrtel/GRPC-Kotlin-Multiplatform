@@ -1,6 +1,7 @@
 package io.github.timortel.kmpgrpc.core.message
 
 import io.github.timortel.kmpgrpc.core.io.CodedInputStream
+import io.github.timortel.kmpgrpc.core.message.extensions.ExtensionRegistry
 
 /**
  * Interface for deserializing messages from various input sources into instances of type [T].
@@ -18,7 +19,7 @@ expect interface MessageDeserializer<T : Message> {
      * @param data The serialized message data in the form of a byte array.
      * @return An instance of [T] constructed from the deserialized data.
      */
-    open fun deserialize(`data`: ByteArray): T
+    open fun deserialize(`data`: ByteArray, extensionRegistry: ExtensionRegistry<T> = ExtensionRegistry.empty()): T
 
     /**
      * Deserializes data from a provided [CodedInputStream] and constructs an instance of type [T].
@@ -26,5 +27,5 @@ expect interface MessageDeserializer<T : Message> {
      * @param stream The [CodedInputStream] containing the serialized message data.
      * @return An instance of [T] constructed from the deserialized data.
      */
-    fun deserialize(stream: CodedInputStream): T
+    fun deserialize(stream: CodedInputStream, extensionRegistry: ExtensionRegistry<T> = ExtensionRegistry.empty()): T
 }

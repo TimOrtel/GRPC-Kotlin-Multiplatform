@@ -2,10 +2,15 @@ package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration
 
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.CompilationException
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.Warnings
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.*
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.BaseDeclarationResolver
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoDeclParent
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOption
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOptionsHolder
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.enumeration.ProtoEnumField
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.ProtoReservation
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.OptionTarget
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.Options
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.toFilePositionString
 import org.antlr.v4.runtime.ParserRuleContext
@@ -34,12 +39,22 @@ data class ProtoEnum(
         get() =
             fields
                 .firstOrNull { it.number == 0 }
-                ?: throw CompilationException.EnumIllegalFirstField("Enumeration does not have field with value 0.", file, ctx)
+                ?: throw CompilationException.EnumIllegalFirstField(
+                    "Enumeration does not have field with value 0.",
+                    file,
+                    ctx
+                )
 
     override val heldFields: List<ProtoField> =
         fields
 
-    override val supportedOptions: List<Options.Option<*>> = listOf(Options.allowAlias)
+    override val optionTarget: OptionTarget = OptionTarget.ENUM
+
+    override val parentOptionsHolder: ProtoOptionsHolder
+        get() = when (val p = parent) {
+            is ProtoDeclParent.File -> p.file
+            is ProtoDeclParent.Message -> p.message
+        }
 
     init {
         fields.forEach { it.enum = this }
@@ -61,7 +76,7 @@ data class ProtoEnum(
             ctx = ctx
         )
 
-        val allowAlias = Options.allowAlias.get(this)
+        val allowAlias = Options.Basic.allowAlias.get(this)
         fields
             .groupBy { it.number }
             .filter { it.value.size > 1 }

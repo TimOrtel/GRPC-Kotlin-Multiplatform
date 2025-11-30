@@ -69,6 +69,7 @@ dependencies {
     testRuntimeOnly(libs.junit.platform.launcher)
 
     testImplementation(libs.mockk)
+    testImplementation(libs.google.testparameterinjector)
 }
 
 buildConfig {

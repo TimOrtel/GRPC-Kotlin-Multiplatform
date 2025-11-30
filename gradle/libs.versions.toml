@@ -32,6 +32,7 @@ slf4jSimple = "2.0.17"
 
 junit = "5.13.4"
 mockk = "1.14.5"
+testParameterInjector = "1.20"
 
 guava = "33.5.0-jre"
 
@@ -68,6 +69,7 @@ kotlin-gradle-plugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-p
 android-gradle-plugin = { group = "com.android.tools.build", name = "gradle", version.ref = "androidGradlePlugin" }
 
 # testing
+google-testparameterinjector = { group = "com.google.testparameterinjector", name = "test-parameter-injector-junit5", version.ref = "testParameterInjector" }
 junit-bom = { group = "org.junit", name = "junit-bom", version.ref = "junit" }
 junit-jupiter = { group = "org.junit.jupiter", name = "junit-jupiter" }
 junit-platform-launcher = { group = "org.junit.platform", name = "junit-platform-launcher" }

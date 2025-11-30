@@ -1,0 +1,11 @@
+edition = "2023";
+
+package io.github.timortel.kmpgrpc.test;
+
+option java_multiple_files = true;
+
+option features.field_presence = LEGACY_REQUIRED;
+
+message EditionsLegacyField {
+  int32 a = 1;
+}

@@ -116,7 +116,6 @@ object DataSize {
         }
     }
 
-
     fun computeUInt32SizeNoTag(value: UInt): Int {
         if ((value and (0u.inv() shl 7)) == 0u) {
             return 1

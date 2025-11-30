@@ -4,6 +4,8 @@ import io.github.timortel.kmpgrpc.shared.internal.io.DataType
 import io.github.timortel.kmpgrpc.core.message.Message
 import io.github.timortel.kmpgrpc.core.message.MessageDeserializer
 import io.github.timortel.kmpgrpc.core.message.UnknownField
+import io.github.timortel.kmpgrpc.core.message.extensions.Extension
+import io.github.timortel.kmpgrpc.core.message.extensions.ExtensionRegistry
 import io.github.timortel.kmpgrpc.shared.internal.InternalKmpGrpcApi
 import io.github.timortel.kmpgrpc.shared.internal.io.WireFormat
 import io.github.timortel.kmpgrpc.shared.internal.io.wireFormatForType
@@ -60,8 +62,8 @@ abstract class CodedInputStream {
      *                     data into an instance of type [M].
      * @return An instance of type [M], which extends [Message], deserialized from the input stream.
      */
-    fun <M : Message> readMessage(deserializer: MessageDeserializer<M>): M {
-        return recursiveRead { deserializer.deserialize(this) }
+    fun <M : Message> readMessage(deserializer: MessageDeserializer<M>, extensionRegistry: ExtensionRegistry<M>): M {
+        return recursiveRead { deserializer.deserialize(this, extensionRegistry) }
     }
 
     // Adapted version of https://github.com/protocolbuffers/protobuf/blob/520c601c99012101c816b6ccc89e8d6fc28fdbb8/objectivec/GPBDictionary.m#L455
@@ -134,9 +136,57 @@ abstract class CodedInputStream {
 
     abstract fun popLimit(oldLimit: Int)
 
-    fun readUnknownField(tag: Int): UnknownField? {
+    fun <M : Message> readUnknownFieldOrExtension(
+        tag: Int,
+        extensionRegistry: ExtensionRegistry<M>
+    ): UnknownFieldOrExtension<M, Any>? {
         val number = wireFormatGetTagFieldNumber(tag)
+
+        val extension = extensionRegistry.getExtensionForFieldNumber(number)
+        @Suppress("UNCHECKED_CAST")
+        return if (extension != null) {
+            readExtension(extension)
+        } else {
+            readUnknownField(tag)?.let(UnknownFieldOrExtension<M, Any>::UnknownField)
+        } as UnknownFieldOrExtension<M, Any>?
+    }
+
+    private fun <M : Message, T : Any> readExtension(extension: Extension<M, T>): UnknownFieldOrExtension.Extension<M, T> {
+        // Read the field as an extension
+        return when (extension) {
+            is Extension.ScalarValueExtension -> {
+                val value = extension.fieldType.read(this)
+                UnknownFieldOrExtension.ScalarExtension(extension, value)
+            }
+
+            is Extension.PackableRepeatedValueExtension -> {
+                if (extension.isPacked) {
+                    val length = readInt32()
+                    val oldLimit = pushLimit(length)
+                    val list = buildList {
+                        while (!isAtEnd) {
+                            add(extension.fieldType.read(this@CodedInputStream))
+                        }
+                    }
+                    popLimit(oldLimit)
+
+                    UnknownFieldOrExtension.RepeatedExtension(extension, list)
+                } else {
+                    val value = extension.fieldType.read(this@CodedInputStream)
+                    UnknownFieldOrExtension.RepeatedExtension(extension, listOf(value))
+                }
+            }
+
+            is Extension.NonPackableRepeatedValueExtension -> {
+                val value = extension.fieldType.read(this@CodedInputStream)
+                UnknownFieldOrExtension.RepeatedExtension(extension, listOf(value))
+            }
+        }
+    }
+
+    private fun readUnknownField(tag: Int): UnknownField? {
         val wireTypeNumber = wireFormatGetTagWireType(tag)
+        val number = wireFormatGetTagFieldNumber(tag)
 
         return when (WireFormat.entries.firstOrNull { it.value == wireTypeNumber }) {
             WireFormat.VARINT -> UnknownField.Varint(number, readInt64())

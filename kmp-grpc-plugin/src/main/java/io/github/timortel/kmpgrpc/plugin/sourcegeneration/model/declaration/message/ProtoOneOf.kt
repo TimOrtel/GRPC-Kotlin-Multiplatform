@@ -3,6 +3,7 @@ package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.mes
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.TypeName
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.Const
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.DeclarationResolver
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoNode
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.capitalize
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
@@ -24,7 +25,7 @@ data class ProtoOneOf(
 
     override lateinit var message: ProtoMessage
 
-    val file: ProtoFile get() = message.file
+    override val file: ProtoFile get() = message.file
 
     val sealedClassName: ClassName get() = message.className.nestedClass(name.capitalize())
 
@@ -44,6 +45,9 @@ data class ProtoOneOf(
 
     override val priority: Int
         get() = fields.minOf { it.number }
+
+    override val declarationResolver: DeclarationResolver
+        get() = message
 
     init {
         fields.forEach { it.parent = this }

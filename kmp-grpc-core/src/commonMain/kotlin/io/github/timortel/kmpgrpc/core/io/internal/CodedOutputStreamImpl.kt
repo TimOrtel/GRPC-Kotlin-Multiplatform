@@ -91,18 +91,24 @@ internal class CodedOutputStreamImpl(private val sink: Sink) : CodedOutputStream
         writeEnum(fieldNumber, value.number)
     }
 
+    override fun writeEnumArrayRaw(fieldNumber: Int, values: List<Int>, tag: UInt) {
+        writeArray(
+            fieldNumber = fieldNumber,
+            values = values,
+            tag = tag,
+            computeSizeNoTag = DataSize::computeEnumSizeNoTag,
+            writeWithTag = ::writeEnum,
+            writeWithoutTag = ::writeEnumNoTag
+        )
+    }
+
     override fun writeEnumArray(
         fieldNumber: Int,
         values: List<Enum>,
         tag: UInt
-    ) = writeArray(
-        fieldNumber = fieldNumber,
-        values = values.map { it.number },
-        tag = tag,
-        computeSizeNoTag = DataSize::computeEnumSizeNoTag,
-        writeWithTag = ::writeEnum,
-        writeWithoutTag = ::writeEnumNoTag
-    )
+    ) {
+        writeEnumArrayRaw(fieldNumber = fieldNumber, values = values.map { it.number }, tag = tag)
+    }
 
     override fun writeEnumNoTag(value: Int) = writeInt32NoTag(value)
 

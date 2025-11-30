@@ -1,8 +1,7 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.enumeration
 
-import com.squareup.kotlinpoet.MemberName
-import com.squareup.kotlinpoet.MemberName.Companion.member
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOption
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOptionsHolder
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoEnum
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoField
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
@@ -16,7 +15,8 @@ data class ProtoEnumField(
 ) : ProtoField {
     lateinit var enum: ProtoEnum
 
-    val memberName: MemberName get() = enum.className.member(name)
+    override val parentOptionsHolder: ProtoOptionsHolder
+        get() = enum
 
     override val file: ProtoFile
         get() = enum.file

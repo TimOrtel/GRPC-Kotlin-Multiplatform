@@ -1,12 +1,11 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.service
 
-import com.squareup.kotlinpoet.ClassName
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.Options
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoNode
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOption
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOptionsHolder
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoBaseDeclaration
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.capitalize
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.OptionTarget
 import org.antlr.v4.runtime.ParserRuleContext
 
 data class ProtoService(
@@ -24,7 +23,10 @@ data class ProtoService(
         rpcs.forEach { it.service = this }
     }
 
-    override val supportedOptions: List<Options.Option<*>> = emptyList()
+    override val optionTarget: OptionTarget = OptionTarget.SERVICE
+
+    override val parentOptionsHolder: ProtoOptionsHolder
+        get() = file
 
     override fun validate() {
         super.validate()

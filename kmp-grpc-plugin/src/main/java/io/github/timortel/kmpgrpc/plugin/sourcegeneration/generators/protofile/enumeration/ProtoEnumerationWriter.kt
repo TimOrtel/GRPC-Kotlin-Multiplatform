@@ -1,10 +1,12 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.enumeration
 
 import com.squareup.kotlinpoet.*
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.Const
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.EnumCompanion
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.kmEnum
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.DefaultAnnotations
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.Options
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.Options
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoEnum
 
 abstract class ProtoEnumerationWriter(val isActual: Boolean) {
@@ -54,7 +56,7 @@ abstract class ProtoEnumerationWriter(val isActual: Boolean) {
                                     addSuperclassConstructorParameter("%L", enumField.number)
                                 }
 
-                                if (Options.deprecated.get(enumField)) {
+                                if (Options.Basic.deprecated.get(enumField)) {
                                     addAnnotation(DefaultAnnotations.Deprecated)
                                 }
                             }
@@ -79,12 +81,14 @@ abstract class ProtoEnumerationWriter(val isActual: Boolean) {
             .addType(
                 TypeSpec
                     .companionObjectBuilder()
+                    .addSuperinterface(EnumCompanion.parameterizedBy(protoEnum.className))
                     .apply {
                         if (isActual) addModifiers(KModifier.ACTUAL)
                     }
                     .addFunction(
                         FunSpec
                             .builder(Const.Enum.GET_ENUM_FOR_FUNCTION_NAME)
+                            .addModifiers(KModifier.OVERRIDE)
                             .returns(protoEnum.className)
                             .addParameter("num", INT)
                             .apply {
