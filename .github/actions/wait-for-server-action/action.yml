@@ -18,7 +18,7 @@ runs:
         $INPUT_PORT: ${{ inputs.port }}
         $RPC: ${{ inputs.rpc }}
       run: |        
-        MAX_WAIT_SECONDS=$((2 * 60))
+        MAX_WAIT_SECONDS=$((10 * 60))
         INTERVAL=5
         ELAPSED=0
 

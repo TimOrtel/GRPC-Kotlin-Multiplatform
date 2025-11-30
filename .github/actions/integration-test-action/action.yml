@@ -52,7 +52,7 @@ runs:
 
     - name: Start envoy service
       shell: bash
-      if: ${{ inputs.use-envoy }}
+      if: ${{ inputs.use-envoy == 'true' }}
       run: |
         docker run -d --rm --name envoy --network host \
         -v $(pwd)/kmp-grpc-internal-test/envoy.yml:/etc/envoy/envoy.yaml \
