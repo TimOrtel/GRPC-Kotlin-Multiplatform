@@ -62,7 +62,7 @@ static_resources:
                       routes:
                         - match: { prefix: "/" }
                           route:
-                            cluster: echo_service
+                            cluster: echo_service2
                             timeout: 0s
                             max_stream_duration:
                               grpc_timeout_header_max: 0s

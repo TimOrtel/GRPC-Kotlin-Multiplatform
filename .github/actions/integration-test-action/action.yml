@@ -48,7 +48,7 @@ runs:
       working-directory: kmp-grpc-internal-test/test-server-python
       run: |
         nohup python server/app.py > python-server.log 2>&1 &
-        echo $! > python_pid.txt
+        echo $! > ../../python_pid.txt
 
     - name: Start envoy service
       shell: bash
