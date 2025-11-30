@@ -6,8 +6,6 @@ inputs:
   rpc:
     description: The rpc to use as a health check
     required: true
-  use-docker:
-    description: If a grpcurl docker image should be used. If no, homebrew
 
 runs:
   using: "composite"
@@ -21,6 +19,8 @@ runs:
         MAX_WAIT_SECONDS=$((10 * 60))
         INTERVAL=5
         ELAPSED=0
+
+        echo "Waiting for server on port $INPUT_PORT with rpc $RPC"
 
         if [[ "${{ runner.os }}" == "macOS" ]]; then
           echo "Runner is macOS — using native grpcurl"
