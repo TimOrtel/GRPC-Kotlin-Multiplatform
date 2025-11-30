@@ -80,7 +80,7 @@ runs:
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: JS Test Results
+        name: ${{ inputs.target }} Test Results
         if-no-files-found: error
         path: test-outputs/kmp-grpc-internal-test/**/*.xml
 
@@ -107,7 +107,7 @@ runs:
       run: |
         docker logs envoy
         docker stop envoy
-      if: ${{ inputs.use-envoy }} && always()
+      if: ${{ inputs.use-envoy == 'true' && always() }}
 
     - name: Print Server Logs
       shell: bash
