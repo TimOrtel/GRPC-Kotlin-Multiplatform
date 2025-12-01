@@ -36,14 +36,18 @@ object HashCodeFunctionExtension : MessageWriterExtension {
 
         builder.apply {
             if (properties.isEmpty()) {
-                addStatement("return %N.hashCode()", Const.Message.Constructor.UnknownFields.name)
-                return
+                if (message.isExtendable) {
+                    addStatement("var result = %N.hashCode()", Const.Message.Constructor.MessageExtensions.name)
+                } else {
+                    addStatement("return %N.hashCode()", Const.Message.Constructor.UnknownFields.name)
+                    return
+                }
             }
 
             properties.forEachIndexed { index, property ->
                 val attrName = property.attributeName
 
-                //Mimic the way IntelliJ generates hashCode
+                // Mimic the way IntelliJ generates hashCode
                 if (index == 0) {
                     addStatement("var result = %N.hashCode()", attrName)
                 } else {

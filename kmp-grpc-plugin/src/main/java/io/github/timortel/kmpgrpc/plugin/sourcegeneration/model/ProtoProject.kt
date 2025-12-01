@@ -1,6 +1,7 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model
 
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoDeclaration
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoMessage
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.structure.ProtoFolder
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.structure.ProtoPackage
@@ -11,15 +12,20 @@ data class ProtoProject(
     val rootFolder: ProtoFolder,
     val logger: Logger,
     val defaultVisibility: Visibility
-) : ProtoNode {
+) : ProtoNode, ProtoExtensionDefinitionFinder {
 
     val rootPackage: ProtoPackage
+
+    // This is an optimization, to avoid searching the tree for every message
+    private val extensionDefinitionsMap: Map<ProtoDeclaration, List<ProtoExtensionDefinition>>
 
     init {
         rootFolder.parent = ProtoFolder.Parent.Project(this)
 
         rootPackage = buildPackageTree(rootFolder.collectFiles(), emptyList())
         rootPackage.parent = ProtoPackage.Parent.Project(this)
+
+        extensionDefinitionsMap = findExtensionDefinitions().groupBy { it.messageType.resolveDeclaration() }
     }
 
     override fun validate() {
@@ -28,6 +34,14 @@ data class ProtoProject(
 
     fun resolveDeclarationFullyQualified(type: ProtoType.DefType): ProtoDeclaration? {
         return rootPackage.resolveDeclaration(type)
+    }
+
+    override fun findExtensionDefinitions(): List<ProtoExtensionDefinition> {
+        return rootPackage.findExtensionDefinitions()
+    }
+
+    fun findExtensionDefinitionsForMessage(message: ProtoMessage): List<ProtoExtensionDefinition> {
+        return extensionDefinitionsMap[message].orEmpty()
     }
 
     private fun buildPackageTree(

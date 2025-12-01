@@ -7,10 +7,7 @@ import com.squareup.kotlinpoet.TypeSpec
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.SourceTarget
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.*
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoMessage
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoFieldCardinality
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoMapField
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoMessageField
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoRegularField
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.*
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
 import io.github.timortel.kmpgrpc.shared.internal.io.wireFormatMakeTag
 
@@ -48,7 +45,7 @@ class SerializationFunctionExtension : BaseSerializationExtension() {
         builder.apply {
             message.fields.forEach { field ->
                 when {
-                    field.cardinality == ProtoFieldCardinality.Optional || (field.type.isMessage && field.cardinality != ProtoFieldCardinality.Repeated) -> {
+                    field.needsIsSetProperty -> {
                         addCode(
                             getWriteScalarFieldCode(
                                 field = field,
@@ -58,7 +55,17 @@ class SerializationFunctionExtension : BaseSerializationExtension() {
                         )
                     }
 
-                    field.cardinality == ProtoFieldCardinality.Implicit -> {
+                    field.cardinality.isLegacyRequired -> {
+                        addCode(
+                            getWriteScalarFieldCode(
+                                field = field,
+                                streamParam = Const.Message.SerializeFunction.STREAM_PARAM,
+                                performIsFieldSetCheck = false
+                            )
+                        )
+                    }
+
+                    field.cardinality.isImplicit -> {
                         addCode("if·(")
                         addCode(field.type.isNotDefaultValueCode(field.attributeName, false))
                         beginControlFlow(")·{ ")
@@ -126,6 +133,15 @@ class SerializationFunctionExtension : BaseSerializationExtension() {
                 "writeUnknownFields",
                 Const.Message.Constructor.UnknownFields.name
             )
+
+            if (message.isExtendable) {
+                addStatement(
+                    "%N.%N(%N)",
+                    Const.Message.SerializeFunction.STREAM_PARAM,
+                    "writeMessageExtensions",
+                    Const.Message.Constructor.MessageExtensions.name
+                )
+            }
         }
     }
 

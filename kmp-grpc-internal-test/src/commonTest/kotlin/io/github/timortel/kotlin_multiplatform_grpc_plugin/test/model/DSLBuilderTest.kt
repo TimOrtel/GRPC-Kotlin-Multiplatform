@@ -17,6 +17,7 @@ import io.github.timortel.kmpgrpc.test.oneOfMessage
 import io.github.timortel.kmpgrpc.test.simpleMessage
 import io.github.timortel.kmpgrpc.test.simpleRepeatedMessage
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.createScalarMessage
+import messageWithExtension
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -239,5 +240,16 @@ class DSLBuilderTest {
         }
 
         assertEquals(value, msg.oneOf1)
+    }
+
+    @Test
+    fun testExtensions() {
+        val value = "Test123"
+
+        val msg = messageWithExtension {
+            extensions[ExtensionsTest.extension] = value
+        }
+
+        assertEquals(value, msg.extensions[ExtensionsTest.extension])
     }
 }

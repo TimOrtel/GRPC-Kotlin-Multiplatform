@@ -1,12 +1,12 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin
 
-fun createSingleFileProtoFolder(content: String): FakeInputDirectory {
-    return FakeInputDirectory("dir", listOf(createProto3File(content)))
+fun createSingleFileProtoFolder(fileHeader: String, content: String): FakeInputDirectory {
+    return FakeInputDirectory("dir", listOf(createProtoFile(fileHeader, content)))
 }
 
-fun createProto3File(content: String, name: String = "testFile"): FakeInputFile {
+fun createProtoFile(fileHeader: String, content: String, name: String = "testFile"): FakeInputFile {
     val protoContent = """
-        syntax = "proto3";
+        $fileHeader
         
         $content
     """.trimIndent()

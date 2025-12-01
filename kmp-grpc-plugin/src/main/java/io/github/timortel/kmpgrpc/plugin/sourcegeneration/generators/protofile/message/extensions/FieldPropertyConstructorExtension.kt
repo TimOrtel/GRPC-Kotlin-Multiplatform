@@ -1,10 +1,6 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions
 
-import com.squareup.kotlinpoet.CodeBlock
-import com.squareup.kotlinpoet.FunSpec
-import com.squareup.kotlinpoet.LIST
-import com.squareup.kotlinpoet.MAP
-import com.squareup.kotlinpoet.ParameterSpec
+import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.SourceTarget
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoMessage
@@ -19,7 +15,9 @@ object FieldPropertyConstructorExtension : MessageWriterExtension {
         message.fields.forEach { field ->
             when (field.cardinality) {
                 is ProtoFieldCardinality.Singular -> {
-                    val type = if (field.needsIsSetProperty) field.type.resolve().copy(nullable = true)
+                    val isParamNullable = field.needsIsSetProperty
+
+                    val type = if (isParamNullable) field.type.resolve().copy(nullable = true)
                     else field.type.resolve()
 
                     builder.addParameter(
@@ -29,7 +27,7 @@ object FieldPropertyConstructorExtension : MessageWriterExtension {
                                 if (!isActual) {
                                     defaultValue(
                                         // If the field needs a isSet property, then the constructor must pass null by default
-                                        if (field.needsIsSetProperty) {
+                                        if (isParamNullable) {
                                             CodeBlock.of("null")
                                         } else {
                                             field.type.defaultValue()

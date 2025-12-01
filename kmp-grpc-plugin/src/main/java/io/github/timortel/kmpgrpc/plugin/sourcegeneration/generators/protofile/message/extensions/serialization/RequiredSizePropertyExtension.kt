@@ -4,8 +4,7 @@ import com.squareup.kotlinpoet.*
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.SourceTarget
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.*
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoMessage
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoFieldCardinality
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoRegularField
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.*
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.joinCodeBlocks
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.joinToCodeBlock
@@ -38,13 +37,27 @@ class RequiredSizePropertyExtension : BaseSerializationExtension() {
 
                 val fieldsCodeBlock = message.fields.joinToCodeBlock(separator) { field ->
                     when {
-                        field.cardinality == ProtoFieldCardinality.Optional || (field.type.isMessage && field.cardinality != ProtoFieldCardinality.Repeated) -> {
-                            add("if·(%N)·{·", field.isSetProperty.attributeName)
-                            add(getCodeForRequiredSizeForScalarAttributeC(field, field.cardinality == ProtoFieldCardinality.Optional))
+                        field.needsIsSetProperty -> {
+                            add("if·(%N != null)·{·", field.attributeName)
+                            add(
+                                getCodeForRequiredSizeForScalarAttributeC(
+                                    field = field,
+                                    isOptional = field.cardinality.isExplicit
+                                )
+                            )
                             add("}·else·{·0·}")
                         }
 
-                        field.cardinality == ProtoFieldCardinality.Implicit -> {
+                        field.cardinality.isLegacyRequired -> {
+                            add(
+                                getCodeForRequiredSizeForScalarAttributeC(
+                                    field = field,
+                                    isOptional = false
+                                )
+                            )
+                        }
+
+                        field.cardinality.isImplicit -> {
                             add("if·(")
                             add(field.type.isDefaultValueCode(field.attributeName, false))
                             add(")·0·else·{ ")
@@ -134,10 +147,15 @@ class RequiredSizePropertyExtension : BaseSerializationExtension() {
                     Const.Message.Constructor.UnknownFields.name
                 )
 
-                add(
-                    listOf(fieldsCodeBlock, mapFieldsCodeBlock, oneOfsBlock, unknownFieldsBlock)
-                        .joinCodeBlocks(separator)
+                val extensionsBlock = CodeBlock.of(
+                    "%N.requiredSize",
+                    Const.Message.Constructor.MessageExtensions.name
                 )
+
+                val blocks = listOf(fieldsCodeBlock, mapFieldsCodeBlock, oneOfsBlock, unknownFieldsBlock) +
+                        if (message.isExtendable) listOf(extensionsBlock) else emptyList()
+
+                add(blocks.joinCodeBlocks(separator))
             }
             .build()
     }

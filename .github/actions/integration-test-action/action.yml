@@ -1,0 +1,120 @@
+name: 'Integration Test'
+inputs:
+  use-envoy:
+    description: If the envoy service should be started
+    required: true
+    default: 'false'
+  target:
+    description: The Multiplatform target to be used
+    required: true
+  test-action:
+    description: The Gradle task name that should be run
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up JDK 17
+      uses: actions/setup-java@v5
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    - name: Start test-server
+      shell: bash
+      run: |
+        nohup ./gradlew :kmp-grpc-internal-test:test-server:run > server.log 2>&1 &
+        echo $! > gradle_pid.txt
+
+    - name: Set up Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: "3.13"
+
+    - name: Install dependencies
+      shell: bash
+      working-directory: kmp-grpc-internal-test/test-server-python
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Generate protobuf code
+      shell: bash
+      working-directory: kmp-grpc-internal-test/test-server-python
+      run: ./gensources.sh
+
+    - name: Run server
+      shell: bash
+      working-directory: kmp-grpc-internal-test/test-server-python
+      run: |
+        nohup python server/app.py > ../../python-server.log 2>&1 &
+        echo $! > ../../python_pid.txt
+
+    - name: Start envoy service
+      shell: bash
+      if: ${{ inputs.use-envoy == 'true' }}
+      run: |
+        docker run -d --rm --name envoy --network host \
+        -v $(pwd)/kmp-grpc-internal-test/envoy.yml:/etc/envoy/envoy.yaml \
+        -p 8082:8082 envoyproxy/envoy-dev:latest \
+        -c /etc/envoy/envoy.yaml \
+        -l trace
+
+    - name: Wait for test-server to be healthy
+      uses: ./.github/actions/wait-for-server-action
+      with:
+        port: 17888
+        rpc: io.github.timortel.kmpgrpc.test.TestService/emptyRpc
+
+    - name: Wait for test-server to be healthy
+      uses: ./.github/actions/wait-for-server-action
+      with:
+        port: 17892
+        rpc: io.github.timortel.kmpgrpc.test.TestService/emptyRpc
+
+    - name: Run tests in plugin module
+      shell: bash
+      run: ./gradlew :kmp-grpc-internal-test:${{ inputs.test-action }} --info -Pio.github.timortel.kmp-grpc.internal.targets=${{ inputs.target }}
+
+    - name: Upload JUnit Test Results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.target }} Test Results
+        if-no-files-found: error
+        path: test-outputs/kmp-grpc-internal-test/**/*.xml
+
+    - name: Report Test Results
+      uses: dorny/test-reporter@v2
+      if: always()
+      with:
+        name: ${{ inputs.target }} Target Tests
+        path: 'test-outputs/kmp-grpc-internal-test/**/*.xml'
+        reporter: java-junit
+
+    - name: Kill test servers
+      shell: bash
+      run: |
+        PID=$(cat gradle_pid.txt)
+        kill $PID
+        
+        PID=$(cat python_pid.txt)
+        kill $PID
+      if: always()
+
+    - name: Print Envoy Logs And Kill
+      shell: bash
+      run: |
+        docker logs envoy
+        docker stop envoy
+      if: ${{ inputs.use-envoy == 'true' && always() }}
+
+    - name: Print Server Logs
+      shell: bash
+      run: cat server.log
+      if: always()
+
+    - name: Print Server Logs
+      shell: bash
+      run: cat python-server.log
+      if: always()

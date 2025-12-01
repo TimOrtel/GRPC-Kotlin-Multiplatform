@@ -1,0 +1,45 @@
+edition = "2023";
+
+package io.github.timortel.kmpgrpc.test;
+
+option java_multiple_files = true;
+
+message EditionsPackedIntegersMessage {
+  repeated int32 field1 = 1 [features.repeated_field_encoding=PACKED];
+}
+
+message EditionsNonPackedIntegersMessage {
+  repeated int32 field1 = 1 [features.repeated_field_encoding=EXPANDED];
+}
+
+message EditionsPackedTypesMessage {
+  repeated int32 field1 = 1 [features.repeated_field_encoding=PACKED];
+  repeated int64 field2 = 2 [features.repeated_field_encoding=PACKED];
+  repeated double field3 = 3 [features.repeated_field_encoding=PACKED];
+  repeated float field4 = 4 [features.repeated_field_encoding=PACKED];
+  repeated uint32 field5 = 5 [features.repeated_field_encoding=PACKED];
+  repeated uint64 field6 = 6 [features.repeated_field_encoding=PACKED];
+  repeated sint32 field7 = 7 [features.repeated_field_encoding=PACKED];
+  repeated sint64 field8 = 8 [features.repeated_field_encoding=PACKED];
+  repeated fixed32 field9 = 9 [features.repeated_field_encoding=PACKED];
+  repeated fixed64 field10 = 10 [features.repeated_field_encoding=PACKED];
+  repeated sfixed32 field11 = 11 [features.repeated_field_encoding=PACKED];
+  repeated sfixed64 field12 = 12 [features.repeated_field_encoding=PACKED];
+  repeated bool field13 = 13 [features.repeated_field_encoding=PACKED];
+}
+
+message EditionsNonPackedTypesMessage {
+  repeated int32 field1 = 1 [features.repeated_field_encoding=EXPANDED];
+  repeated int64 field2 = 2 [features.repeated_field_encoding=EXPANDED];
+  repeated double field3 = 3 [features.repeated_field_encoding=EXPANDED];
+  repeated float field4 = 4 [features.repeated_field_encoding=EXPANDED];
+  repeated uint32 field5 = 5 [features.repeated_field_encoding=EXPANDED];
+  repeated uint64 field6 = 6 [features.repeated_field_encoding=EXPANDED];
+  repeated sint32 field7 = 7 [features.repeated_field_encoding=EXPANDED];
+  repeated sint64 field8 = 8 [features.repeated_field_encoding=EXPANDED];
+  repeated fixed32 field9 = 9 [features.repeated_field_encoding=EXPANDED];
+  repeated fixed64 field10 = 10 [features.repeated_field_encoding=EXPANDED];
+  repeated sfixed32 field11 = 11 [features.repeated_field_encoding=EXPANDED];
+  repeated sfixed64 field12 = 12 [features.repeated_field_encoding=EXPANDED];
+  repeated bool field13 = 13 [features.repeated_field_encoding=EXPANDED];
+}

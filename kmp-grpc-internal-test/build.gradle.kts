@@ -114,7 +114,7 @@ kmpGrpc {
 
     includeWellKnownTypes = true
 
-    protoSourceFolders = project.files("src/commonMain/proto/general", "src/commonMain/proto/unknownfield")
+    protoSourceFolders = project.files("src/commonMain/proto/general", "src/commonMain/proto/unknownfield", "src/commonMain/proto/editions")
 }
 
 buildConfig {

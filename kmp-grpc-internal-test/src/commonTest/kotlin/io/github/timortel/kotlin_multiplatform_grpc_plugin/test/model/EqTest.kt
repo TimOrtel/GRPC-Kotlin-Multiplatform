@@ -1,9 +1,12 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.test.model
 
+import ExtensionsTest
 import io.github.timortel.kmpgrpc.core.message.UnknownField
+import io.github.timortel.kmpgrpc.core.message.extensions.buildExtensions
 import io.github.timortel.kmpgrpc.test.Unknownfield
 import io.github.timortel.kmpgrpc.test.emptyMessage
 import io.github.timortel.kmpgrpc.test.simpleMessage
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.createMessageWithAllExtensions
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.createMessageWithAllTypes
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.createScalarMessage
 import kotlin.test.Test
@@ -74,5 +77,25 @@ class EqTest {
         )
 
         assertNotEquals(message, message2)
+    }
+
+    @Test
+    fun messageWithDifferentExtensionsEqual() {
+        val msg1 = createMessageWithAllExtensions()
+        val msg2 = createMessageWithAllExtensions()
+
+        assertEquals(msg1, msg2)
+    }
+
+    @Test
+    fun messageWithDifferentExtensionsDiffer() {
+        val msg1 = createMessageWithAllExtensions()
+        val msg2 = ExtensionsTest.MessageWithEveryExtension(
+            extensions = buildExtensions {
+                set(ExtensionsTest.field1, "Foo")
+            }
+        )
+
+        assertNotEquals(msg1, msg2)
     }
 }

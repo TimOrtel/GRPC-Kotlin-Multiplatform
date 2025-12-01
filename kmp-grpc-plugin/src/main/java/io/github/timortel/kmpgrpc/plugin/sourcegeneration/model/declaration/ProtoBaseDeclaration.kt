@@ -1,7 +1,7 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration
 
 import com.squareup.kotlinpoet.ClassName
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.Options
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.Options
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOptionsHolder
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoProject
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoVisibilityHolder
@@ -33,7 +33,7 @@ interface ProtoBaseDeclaration : ProtoOptionsHolder, ProtoVisibilityHolder {
      */
     val className: ClassName
         get() {
-            return if (Options.javaMultipleFiles.get(file)) {
+            return if (Options.Basic.javaMultipleFiles.get(file)) {
                 ClassName(file.javaPackage, kotlinClassName)
             } else {
                 file.className.nestedClass(kotlinClassName)
@@ -44,7 +44,7 @@ interface ProtoBaseDeclaration : ProtoOptionsHolder, ProtoVisibilityHolder {
      * If the message is nested within another class in the generated code.
      */
     val isNested: Boolean
-        get() = !Options.javaMultipleFiles.get(file)
+        get() = !Options.Basic.javaMultipleFiles.get(file)
 
     val ctx: ParserRuleContext
 }

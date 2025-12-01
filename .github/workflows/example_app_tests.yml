@@ -34,14 +34,10 @@ jobs:
           echo $! > gradle_pid.txt
 
       - name: Wait for test-server to be healthy
-        timeout-minutes: 10
-        run: |
-          docker pull fullstorydev/grpcurl:latest
-          echo "Waiting for service..."
-          while ! docker run --network host fullstorydev/grpcurl -plaintext localhost:17888 io.github.timortel.kmpgrpc.composeexample.shared.CommunicationService/emptyRpc | grep -q "{}"; do
-            sleep 5
-          done
-          echo "Service is healthy!"
+        uses: ./.github/actions/wait-for-server-action
+        with:
+          port: 17888
+          rpc: io.github.timortel.kmpgrpc.composeexample.shared.CommunicationService/emptyRpc
 
       - name: Run tests
         run: |
@@ -71,14 +67,10 @@ jobs:
           echo $! > gradle_pid.txt
 
       - name: Wait for test-server to be healthy
-        timeout-minutes: 10
-        run: |
-          docker pull fullstorydev/grpcurl:latest
-          echo "Waiting for service..."
-          while ! docker run --network host fullstorydev/grpcurl -plaintext localhost:17888 io.github.timortel.kmpgrpc.composeexample.shared.CommunicationService/emptyRpc | grep -q "{}"; do
-            sleep 5
-          done
-          echo "Service is healthy!"
+        uses: ./.github/actions/wait-for-server-action
+        with:
+          port: 17888
+          rpc: io.github.timortel.kmpgrpc.composeexample.shared.CommunicationService/emptyRpc
 
       - name: Start envoy service
         run: docker run -d --rm --name envoy --network host -v $(pwd)/kmp-grpc-internal-test/envoy.yml:/etc/envoy/envoy.yaml -p 8082:8082 envoyproxy/envoy-dev:latest
@@ -115,13 +107,10 @@ jobs:
           echo $! > gradle_pid.txt
 
       - name: Wait for test-server to be healthy
-        timeout-minutes: 10
-        run: |
-          echo "Waiting for service..."
-          while ! grpcurl -plaintext localhost:17888 io.github.timortel.kmpgrpc.composeexample.shared.CommunicationService/emptyRpc | grep -q "{}"; do
-            sleep 5
-          done
-          echo "Service is healthy!"
+        uses: ./.github/actions/wait-for-server-action
+        with:
+          port: 17888
+          rpc: io.github.timortel.kmpgrpc.composeexample.shared.CommunicationService/emptyRpc
 
       - name: Run tests
         run: |

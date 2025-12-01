@@ -1,9 +1,11 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.serialization
 
 import com.squareup.kotlinpoet.*
+import com.squareup.kotlinpoet.MemberName.Companion.member
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.SourceTarget
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.*
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoEnum
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoMessage
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoFieldCardinality
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoMessageField
@@ -20,7 +22,7 @@ import io.github.timortel.kmpgrpc.shared.internal.io.wireFormatMakeTag
  */
 class DeserializationFunctionExtension : BaseSerializationExtension() {
 
-    private val wrapperParamName = Const.Message.Companion.WrapperDeserializationFunction.STREAM_PARAM
+    private val wrapperParamName = Const.Message.Companion.WrapperDeserializationFunction.STREAM_PARAM.name
 
     override fun applyToCompanionObject(builder: TypeSpec.Builder, message: ProtoMessage, sourceTarget: SourceTarget) {
         builder.addFunction(
@@ -28,9 +30,11 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
             FunSpec
                 .builder(Const.Message.Companion.WrapperDeserializationFunction.NAME)
                 .addModifiers(KModifier.OVERRIDE)
+                .addParameter(Const.Message.Companion.WrapperDeserializationFunction.STREAM_PARAM.toParamSpec())
                 .addParameter(
-                    Const.Message.Companion.WrapperDeserializationFunction.STREAM_PARAM,
-                    CodedInputStream
+                    Const.Message.Companion.WrapperDeserializationFunction.EXTENSION_REGISTRY_PARAM
+                        .parametrizedBy(message.className)
+                        .toParamSpec()
                 )
                 .returns(message.className)
                 .apply {
@@ -47,13 +51,21 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
         builder: FunSpec.Builder,
         message: ProtoMessage
     ) {
-        // declare unknownFields variable
+        // declare unknownFields and extension builder variables
         declareLocalVariable(
             builder = builder,
             fieldName = Const.Message.Companion.WrapperDeserializationFunction.UNKNOWN_FIELDS_LOCAL_VARIABLE,
             type = MUTABLE_LIST.parameterizedBy(unknownField),
             isMutable = false,
             defaultValue = CodeBlock.of("mutableListOf()")
+        )
+
+        declareLocalVariable(
+            builder = builder,
+            fieldName = Const.Message.Companion.WrapperDeserializationFunction.EXTENSION_BUILDER_LOCAL_VARIABLE,
+            type = kmExtensionBuilder.parameterizedBy(message.className),
+            isMutable = false,
+            defaultValue = CodeBlock.of("%T()", kmExtensionBuilder)
         )
 
         // declare variables for each field
@@ -87,14 +99,17 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
 
             declareWhenEntriesForOneOfs(message)
 
-            // Unknown field
+            // Unknown field or extension
             addStatement(
-                "else -> %N.%N(%N)?.let { unknownFields.add(it) }",
+                "else -> %M(%N.%N(%N, %N), %N, %N)",
+                mergeUnknownFieldOrExtension,
                 wrapperParamName,
-                "readUnknownField",
-                tagLocalFieldName
+                "readUnknownFieldOrExtension",
+                tagLocalFieldName,
+                Const.Message.Companion.WrapperDeserializationFunction.EXTENSION_REGISTRY_PARAM.name,
+                Const.Message.Companion.WrapperDeserializationFunction.UNKNOWN_FIELDS_LOCAL_VARIABLE,
+                Const.Message.Companion.WrapperDeserializationFunction.EXTENSION_BUILDER_LOCAL_VARIABLE,
             )
-            // Unknown field
 
             endControlFlow()
 
@@ -146,14 +161,20 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
                 beginControlFlow("{")
 
                 when {
-                    field.type.isMessage -> {
+                    field.type is ProtoType.DefType && field.type.isMessage -> {
+                        val message = field.type.resolveDeclaration() as ProtoMessage
+
                         addCode(
-                            "%N·+=·%N.%N(%T.Companion)\n",
+                            "%N·+=·%N.%N(%T.Companion, ",
                             field.attributeName,
                             wrapperParamName,
                             "readMessage",
                             field.type.resolve()
                         )
+
+                        addCode(buildExtensionRegistryCodeForMessage(message))
+
+                        addCode(")\n")
                     }
 
                     isPacked -> {
@@ -230,7 +251,7 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
 
             addCode(
                 "%N.%N(%N, %T.%N, %T.%N, ",
-                Const.Message.Companion.WrapperDeserializationFunction.STREAM_PARAM,
+                wrapperParamName,
                 "readMapEntry",
                 mapField.attributeName,
                 DataType::class.asTypeName(),
@@ -283,7 +304,19 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
                     Const.Message.Companion.WrapperDeserializationFunction.UNKNOWN_FIELDS_LOCAL_VARIABLE
                 )
 
-            addCode(listOf(fieldsBlock, unknownFieldsBlock).joinCodeBlocks(separator))
+            val extensionsBlock =
+                CodeBlock.of(
+                    "%N·=·%N.build()",
+                    Const.Message.Constructor.MessageExtensions.name,
+                    Const.Message.Companion.WrapperDeserializationFunction.EXTENSION_BUILDER_LOCAL_VARIABLE
+                )
+
+            val codeBlocks = listOf(
+                fieldsBlock,
+                unknownFieldsBlock
+            ) + if (message.isExtendable) listOf(extensionsBlock) else emptyList()
+
+            addCode(codeBlocks.joinCodeBlocks(separator))
 
             addCode(")\n")
         }
@@ -378,17 +411,21 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
             }
 
             is ProtoType.DefType -> {
-                when (type.declType) {
-                    ProtoType.DefType.DeclarationType.MESSAGE -> {
-                        CodeBlock.of(
-                            "%N.%N(%T.Companion)",
-                            wrapperParamName,
-                            "readMessage",
-                            field.type.resolve()
-                        )
+                when (val decl = type.resolveDeclaration()) {
+                    is ProtoMessage -> {
+                        CodeBlock.builder()
+                            .add(
+                                "%N.%N(%T.Companion, ",
+                                wrapperParamName,
+                                "readMessage",
+                                field.type.resolve()
+                            )
+                            .add(buildExtensionRegistryCodeForMessage(decl))
+                            .add(")")
+                            .build()
                     }
 
-                    ProtoType.DefType.DeclarationType.ENUM -> {
+                    is ProtoEnum -> {
                         CodeBlock.of(
                             "%T.%N(%N.readEnum())",
                             field.type.resolve(),
@@ -411,16 +448,20 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
             }
 
             is ProtoType.DefType -> {
-                when (type.declType) {
-                    ProtoType.DefType.DeclarationType.MESSAGE -> {
-                        CodeBlock.of(
-                            "{·%N(%T.Companion)}",
-                            "readMessage",
-                            type.resolve()
-                        )
+                when (val decl = type.resolveDeclaration()) {
+                    is ProtoMessage -> {
+                        CodeBlock.builder()
+                            .add(
+                                "{·%N(%T.Companion, ",
+                                "readMessage",
+                                type.resolve()
+                            )
+                            .add(buildExtensionRegistryCodeForMessage(decl))
+                            .add(")}")
+                            .build()
                     }
 
-                    ProtoType.DefType.DeclarationType.ENUM -> {
+                    is ProtoEnum -> {
                         CodeBlock.of(
                             "{·%T.%N(readEnum())·}",
                             type.resolve(),
@@ -455,6 +496,17 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
                     ProtoType.DefType.DeclarationType.ENUM -> "readEnum"
                 }
             }
+        }
+    }
+
+    private fun buildExtensionRegistryCodeForMessage(message: ProtoMessage): CodeBlock {
+        return if (message.isExtendable) {
+            CodeBlock.of(
+                "%M",
+                message.className.nestedClass("Companion").member(Const.Message.Companion.defaultExtensionRegistryProperty.name)
+            )
+        } else {
+            CodeBlock.of("%T.empty()", kmExtensionRegistry)
         }
     }
 }

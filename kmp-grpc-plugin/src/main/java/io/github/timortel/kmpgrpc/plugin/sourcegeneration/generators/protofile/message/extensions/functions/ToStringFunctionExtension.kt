@@ -14,7 +14,7 @@ object ToStringFunctionExtension : MessageWriterExtension {
         if (sourceTarget is SourceTarget.Actual) {
             builder.addFunction(
                 FunSpec
-                    .builder("toString")
+                    .builder(Const.Message.BasicFunctions.ToStringFunction.NAME)
                     .addModifiers(KModifier.OVERRIDE)
                     .returns(STRING)
                     .apply {
@@ -25,11 +25,12 @@ object ToStringFunctionExtension : MessageWriterExtension {
 
                         val separator = CodeBlock.of("\nappend(%S)\n", ", ")
 
-                        val propertiesCodeBlock = (message.fields + message.oneOfs + message.mapFields).joinToCodeBlock(separator) { field ->
-                            addStatement("append(%S)", field.attributeName)
-                            addStatement("append(%S)", "=")
-                            addStatement("append(%N.toString())", field.attributeName)
-                        }
+                        val propertiesCodeBlock =
+                            (message.fields + message.oneOfs + message.mapFields).joinToCodeBlock(separator) { field ->
+                                addStatement("append(%S)", field.attributeName)
+                                addStatement("append(%S)", "=")
+                                addStatement("append(%N.toString())", field.attributeName)
+                            }
 
                         val unknownFieldsCodeBlock = CodeBlock.builder()
                             .apply {
@@ -39,7 +40,19 @@ object ToStringFunctionExtension : MessageWriterExtension {
                             }
                             .build()
 
-                        addCode(listOf(propertiesCodeBlock, unknownFieldsCodeBlock).joinCodeBlocks(separator))
+                        val extensionsCodeBlock = CodeBlock.builder()
+                            .apply {
+                                addStatement("append(%S)", Const.Message.Constructor.MessageExtensions.name)
+                                addStatement("append(%S)", "=")
+                                addStatement("append(%N.toString())", Const.Message.Constructor.MessageExtensions.name)
+                            }
+                            .build()
+
+                        val codeBlocks =
+                            listOf(propertiesCodeBlock, unknownFieldsCodeBlock) +
+                                    if (message.isExtendable) listOf(extensionsCodeBlock) else emptyList()
+
+                        addCode(codeBlocks.joinCodeBlocks(separator))
 
                         addStatement("append(%S)", "}")
 

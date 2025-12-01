@@ -3,6 +3,7 @@ package io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.dsl
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.Const
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.kmExtensionBuilder
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.DefaultAnnotations
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoMessage
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoFieldCardinality
@@ -133,6 +134,20 @@ abstract class ProtoDslWriter(private val isActual: Boolean) {
                                 .apply {
                                     if (isActual) {
                                         initializer("%T", oneOf.sealedClassNameNotSet)
+                                    }
+                                }
+                                .build()
+                        )
+                    }
+
+                    if (message.isExtendable) {
+                        addProperty(
+                            Const.DSL.MessageExtensions
+                                .parametrizedBy(message.className)
+                                .toPropertySpecBuilder(*modifier.toTypedArray())
+                                .apply {
+                                    if (isActual) {
+                                        initializer("%T()", kmExtensionBuilder)
                                     }
                                 }
                                 .build()

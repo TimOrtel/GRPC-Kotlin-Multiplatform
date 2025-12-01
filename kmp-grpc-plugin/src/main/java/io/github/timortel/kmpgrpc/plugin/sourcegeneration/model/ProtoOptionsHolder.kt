@@ -3,6 +3,8 @@ package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.CompilationException
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.Warnings
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.OptionTarget
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.Options
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.toFilePositionString
 
 interface ProtoOptionsHolder : ProtoNode {
@@ -10,15 +12,42 @@ interface ProtoOptionsHolder : ProtoNode {
     val options: List<ProtoOption>
     val file: ProtoFile
 
-    val supportedOptions: List<Options.Option<*>>
+    val parentOptionsHolder: ProtoOptionsHolder?
+
+    val optionTarget: OptionTarget
 
     override fun validate() {
         options.forEach { option ->
-            val isSupported = option.name in supportedOptions.map { it.name }
+            val relatedOption = Options.options.firstOrNull { it.name == option.name }
+            val isSupportedOnHolder = optionTarget in relatedOption?.targets.orEmpty()
             val isIgnored = option.name in Options.ignoredOptions
 
+            val languageConfiguration = relatedOption?.languageConfigurationMap?.get(file.languageVersion)
+
+            val isSupportedOnLanguageVersion = when (languageConfiguration) {
+                is Options.LangConfig.Available -> true
+                is Options.LangConfig.Unavailable, null -> false
+            }
+
             // An option can be supported, but still not valid, for example because it is only valid on certain field types
-            val isValid = isSupported && isSupportedOptionValid(option)
+            val isValid = isSupportedOnHolder && isSupportedOnLanguageVersion && isSupportedOptionValid(option)
+
+            if (!isIgnored && isValid) {
+                when (languageConfiguration) {
+                    is Options.LangConfig.Available -> {
+                        val value = relatedOption.get(this)
+
+                        if (languageConfiguration.isLocked && value != languageConfiguration.defaultValue) {
+                            Warnings.unsupportedOptionValueUsed.withMessage(
+                                "${option.name} at ${
+                                    option.ctx.toFilePositionString(file.path)
+                                } has fixed value of ${languageConfiguration.defaultValue}. Set value will be ignored."
+                            )
+                        }
+                    }
+                    is Options.LangConfig.Unavailable, null -> {}
+                }
+            }
 
             if (!isIgnored && !isValid) {
                 file.project.logger.warn(

@@ -2,7 +2,7 @@ package io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.
 
 import com.squareup.kotlinpoet.*
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.DefaultAnnotations
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.Options
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.Options
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.ProtoOneOf
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoOneOfField
 
@@ -46,7 +46,7 @@ abstract class ProtoOneOfWriter(private val isActual: Boolean) {
                                         addSuperinterface(protoOneOf.sealedClassName)
                                     }
 
-                                    if (Options.deprecated.get(field)) {
+                                    if (Options.Basic.deprecated.get(field)) {
                                         addAnnotation(DefaultAnnotations.Deprecated)
                                     }
 

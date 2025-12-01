@@ -1,5 +1,7 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.test
 
+import ExtensionsTest
+import io.github.timortel.kmpgrpc.core.message.extensions.buildExtensions
 import io.github.timortel.kmpgrpc.test.*
 
 fun createScalarMessage() = scalarTypes {
@@ -63,6 +65,52 @@ fun createMessageWithAllTypes() = messageWithEverything {
     field36List += listOf(byteArrayOf(0, -127, 127), byteArrayOf(-123, 1, 2), byteArrayOf(3, 3, -6))
 }
 
+fun createMessageWithAllExtensions() = ExtensionsTest.MessageWithEveryExtension(
+    extensions = buildExtensions {
+        set(ExtensionsTest.field1, "Test")
+        set(ExtensionsTest.field2, true)
+        set(ExtensionsTest.field3, 12)
+        set(ExtensionsTest.field4, 25L)
+        set(ExtensionsTest.field5, 3f)
+        set(ExtensionsTest.field6, 7.0)
+        set(ExtensionsTest.field7, SimpleEnum.ONE)
+        set(ExtensionsTest.field8, simpleMessage { field1 = "Foo" })
+
+        set(ExtensionsTest.field9, listOf("Foo", "Bar", "Baz"))
+        set(ExtensionsTest.field10, listOf(true, false, true, true))
+        set(ExtensionsTest.field11, listOf(1, 2, 3, 4, -12, 1341))
+        set(ExtensionsTest.field12, listOf(12L, 23424L, 10312313L, -123131L))
+        set(ExtensionsTest.field13, listOf(-1f, 2f, 2.5f, -0.5f))
+        set(ExtensionsTest.field14, listOf(-0.5, 15.0))
+        set(ExtensionsTest.field15, listOf(SimpleEnum.ZERO, SimpleEnum.ZERO, SimpleEnum.ONE, SimpleEnum.TWO))
+
+        set(ExtensionsTest.field19, 12u)
+        set(ExtensionsTest.field20, 14uL)
+        set(ExtensionsTest.field21, 2421)
+        set(ExtensionsTest.field22, 1413414L)
+        set(ExtensionsTest.field23, 1245124u)
+        set(ExtensionsTest.field24, 124123122423123uL)
+        set(ExtensionsTest.field25, -13)
+        set(ExtensionsTest.field26, -1353532131L)
+        set(ExtensionsTest.field27, byteArrayOf(0, -13, 127))
+
+        set(ExtensionsTest.field28, listOf(0u, 134u, 35311u))
+        set(ExtensionsTest.field29, listOf(0uL, 134uL, 353111345134uL))
+        set(ExtensionsTest.field30, listOf(-134, -145129, 34521431))
+        set(ExtensionsTest.field31, listOf(-1L, 141341413413L, -134134314131L))
+        set(ExtensionsTest.field32, listOf(0u, 14234u, 1413413413u))
+        set(ExtensionsTest.field33, listOf(0uL, 134uL, 353111345134uL))
+        set(ExtensionsTest.field34, listOf(-14, 0, 1241522))
+        set(ExtensionsTest.field35, listOf(-154L, 0L, 4514124121L))
+        set(ExtensionsTest.field36, listOf(
+            byteArrayOf(0, -127, 127),
+            byteArrayOf(-123, 1, 2),
+            byteArrayOf(3, 3, -6)
+        ))
+    }
+)
+
+
 private val field1 = listOf(0, 1, -13, 5000)
 private val field2 = listOf(0L, 1L, -13L, 5000L)
 private val field3 = listOf(0.0, 1.0, -13.0, 5000.0, 2.5, -0.5)
@@ -94,6 +142,38 @@ fun createPackedTypesMessage(): PackedTypesMessage = PackedTypesMessage(
 )
 
 fun createNonPackedTypesMessage(): NonPackedTypesMessage = NonPackedTypesMessage(
+    field1List = field1,
+    field2List = field2,
+    field3List = field3,
+    field4List = field4,
+    field5List = field5,
+    field6List = field6,
+    field7List = field7,
+    field8List = field8,
+    field9List = field9,
+    field10List = field10,
+    field11List = field11,
+    field12List = field12,
+    field13List = field13,
+)
+
+fun createEditionsPackedTypesMessage(): EditionsPackedTypesMessage = EditionsPackedTypesMessage(
+    field1List = field1,
+    field2List = field2,
+    field3List = field3,
+    field4List = field4,
+    field5List = field5,
+    field6List = field6,
+    field7List = field7,
+    field8List = field8,
+    field9List = field9,
+    field10List = field10,
+    field11List = field11,
+    field12List = field12,
+    field13List = field13,
+)
+
+fun createEditionsNonPackedTypesMessage(): EditionsNonPackedTypesMessage = EditionsNonPackedTypesMessage(
     field1List = field1,
     field2List = field2,
     field3List = field3,

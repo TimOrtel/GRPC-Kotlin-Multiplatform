@@ -1,0 +1,33 @@
+edition = "2023";
+
+package io.github.timortel.kmpgrpc.test.editions;
+
+option java_multiple_files = true;
+
+option java_outer_classname = "EditionDeclarations";
+
+message SimpleMessage {
+
+}
+
+message NestingMessage {
+  message NestedMessage {
+
+  }
+
+  enum NestedEnum {
+    DEFAULT = 0;
+  }
+}
+
+enum SimpleEnum {
+  DEFAULT = 0;
+}
+
+service SomeService {
+
+}
+
+message EditionsLegacyField {
+  int32 a = 1 [features.field_presence = LEGACY_REQUIRED];
+}

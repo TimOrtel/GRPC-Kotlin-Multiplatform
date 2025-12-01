@@ -3,8 +3,10 @@ package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.mes
 import com.squareup.kotlinpoet.MAP
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.TypeName
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.DeclarationResolver
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOption
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOptionsHolder
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoMessage
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.ProtoMessageProperty
@@ -18,7 +20,11 @@ data class ProtoMapField(
     val valuesType: ProtoType,
     override val ctx: ParserRuleContext
 ) : ProtoBaseField(), ProtoMessageProperty {
+
     override lateinit var message: ProtoMessage
+
+    override val parentOptionsHolder: ProtoOptionsHolder
+        get() = message
 
     override val file: ProtoFile get() = message.file
 
@@ -26,6 +32,9 @@ data class ProtoMapField(
 
     override val propertyType: TypeName
         get() = MAP.parameterizedBy(keyType.resolve(), valuesType.resolve())
+
+    override val declarationResolver: DeclarationResolver
+        get() = message
 
     init {
         keyType.parent = ProtoType.Parent.MapField(this)

@@ -6,16 +6,22 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.SourceTarget
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.MessageCompanion
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.MessageDeserializer
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.DefaultMessageCompanion
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.DefaultMessageWithExtensionsCompanion
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.kmMessage
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.kmMessageWithExtensions
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.enumeration.ProtoEnumerationWriter
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.field.ProtoFieldWriter
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.*
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.FieldPropertyConstructorExtension
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.MessageWriterExtension
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.UnknownFieldsExtension
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.functions.CopyFunctionExtension
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.functions.EqualsFunctionExtension
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.functions.HashCodeFunctionExtension
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.functions.ToStringFunctionExtension
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.protoextensions.DefaultExtensionRegistryExtension
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.protoextensions.ExtensionDefinitionExtension
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.protoextensions.ExtensionsPropertyExtension
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.serialization.DeserializationFunctionExtension
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.serialization.RequiredSizePropertyExtension
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.serialization.SerializationFunctionExtension
@@ -46,7 +52,10 @@ abstract class ProtoMessageWriter(private val isActual: Boolean) {
         ToStringFunctionExtension,
         CopyFunctionExtension,
         FieldPropertyConstructorExtension,
-        UnknownFieldsExtension
+        UnknownFieldsExtension,
+        ExtensionsPropertyExtension,
+        ExtensionDefinitionExtension,
+        DefaultExtensionRegistryExtension
     )
 
     /**
@@ -78,7 +87,10 @@ abstract class ProtoMessageWriter(private val isActual: Boolean) {
                         .build()
                 )
 
-                addSuperinterface(kmMessage)
+                addSuperinterface(
+                    if (message.isExtendable) kmMessageWithExtensions.parameterizedBy(message.className)
+                    else kmMessage
+                )
                 addSuperinterfaces(additionalSuperinterfaces)
 
                 message.fields.forEach { field ->
@@ -105,10 +117,12 @@ abstract class ProtoMessageWriter(private val isActual: Boolean) {
                     addType(protoEnumerationWriter.generateProtoEnum(childEnum))
                 }
 
+                val companionType = if (message.isExtendable) { DefaultMessageWithExtensionsCompanion } else { DefaultMessageCompanion }
+                    .parameterizedBy(message.className)
+
                 addType(
                     TypeSpec.companionObjectBuilder()
-                        .addSuperinterface(MessageDeserializer.parameterizedBy(message.className))
-                        .addSuperinterface(MessageCompanion.parameterizedBy(message.className))
+                        .addSuperinterface(companionType)
                         .apply {
                             applyToCompanionObject(this, message)
 
