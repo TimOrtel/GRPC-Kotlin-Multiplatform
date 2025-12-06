@@ -40,6 +40,13 @@ sealed class CompilationException(val msg: String, val filePath: String, val ctx
     class ExtensionInvalidReference(message: String, file: ProtoFile, ctx: ParserRuleContext) : CompilationException(message, file, ctx)
     class ExtensionInvalidRange(message: String, file: ProtoFile, ctx: ParserRuleContext) : CompilationException(message, file, ctx)
 
+    // Export
+    class ImportLocalDeclaration(message: String, file: ProtoFile, ctx: ParserRuleContext) : CompilationException(message, file, ctx)
+    class StrictExportViolation(message: String, file: ProtoFile, ctx: ParserRuleContext) : CompilationException(message, file, ctx)
+
+    // Language
+    class UnsupportedLanguageFeatureUsed(message: String, file: ProtoFile, ctx: ParserRuleContext) : CompilationException(message, file, ctx)
+
     override val message: String
         get() = if (ctx == null) {
             "$filePath: $msg"

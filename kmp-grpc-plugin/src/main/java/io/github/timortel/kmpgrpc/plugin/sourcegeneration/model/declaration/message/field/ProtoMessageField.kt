@@ -66,7 +66,7 @@ class ProtoMessageField(
                 FieldCardinality.SINGULAR_OPTIONAL -> ProtoFieldCardinality.Singular(ProtoFieldPresence.EXPLICIT)
                 FieldCardinality.REPEATED -> ProtoFieldCardinality.Repeated
             }
-            ProtoLanguageVersion.EDITION2023 -> when (fieldCardinality) {
+            ProtoLanguageVersion.EDITION2023, ProtoLanguageVersion.EDITION2024 -> when (fieldCardinality) {
                 FieldCardinality.SINGULAR -> ProtoFieldCardinality.Singular(
                     presence = Options.Feature.fieldPresence.get(this)
                 )
@@ -114,7 +114,7 @@ class ProtoMessageField(
     override val isPacked: Boolean
         get() = cardinality == ProtoFieldCardinality.Repeated && type.isPackable && when (file.languageVersion) {
             ProtoLanguageVersion.PROTO3 -> Options.Basic.packed.get(this)
-            ProtoLanguageVersion.EDITION2023 -> when (Options.Feature.repeatedFieldEncoding.get(this)) {
+            ProtoLanguageVersion.EDITION2023, ProtoLanguageVersion.EDITION2024 -> when (Options.Feature.repeatedFieldEncoding.get(this)) {
                 ProtoRepeatedFieldEncoding.PACKED -> true
                 ProtoRepeatedFieldEncoding.EXPANDED -> false
             }

@@ -30,6 +30,7 @@ data class ProtoMessage(
     override val options: List<ProtoOption>,
     override val extensionDefinitions: List<ProtoExtensionDefinition>,
     val extensionRange: ProtoExtensionRanges,
+    override val symbolVisibility: ProtoSymbolVisibility?,
     override val ctx: ParserRuleContext
 ) : ProtoDeclaration, FileBasedDeclarationResolver, ProtoFieldHolder, ProtoChildPropertyNameResolver,
     ProtoExtensionDefinitionHolder, ProtoExtensionDefinitionFinder {

@@ -20,6 +20,7 @@ data class ProtoEnum(
     val fields: List<ProtoEnumField>,
     override val options: List<ProtoOption>,
     override val reservation: ProtoReservation,
+    override val symbolVisibility: ProtoSymbolVisibility?,
     override val ctx: ParserRuleContext
 ) : ProtoDeclaration, BaseDeclarationResolver, ProtoFieldHolder {
 

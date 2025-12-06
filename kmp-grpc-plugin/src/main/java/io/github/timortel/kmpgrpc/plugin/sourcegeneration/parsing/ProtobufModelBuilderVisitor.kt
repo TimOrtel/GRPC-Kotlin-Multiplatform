@@ -14,6 +14,7 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOption
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoEnum
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoMessage
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoSymbolVisibility
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.enumeration.ProtoEnumField
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.ProtoExtensionRanges
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.ProtoExtensionRanges.Companion.fold
@@ -38,11 +39,11 @@ class ProtobufModelBuilderVisitor(
     private val filePath: String,
     private val fileName: String,
     private val fileNameWithoutExtension: String,
+    private val protoLanguageVersion: ProtoLanguageVersion
 ) : Protobuf3Visitor<Any>, ProtobufEditionsVisitor<Any> {
 
     private fun visitProto(
         ctx: ParserRuleContext,
-        languageVersion: ProtoLanguageVersion,
         imports: List<ProtoImport>,
         options: List<ProtoOption>,
         messages: List<ProtoMessage>,
@@ -61,7 +62,7 @@ class ProtobufModelBuilderVisitor(
             `package` = packages.firstOrNull(),
             fileName = fileName,
             fileNameWithoutExtension = fileNameWithoutExtension,
-            languageVersion = languageVersion,
+            languageVersion = protoLanguageVersion,
             messages = messages,
             enums = topLevelEnums,
             services = services,
@@ -84,7 +85,6 @@ class ProtobufModelBuilderVisitor(
 
         return visitProto(
             ctx = ctx,
-            languageVersion = ProtoLanguageVersion.EDITION2023,
             imports = imports,
             options = options,
             messages = messages,
@@ -108,7 +108,6 @@ class ProtobufModelBuilderVisitor(
 
         return visitProto(
             ctx = ctx,
-            languageVersion = ProtoLanguageVersion.PROTO3,
             imports = imports,
             options = options,
             messages = messages,
@@ -147,10 +146,19 @@ class ProtobufModelBuilderVisitor(
         return visitOption(ctx, ctx.optionName().text, ctx.constant().text)
     }
 
+    override fun visitSymbolVisibility(ctx: ProtobufEditionsParser.SymbolVisibilityContext?): ProtoSymbolVisibility? {
+        return when {
+            ctx?.LOCAL() != null -> ProtoSymbolVisibility.LOCAL
+            ctx?.EXPORT() != null -> ProtoSymbolVisibility.EXPORT
+            else -> null
+        }
+    }
+
     // Message parsing
 
     override fun visitMessageDef(ctx: ProtobufEditionsParser.MessageDefContext): ProtoMessage {
         val name = ctx.messageName().text
+        val symbolVisibility = visitSymbolVisibility(ctx.symbolVisibility())
 
         val elements = ctx.messageBody().messageElement()
 
@@ -179,6 +187,7 @@ class ProtobufModelBuilderVisitor(
             options = options,
             extensionDefinitions = extensionDefinitions,
             extensionRange = extensionRange,
+            symbolVisibility = symbolVisibility,
             ctx = ctx
         )
     }
@@ -212,6 +221,7 @@ class ProtobufModelBuilderVisitor(
             options = options,
             extensionDefinitions = extensionDefinitions,
             extensionRange = ProtoExtensionRanges(),
+            symbolVisibility = null,
             ctx = ctx
         )
     }
@@ -285,6 +295,8 @@ class ProtobufModelBuilderVisitor(
         val name = ctx.enumName().text
         val elements = ctx.enumBody().enumElement()
 
+        val symbolVisibility = visitSymbolVisibility(ctx.symbolVisibility())
+
         val options = elements.mapNotNull { it.option() }.map { visitOption(it) }
         val fields = elements.mapNotNull { it.enumField() }.map { visitEnumField(it) }
         val reservation = elements.mapNotNull { it.reserved() }.map { visitReserved(it) }.fold()
@@ -294,6 +306,7 @@ class ProtobufModelBuilderVisitor(
             fields = fields,
             options = options,
             reservation = reservation,
+            symbolVisibility = symbolVisibility,
             ctx = ctx
         )
     }
@@ -311,6 +324,7 @@ class ProtobufModelBuilderVisitor(
             fields = fields,
             options = options,
             reservation = reservation,
+            symbolVisibility = null,
             ctx = ctx
         )
     }

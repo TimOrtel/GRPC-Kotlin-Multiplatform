@@ -12,7 +12,7 @@ class FeatureProtoOption<T>(
     name: String,
     parse: (String) -> T?,
     languageConfigurationMap: Map<ProtoLanguageVersion, LangConfig<T>>,
-    targets: List<OptionTarget>
+    targets: List<OptionTarget> = OptionTarget.entries
 ) : Option<T>(
     name = "features.$name",
     parse = parse,
@@ -24,13 +24,15 @@ class FeatureProtoOption<T>(
         name: String,
         parse: (String) -> T?,
         edition2023Config: LangConfig<T>,
+        edition2024Config: LangConfig<T>,
         targets: List<OptionTarget> = OptionTarget.entries
     ) : this(
         name = name,
         parse = parse,
         languageConfigurationMap = mapOf(
             ProtoLanguageVersion.PROTO3 to LangConfig.Unavailable(),
-            ProtoLanguageVersion.EDITION2023 to edition2023Config
+            ProtoLanguageVersion.EDITION2023 to edition2023Config,
+            ProtoLanguageVersion.EDITION2024 to edition2024Config,
         ),
         targets = targets
     )
