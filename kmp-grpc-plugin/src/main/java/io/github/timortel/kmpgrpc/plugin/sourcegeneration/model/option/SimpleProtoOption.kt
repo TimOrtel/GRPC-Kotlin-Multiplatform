@@ -11,13 +11,13 @@ class SimpleProtoOption<T>(
     name: String,
     parse: (String) -> T?,
     languageConfigurationMap: Map<ProtoLanguageVersion, LangConfig<T>>,
-    targets: List<OptionTarget>
+    targets: List<OptionTargetMatcher>
 ) : Option<T>(name, parse, languageConfigurationMap, targets) {
 
     constructor(
         name: String,
         parse: (String) -> T?,
-        targets: List<OptionTarget>,
+        targets: List<OptionTargetMatcher>,
         proto3Config: LangConfig<T>,
         editionConfig: LangConfig<T>
     ) : this(
@@ -32,7 +32,7 @@ class SimpleProtoOption<T>(
     constructor(
         name: String,
         parse: (String) -> T?,
-        targets: List<OptionTarget>,
+        targets: List<OptionTargetMatcher>,
         proto3Config: LangConfig<T>,
         edition2023Config: LangConfig<T>,
         edition2024Config: LangConfig<T>,

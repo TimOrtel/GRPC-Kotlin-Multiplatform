@@ -35,7 +35,7 @@ This projects implements client-side gRPC for Android, JVM, Native (including iO
 | Proto2        | ⏳ Planned      |
 | Proto3        | ✅ Supported    |
 | Editions 2023 | ✅ Supported    |
-| Editions 2024 | ⏳ Planned      |
+| Editions 2024 | ✅ Supported    |
 
 Please note that not all features may be available even if the protobuf version is marked as _supported_.
 
@@ -71,14 +71,16 @@ Please note that not all features may be available even if the protobuf version 
 | `optimize_for`         | ❌      | ❌            |
 
 ### Features
-| Feature                   | Edition 2023 |
-|---------------------------|--------------|
-| `field_presence`          | ✅            | 
-| `repeated_field_encoding` | ✅            | 
-| `enum_type`               | ❌            | 
-| `json_format`             | ❌            | 
-| `message_encoding`        | ❌            | 
-| `utf8_validation`         | ❌            |
+| Feature                        | Edition 2023 | Edition 2024 |
+|--------------------------------|--------------|--------------|
+| `field_presence`               | ✅            | ✅            |
+| `repeated_field_encoding`      | ✅            | ✅            |
+| `enum_type`                    | ❌            | ❌            |
+| `json_format`                  | ❌            | ❌            |
+| `message_encoding`             | ❌            | ❌            |
+| `utf8_validation`              | ❌            | ❌            |
+| `default_symbol_visibility`    |              | ✅            |
+| `(pb.java).nest_in_file_class` |              | ✅            |
 
 
 

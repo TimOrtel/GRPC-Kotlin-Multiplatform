@@ -12,12 +12,12 @@ class FeatureProtoOption<T>(
     name: String,
     parse: (String) -> T?,
     languageConfigurationMap: Map<ProtoLanguageVersion, LangConfig<T>>,
-    targets: List<OptionTarget> = OptionTarget.entries
+    targets: List<OptionTargetMatcher>
 ) : Option<T>(
     name = "features.$name",
     parse = parse,
     languageConfigurationMap = languageConfigurationMap,
-    targets = targets
+    targetMatchers = targets
 ) {
 
     constructor(
@@ -25,7 +25,7 @@ class FeatureProtoOption<T>(
         parse: (String) -> T?,
         edition2023Config: LangConfig<T>,
         edition2024Config: LangConfig<T>,
-        targets: List<OptionTarget> = OptionTarget.entries
+        targets: List<OptionTargetMatcher>
     ) : this(
         name = name,
         parse = parse,

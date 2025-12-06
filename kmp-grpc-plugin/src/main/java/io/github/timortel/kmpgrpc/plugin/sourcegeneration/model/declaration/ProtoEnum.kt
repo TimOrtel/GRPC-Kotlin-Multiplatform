@@ -49,7 +49,7 @@ data class ProtoEnum(
     override val heldFields: List<ProtoField> =
         fields
 
-    override val optionTarget: OptionTarget = OptionTarget.ENUM
+    override val optionTarget: OptionTarget get() = OptionTarget.ENUM(isProtoTopLevel)
 
     override val parentOptionsHolder: ProtoOptionsHolder
         get() = when (val p = parent) {

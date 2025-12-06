@@ -57,7 +57,7 @@ data class ProtoMessage(
     val isEmpty: Boolean =
         fields.isEmpty() && mapFields.isEmpty() && oneOfs.isEmpty()
 
-    override val optionTarget: OptionTarget = OptionTarget.MESSAGE
+    override val optionTarget: OptionTarget get() = OptionTarget.MESSAGE(isProtoTopLevel)
 
     override val parentOptionsHolder: ProtoOptionsHolder
         get() = when (val p = parent) {

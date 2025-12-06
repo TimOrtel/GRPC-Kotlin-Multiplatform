@@ -53,6 +53,7 @@ optionName
     : ident
     | fullIdent
     | LP DOT? fullIdent RP
+    | ident (DOT optionName)+
     ;
 
 // Fields

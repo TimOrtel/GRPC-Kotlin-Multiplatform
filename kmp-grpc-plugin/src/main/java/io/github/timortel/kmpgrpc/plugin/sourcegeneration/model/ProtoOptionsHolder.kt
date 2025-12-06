@@ -4,6 +4,7 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.CompilationException
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.Warnings
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.OptionTarget
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.OptionTargetMatcher
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.Options
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.toFilePositionString
 
@@ -19,7 +20,16 @@ interface ProtoOptionsHolder : ProtoNode {
     override fun validate() {
         options.forEach { option ->
             val relatedOption = Options.options.firstOrNull { it.name == option.name }
-            val isSupportedOnHolder = optionTarget in relatedOption?.targets.orEmpty()
+
+            val isSupportedOnHolder = relatedOption?.targetMatchers?.any {
+                it.target == optionTarget::class && when (it) {
+                    is OptionTargetMatcher.TypeDeclaration -> {
+                        !it.restrictToTopLevel || (optionTarget as? OptionTarget.TypeDeclaration)?.isTopLevel == true
+                    }
+                    is OptionTargetMatcher.OtherDeclaration -> true
+                }
+            } == true
+
             val isIgnored = option.name in Options.ignoredOptions
 
             val languageConfiguration = relatedOption?.languageConfigurationMap?.get(file.languageVersion)
@@ -45,6 +55,7 @@ interface ProtoOptionsHolder : ProtoNode {
                             )
                         }
                     }
+
                     is Options.LangConfig.Unavailable, null -> {}
                 }
             }

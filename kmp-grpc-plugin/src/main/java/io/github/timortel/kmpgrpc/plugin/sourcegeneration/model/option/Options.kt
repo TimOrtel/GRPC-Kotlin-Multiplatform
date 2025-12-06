@@ -11,16 +11,16 @@ object Options {
         val javaMultipleFiles = SimpleProtoOption(
             name = "java_multiple_files",
             parse = String::toBooleanStrictOrNull,
-            targets = listOf(OptionTarget.FILE),
+            targets = listOf(OptionTargetMatcher.FILE),
             proto3Config = LangConfig.Available(defaultValue = false),
             edition2023Config = LangConfig.Available(defaultValue = false),
-            edition2024Config = LangConfig.Available(defaultValue = false) // TODO: should be unsupported
+            edition2024Config = LangConfig.Available(defaultValue = false)
         )
 
         val javaPackage = SimpleProtoOption(
             name = "java_package",
             parse = { it },
-            targets = listOf(OptionTarget.FILE),
+            targets = listOf(OptionTargetMatcher.FILE),
             proto3Config = LangConfig.Available(defaultValue = null),
             editionConfig = LangConfig.Available(defaultValue = null)
         )
@@ -28,7 +28,7 @@ object Options {
         val javaOuterClassName = SimpleProtoOption(
             name = "java_outer_classname",
             parse = { it },
-            targets = listOf(OptionTarget.FILE),
+            targets = listOf(OptionTargetMatcher.FILE),
             proto3Config = LangConfig.Available(defaultValue = null),
             editionConfig = LangConfig.Available(defaultValue = null)
         )
@@ -36,7 +36,7 @@ object Options {
         val allowAlias = SimpleProtoOption(
             name = "allow_alias",
             parse = String::toBooleanStrictOrNull,
-            targets = listOf(OptionTarget.ENUM),
+            targets = listOf(OptionTargetMatcher.ENUM(restrictToTopLevel = false)),
             proto3Config = LangConfig.Available(defaultValue = false),
             editionConfig = LangConfig.Available(defaultValue = false)
         )
@@ -44,7 +44,7 @@ object Options {
         val deprecated = SimpleProtoOption(
             name = "deprecated",
             parse = String::toBooleanStrictOrNull,
-            targets = listOf(OptionTarget.FIELD),
+            targets = listOf(OptionTargetMatcher.FIELD),
             proto3Config = LangConfig.Available(defaultValue = false),
             editionConfig = LangConfig.Available(defaultValue = false)
         )
@@ -52,7 +52,7 @@ object Options {
         val packed = SimpleProtoOption(
             name = "packed",
             parse = String::toBooleanStrictOrNull,
-            targets = listOf(OptionTarget.FIELD),
+            targets = listOf(OptionTargetMatcher.FIELD),
             proto3Config = LangConfig.Available(defaultValue = true),
             editionConfig = LangConfig.Available(defaultValue = true, isLocked = true)
         )
@@ -64,7 +64,7 @@ object Options {
             parse = { value -> ProtoFieldPresence.entries.firstOrNull { it.name == value } },
             edition2023Config = LangConfig.Available(defaultValue = ProtoFieldPresence.EXPLICIT),
             edition2024Config = LangConfig.Available(defaultValue = ProtoFieldPresence.EXPLICIT),
-            targets = listOf(OptionTarget.FILE, OptionTarget.FIELD)
+            targets = listOf(OptionTargetMatcher.FILE, OptionTargetMatcher.FIELD)
         )
 
         val repeatedFieldEncoding = FeatureProtoOption(
@@ -72,18 +72,38 @@ object Options {
             parse = { value -> ProtoRepeatedFieldEncoding.entries.firstOrNull { it.name == value } },
             edition2023Config = LangConfig.Available(defaultValue = ProtoRepeatedFieldEncoding.PACKED),
             edition2024Config = LangConfig.Available(defaultValue = ProtoRepeatedFieldEncoding.PACKED),
-            targets = listOf(OptionTarget.FILE, OptionTarget.FIELD)
+            targets = listOf(OptionTargetMatcher.FILE, OptionTargetMatcher.FIELD)
         )
 
         val defaultSymbolVisibility = FeatureProtoOption(
             name = "default_symbol_visibility",
             parse = { value -> ProtoDefaultSymbolVisibility.entries.firstOrNull { it.name == value } },
             languageConfigurationMap = mapOf(
-                ProtoLanguageVersion.PROTO3 to LangConfig.Available(defaultValue = ProtoDefaultSymbolVisibility.EXPORT_ALL, isLocked = true),
-                ProtoLanguageVersion.EDITION2023 to LangConfig.Available(defaultValue = ProtoDefaultSymbolVisibility.EXPORT_ALL, isLocked = true),
+                ProtoLanguageVersion.PROTO3 to LangConfig.Available(
+                    defaultValue = ProtoDefaultSymbolVisibility.EXPORT_ALL,
+                    isLocked = true
+                ),
+                ProtoLanguageVersion.EDITION2023 to LangConfig.Available(
+                    defaultValue = ProtoDefaultSymbolVisibility.EXPORT_ALL,
+                    isLocked = true
+                ),
                 ProtoLanguageVersion.EDITION2024 to LangConfig.Available(defaultValue = ProtoDefaultSymbolVisibility.EXPORT_TOP_LEVEL)
             ),
-            targets = listOf(OptionTarget.FILE)
+            targets = listOf(OptionTargetMatcher.FILE)
+        )
+
+        val nestInFileClass = FeatureProtoOption(
+            name = "(pb.java).nest_in_file_class",
+            parse = { value -> ProtoNestInFileClass.entries.firstOrNull { it.name == value } },
+            targets = listOf(
+                OptionTargetMatcher.MESSAGE(restrictToTopLevel = true),
+                OptionTargetMatcher.ENUM(restrictToTopLevel = true),
+                OptionTargetMatcher.SERVICE(
+                    restrictToTopLevel = true
+                )
+            ),
+            edition2023Config = LangConfig.Unavailable(),
+            edition2024Config = LangConfig.Available(defaultValue = ProtoNestInFileClass.NO)
         )
     }
 
@@ -96,7 +116,8 @@ object Options {
         Basic.packed,
         Feature.fieldPresence,
         Feature.repeatedFieldEncoding,
-        Feature.defaultSymbolVisibility
+        Feature.defaultSymbolVisibility,
+        Feature.nestInFileClass
     )
 
     /**

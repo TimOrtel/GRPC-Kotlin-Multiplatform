@@ -1,7 +1,14 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin
 
-fun createSingleFileProtoFolder(fileHeader: String, content: String): FakeInputDirectory {
-    return FakeInputDirectory("dir", listOf(createProtoFile(fileHeader, content)))
+fun createSingleFileProtoFolder(
+    fileHeader: String,
+    content: String,
+    fileName: String = "testFile"
+): FakeInputDirectory {
+    return FakeInputDirectory(
+        "dir",
+        listOf(createProtoFile(fileHeader = fileHeader, content = content, name = fileName))
+    )
 }
 
 fun createProtoFile(fileHeader: String, content: String, name: String = "testFile"): FakeInputFile {
