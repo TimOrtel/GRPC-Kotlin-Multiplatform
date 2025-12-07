@@ -80,6 +80,7 @@ data class ProtoFile(
     init {
         val parent = ProtoDeclParent.File(this)
 
+        imports.forEach { it.file = this }
         services.forEach { it.file = this }
         messages.forEach { it.parent = parent }
         enums.forEach { it.parent = parent }
@@ -98,5 +99,6 @@ data class ProtoFile(
         messages.forEach { it.validate() }
         enums.forEach { it.validate() }
         services.forEach { it.validate() }
+        imports.forEach { it.validate() }
     }
 }

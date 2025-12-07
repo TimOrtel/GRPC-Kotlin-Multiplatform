@@ -241,6 +241,8 @@ sealed interface ProtoType {
 
             if (decl == null) {
                 throw CompilationException.UnresolvedReference("Unresolved reference $declaration", file, ctx)
+            } else if (decl.file != file && !decl.isExported) {
+                throw CompilationException.ImportLocalDeclaration("Illegal import of local declaration $decl", file, ctx)
             }
 
             return decl

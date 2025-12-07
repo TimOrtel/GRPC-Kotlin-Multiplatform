@@ -34,7 +34,7 @@ edition
 // Import Statement
 
 importStatement
-    : IMPORT (WEAK | PUBLIC)? strLit SEMI
+    : IMPORT (WEAK | PUBLIC | OPTION)? strLit SEMI
     ;
 
 // Package
@@ -53,6 +53,7 @@ optionName
     : ident
     | fullIdent
     | LP DOT? fullIdent RP
+    | ident (DOT optionName)+
     ;
 
 // Fields
@@ -183,10 +184,15 @@ topLevelDef
     | serviceDef
     ;
 
+symbolVisibility
+    : EXPORT
+    | LOCAL
+    ;
+
 // enum
 
 enumDef
-    : ENUM enumName enumBody
+    : (symbolVisibility)? ENUM enumName enumBody
     ;
 
 enumBody
@@ -216,7 +222,7 @@ enumValueOption
 // message
 
 messageDef
-    : MESSAGE messageName messageBody
+    : (symbolVisibility)? MESSAGE messageName messageBody
     ;
 
 messageBody
@@ -335,6 +341,14 @@ IMPORT
 
 WEAK
     : 'weak'
+    ;
+
+EXPORT
+    : 'export'
+    ;
+
+LOCAL
+    : 'local'
     ;
 
 PUBLIC
@@ -637,6 +651,8 @@ keywords
     : EDITION
     | IMPORT
     | WEAK
+    | EXPORT
+    | LOCAL
     | PUBLIC
     | PACKAGE
     | OPTION

@@ -30,6 +30,7 @@ data class ProtoMessage(
     override val options: List<ProtoOption>,
     override val extensionDefinitions: List<ProtoExtensionDefinition>,
     val extensionRange: ProtoExtensionRanges,
+    override val symbolVisibility: ProtoSymbolVisibility?,
     override val ctx: ParserRuleContext
 ) : ProtoDeclaration, FileBasedDeclarationResolver, ProtoFieldHolder, ProtoChildPropertyNameResolver,
     ProtoExtensionDefinitionHolder, ProtoExtensionDefinitionFinder {
@@ -56,7 +57,7 @@ data class ProtoMessage(
     val isEmpty: Boolean =
         fields.isEmpty() && mapFields.isEmpty() && oneOfs.isEmpty()
 
-    override val optionTarget: OptionTarget = OptionTarget.MESSAGE
+    override val optionTarget: OptionTarget get() = OptionTarget.MESSAGE(isProtoTopLevel)
 
     override val parentOptionsHolder: ProtoOptionsHolder
         get() = when (val p = parent) {

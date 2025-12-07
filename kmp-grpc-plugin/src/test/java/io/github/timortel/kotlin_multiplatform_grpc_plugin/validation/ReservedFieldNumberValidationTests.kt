@@ -14,7 +14,7 @@ class ReservedFieldNumberValidationTests : BaseValidationTest() {
                     message TestMessage {
                         reserved 2;
                         string a = 1;
-                        boolean b = 2;
+                        bool b = 2;
                     }
                 """.trimIndent()
             )
@@ -28,7 +28,7 @@ class ReservedFieldNumberValidationTests : BaseValidationTest() {
                     message TestMessage {
                         reserved 2;
                         string a = 1;
-                        boolean b = 3;
+                        bool b = 3;
                     }
                 """.trimIndent()
         )

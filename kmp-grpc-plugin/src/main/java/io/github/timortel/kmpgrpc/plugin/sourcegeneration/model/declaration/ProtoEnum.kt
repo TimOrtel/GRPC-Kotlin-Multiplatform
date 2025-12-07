@@ -20,6 +20,7 @@ data class ProtoEnum(
     val fields: List<ProtoEnumField>,
     override val options: List<ProtoOption>,
     override val reservation: ProtoReservation,
+    override val symbolVisibility: ProtoSymbolVisibility?,
     override val ctx: ParserRuleContext
 ) : ProtoDeclaration, BaseDeclarationResolver, ProtoFieldHolder {
 
@@ -48,7 +49,7 @@ data class ProtoEnum(
     override val heldFields: List<ProtoField> =
         fields
 
-    override val optionTarget: OptionTarget = OptionTarget.ENUM
+    override val optionTarget: OptionTarget get() = OptionTarget.ENUM(isProtoTopLevel)
 
     override val parentOptionsHolder: ProtoOptionsHolder
         get() = when (val p = parent) {
