@@ -32,6 +32,8 @@ sealed class CompilationException(val msg: String, val filePath: String, val ctx
 
     // Options
     class OptionFailedParse(message: String, file: ProtoFile, ctx: ParserRuleContext) : CompilationException(message, file, ctx)
+    class OptionInvalidTarget(message: String, file: ProtoFile, ctx: ParserRuleContext) : CompilationException(message, file, ctx)
+    class OptionUsedWithInvalidLanguageVersion(message: String, file: ProtoFile, ctx: ParserRuleContext) : CompilationException(message, file, ctx)
 
     // Extensions
     class ExtensionDefinedOnNonExtendableMessage(message: String, file: ProtoFile, ctx: ParserRuleContext) : CompilationException(message, file, ctx)

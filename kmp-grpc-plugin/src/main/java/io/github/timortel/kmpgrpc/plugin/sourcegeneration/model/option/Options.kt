@@ -44,7 +44,7 @@ object Options {
         val deprecated = SimpleProtoOption(
             name = "deprecated",
             parse = String::toBooleanStrictOrNull,
-            targets = listOf(OptionTargetMatcher.FIELD),
+            targets = listOf(OptionTargetMatcher.FIELD()),
             proto3Config = LangConfig.Available(defaultValue = false),
             editionConfig = LangConfig.Available(defaultValue = false)
         )
@@ -52,7 +52,7 @@ object Options {
         val packed = SimpleProtoOption(
             name = "packed",
             parse = String::toBooleanStrictOrNull,
-            targets = listOf(OptionTargetMatcher.FIELD),
+            targets = listOf(OptionTargetMatcher.FIELD(restriction = OptionTargetMatcher.FIELD.Restriction.OnlyOnRepeated(forcePackable = true))),
             proto3Config = LangConfig.Available(defaultValue = true),
             editionConfig = LangConfig.Available(defaultValue = true, isLocked = true)
         )
@@ -64,7 +64,7 @@ object Options {
             parse = { value -> ProtoFieldPresence.entries.firstOrNull { it.name == value } },
             edition2023Config = LangConfig.Available(defaultValue = ProtoFieldPresence.EXPLICIT),
             edition2024Config = LangConfig.Available(defaultValue = ProtoFieldPresence.EXPLICIT),
-            targets = listOf(OptionTargetMatcher.FILE, OptionTargetMatcher.FIELD)
+            targets = listOf(OptionTargetMatcher.FILE, OptionTargetMatcher.FIELD())
         )
 
         val repeatedFieldEncoding = FeatureProtoOption(
@@ -72,7 +72,7 @@ object Options {
             parse = { value -> ProtoRepeatedFieldEncoding.entries.firstOrNull { it.name == value } },
             edition2023Config = LangConfig.Available(defaultValue = ProtoRepeatedFieldEncoding.PACKED),
             edition2024Config = LangConfig.Available(defaultValue = ProtoRepeatedFieldEncoding.PACKED),
-            targets = listOf(OptionTargetMatcher.FILE, OptionTargetMatcher.FIELD)
+            targets = listOf(OptionTargetMatcher.FILE, OptionTargetMatcher.FIELD(OptionTargetMatcher.FIELD.Restriction.OnlyOnRepeated(forcePackable = true)))
         )
 
         val defaultSymbolVisibility = FeatureProtoOption(

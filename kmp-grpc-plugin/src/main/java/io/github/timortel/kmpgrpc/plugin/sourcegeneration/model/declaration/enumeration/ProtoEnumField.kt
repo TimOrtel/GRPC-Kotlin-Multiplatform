@@ -5,6 +5,7 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOptionsHold
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoEnum
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoField
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.OptionTarget
 import org.antlr.v4.runtime.ParserRuleContext
 
 data class ProtoEnumField(
@@ -20,4 +21,6 @@ data class ProtoEnumField(
 
     override val file: ProtoFile
         get() = enum.file
+
+    override val optionTarget: OptionTarget get() = OptionTarget.ENUM_ENTRY
 }

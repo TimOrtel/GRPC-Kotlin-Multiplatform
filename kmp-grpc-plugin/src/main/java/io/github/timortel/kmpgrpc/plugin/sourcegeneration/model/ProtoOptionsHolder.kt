@@ -3,8 +3,8 @@ package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.CompilationException
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.Warnings
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.MatchResult
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.OptionTarget
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.OptionTargetMatcher
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.Options
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.toFilePositionString
 
@@ -19,31 +19,29 @@ interface ProtoOptionsHolder : ProtoNode {
 
     override fun validate() {
         options.forEach { option ->
+            val isIgnored = option.name in Options.ignoredOptions
             val relatedOption = Options.options.firstOrNull { it.name == option.name }
 
-            val isSupportedOnHolder = relatedOption?.targetMatchers?.any {
-                it.target == optionTarget::class && when (it) {
-                    is OptionTargetMatcher.TypeDeclaration -> {
-                        !it.restrictToTopLevel || (optionTarget as? OptionTarget.TypeDeclaration)?.isTopLevel == true
-                    }
-                    is OptionTargetMatcher.OtherDeclaration -> true
+            if (relatedOption == null) {
+                if (!isIgnored) {
+                    file.project.logger.warn(
+                        Warnings.unsupportedOptionUsed.withMessage(
+                            "${option.name} at ${
+                                option.ctx.toFilePositionString(file.path)
+                            }"
+                        )
+                    )
                 }
-            } == true
+            } else {
+                val throwInvalidOptionTargetException = { message: String ->
+                    throw CompilationException.OptionInvalidTarget(
+                        message = message,
+                        file = file,
+                        ctx = option.ctx
+                    )
+                }
 
-            val isIgnored = option.name in Options.ignoredOptions
-
-            val languageConfiguration = relatedOption?.languageConfigurationMap?.get(file.languageVersion)
-
-            val isSupportedOnLanguageVersion = when (languageConfiguration) {
-                is Options.LangConfig.Available -> true
-                is Options.LangConfig.Unavailable, null -> false
-            }
-
-            // An option can be supported, but still not valid, for example because it is only valid on certain field types
-            val isValid = isSupportedOnHolder && isSupportedOnLanguageVersion && isSupportedOptionValid(option)
-
-            if (!isIgnored && isValid) {
-                when (languageConfiguration) {
+                when (val languageConfiguration = relatedOption.languageConfigurationMap[file.languageVersion]) {
                     is Options.LangConfig.Available -> {
                         val value = relatedOption.get(this)
 
@@ -55,19 +53,24 @@ interface ProtoOptionsHolder : ProtoNode {
                             )
                         }
                     }
-
-                    is Options.LangConfig.Unavailable, null -> {}
+                    is Options.LangConfig.Unavailable, null -> {
+                        throw CompilationException.OptionUsedWithInvalidLanguageVersion(
+                            message = "${option.name} is not supported on language version ${file.languageVersion}",
+                            file = file,
+                            ctx = option.ctx
+                        )
+                    }
                 }
-            }
 
-            if (!isIgnored && !isValid) {
-                file.project.logger.warn(
-                    Warnings.unsupportedOptionUsed.withMessage(
-                        "${option.name} at ${
-                            option.ctx.toFilePositionString(file.path)
-                        }"
-                    )
-                )
+                val targetMatcher = relatedOption.targetMatchers.firstOrNull { it.target == optionTarget::class }
+                if (targetMatcher == null) throwInvalidOptionTargetException("${option.name} is not supported on $optionTarget")
+
+                when (val matchResult = targetMatcher.matches(optionTarget)) {
+                    MatchResult.Success -> {}
+                    is MatchResult.Failure -> {
+                        throwInvalidOptionTargetException(matchResult.reason)
+                    }
+                }
             }
         }
 
@@ -75,16 +78,17 @@ interface ProtoOptionsHolder : ProtoNode {
             .groupBy { it.name }
             .filter { it.value.size > 1 }
             .forEach { (name, options) ->
-                val message = buildString {
-                    append("Found clashing proto options for $name:\n")
-                    options.joinToString(separator = "\n") {
-                        "-> $name at ${it.ctx.toFilePositionString(file.path)}"
+                val relatedOption = Options.options.firstOrNull { it.name == name }
+                if (relatedOption != null) {
+                    val message = buildString {
+                        append("Found clashing proto options for $name:\n")
+                        options.joinToString(separator = "\n") {
+                            "-> $name at ${it.ctx.toFilePositionString(file.path)}"
+                        }
                     }
-                }
 
-                throw CompilationException.DuplicateDeclaration(message, file)
+                    throw CompilationException.DuplicateDeclaration(message, file)
+                }
             }
     }
-
-    fun isSupportedOptionValid(option: ProtoOption): Boolean = true
 }
