@@ -9,6 +9,7 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.e
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.ProtoMessageWriter
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.service.ProtoServiceWriter
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoBaseDeclaration
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoEnum
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
 
 abstract class ProtoFileWriter(val isActual: Boolean) {
@@ -17,12 +18,13 @@ abstract class ProtoFileWriter(val isActual: Boolean) {
     abstract val protoEnumWriter: ProtoEnumerationWriter
 
     fun generateFiles(file: ProtoFile): List<FileSpec> {
-        val declarationsWithData = (file.messages.map { protoMessageWriter.generateProtoMessageClass(message = it) to it } +
-                file.services.map { protoServiceWriter.generateServiceStub(service = it) to it } +
-                file.enums.map { protoEnumWriter.generateProtoEnum(protoEnum = it) to it })
-            .map { (type, declaration) ->
-                TopLevelDeclarationTypeData(type = type, declaration = declaration, file = file)
-            }
+        val declarationsWithData =
+            (file.messages.map { protoMessageWriter.generateProtoMessageClass(message = it) to it } +
+                    file.services.map { protoServiceWriter.generateServiceStub(service = it) to it } +
+                    file.enums.map { protoEnumWriter.generateProtoEnum(protoEnum = it) to it })
+                .map { (type, declaration) ->
+                    TopLevelDeclarationTypeData(type = type, declaration = declaration, file = file)
+                }
 
         val hasNestedDeclarations = declarationsWithData.any { it.nestInFileClass }
 
@@ -34,19 +36,26 @@ abstract class ProtoFileWriter(val isActual: Boolean) {
             listOf(file)
         } else emptyList()
 
-        val topLevelDeclarationFiles = declarationsWithData.filterNot { it.nestInFileClass }.map {
-            FileSpec
-                .builder(it.declaration.className)
-                .addAnnotation(DefaultAnnotations.SuppressDeprecation)
-                .addAnnotation(DefaultAnnotations.OptIntoKmpGrpcInternalApi)
-                .addType(it.type)
-                .build()
-        }
+        val topLevelDeclarationFiles = declarationsWithData
+            .filterNot { it.nestInFileClass }
+            .filter { it.declaration !is ProtoEnum || !isActual }
+            .map {
+                FileSpec
+                    .builder(it.declaration.className)
+                    .addAnnotation(DefaultAnnotations.SuppressDeprecation)
+                    .addAnnotation(DefaultAnnotations.OptIntoKmpGrpcInternalApi)
+                    .addType(it.type)
+                    .build()
+            }
 
         return baseFile + topLevelDeclarationFiles
     }
 
-    private data class TopLevelDeclarationTypeData(val type: TypeSpec, val declaration: ProtoBaseDeclaration, val nestInFileClass: Boolean) {
+    private data class TopLevelDeclarationTypeData(
+        val type: TypeSpec,
+        val declaration: ProtoBaseDeclaration,
+        val nestInFileClass: Boolean
+    ) {
         constructor(type: TypeSpec, declaration: ProtoBaseDeclaration, file: ProtoFile) : this(
             type = type,
             declaration = declaration,
