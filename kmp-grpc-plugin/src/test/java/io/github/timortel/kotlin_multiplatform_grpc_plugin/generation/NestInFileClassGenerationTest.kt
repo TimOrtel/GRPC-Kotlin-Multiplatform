@@ -105,10 +105,18 @@ class NestInFileClassGenerationTest : BaseGenerationTest() {
                         import "google/protobuf/java_features.proto";
                         
                         option java_multiple_files = false;
-                        option features.(pb.java).nest_in_file_class = LEGACY;
-                        message A { message B {} }
-                        enum C { DEFAULT = 0; }
-                        service D { }
+                        
+                        message A { 
+                            option features.(pb.java).nest_in_file_class = LEGACY;
+                            message B {} 
+                        }
+                        enum C {
+                            option features.(pb.java).nest_in_file_class = LEGACY;
+                            DEFAULT = 0;
+                        }
+                        service D {
+                            option features.(pb.java).nest_in_file_class = LEGACY;
+                        }
                     """.trimIndent(),
                     fileName = "ProtoFile"
                 )

@@ -11,22 +11,25 @@ class SimpleProtoOption<T>(
     name: String,
     parse: (String) -> T?,
     languageConfigurationMap: Map<ProtoLanguageVersion, LangConfig<T>>,
-    targets: List<OptionTargetMatcher>
-) : Option<T>(name, parse, languageConfigurationMap, targets) {
+    targets: List<OptionTargetMatcher>,
+    failOnInvalidTargetUsage: Boolean
+) : Option<T>(name, parse, languageConfigurationMap, targets, failOnInvalidTargetUsage) {
 
     constructor(
         name: String,
         parse: (String) -> T?,
         targets: List<OptionTargetMatcher>,
         proto3Config: LangConfig<T>,
-        editionConfig: LangConfig<T>
+        editionConfig: LangConfig<T>,
+        failOnInvalidTargetUsage: Boolean = true
     ) : this(
         name = name,
         parse = parse,
         proto3Config = proto3Config,
         edition2023Config = editionConfig,
         edition2024Config = editionConfig,
-        targets = targets
+        targets = targets,
+        failOnInvalidTargetUsage = failOnInvalidTargetUsage
     )
 
     constructor(
@@ -36,6 +39,7 @@ class SimpleProtoOption<T>(
         proto3Config: LangConfig<T>,
         edition2023Config: LangConfig<T>,
         edition2024Config: LangConfig<T>,
+        failOnInvalidTargetUsage: Boolean = true
     ) : this(
         name = name,
         parse = parse,
@@ -44,7 +48,8 @@ class SimpleProtoOption<T>(
             ProtoLanguageVersion.EDITION2023 to edition2023Config,
             ProtoLanguageVersion.EDITION2024 to edition2024Config
         ),
-        targets = targets
+        targets = targets,
+        failOnInvalidTargetUsage = failOnInvalidTargetUsage
     )
 
     override fun get(optionsHolder: ProtoOptionsHolder): T {

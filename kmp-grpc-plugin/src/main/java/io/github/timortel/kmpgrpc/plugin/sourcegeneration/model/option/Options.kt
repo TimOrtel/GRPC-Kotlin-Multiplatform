@@ -44,9 +44,10 @@ object Options {
         val deprecated = SimpleProtoOption(
             name = "deprecated",
             parse = String::toBooleanStrictOrNull,
-            targets = listOf(OptionTargetMatcher.FIELD()),
+            targets = listOf(OptionTargetMatcher.FIELD(), OptionTargetMatcher.ENUM_ENTRY),
             proto3Config = LangConfig.Available(defaultValue = false),
-            editionConfig = LangConfig.Available(defaultValue = false)
+            editionConfig = LangConfig.Available(defaultValue = false),
+            failOnInvalidTargetUsage = false
         )
 
         val packed = SimpleProtoOption(

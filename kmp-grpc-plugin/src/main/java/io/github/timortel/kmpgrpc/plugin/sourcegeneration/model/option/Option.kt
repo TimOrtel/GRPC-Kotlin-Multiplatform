@@ -11,7 +11,8 @@ abstract class Option<T>(
     val name: String,
     val parse: (String) -> T?,
     val languageConfigurationMap: Map<ProtoLanguageVersion, LangConfig<T>>,
-    val targetMatchers: List<OptionTargetMatcher>
+    val targetMatchers: List<OptionTargetMatcher>,
+    val failOnInvalidTargetUsage: Boolean
 ) {
 
     init {

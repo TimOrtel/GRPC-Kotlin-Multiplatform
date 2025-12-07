@@ -118,16 +118,27 @@ class ProtobufModelBuilderVisitor(
         )
     }
 
-    private fun visitImportStatement(ctx: ParserRuleContext, identifier: String): ProtoImport {
-        return ProtoImport(identifier, ctx)
+    private fun visitImportStatement(ctx: ParserRuleContext, identifier: String, type: ProtoImport.Type): ProtoImport {
+        return ProtoImport(identifier = identifier, type = type, ctx = ctx)
     }
 
     override fun visitImportStatement(ctx: ProtobufEditionsParser.ImportStatementContext): ProtoImport {
-        return visitImportStatement(ctx, ctx.strLit().text)
+        val type = when {
+            ctx.OPTION() != null -> ProtoImport.Type.OPTION
+            ctx.PUBLIC() != null -> ProtoImport.Type.PUBLIC
+            else -> ProtoImport.Type.DEFAULT
+        }
+
+        return visitImportStatement(ctx, ctx.strLit().text, type)
     }
 
     override fun visitImportStatement(ctx: Protobuf3Parser.ImportStatementContext): ProtoImport {
-        return visitImportStatement(ctx, ctx.strLit().text)
+        val type = when {
+            ctx.PUBLIC() != null -> ProtoImport.Type.PUBLIC
+            else -> ProtoImport.Type.DEFAULT
+        }
+
+        return visitImportStatement(ctx, ctx.strLit().text, type)
     }
 
     private fun visitOption(ctx: ParserRuleContext, name: String, constant: String): ProtoOption {

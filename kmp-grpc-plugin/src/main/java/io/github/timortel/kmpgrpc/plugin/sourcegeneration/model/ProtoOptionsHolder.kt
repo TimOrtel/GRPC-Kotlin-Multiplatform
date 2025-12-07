@@ -33,26 +33,19 @@ interface ProtoOptionsHolder : ProtoNode {
                     )
                 }
             } else {
-                val throwInvalidOptionTargetException = { message: String ->
-                    throw CompilationException.OptionInvalidTarget(
-                        message = message,
-                        file = file,
-                        ctx = option.ctx
-                    )
-                }
-
                 when (val languageConfiguration = relatedOption.languageConfigurationMap[file.languageVersion]) {
                     is Options.LangConfig.Available -> {
                         val value = relatedOption.get(this)
 
                         if (languageConfiguration.isLocked && value != languageConfiguration.defaultValue) {
                             Warnings.unsupportedOptionValueUsed.withMessage(
-                                "${option.name} at ${
-                                    option.ctx.toFilePositionString(file.path)
-                                } has fixed value of ${languageConfiguration.defaultValue}. Set value will be ignored."
+                                ctx = option.ctx,
+                                file = file,
+                                message = "${option.name} has fixed value of ${languageConfiguration.defaultValue}. Set value will be ignored."
                             )
                         }
                     }
+
                     is Options.LangConfig.Unavailable, null -> {
                         throw CompilationException.OptionUsedWithInvalidLanguageVersion(
                             message = "${option.name} is not supported on language version ${file.languageVersion}",
@@ -62,13 +55,33 @@ interface ProtoOptionsHolder : ProtoNode {
                     }
                 }
 
+                val onInvalidOptionTargetUse = { message: String ->
+                    if (relatedOption.failOnInvalidTargetUsage) {
+                        throw CompilationException.OptionInvalidTarget(
+                            message = message,
+                            file = file,
+                            ctx = option.ctx
+                        )
+                    } else {
+                        Warnings.unsupportedOptionUsed.withMessage(
+                            ctx = option.ctx,
+                            file = file,
+                            message = message
+                        )
+                    }
+                }
+
                 val targetMatcher = relatedOption.targetMatchers.firstOrNull { it.target == optionTarget::class }
-                if (targetMatcher == null) throwInvalidOptionTargetException("${option.name} is not supported on $optionTarget")
+                if (targetMatcher == null) {
+                    onInvalidOptionTargetUse("${option.name} is not supported on $optionTarget")
+                    return@forEach
+                }
 
                 when (val matchResult = targetMatcher.matches(optionTarget)) {
                     MatchResult.Success -> {}
                     is MatchResult.Failure -> {
-                        throwInvalidOptionTargetException(matchResult.reason)
+                        onInvalidOptionTargetUse(matchResult.reason)
+                        return@forEach
                     }
                 }
             }

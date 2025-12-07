@@ -17,7 +17,8 @@ class FeatureProtoOption<T>(
     name = "features.$name",
     parse = parse,
     languageConfigurationMap = languageConfigurationMap,
-    targetMatchers = targets
+    targetMatchers = targets,
+    failOnInvalidTargetUsage = true
 ) {
 
     constructor(
