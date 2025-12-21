@@ -1,7 +1,7 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.test.serialization
 
-import io.github.timortel.kmpgrpc.test.editions.ClosedEnumTest
-import io.github.timortel.kmpgrpc.test.editions.OpenEnumTest
+import io.github.timortel.kmpgrpc.test.editions.closedtest.ClosedEnumTest
+import io.github.timortel.kmpgrpc.test.editions.opentest.OpenEnumTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

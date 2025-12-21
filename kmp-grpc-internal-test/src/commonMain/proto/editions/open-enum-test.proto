@@ -1,6 +1,6 @@
 edition = "2023";
 
-package io.github.timortel.kmpgrpc.test.editions;
+package io.github.timortel.kmpgrpc.test.editions.opentest;
 
 option java_outer_classname = "OpenEnumTest";
 
