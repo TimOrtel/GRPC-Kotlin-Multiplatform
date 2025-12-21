@@ -86,36 +86,57 @@ abstract class ProtoEnumerationWriter(val isActual: Boolean) {
                         if (isActual) addModifiers(KModifier.ACTUAL)
                     }
                     .addFunction(
-                        FunSpec
-                            .builder(Const.Enum.GET_ENUM_FOR_FUNCTION_NAME)
-                            .addModifiers(KModifier.OVERRIDE)
-                            .returns(protoEnum.className)
-                            .addParameter("num", INT)
-                            .apply {
-                                if (supplyImplementation) {
-                                    addCode(
-                                        CodeBlock
-                                            .builder()
-                                            .add("return ")
-                                            .beginControlFlow("when(num)")
-                                            .apply {
-                                                protoEnum.fields.forEach { field ->
-                                                    add("%L -> %N\n", field.number, field.name)
-                                                }
-                                                add("else -> %N\n", ProtoEnum.UNRECOGNIZED_FIELD_NAME)
-                                            }
-                                            .endControlFlow()
-                                            .build()
-                                    )
-
-                                    addModifiers(this@ProtoEnumerationWriter.modifiers)
-                                }
-                            }
-                            .build()
+                        buildGetEnumForNumberFunction(
+                            protoEnum = protoEnum,
+                            orNullVersion = false,
+                            supplyImplementation = supplyImplementation
+                        )
+                    )
+                    .addFunction(
+                        buildGetEnumForNumberFunction(
+                            protoEnum = protoEnum,
+                            orNullVersion = true,
+                            supplyImplementation = supplyImplementation
+                        )
                     )
                     .build()
             )
             .build()
 
     }
+
+    private fun buildGetEnumForNumberFunction(
+        protoEnum: ProtoEnum,
+        orNullVersion: Boolean,
+        supplyImplementation: Boolean
+    ): FunSpec = FunSpec
+        .builder(if (orNullVersion) Const.Enum.GET_ENUM_FOR_OR_NULL_FUNCTION_NAME else Const.Enum.GET_ENUM_FOR_FUNCTION_NAME)
+        .addModifiers(KModifier.OVERRIDE)
+        .returns(protoEnum.className.copy(nullable = orNullVersion))
+        .addParameter("num", INT)
+        .apply {
+            if (supplyImplementation) {
+                addCode(
+                    CodeBlock
+                        .builder()
+                        .add("return ")
+                        .beginControlFlow("when(num)")
+                        .apply {
+                            protoEnum.fields.forEach { field ->
+                                add("%L -> %N\n", field.number, field.name)
+                            }
+                            if (orNullVersion) {
+                                add("else -> null\n")
+                            } else {
+                                add("else -> %N\n", ProtoEnum.UNRECOGNIZED_FIELD_NAME)
+                            }
+                        }
+                        .endControlFlow()
+                        .build()
+                )
+
+                addModifiers(this@ProtoEnumerationWriter.modifiers)
+            }
+        }
+        .build()
 }

@@ -1,0 +1,31 @@
+edition = "2023";
+
+package io.github.timortel.kmpgrpc.test.editions;
+
+option java_outer_classname = "OpenEnumTest";
+
+enum OpenEnum {
+  option features.enum_type = OPEN;
+
+  DEFAULT = 0;
+  ONE = 1;
+}
+
+message MessageWithOpenEnum {
+  OpenEnum a = 1;
+}
+
+message MessageWithRepeatedOpenEnum {
+  repeated OpenEnum a = 1 [packed = false];
+  repeated OpenEnum b = 2 [packed = true];
+}
+
+message MessageWithOpenEnumMap {
+  map<int32, OpenEnum> a = 1;
+}
+
+message MessageWithOpenOneOf {
+  oneof a {
+    OpenEnum b = 1;
+  }
+}

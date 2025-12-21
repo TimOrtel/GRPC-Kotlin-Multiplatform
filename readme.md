@@ -75,12 +75,13 @@ Please note that not all features may be available even if the protobuf version 
 |--------------------------------|--------------|--------------|
 | `field_presence`               | ✅            | ✅            |
 | `repeated_field_encoding`      | ✅            | ✅            |
-| `enum_type`                    | ❌            | ❌            |
-| `json_format`                  | ❌            | ❌            |
-| `message_encoding`             | ❌            | ❌            |
+| `enum_type`                    | ✅            | ✅            |
+| `json_format`                  | ⏳ Planned    | ⏳ Planned    |
+| `message_encoding`             | ⏳ Planned    | ⏳ Planned    |
 | `utf8_validation`              | ❌            | ❌            |
 | `default_symbol_visibility`    |              | ✅            |
 | `(pb.java).nest_in_file_class` |              | ✅            |
+| `enforce_naming_style`         |              | ⏳ Planned    |
 
 
 

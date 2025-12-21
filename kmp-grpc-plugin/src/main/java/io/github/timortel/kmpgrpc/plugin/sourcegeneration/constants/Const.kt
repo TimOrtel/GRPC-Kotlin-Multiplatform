@@ -38,7 +38,14 @@ object Const {
     }
 
     object Message {
-        val reservedAttributeNames = setOf("fullName", "requiredSize", Companion.WrapperDeserializationFunction.TAG_LOCAL_VARIABLE, Constructor.UnknownFields.name)
+        val reservedAttributeNames = setOf(
+            "fullName",
+            "requiredSize",
+            Companion.WrapperDeserializationFunction.TAG_LOCAL_VARIABLE,
+            Companion.WrapperDeserializationFunction.ENUM_NUMBER_VALUE_LOCAL_VARIABLE,
+            Companion.WrapperDeserializationFunction.ENUM_VALUE_LOCAL_VARIABLE,
+            Constructor.UnknownFields.name
+        )
 
         val fullNameProperty = Property.of("fullName", STRING)
 
@@ -91,6 +98,8 @@ object Const {
                 val EXTENSION_REGISTRY_PARAM = Property.of("extensionRegistry", kmExtensionRegistry)
 
                 const val TAG_LOCAL_VARIABLE = "tag_"
+                const val ENUM_NUMBER_VALUE_LOCAL_VARIABLE = "enumNumberValue_"
+                const val ENUM_VALUE_LOCAL_VARIABLE = "enumValue_"
                 const val UNKNOWN_FIELDS_LOCAL_VARIABLE = "unknownFields"
                 const val EXTENSION_BUILDER_LOCAL_VARIABLE = "extensionBuilder"
             }
@@ -104,6 +113,7 @@ object Const {
 
     object Enum {
         const val GET_ENUM_FOR_FUNCTION_NAME = "getEnumForNumber"
+        const val GET_ENUM_FOR_OR_NULL_FUNCTION_NAME = "getEnumForNumberOrNull"
         const val NUMBER_PROPERTY_NAME = "number"
     }
 }

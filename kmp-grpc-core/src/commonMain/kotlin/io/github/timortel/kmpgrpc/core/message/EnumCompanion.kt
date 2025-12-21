@@ -14,4 +14,13 @@ interface EnumCompanion<T : Enum> {
      * or `UNRECOGNIZED` if no corresponding value is found
      */
     fun getEnumForNumber(num: Int): T
+
+    /**
+     * Retrieves the enumeration value corresponding to the given numeric value.
+     *
+     * @param num The numeric value for which the corresponding enumeration value is to be retrieved.
+     * @return The enumeration value of type T corresponding to the provided numeric value,
+     * or null if no corresponding value is found
+     */
+    fun getEnumForNumberOrNull(num: Int): T?
 }

@@ -24,6 +24,7 @@ sealed class CompilationException(val msg: String, val filePath: String, val ctx
     // Enum
     class EnumIllegalFirstField(message: String, file: ProtoFile, ctx: ParserRuleContext) : CompilationException(message, file, ctx)
     class EnumNoFields(message: String, file: ProtoFile, ctx: ParserRuleContext) : CompilationException(message, file, ctx)
+    class IllegalClosedEnumImport(message: String, file: ProtoFile, ctx: ParserRuleContext) : CompilationException(message, file, ctx)
 
     // Name Resolving
     class ResolvedToPackage(message: String, file: ProtoFile, ctx: ParserRuleContext) : CompilationException(message, file, ctx)

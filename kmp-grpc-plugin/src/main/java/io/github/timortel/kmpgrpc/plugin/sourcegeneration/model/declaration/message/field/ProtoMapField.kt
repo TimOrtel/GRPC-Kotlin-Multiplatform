@@ -43,4 +43,11 @@ data class ProtoMapField(
         keyType.parent = ProtoType.Parent.MapField(this)
         valuesType.parent = ProtoType.Parent.MapField(this)
     }
+
+    override fun validate() {
+        super.validate()
+
+        keyType.validate()
+        valuesType.validate()
+    }
 }

@@ -31,6 +31,7 @@ val kmExtensionRegistry = ClassName(PACKAGE_MESSAGE_EXTENSIONS, "ExtensionRegist
 val kmExtensionBuilder = ClassName(PACKAGE_MESSAGE_EXTENSIONS, "MessageExtensionsBuilder")
 
 val unknownField = ClassName(PACKAGE_MESSAGE, "UnknownField")
+val unknownFieldVarint = unknownField.nestedClass("Varint")
 
 val CodedOutputStream = ClassName(PACKAGE_IO, "CodedOutputStream")
 val CodedInputStream = ClassName(PACKAGE_IO, "CodedInputStream")
@@ -68,3 +69,4 @@ val fieldTypeBytes = fieldType.nestedClass("Bytes")
 
 // util
 val mergeUnknownFieldOrExtension = MemberName(PACKAGE_MESSAGE, "mergeUnknownFieldOrExtension")
+val readMapEntry = MemberName(PACKAGE_IO, "readMapEntry")

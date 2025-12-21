@@ -106,6 +106,14 @@ object Options {
             edition2023Config = LangConfig.Unavailable(),
             edition2024Config = LangConfig.Available(defaultValue = ProtoNestInFileClass.NO)
         )
+
+        val enumType = FeatureProtoOption(
+            name = "enum_type",
+            parse = { value -> ProtoEnumType.entries.firstOrNull { it.name == value } },
+            targets = listOf(OptionTargetMatcher.FILE, OptionTargetMatcher.ENUM()),
+            edition2023Config = LangConfig.Available(defaultValue = ProtoEnumType.OPEN),
+            edition2024Config = LangConfig.Available(defaultValue = ProtoEnumType.OPEN),
+        )
     }
 
     val options = listOf(
@@ -118,7 +126,8 @@ object Options {
         Feature.fieldPresence,
         Feature.repeatedFieldEncoding,
         Feature.defaultSymbolVisibility,
-        Feature.nestInFileClass
+        Feature.nestInFileClass,
+        Feature.enumType
     )
 
     /**

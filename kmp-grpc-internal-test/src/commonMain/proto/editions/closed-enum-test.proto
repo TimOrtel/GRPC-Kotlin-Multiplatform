@@ -1,0 +1,35 @@
+edition = "2023";
+
+package io.github.timortel.kmpgrpc.test.editions;
+
+option java_outer_classname = "ClosedEnumTest";
+
+enum ClosedEnum {
+  option features.enum_type = CLOSED;
+
+  DEFAULT = 0;
+  ONE = 1;
+}
+
+message MessageWithClosedEnum {
+  ClosedEnum a = 1;
+}
+
+message MessageWithRepeatedClosedEnum {
+  repeated ClosedEnum a = 1 [packed = false];
+  repeated ClosedEnum b = 2 [packed = true];
+}
+
+message MessageWithClosedEnumMap {
+  map<int32, ClosedEnum> a = 1;
+}
+
+message MessageWithDummyMap {
+  map<int32, int32> a = 1;
+}
+
+message MessageWithClosedOneOf {
+  oneof a {
+    ClosedEnum b = 1;
+  }
+}
