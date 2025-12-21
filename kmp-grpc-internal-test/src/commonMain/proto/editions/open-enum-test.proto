@@ -16,8 +16,8 @@ message MessageWithOpenEnum {
 }
 
 message MessageWithRepeatedOpenEnum {
-  repeated OpenEnum a = 1 [packed = false];
-  repeated OpenEnum b = 2 [packed = true];
+  repeated OpenEnum a = 1 [features.repeated_field_encoding = EXPANDED];
+  repeated OpenEnum b = 2 [features.repeated_field_encoding = PACKED];
 }
 
 message MessageWithOpenEnumMap {

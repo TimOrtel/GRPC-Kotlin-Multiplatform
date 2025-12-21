@@ -55,7 +55,7 @@ object Options {
             parse = String::toBooleanStrictOrNull,
             targets = listOf(OptionTargetMatcher.FIELD(restriction = OptionTargetMatcher.FIELD.Restriction.OnlyOnRepeated(forcePackable = true))),
             proto3Config = LangConfig.Available(defaultValue = true),
-            editionConfig = LangConfig.Available(defaultValue = true, isLocked = true)
+            editionConfig = LangConfig.Unavailable()
         )
     }
 

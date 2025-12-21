@@ -16,8 +16,8 @@ message MessageWithClosedEnum {
 }
 
 message MessageWithRepeatedClosedEnum {
-  repeated ClosedEnum a = 1 [packed = false];
-  repeated ClosedEnum b = 2 [packed = true];
+  repeated ClosedEnum a = 1 [features.repeated_field_encoding = EXPANDED];
+  repeated ClosedEnum b = 2 [features.repeated_field_encoding = PACKED];
 }
 
 message MessageWithClosedEnumMap {
