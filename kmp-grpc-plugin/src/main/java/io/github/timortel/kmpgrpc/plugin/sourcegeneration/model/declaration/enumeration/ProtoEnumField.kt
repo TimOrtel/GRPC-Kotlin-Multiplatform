@@ -1,5 +1,6 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.enumeration
 
+import com.squareup.kotlinpoet.ClassName
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOption
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOptionsHolder
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoEnum
@@ -23,4 +24,6 @@ data class ProtoEnumField(
         get() = enum.file
 
     override val optionTarget: OptionTarget get() = OptionTarget.ENUM_ENTRY
+
+    val className: ClassName get() = enum.className.nestedClass(name)
 }

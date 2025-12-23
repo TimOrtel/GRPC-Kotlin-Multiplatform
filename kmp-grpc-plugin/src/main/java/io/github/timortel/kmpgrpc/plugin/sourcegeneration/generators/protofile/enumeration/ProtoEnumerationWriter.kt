@@ -22,60 +22,65 @@ abstract class ProtoEnumerationWriter(val isActual: Boolean) {
         val supplyImplementation = isActual || !protoEnum.isNested
 
         return TypeSpec
-            .enumBuilder(protoEnum.className)
+            .interfaceBuilder(protoEnum.className)
             .addModifiers(protoEnum.visibility.modifier)
+            .addModifiers(KModifier.SEALED)
             .addSuperinterface(kmEnum)
-            .addProperty(
-                PropertySpec
-                    .builder(Const.Enum.NUMBER_PROPERTY_NAME, INT, KModifier.OVERRIDE)
-                    .apply {
-                        if (supplyImplementation) initializer(Const.Enum.NUMBER_PROPERTY_NAME)
-                        addModifiers(this@ProtoEnumerationWriter.modifiers)
-                    }
-                    .build()
-            )
             .apply {
                 if (supplyImplementation) {
-                    primaryConstructor(
-                        FunSpec
-                            .constructorBuilder()
-                            .addParameter(Const.Enum.NUMBER_PROPERTY_NAME, INT)
-                            .build()
-                    )
-
                     addModifiers(this@ProtoEnumerationWriter.modifiers)
                 }
 
                 protoEnum.fields.forEach { enumField ->
-                    addEnumConstant(
-                        enumField.name,
-                        TypeSpec
-                            .anonymousClassBuilder()
-                            .apply {
-                                if (supplyImplementation) {
-                                    addSuperclassConstructorParameter("%L", enumField.number)
-                                }
+                    addType(
+                        TypeSpec.objectBuilder(enumField.className)
+                            .addModifiers(KModifier.DATA)
+                            .addModifiers(this@ProtoEnumerationWriter.modifiers)
+                            .addProperty(
+                                PropertySpec
+                                    .builder(Const.Enum.NUMBER_PROPERTY_NAME, INT, KModifier.OVERRIDE)
+                                    .apply {
+                                        if (supplyImplementation) initializer("%L", enumField.number)
+                                        addModifiers(this@ProtoEnumerationWriter.modifiers)
 
-                                if (Options.Basic.deprecated.get(enumField)) {
-                                    addAnnotation(DefaultAnnotations.Deprecated)
-                                }
-                            }
+                                        if (Options.Basic.deprecated.get(enumField)) {
+                                            addAnnotation(DefaultAnnotations.Deprecated)
+                                        }
+                                    }
+                                    .build()
+                            )
+                            .addSuperinterface(protoEnum.className)
                             .build()
                     )
                 }
 
                 // unrecognizedEnumField
-                addEnumConstant(
-                    name = ProtoEnum.UNRECOGNIZED_FIELD_NAME,
-                    typeSpec = TypeSpec
-                        .anonymousClassBuilder()
-                        .apply {
-                            if (supplyImplementation) {
-                                addSuperclassConstructorParameter("-1")
+                if (protoEnum.isOpen(protoEnum.file.languageVersion)) {
+                    addType(
+                        TypeSpec
+                            .classBuilder(protoEnum.unrecognizedSubtypeClassName)
+                            .addModifiers(this@ProtoEnumerationWriter.modifiers)
+                            .addProperty(
+                                PropertySpec.builder(Const.Enum.NUMBER_PROPERTY_NAME, INT, KModifier.OVERRIDE)
+                                    .addModifiers(this@ProtoEnumerationWriter.modifiers)
+                                    .apply {
+                                        if (supplyImplementation) initializer("%N", Const.Enum.NUMBER_PROPERTY_NAME)
+                                    }
+                                    .build()
+                            )
+                            .primaryConstructor(
+                                FunSpec.constructorBuilder()
+                                    .addParameter(Const.Enum.NUMBER_PROPERTY_NAME, INT)
+                                    .addModifiers(this@ProtoEnumerationWriter.modifiers)
+                                    .build()
+                            )
+                            .addSuperinterface(protoEnum.className)
+                            .apply {
+                                if (supplyImplementation) addModifiers(KModifier.DATA)
                             }
-                        }
-                        .build()
-                )
+                            .build()
+                    )
+                }
             }
             //The method that will return the correct enum for the given num
             .addType(
@@ -128,7 +133,15 @@ abstract class ProtoEnumerationWriter(val isActual: Boolean) {
                             if (orNullVersion) {
                                 add("else -> null\n")
                             } else {
-                                add("else -> %N\n", ProtoEnum.UNRECOGNIZED_FIELD_NAME)
+                                if (protoEnum.isOpen(protoEnum.file.languageVersion)) {
+                                    add("else -> %T(num)\n", protoEnum.unrecognizedSubtypeClassName)
+                                } else {
+                                    add(
+                                        "else -> throw %T(%P)",
+                                        IllegalArgumentException::class.asClassName(),
+                                        $$"Unknown numeric value $num for closed enum $${protoEnum.name}."
+                                    )
+                                }
                             }
                         }
                         .endControlFlow()

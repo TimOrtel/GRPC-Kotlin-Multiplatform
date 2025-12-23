@@ -13,7 +13,7 @@ class MessageValidationTests : BaseValidationTest() {
                 """
                     message TestMessage {
                        string a = 1;
-                       boolean a = 2;
+                       bool a = 2;
                     }
                 """.trimIndent()
             )

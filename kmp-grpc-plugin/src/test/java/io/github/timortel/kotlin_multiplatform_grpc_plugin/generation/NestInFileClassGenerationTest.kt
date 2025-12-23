@@ -3,6 +3,7 @@ package io.github.timortel.kotlin_multiplatform_grpc_plugin.generation
 import com.google.testing.junit.testparameterinjector.junit5.TestParameter
 import com.google.testing.junit.testparameterinjector.junit5.TestParameterInjectorTest
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.ProtoSourceGenerator
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.SourceTarget
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.createSingleFileProtoFolder
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.validation.BaseValidationTest
 import org.junit.jupiter.api.Assertions
@@ -57,11 +58,21 @@ class NestInFileClassGenerationTest : BaseGenerationTest() {
             internalVisibility = false
         )
 
-        fileMap.values.forEach { collection ->
-            assertEquals(4, collection.size)
-            Assertions.assertTrue { collection.any { it.name == "A" } }
-            Assertions.assertTrue { collection.any { it.name == "C" } }
-            Assertions.assertTrue { collection.any { it.name == "DStub" } }
+        fileMap.entries.forEach { (target, collection) ->
+            when (target) {
+                SourceTarget.Common -> {
+                    assertEquals(4, collection.size)
+                    Assertions.assertTrue { collection.any { it.name == "A" } }
+                    Assertions.assertTrue { collection.any { it.name == "C" } }
+                    Assertions.assertTrue { collection.any { it.name == "DStub" } }
+                }
+                is SourceTarget.Actual -> {
+                    assertEquals(3, collection.size)
+                    Assertions.assertTrue { collection.any { it.name == "A" } }
+                    Assertions.assertTrue { collection.none { it.name == "C" } }
+                    Assertions.assertTrue { collection.any { it.name == "DStub" } }
+                }
+            }
         }
     }
 
@@ -86,11 +97,21 @@ class NestInFileClassGenerationTest : BaseGenerationTest() {
             internalVisibility = false
         )
 
-        fileMap.values.forEach { collection ->
-            assertEquals(4, collection.size)
-            Assertions.assertTrue { collection.any { it.name == "A" } }
-            Assertions.assertTrue { collection.any { it.name == "C" } }
-            Assertions.assertTrue { collection.any { it.name == "DStub" } }
+        fileMap.entries.forEach { (target, collection) ->
+            when (target) {
+                SourceTarget.Common -> {
+                    assertEquals(4, collection.size)
+                    Assertions.assertTrue { collection.any { it.name == "A" } }
+                    Assertions.assertTrue { collection.any { it.name == "C" } }
+                    Assertions.assertTrue { collection.any { it.name == "DStub" } }
+                }
+                is SourceTarget.Actual -> {
+                    assertEquals(3, collection.size)
+                    Assertions.assertTrue { collection.any { it.name == "A" } }
+                    Assertions.assertTrue { collection.none { it.name == "C" } }
+                    Assertions.assertTrue { collection.any { it.name == "DStub" } }
+                }
+            }
         }
     }
 
@@ -154,10 +175,19 @@ class NestInFileClassGenerationTest : BaseGenerationTest() {
             internalVisibility = false
         )
 
-        fileMap.values.forEach { collection ->
-            assertEquals(3, collection.size)
-            Assertions.assertTrue { collection.any { it.name == "ProtoFile" } }
-            Assertions.assertTrue { collection.any { it.name == "C" } }
+        fileMap.entries.forEach { (target, collection) ->
+            when (target) {
+                SourceTarget.Common -> {
+                    assertEquals(3, collection.size)
+                    Assertions.assertTrue { collection.any { it.name == "ProtoFile" } }
+                    Assertions.assertTrue { collection.any { it.name == "C" } }
+                }
+                is SourceTarget.Actual -> {
+                    assertEquals(2, collection.size)
+                    Assertions.assertTrue { collection.any { it.name == "ProtoFile" } }
+                    Assertions.assertTrue { collection.none { it.name == "C" } }
+                }
+            }
         }
     }
 }

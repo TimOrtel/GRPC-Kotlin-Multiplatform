@@ -7,6 +7,7 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.CompilationException
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.validation.BaseValidationTest
 import io.mockk.verify
 import org.junit.jupiter.api.assertThrows
+import kotlin.collections.plus
 
 class OptionHolderTargetValidationTests : BaseValidationTest() {
 
@@ -17,13 +18,16 @@ class OptionHolderTargetValidationTests : BaseValidationTest() {
             val allVersionScenarios = listOf(
                 """
                     option java_package = foo.bar;
-                """.trimIndent(),
+                """.trimIndent()
+                )
+
+            val proto3Scenarios = listOf(
                 """
                     message A {
                         repeated int32 a = 1 [packed = true];
                     }
                 """.trimIndent()
-                )
+            )
 
             val featureScenarios = listOf(
                 """
@@ -38,10 +42,11 @@ class OptionHolderTargetValidationTests : BaseValidationTest() {
                     message A {
                         repeated int32 a = 1 [features.repeated_field_encoding = PACKED];
                     }
-                """.trimIndent(),
+                """.trimIndent()
             )
 
             return allVersionScenarios.flatMap { ProtoVersion.entries.map { version -> OptionApplicationScenario(it, version) } } +
+                    proto3Scenarios.map { content -> OptionApplicationScenario(content, ProtoVersion.PROTO3) } +
                     featureScenarios.flatMap { listOf(ProtoVersion.EDITION2023, ProtoVersion.EDITION2024).map { version -> OptionApplicationScenario(it, version) } }
         }
     }
@@ -65,7 +70,10 @@ class OptionHolderTargetValidationTests : BaseValidationTest() {
                     message A {
                         option java_package = foo.bar;
                     }
-                """.trimIndent(),
+                """.trimIndent()
+            )
+
+            val proto3Scenarios = listOf(
                 """
                     message A {
                         int32 a = 1 [packed = true];
@@ -89,10 +97,16 @@ class OptionHolderTargetValidationTests : BaseValidationTest() {
                     message A {
                         repeated string a = 1 [features.repeated_field_encoding = PACKED];
                     }
+                """.trimIndent(),
+                """
+                    message A {
+                        int32 a = 1 [features.repeated_field_encoding = PACKED];
+                    }
                 """.trimIndent()
             )
 
             return allVersionScenarios.flatMap { ProtoVersion.entries.map { version -> OptionApplicationScenario(it, version) } } +
+                    proto3Scenarios.map { content -> OptionApplicationScenario(content, ProtoVersion.PROTO3) } +
                     featureScenarios.flatMap { listOf(ProtoVersion.EDITION2023, ProtoVersion.EDITION2024).map { version -> OptionApplicationScenario(it, version) } }
         }
     }

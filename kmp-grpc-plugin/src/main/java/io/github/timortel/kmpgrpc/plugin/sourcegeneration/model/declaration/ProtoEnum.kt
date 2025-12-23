@@ -1,5 +1,6 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration
 
+import com.squareup.kotlinpoet.ClassName
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.CompilationException
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.Warnings
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.BaseDeclarationResolver
@@ -26,8 +27,8 @@ data class ProtoEnum(
     override val ctx: ParserRuleContext
 ) : ProtoDeclaration, BaseDeclarationResolver, ProtoFieldHolder {
 
-    companion object {
-        const val UNRECOGNIZED_FIELD_NAME = "UNRECOGNIZED"
+    private companion object {
+        private const val UNRECOGNIZED_FILE_NAME = "Unrecognized"
     }
 
     override lateinit var parent: ProtoDeclParent
@@ -58,6 +59,8 @@ data class ProtoEnum(
             is ProtoDeclParent.File -> p.file
             is ProtoDeclParent.Message -> p.message
         }
+
+    val unrecognizedSubtypeClassName: ClassName get() = className.nestedClass(UNRECOGNIZED_FILE_NAME)
 
     init {
         fields.forEach { it.enum = this }

@@ -38,7 +38,7 @@ class OpenClosedEnumScalarFieldSerializationTest {
         runOpenScalarDeserializationTest(UnknownField.Varint(1, 1), OpenEnumTest.OpenEnum.ONE, emptyList())
         runOpenScalarDeserializationTest(
             UnknownField.Varint(1, 2),
-            OpenEnumTest.OpenEnum.UNRECOGNIZED,
+            OpenEnumTest.OpenEnum.Unrecognized(2),
             emptyList()
         )
     }

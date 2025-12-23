@@ -70,9 +70,9 @@ class OpenClosedEnumMapFieldSerializationTest {
                 3 to 2
             ),
             expectedValues = mapOf(
-                1 to OpenEnumTest.OpenEnum.UNRECOGNIZED,
+                1 to OpenEnumTest.OpenEnum.Unrecognized(-1),
                 2 to OpenEnumTest.OpenEnum.ONE,
-                3 to OpenEnumTest.OpenEnum.UNRECOGNIZED
+                3 to OpenEnumTest.OpenEnum.Unrecognized(2)
             ),
             expectedUnknownFieldCount = 0
         )

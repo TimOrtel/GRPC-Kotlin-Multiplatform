@@ -99,7 +99,6 @@ abstract class ProtoOneOfWriter(private val isActual: Boolean) {
                     }
 
                     // Unknown
-                    addObject(protoOneOf.sealedClassNameUnknown, ChildClassType.Unknown)
                     addObject(protoOneOf.sealedClassNameNotSet, ChildClassType.NotSet)
                 }
                 .build()

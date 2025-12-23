@@ -62,7 +62,7 @@ class OpenClosedEnumOneOfSerializationTest {
         )
         runOpenOneOfDeserializationTest(
             UnknownField.Varint(1, 2),
-            OpenEnumTest.MessageWithOpenOneOf.A.B(OpenEnumTest.OpenEnum.UNRECOGNIZED),
+            OpenEnumTest.MessageWithOpenOneOf.A.B(OpenEnumTest.OpenEnum.Unrecognized(2)),
             emptyList()
         )
     }
