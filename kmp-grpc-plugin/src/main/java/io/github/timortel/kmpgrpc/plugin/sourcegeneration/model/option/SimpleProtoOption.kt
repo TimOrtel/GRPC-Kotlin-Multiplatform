@@ -19,12 +19,14 @@ class SimpleProtoOption<T>(
         name: String,
         parse: (String) -> T?,
         targets: List<OptionTargetMatcher>,
+        proto2Config: LangConfig<T>,
         proto3Config: LangConfig<T>,
         editionConfig: LangConfig<T>,
         failOnInvalidTargetUsage: Boolean = true
     ) : this(
         name = name,
         parse = parse,
+        proto2Config = proto2Config,
         proto3Config = proto3Config,
         edition2023Config = editionConfig,
         edition2024Config = editionConfig,
@@ -36,6 +38,7 @@ class SimpleProtoOption<T>(
         name: String,
         parse: (String) -> T?,
         targets: List<OptionTargetMatcher>,
+        proto2Config: LangConfig<T>,
         proto3Config: LangConfig<T>,
         edition2023Config: LangConfig<T>,
         edition2024Config: LangConfig<T>,
@@ -44,6 +47,7 @@ class SimpleProtoOption<T>(
         name = name,
         parse = parse,
         languageConfigurationMap = mapOf(
+            ProtoLanguageVersion.PROTO2 to proto2Config,
             ProtoLanguageVersion.PROTO3 to proto3Config,
             ProtoLanguageVersion.EDITION2023 to edition2023Config,
             ProtoLanguageVersion.EDITION2024 to edition2024Config

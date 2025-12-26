@@ -79,11 +79,19 @@ data class ProtoEnum(
         }
 
         return when (userLanguage) {
+            ProtoLanguageVersion.PROTO2 -> when (file.languageVersion) {
+                ProtoLanguageVersion.PROTO2 -> false
+                ProtoLanguageVersion.PROTO3 -> true
+                ProtoLanguageVersion.EDITION2023, ProtoLanguageVersion.EDITION2024 -> getFeatureIsOpen()
+            }
+            // Closed enum imports are illegal. We still return closed here and throw an exception in ProtoType#validate
             ProtoLanguageVersion.PROTO3 -> when (file.languageVersion) {
+                ProtoLanguageVersion.PROTO2 -> false
                 ProtoLanguageVersion.PROTO3 -> true
                 ProtoLanguageVersion.EDITION2023, ProtoLanguageVersion.EDITION2024 -> getFeatureIsOpen()
             }
             ProtoLanguageVersion.EDITION2023, ProtoLanguageVersion.EDITION2024 -> when (file.languageVersion) {
+                ProtoLanguageVersion.PROTO2 -> false
                 ProtoLanguageVersion.PROTO3 -> true
                 ProtoLanguageVersion.EDITION2023, ProtoLanguageVersion.EDITION2024 -> getFeatureIsOpen()
             }

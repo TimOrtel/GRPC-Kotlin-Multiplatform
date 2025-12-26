@@ -63,9 +63,10 @@ class ProtoMessageField(
 
     val cardinality: ProtoFieldCardinality
         get() = when (file.languageVersion) {
-            ProtoLanguageVersion.PROTO3 -> when (fieldCardinality) {
+            ProtoLanguageVersion.PROTO3, ProtoLanguageVersion.PROTO2 -> when (fieldCardinality) {
                 FieldCardinality.SINGULAR -> ProtoFieldCardinality.Singular(ProtoFieldPresence.IMPLICIT)
                 FieldCardinality.SINGULAR_OPTIONAL -> ProtoFieldCardinality.Singular(ProtoFieldPresence.EXPLICIT)
+                FieldCardinality.SINGULAR_REQUIRED -> ProtoFieldCardinality.Singular(ProtoFieldPresence.LEGACY_REQUIRED)
                 FieldCardinality.REPEATED -> ProtoFieldCardinality.Repeated
             }
 
@@ -75,7 +76,7 @@ class ProtoMessageField(
                 )
 
                 FieldCardinality.REPEATED -> ProtoFieldCardinality.Repeated
-                FieldCardinality.SINGULAR_OPTIONAL -> throw IllegalArgumentException("FieldCardinality.SINGULAR_OPTIONAL is illegal for edition versions.")
+                FieldCardinality.SINGULAR_OPTIONAL, FieldCardinality.SINGULAR_REQUIRED -> throw IllegalArgumentException("field cardinality $fieldCardinality is illegal for edition versions.")
             }
         }
 
@@ -118,7 +119,7 @@ class ProtoMessageField(
      */
     override val isPacked: Boolean
         get() = cardinality == ProtoFieldCardinality.Repeated && type.isPackable && when (file.languageVersion) {
-            ProtoLanguageVersion.PROTO3 -> Options.Basic.packed.get(this)
+            ProtoLanguageVersion.PROTO3, ProtoLanguageVersion.PROTO2 -> Options.Basic.packed.get(this)
             ProtoLanguageVersion.EDITION2023, ProtoLanguageVersion.EDITION2024 ->
                 when (Options.Feature.repeatedFieldEncoding.get(this)) {
                     ProtoRepeatedFieldEncoding.PACKED -> true
@@ -191,6 +192,7 @@ class ProtoMessageField(
     enum class FieldCardinality {
         SINGULAR,
         SINGULAR_OPTIONAL,
+        SINGULAR_REQUIRED,
         REPEATED
     }
 }

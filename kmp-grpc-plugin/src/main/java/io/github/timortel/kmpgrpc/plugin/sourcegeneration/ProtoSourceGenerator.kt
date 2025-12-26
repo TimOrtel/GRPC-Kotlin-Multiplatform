@@ -1,6 +1,8 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration
 
 import com.squareup.kotlinpoet.FileSpec
+import io.github.timortel.kmpgrpc.anltr.Protobuf2Lexer
+import io.github.timortel.kmpgrpc.anltr.Protobuf2Parser
 import io.github.timortel.kmpgrpc.anltr.Protobuf3Lexer
 import io.github.timortel.kmpgrpc.anltr.Protobuf3Parser
 import io.github.timortel.kmpgrpc.anltr.ProtobufEditionsLexer
@@ -16,16 +18,19 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.Visibility
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.structure.ProtoFolder
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.parsing.ProtobufModelBuilderVisitor
+import org.antlr.v4.runtime.TokenStream
+import org.antlr.v4.runtime.CharStream
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
+import org.antlr.v4.runtime.Lexer
 import org.slf4j.Logger
 import java.io.File
 
 object ProtoSourceGenerator {
 
     // regexes that allow for arbitrarily many whitespaces and comments in the proto file, but expect the syntax/edition statement first.
-    private val proto3Regex =
-        "^\\s*(?:(?://[^\\n]*|/\\*[\\s\\S]*?\\*/)\\s*|\\s*\\n)*syntax\\s*=\\s*[\"']proto3[\"']\\s*;[\\s\\S]*$".toRegex()
+    private val protoSyntaxRegex =
+        "^\\s*(?:(?://[^\\n]*|/\\*[\\s\\S]*?\\*/)\\s*|\\s*\\n)*syntax\\s*=\\s*[\"'](proto2|proto3)[\"']\\s*;[\\s\\S]*$".toRegex()
     private val protoEditionsRegex =
         "^\\s*(?:(?://[^\\n]*|/\\*[\\s\\S]*?\\*/)\\s*|\\s*\\n)*edition\\s*=\\s*[\"'](\\d+)[\"']\\s*;[\\s\\S]*$".toRegex()
 
@@ -161,50 +166,65 @@ object ProtoSourceGenerator {
         val fileText =
             file.inputStream().use { inputStream -> inputStream.reader().use { reader -> reader.readText() } }
 
-        return when {
-            fileText.matches(proto3Regex) -> {
-                val visitor = ProtobufModelBuilderVisitor(
-                    filePath = file.path,
-                    fileNameWithoutExtension = file.nameWithoutExtension,
-                    fileName = file.name,
-                    protoLanguageVersion = ProtoLanguageVersion.PROTO3
-                )
-
-                val proto3Lexer = Protobuf3Lexer(CharStreams.fromStream(file.inputStream()))
-                val proto3Parser = Protobuf3Parser(CommonTokenStream(proto3Lexer))
-                val proto3File = proto3Parser.proto()
-
-                visitor.visitProto(proto3File)
+        val languageVersion = when {
+            fileText.matches(protoSyntaxRegex) -> {
+                when (val versionGroup = protoSyntaxRegex.matchEntire(fileText)!!.groups[1]!!.value) {
+                    "proto2" -> ProtoLanguageVersion.PROTO2
+                    "proto3" -> ProtoLanguageVersion.PROTO3
+                    else -> {
+                        logger.warn("File $file uses unsupported proto language version $versionGroup. Only ${ProtoLanguageVersion.entries} are supported.")
+                        return null
+                    }
+                }
             }
 
             fileText.matches(protoEditionsRegex) -> {
-                val versionGroup = protoEditionsRegex.matchEntire(fileText)!!.groups[1]!!.value
-
-                val visitor = ProtobufModelBuilderVisitor(
-                    filePath = file.path,
-                    fileNameWithoutExtension = file.nameWithoutExtension,
-                    fileName = file.name,
-                    protoLanguageVersion = when (versionGroup) {
-                        "2023" -> ProtoLanguageVersion.EDITION2023
-                        "2024" -> ProtoLanguageVersion.EDITION2024
-                        else -> {
-                            logger.warn("File $file uses unsupported proto editions $versionGroup. Only ${ProtoLanguageVersion.entries} are supported.")
-                            return null
-                        }
+                when (val versionGroup = protoEditionsRegex.matchEntire(fileText)!!.groups[1]!!.value) {
+                    "2023" -> ProtoLanguageVersion.EDITION2023
+                    "2024" -> ProtoLanguageVersion.EDITION2024
+                    else -> {
+                        logger.warn("File $file uses unsupported proto editions $versionGroup. Only ${ProtoLanguageVersion.entries} are supported.")
+                        return null
                     }
-                )
-
-                val protoEditionsLexer = ProtobufEditionsLexer(CharStreams.fromStream(file.inputStream()))
-                val protoEditionsParser = ProtobufEditionsParser(CommonTokenStream(protoEditionsLexer))
-                val protoEditionsFile = protoEditionsParser.proto()
-
-                visitor.visitProto(protoEditionsFile)
+                }
             }
 
             else -> {
-                logger.warn("File $file does not seem to conform to any known proto syntax. Only proto3 and proto editions files are currently supported. Ignoring file.")
-                null
+                logger.debug("Ignoring file {}, as it is not recognized as a valid proto file", file)
+                return null
             }
         }
+
+        data class Toolchain(
+            val lexerFactory: (CharStream) -> Lexer,
+            val visitProto: (ProtobufModelBuilderVisitor, TokenStream) -> ProtoFile
+        )
+
+        val toolchain = when (languageVersion) {
+            ProtoLanguageVersion.PROTO2 -> Toolchain(
+                lexerFactory = ::Protobuf2Lexer,
+                visitProto = { visitor, tokenStream -> visitor.visitProto(Protobuf2Parser(tokenStream).proto()) }
+            )
+
+            ProtoLanguageVersion.PROTO3 -> Toolchain(
+                lexerFactory = ::Protobuf3Lexer,
+                visitProto = { visitor, tokenStream -> visitor.visitProto(Protobuf3Parser(tokenStream).proto()) }
+            )
+
+            ProtoLanguageVersion.EDITION2023, ProtoLanguageVersion.EDITION2024 -> Toolchain(
+                lexerFactory = ::ProtobufEditionsLexer,
+                visitProto = { visitor, tokenStream -> visitor.visitProto(ProtobufEditionsParser(tokenStream).proto()) }
+            )
+        }
+
+        val visitor = ProtobufModelBuilderVisitor(
+            filePath = file.path,
+            fileNameWithoutExtension = file.nameWithoutExtension,
+            fileName = file.name,
+            protoLanguageVersion = languageVersion
+        )
+
+        val lexer = toolchain.lexerFactory(CharStreams.fromStream(file.inputStream()))
+        return toolchain.visitProto(visitor, CommonTokenStream(lexer))
     }
 }

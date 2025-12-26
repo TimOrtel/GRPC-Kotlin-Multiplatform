@@ -20,7 +20,7 @@ data class ProtoImport(val identifier: String, val type: Type, val ctx: ParserRu
             }
             Type.OPTION -> {
                 when (file.languageVersion) {
-                    ProtoLanguageVersion.PROTO3, ProtoLanguageVersion.EDITION2023 -> throw CompilationException.UnsupportedLanguageFeatureUsed(
+                    ProtoLanguageVersion.PROTO2, ProtoLanguageVersion.PROTO3, ProtoLanguageVersion.EDITION2023 -> throw CompilationException.UnsupportedLanguageFeatureUsed(
                         message = "Option imports are not available in language version ${file.languageVersion}",
                         file = file,
                         ctx = ctx

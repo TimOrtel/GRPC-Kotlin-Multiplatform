@@ -47,7 +47,7 @@ interface ProtoBaseDeclaration : ProtoOptionsHolder, ProtoVisibilityHolder {
      */
     val isNested: Boolean
         get() = when (file.languageVersion) {
-            ProtoLanguageVersion.PROTO3, ProtoLanguageVersion.EDITION2023 -> !Options.Basic.javaMultipleFiles.get(file)
+            ProtoLanguageVersion.PROTO2, ProtoLanguageVersion.PROTO3, ProtoLanguageVersion.EDITION2023 -> !Options.Basic.javaMultipleFiles.get(file)
             ProtoLanguageVersion.EDITION2024 -> when (Options.Feature.nestInFileClass.get(this)) {
                 ProtoNestInFileClass.YES -> true
                 ProtoNestInFileClass.NO -> false
