@@ -29,6 +29,7 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.mess
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoOneOfField
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.service.ProtoRpc
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.service.ProtoService
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.decapitalize
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.tree.ErrorNode
 import org.antlr.v4.runtime.tree.ParseTree
@@ -351,7 +352,7 @@ class ProtobufModelBuilderVisitor(
 
         val field = ProtoMessageField(
             type = ProtoType.DefType(groupName, ctx),
-            name = groupName,
+            name = groupName.decapitalize(),
             number = number,
             options = options,
             fieldCardinality = fieldCardinality,

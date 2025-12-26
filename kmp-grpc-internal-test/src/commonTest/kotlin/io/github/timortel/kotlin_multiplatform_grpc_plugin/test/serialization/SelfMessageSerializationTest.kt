@@ -16,12 +16,15 @@ import io.github.timortel.kmpgrpc.test.Unknownfield
 import io.github.timortel.kmpgrpc.test.longMessage
 import io.github.timortel.kmpgrpc.test.messageWithSubMessage
 import io.github.timortel.kmpgrpc.test.oneOfMessage
+import io.github.timortel.kmpgrpc.test.proto2.Proto2GroupTest
 import io.github.timortel.kmpgrpc.test.repeatedLongMessage
 import io.github.timortel.kmpgrpc.test.simpleMessage
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.createComplexRepeated
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.createMessageWithAllExtensions
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.createMessageWithAllTypes
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.createNonPackedTypesMessage
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.createProto2GroupMessageWithExtensions
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.createProto2NestedGroupMessage
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.createScalarMessage
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -187,6 +190,24 @@ class SelfMessageSerializationTest {
     fun testLegacyRequiredFieldSerialization() {
         val msg = EditionsLegacyField(a = 12)
         val reconstructed = EditionsLegacyField.deserialize(msg.serialize())
+
+        assertEquals(msg, reconstructed)
+    }
+
+    @Test
+    fun testGroupSerialization() {
+        val msg = createProto2NestedGroupMessage()
+
+        val reconstructed = Proto2GroupTest.A.deserialize(msg.serialize())
+
+        assertEquals(msg, reconstructed)
+    }
+
+    @Test
+    fun testGroupExtensionSerialization() {
+        val msg = createProto2GroupMessageWithExtensions()
+
+        val reconstructed = Proto2GroupTest.E.deserialize(msg.serialize())
 
         assertEquals(msg, reconstructed)
     }

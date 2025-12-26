@@ -64,6 +64,15 @@ abstract class CodedInputStream {
         return recursiveRead { deserializer.deserialize(this, extensionRegistry) }
     }
 
+    fun <M : Message> readGroup(deserializer: MessageDeserializer<M>, extensionRegistry: ExtensionRegistry<M>, fieldNumber: Int): M {
+        checkRecursionLimit()
+        recursionDepth++
+        val message = deserializer.deserialize(this, extensionRegistry)
+        checkLastTagWas(wireFormatMakeTag(fieldNumber, WireFormat.END_GROUP))
+        recursionDepth--
+        return message
+    }
+
     abstract fun readBytes(): ByteArray
 
     abstract fun readUInt32(): UInt

@@ -77,7 +77,11 @@ interface CodedOutputStream {
 
     fun writeMessage(fieldNumber: Int, value: Message)
 
+    fun writeGroup(fieldNumber: Int, value: Message)
+
     fun writeMessageArray(fieldNumber: Int, values: List<Message>)
+
+    fun writeGroupArray(fieldNumber: Int, values: List<Message>)
 
     fun writeSFixed32(fieldNumber: Int, value: Int)
 

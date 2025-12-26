@@ -1,7 +1,7 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.test
 
-import iio.github.timortel.kmpgrpc.internal.test.CA_CERTIFICATE
-import iio.github.timortel.kmpgrpc.internal.test.STANDALONE_LEAF_CERTIFICATE
+import io.github.timortel.kmpgrpc.internal.test.CA_CERTIFICATE
+import io.github.timortel.kmpgrpc.internal.test.STANDALONE_LEAF_CERTIFICATE
 import io.github.timortel.kmpgrpc.core.Certificate
 import io.github.timortel.kmpgrpc.core.Channel
 import io.github.timortel.kmpgrpc.core.StatusException

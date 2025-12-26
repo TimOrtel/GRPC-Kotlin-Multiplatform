@@ -114,11 +114,16 @@ kmpGrpc {
 
     includeWellKnownTypes = true
 
-    protoSourceFolders = project.files("src/commonMain/proto/general", "src/commonMain/proto/unknownfield", "src/commonMain/proto/editions")
+    protoSourceFolders = project.files(
+        "src/commonMain/proto/general",
+        "src/commonMain/proto/unknownfield",
+        "src/commonMain/proto/editions",
+        "src/commonMain/proto/proto2"
+    )
 }
 
 buildConfig {
-    packageName("iio.github.timortel.kmpgrpc.internal.test")
+    packageName("io.github.timortel.kmpgrpc.internal.test")
 
     useKotlinOutput {
         internalVisibility = true
