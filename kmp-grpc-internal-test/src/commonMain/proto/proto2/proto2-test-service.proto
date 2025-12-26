@@ -1,0 +1,11 @@
+syntax = "proto2";
+
+package io.github.timortel.kmpgrpc.test.proto2;
+
+import "proto2-group-test.proto";
+
+option java_multiple_files = true;
+
+service Proto2TestService {
+  rpc sendMessageWithNestedGroups (A) returns (A);
+}

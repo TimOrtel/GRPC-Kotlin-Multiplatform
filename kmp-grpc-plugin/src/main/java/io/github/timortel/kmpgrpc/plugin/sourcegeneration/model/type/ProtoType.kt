@@ -196,9 +196,12 @@ sealed interface ProtoType : ProtoNode {
         override val isEnum: Boolean get() = declType == DeclarationType.ENUM
 
         override val wireType: DataType
-            get() = when (declType) {
-                DeclarationType.MESSAGE -> DataType.MESSAGE
-                DeclarationType.ENUM -> DataType.ENUM
+            get() = when (val decl = resolveDeclaration()) {
+                is ProtoEnum -> DataType.ENUM
+                is ProtoMessage -> when (decl.type) {
+                    ProtoMessage.Type.DEFAULT -> DataType.MESSAGE
+                    ProtoMessage.Type.GROUP -> DataType.GROUP
+                }
             }
 
         override val fieldType: TypeName

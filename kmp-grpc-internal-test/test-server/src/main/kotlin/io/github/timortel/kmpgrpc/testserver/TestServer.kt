@@ -1,6 +1,8 @@
 package io.github.timortel.kmpgrpc.testserver
 
 import io.github.timortel.kmpgrpc.test.*
+import io.github.timortel.kmpgrpc.test.proto2.Proto2GroupTest
+import io.github.timortel.kmpgrpc.test.proto2.Proto2TestServiceGrpcKt
 import io.grpc.*
 import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts
 import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder
@@ -212,6 +214,11 @@ object TestServer {
                     }
                 }
             )
+            .addService(object : Proto2TestServiceGrpcKt.Proto2TestServiceCoroutineImplBase() {
+                override suspend fun sendMessageWithNestedGroups(request: Proto2GroupTest.A): Proto2GroupTest.A {
+                    return request
+                }
+            })
             .intercept(
                 object : ServerInterceptor {
                     override fun <ReqT : Any?, RespT : Any?> interceptCall(

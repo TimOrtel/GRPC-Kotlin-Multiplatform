@@ -1,7 +1,6 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.serialization
 
 import com.squareup.kotlinpoet.*
-import com.squareup.kotlinpoet.MemberName.Companion.member
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.SourceTarget
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.*
@@ -102,7 +101,7 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
 
             // Unknown field or extension
             addStatement(
-                "else -> %M(%N.%N(%N, %N), %N, %N)",
+                "else -> if·(!%M(%N.%N(%N, %N), %N, %N))·break",
                 mergeUnknownFieldOrExtension,
                 wrapperParamName,
                 "readUnknownFieldOrExtension",
@@ -201,7 +200,7 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
                         when (val type = type) {
                             is ProtoType.DefType -> when (val decl = type.resolveDeclaration()) {
                                 is ProtoEnum -> buildReadScalarFieldOpenEnumTypeCode(type)
-                                is ProtoMessage -> buildReadScalarFieldMessageTypeCode(type, decl)
+                                is ProtoMessage -> buildReadScalarFieldMessageTypeCode(type, decl, fieldNumber)
                             }
 
                             is ProtoType.NonDeclType -> {
@@ -248,17 +247,9 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
                     field.type is ProtoType.DefType && field.type.isMessage -> {
                         val message = field.type.resolveDeclaration() as ProtoMessage
 
-                        addCode(
-                            "%N·+=·%N.%N(%T.Companion, ",
-                            field.attributeName,
-                            wrapperParamName,
-                            "readMessage",
-                            field.type.resolve()
-                        )
-
-                        addCode(buildExtensionRegistryCodeForMessage(message))
-
-                        addCode(")\n")
+                        addCode("%N·+=·", field.attributeName)
+                        addCode(buildReadScalarFieldMessageTypeCode(field.type, message, field.number))
+                        addCode("\n")
                     }
 
                     isPacked -> {
@@ -363,9 +354,9 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
             addCode(", ")
             addCode(getDefaultEntry(mapField.valuesType))
             addCode(", ")
-            addCode(buildReadMapFieldDataCode(mapField.keyType))
+            addCode(buildReadMapFieldDataCode(mapField.keyType, 1))
             addCode(", ")
-            addCode(buildReadMapFieldDataCode(mapField.valuesType))
+            addCode(buildReadMapFieldDataCode(mapField.valuesType, 2))
             addCode(")\n")
         }
     }
@@ -499,15 +490,20 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
         )
     }
 
-    private fun buildReadScalarFieldMessageTypeCode(type: ProtoType.DefType, message: ProtoMessage): CodeBlock {
+    private fun buildReadScalarFieldMessageTypeCode(type: ProtoType.DefType, message: ProtoMessage, fieldNumber: Int): CodeBlock {
         return CodeBlock.builder()
             .add(
                 "%N.%N(%T.Companion, ",
                 wrapperParamName,
-                "readMessage",
+                getReadScalarFunctionName(type),
                 type.resolve()
             )
             .add(buildExtensionRegistryCodeForMessage(message))
+            .apply {
+                if (message.type == ProtoMessage.Type.GROUP) {
+                    add(", %L", fieldNumber)
+                }
+            }
             .add(")")
             .build()
     }
@@ -521,7 +517,7 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
         )
     }
 
-    private fun buildReadMapFieldDataCode(type: ProtoType): CodeBlock {
+    private fun buildReadMapFieldDataCode(type: ProtoType, fieldNumber: Int): CodeBlock {
         return when (type) {
             is ProtoType.NonDeclType -> {
                 CodeBlock.of(
@@ -534,13 +530,9 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
                 when (val decl = type.resolveDeclaration()) {
                     is ProtoMessage -> {
                         CodeBlock.builder()
-                            .add(
-                                "{·%N(%T.Companion, ",
-                                "readMessage",
-                                type.resolve()
-                            )
-                            .add(buildExtensionRegistryCodeForMessage(decl))
-                            .add(")}")
+                            .add("{·")
+                            .add(buildReadScalarFieldMessageTypeCode(type, decl, fieldNumber))
+                            .add("}")
                             .build()
                     }
 
@@ -575,9 +567,12 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
             ProtoType.StringType -> "readString"
             ProtoType.BytesType -> "readBytes"
             is ProtoType.DefType -> {
-                when (protoType.declType) {
-                    ProtoType.DefType.DeclarationType.MESSAGE -> "readMessage"
-                    ProtoType.DefType.DeclarationType.ENUM -> "readEnum"
+                when (val decl = protoType.resolveDeclaration()) {
+                    is ProtoEnum -> "readEnum"
+                    is ProtoMessage -> when (decl.type) {
+                        ProtoMessage.Type.DEFAULT -> "readMessage"
+                        ProtoMessage.Type.GROUP -> "readGroup"
+                    }
                 }
             }
         }
@@ -585,10 +580,11 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
 
     private fun buildExtensionRegistryCodeForMessage(message: ProtoMessage): CodeBlock {
         return if (message.isExtendable) {
+            // bug in KotlinPoet: Member declaration resolves incorrectly, so we use %T.%N
             CodeBlock.of(
-                "%M",
-                message.className.nestedClass("Companion")
-                    .member(Const.Message.Companion.defaultExtensionRegistryProperty.name)
+                "%T.%N",
+                message.className.nestedClass("Companion"),
+                Const.Message.Companion.defaultExtensionRegistryProperty.name
             )
         } else {
             CodeBlock.of("%T.empty()", kmExtensionRegistry)

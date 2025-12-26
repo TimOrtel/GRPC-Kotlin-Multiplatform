@@ -6,6 +6,7 @@ import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeSpec
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.SourceTarget
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.*
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoEnum
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoMessage
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.*
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
@@ -193,7 +194,8 @@ class SerializationFunctionExtension : BaseSerializationExtension() {
                 when (type.declType) {
                     ProtoType.DefType.DeclarationType.MESSAGE -> {
                         addCode(
-                            "{·fieldNumber,·msg·-> writeMessage(fieldNumber, msg)·}"
+                            "{·fieldNumber,·msg·-> %N(fieldNumber, msg)·}",
+                            getWriteScalarFunctionName(type)
                         )
                     }
 
@@ -238,9 +240,12 @@ class SerializationFunctionExtension : BaseSerializationExtension() {
             ProtoType.StringType -> "writeStringArray"
             ProtoType.BytesType -> "writeBytesArray"
             is ProtoType.DefType -> {
-                when (protoType.declType) {
-                    ProtoType.DefType.DeclarationType.MESSAGE -> "writeMessageArray"
-                    ProtoType.DefType.DeclarationType.ENUM -> "writeEnumArray"
+                when (val decl = protoType.resolveDeclaration()) {
+                    is ProtoMessage -> when (decl.type) {
+                        ProtoMessage.Type.DEFAULT -> "writeMessageArray"
+                        ProtoMessage.Type.GROUP -> "writeGroupArray"
+                    }
+                    is ProtoEnum -> "writeEnumArray"
                 }
             }
         }
@@ -266,17 +271,19 @@ class SerializationFunctionExtension : BaseSerializationExtension() {
                 }
 
                 is ProtoType.DefType -> {
-                    when (type.declType) {
-                        ProtoType.DefType.DeclarationType.MESSAGE -> {
+                    when (type.resolveDeclaration()) {
+                        is ProtoMessage -> {
+                            val functionName = getWriteScalarFunctionName(type)
+
                             CodeBlock.of(
-                                "%N.writeMessage(%L, %N)",
+                                "%N.%N(%L, %N)",
                                 streamParam,
+                                functionName,
                                 field.number,
                                 field.attributeName
                             )
                         }
-
-                        ProtoType.DefType.DeclarationType.ENUM -> {
+                        is ProtoEnum -> {
                             CodeBlock.of(
                                 "%N.writeEnum(%L, %N.%N)\n",
                                 streamParam,
@@ -321,9 +328,12 @@ class SerializationFunctionExtension : BaseSerializationExtension() {
                 ProtoType.StringType -> "writeString"
                 ProtoType.BytesType -> "writeBytes"
                 is ProtoType.DefType -> {
-                    when (protoType.declType) {
-                        ProtoType.DefType.DeclarationType.MESSAGE -> "writeMessage"
-                        ProtoType.DefType.DeclarationType.ENUM -> "writeEnum"
+                    when (val decl = protoType.resolveDeclaration()) {
+                        is ProtoEnum -> "writeEnum"
+                        is ProtoMessage -> when (decl.type) {
+                            ProtoMessage.Type.DEFAULT -> "writeMessage"
+                            ProtoMessage.Type.GROUP -> "writeGroup"
+                        }
                     }
                 }
             }

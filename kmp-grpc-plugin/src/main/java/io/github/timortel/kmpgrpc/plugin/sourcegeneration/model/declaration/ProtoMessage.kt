@@ -31,6 +31,7 @@ data class ProtoMessage(
     override val extensionDefinitions: List<ProtoExtensionDefinition>,
     val extensionRange: ProtoExtensionRanges,
     override val symbolVisibility: ProtoSymbolVisibility?,
+    val type: Type,
     override val ctx: ParserRuleContext
 ) : ProtoDeclaration, FileBasedDeclarationResolver, ProtoFieldHolder, ProtoChildPropertyNameResolver,
     ProtoExtensionDefinitionHolder, ProtoExtensionDefinitionFinder {
@@ -173,5 +174,10 @@ data class ProtoMessage(
 
                 throw CompilationException.FieldNumberConflict(message, file, ctx)
             }
+    }
+
+    enum class Type {
+        DEFAULT,
+        GROUP
     }
 }
