@@ -138,7 +138,7 @@ abstract class ProtoEnumerationWriter(val isActual: Boolean) {
                                 } else {
                                     add(
                                         "else -> throw %T(%P)",
-                                        IllegalArgumentException::class.asClassName(),
+                                        ClassName("kotlin", "IllegalArgumentException"),
                                         $$"Unknown numeric value $num for closed enum $${protoEnum.name}."
                                     )
                                 }
