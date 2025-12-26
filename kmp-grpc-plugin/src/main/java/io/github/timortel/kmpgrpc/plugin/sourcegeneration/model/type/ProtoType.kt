@@ -4,6 +4,8 @@ import com.squareup.kotlinpoet.*
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.CompilationException
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.*
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoExtensionDefinition
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoLanguageVersion
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoNode
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoProject
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoDeclaration
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoEnum
@@ -19,7 +21,7 @@ import org.antlr.v4.runtime.ParserRuleContext
 /**
  * General representation of a type in the proto language, for example bool, message, enum, etc.
  */
-sealed interface ProtoType {
+sealed interface ProtoType : ProtoNode {
 
     var parent: Parent
 
@@ -76,6 +78,8 @@ sealed interface ProtoType {
         isRepeated: Boolean,
         messageDefaultValue: MessageDefaultValue = MessageDefaultValue.NULL
     ): CodeBlock
+
+    override fun validate() = Unit
 
     enum class MessageDefaultValue {
         NULL,
@@ -241,6 +245,8 @@ sealed interface ProtoType {
 
             if (decl == null) {
                 throw CompilationException.UnresolvedReference("Unresolved reference $declaration", file, ctx)
+            } else if (decl.file != file && !decl.isExported) {
+                throw CompilationException.ImportLocalDeclaration("Illegal import of local declaration $decl", file, ctx)
             }
 
             return decl
@@ -287,6 +293,22 @@ sealed interface ProtoType {
                 }
 
                 is ProtoEnum -> super.isNotDefaultValueCode(attributeName, false, messageDefaultValue)
+            }
+        }
+
+        override fun validate() {
+            when (val decl = resolveDeclaration()) {
+                is ProtoEnum -> {
+                    val isClosed = !decl.isOpen(file.languageVersion)
+                    if (file.languageVersion == ProtoLanguageVersion.PROTO3 && isClosed) {
+                        throw CompilationException.IllegalClosedEnumImport(
+                            message = "Illegal import of closed enum in proto3 file",
+                            file = file,
+                            ctx = ctx
+                        )
+                    }
+                }
+                is ProtoMessage -> {}
             }
         }
 

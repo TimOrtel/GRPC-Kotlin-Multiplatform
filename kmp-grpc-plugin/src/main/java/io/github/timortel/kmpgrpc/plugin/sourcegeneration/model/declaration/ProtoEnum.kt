@@ -1,9 +1,11 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration
 
+import com.squareup.kotlinpoet.ClassName
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.CompilationException
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.Warnings
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.BaseDeclarationResolver
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoDeclParent
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoLanguageVersion
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOption
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOptionsHolder
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.enumeration.ProtoEnumField
@@ -11,6 +13,7 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.mess
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.OptionTarget
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.Options
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.ProtoEnumType
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.toFilePositionString
 import org.antlr.v4.runtime.ParserRuleContext
@@ -20,11 +23,12 @@ data class ProtoEnum(
     val fields: List<ProtoEnumField>,
     override val options: List<ProtoOption>,
     override val reservation: ProtoReservation,
+    override val symbolVisibility: ProtoSymbolVisibility?,
     override val ctx: ParserRuleContext
 ) : ProtoDeclaration, BaseDeclarationResolver, ProtoFieldHolder {
 
-    companion object {
-        const val UNRECOGNIZED_FIELD_NAME = "UNRECOGNIZED"
+    private companion object {
+        private const val UNRECOGNIZED_FILE_NAME = "Unrecognized"
     }
 
     override lateinit var parent: ProtoDeclParent
@@ -48,7 +52,7 @@ data class ProtoEnum(
     override val heldFields: List<ProtoField> =
         fields
 
-    override val optionTarget: OptionTarget = OptionTarget.ENUM
+    override val optionTarget: OptionTarget get() = OptionTarget.ENUM(isProtoTopLevel)
 
     override val parentOptionsHolder: ProtoOptionsHolder
         get() = when (val p = parent) {
@@ -56,8 +60,34 @@ data class ProtoEnum(
             is ProtoDeclParent.Message -> p.message
         }
 
+    val unrecognizedSubtypeClassName: ClassName get() = className.nestedClass(UNRECOGNIZED_FILE_NAME)
+
     init {
         fields.forEach { it.enum = this }
+    }
+
+    // Implements: https://protobuf.dev/programming-guides/enum/#spec
+    /**
+     * @param userLanguage the language of whoever wants to use the enum.
+     */
+    fun isOpen(userLanguage: ProtoLanguageVersion): Boolean {
+        val getFeatureIsOpen = {
+            when (Options.Feature.enumType.get(this)) {
+                ProtoEnumType.OPEN -> true
+                ProtoEnumType.CLOSED -> false
+            }
+        }
+
+        return when (userLanguage) {
+            ProtoLanguageVersion.PROTO3 -> when (file.languageVersion) {
+                ProtoLanguageVersion.PROTO3 -> true
+                ProtoLanguageVersion.EDITION2023, ProtoLanguageVersion.EDITION2024 -> getFeatureIsOpen()
+            }
+            ProtoLanguageVersion.EDITION2023, ProtoLanguageVersion.EDITION2024 -> when (file.languageVersion) {
+                ProtoLanguageVersion.PROTO3 -> true
+                ProtoLanguageVersion.EDITION2023, ProtoLanguageVersion.EDITION2024 -> getFeatureIsOpen()
+            }
+        }
     }
 
     override fun validate() {

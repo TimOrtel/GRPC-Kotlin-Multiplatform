@@ -40,3 +40,5 @@ playground
 .DS_Store
 
 **/.secrets
+
+.run

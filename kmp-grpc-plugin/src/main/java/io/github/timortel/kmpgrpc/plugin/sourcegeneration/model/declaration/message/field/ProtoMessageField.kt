@@ -15,6 +15,7 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.Prot
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoMessage
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.ProtoMessageProperty
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.OptionTarget
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.Options
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType.MessageDefaultValue
@@ -38,6 +39,7 @@ class ProtoMessageField(
                 is ProtoExtensionDefinition.Parent.File -> p2.file
                 is ProtoExtensionDefinition.Parent.Message -> p2.message
             }
+
             is Parent.Message -> p.message
         }
 
@@ -66,19 +68,22 @@ class ProtoMessageField(
                 FieldCardinality.SINGULAR_OPTIONAL -> ProtoFieldCardinality.Singular(ProtoFieldPresence.EXPLICIT)
                 FieldCardinality.REPEATED -> ProtoFieldCardinality.Repeated
             }
-            ProtoLanguageVersion.EDITION2023 -> when (fieldCardinality) {
+
+            ProtoLanguageVersion.EDITION2023, ProtoLanguageVersion.EDITION2024 -> when (fieldCardinality) {
                 FieldCardinality.SINGULAR -> ProtoFieldCardinality.Singular(
                     presence = Options.Feature.fieldPresence.get(this)
                 )
+
                 FieldCardinality.REPEATED -> ProtoFieldCardinality.Repeated
                 FieldCardinality.SINGULAR_OPTIONAL -> throw IllegalArgumentException("FieldCardinality.SINGULAR_OPTIONAL is illegal for edition versions.")
             }
         }
 
-    override val desiredAttributeName: String get() = when (cardinality) {
-        is ProtoFieldCardinality.Singular -> name
-        ProtoFieldCardinality.Repeated -> "${name}List"
-    }
+    override val desiredAttributeName: String
+        get() = when (cardinality) {
+            is ProtoFieldCardinality.Singular -> name
+            ProtoFieldCardinality.Repeated -> "${name}List"
+        }
 
     override val propertyType: TypeName
         get() = when (cardinality) {
@@ -114,21 +119,33 @@ class ProtoMessageField(
     override val isPacked: Boolean
         get() = cardinality == ProtoFieldCardinality.Repeated && type.isPackable && when (file.languageVersion) {
             ProtoLanguageVersion.PROTO3 -> Options.Basic.packed.get(this)
-            ProtoLanguageVersion.EDITION2023 -> when (Options.Feature.repeatedFieldEncoding.get(this)) {
-                ProtoRepeatedFieldEncoding.PACKED -> true
-                ProtoRepeatedFieldEncoding.EXPANDED -> false
-            }
+            ProtoLanguageVersion.EDITION2023, ProtoLanguageVersion.EDITION2024 ->
+                when (Options.Feature.repeatedFieldEncoding.get(this)) {
+                    ProtoRepeatedFieldEncoding.PACKED -> true
+                    ProtoRepeatedFieldEncoding.EXPANDED -> false
+                }
         }
 
     val memberName: MemberName
         get() {
-            val parentClassName =  when (val p = parent) {
+            val parentClassName = when (val p = parent) {
                 is Parent.ExtensionDefinition -> p.ext.parent.className
                 is Parent.Message -> p.message.className
             }
 
             return parentClassName.member(name)
         }
+
+    override val optionTarget: OptionTarget
+        get() = OptionTarget.FIELD(
+            type = OptionTarget.FIELD.Type.Regular(
+                isRepeated = when (cardinality) {
+                    ProtoFieldCardinality.Repeated -> true
+                    is ProtoFieldCardinality.Singular -> false
+                },
+                isPackable = type.isPackable
+            )
+        )
 
     init {
         type.parent = ProtoType.Parent.MessageField(this)
@@ -138,16 +155,6 @@ class ProtoMessageField(
         return when (cardinality) {
             is ProtoFieldCardinality.Singular -> type.defaultValue(messageDefaultValue)
             ProtoFieldCardinality.Repeated -> CodeBlock.of("emptyList()")
-        }
-    }
-
-    override fun isSupportedOptionValid(option: ProtoOption): Boolean {
-        return when (option.name) {
-            Options.Basic.packed.name -> {
-                // packed option is only valid on repeated fields that have a packable type
-                cardinality == ProtoFieldCardinality.Repeated && type.isPackable
-            }
-            else -> super.isSupportedOptionValid(option)
         }
     }
 

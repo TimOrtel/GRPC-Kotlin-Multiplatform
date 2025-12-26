@@ -1,11 +1,14 @@
-package io.github.timortel.kotlin_multiplatform_grpc_plugin.validation
+package io.github.timortel.kotlin_multiplatform_grpc_plugin.validation.options
 
 import com.google.testing.junit.testparameterinjector.junit5.TestParameter
 import com.google.testing.junit.testparameterinjector.junit5.TestParameterInjectorTest
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.CompilationException
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.Warnings
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.matchWarning
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.validation.BaseValidationTest
 import io.mockk.verify
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 
 class OptionHolderValidationTests : BaseValidationTest() {
 
@@ -127,64 +130,16 @@ class OptionHolderValidationTests : BaseValidationTest() {
         verify(atLeast = 1) { logger.warn(matchWarning(Warnings.unsupportedOptionUsed)) }
     }
 
-    @TestParameterInjectorTest
-    fun `test WHEN packed option is used on a non-repeated field THEN a warning is printed`(
-        @TestParameter protoVersion: ProtoVersion
-    ) {
-        runGenerator(
-            """
-                    message TestMessage {
-                        bool a = 1 [packed = false];
-                    }
-                """.trimIndent(),
-            protoVersion
-        )
-
-        verify(atLeast = 1) { logger.warn(matchWarning(Warnings.unsupportedOptionUsed)) }
-    }
-
-    @TestParameterInjectorTest
-    fun `test WHEN packed option is used on a repeated field that has a non-packable type THEN a warning is printed`(
-        @TestParameter protoVersion: ProtoVersion
-    ) {
-        runGenerator(
-            """
-                    message TestMessage {
-                        repeated string a = 1 [packed = false];
-                    }
-                """.trimIndent(),
-            protoVersion
-        )
-
-        verify(atLeast = 1) { logger.warn(matchWarning(Warnings.unsupportedOptionUsed)) }
-    }
-
-    @TestParameterInjectorTest
-    fun `test WHEN packed option is used on a repeated field that has a packable type THEN no warning is printed`(
-        @TestParameter protoVersion: ProtoVersion
-    ) {
-        runGenerator(
-            """
-                    message TestMessage {
-                        repeated int32 a = 1 [packed = false];
-                    }
-                """.trimIndent(),
-            protoVersion
-        )
-
-        verify(exactly = 0) { logger.warn(matchWarning(Warnings.unsupportedOptionUsed)) }
-    }
-
     @Test
-    fun `test WHEN feature option is used on proto3 THEN a warning is printed`() {
-        runGenerator(
-            """
+    fun `test WHEN feature option is used on proto3 THEN exception is thrown`() {
+        assertThrows<CompilationException.OptionUsedWithInvalidLanguageVersion> {
+            runGenerator(
+                """
                 option features.field_presence = IMPLICIT;
             """.trimIndent(),
-            protoVersion = ProtoVersion.PROTO3
-        )
-
-        verify(exactly = 1) { logger.warn(matchWarning(Warnings.unsupportedOptionUsed)) }
+                protoVersion = ProtoVersion.PROTO3
+            )
+        }
     }
 
     @Test
@@ -197,5 +152,18 @@ class OptionHolderValidationTests : BaseValidationTest() {
         )
 
         verify(exactly = 0) { logger.warn(matchWarning(Warnings.unsupportedOptionUsed)) }
+    }
+
+    @TestParameterInjectorTest
+    fun `test WHEN unknown option is declared multiple times THEN exception is thrown`(
+        @TestParameter version: ProtoVersion
+    ) {
+        runGenerator(
+            """
+                option a = A;
+                option a = B;
+            """.trimIndent(),
+            protoVersion = version
+        )
     }
 }

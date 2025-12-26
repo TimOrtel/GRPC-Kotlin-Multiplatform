@@ -1,6 +1,5 @@
 package io.github.timortel.kmpgrpc.core.io
 
-import io.github.timortel.kmpgrpc.shared.internal.io.DataType
 import io.github.timortel.kmpgrpc.core.message.Message
 import io.github.timortel.kmpgrpc.core.message.MessageDeserializer
 import io.github.timortel.kmpgrpc.core.message.UnknownField
@@ -8,7 +7,6 @@ import io.github.timortel.kmpgrpc.core.message.extensions.Extension
 import io.github.timortel.kmpgrpc.core.message.extensions.ExtensionRegistry
 import io.github.timortel.kmpgrpc.shared.internal.InternalKmpGrpcApi
 import io.github.timortel.kmpgrpc.shared.internal.io.WireFormat
-import io.github.timortel.kmpgrpc.shared.internal.io.wireFormatForType
 import io.github.timortel.kmpgrpc.shared.internal.io.wireFormatGetTagFieldNumber
 import io.github.timortel.kmpgrpc.shared.internal.io.wireFormatGetTagWireType
 import io.github.timortel.kmpgrpc.shared.internal.io.wireFormatMakeTag
@@ -66,58 +64,6 @@ abstract class CodedInputStream {
         return recursiveRead { deserializer.deserialize(this, extensionRegistry) }
     }
 
-    // Adapted version of https://github.com/protocolbuffers/protobuf/blob/520c601c99012101c816b6ccc89e8d6fc28fdbb8/objectivec/GPBDictionary.m#L455
-    /**
-     * Reads a map entry from a coded input stream and adds it to the given mutable map.
-     *
-     * @param map The mutable map to which the read key-value pair should be added.
-     * @param keyDataType The data type of the key in the map.
-     * @param valueDataType The data type of the value in the map.
-     * @param defaultKey The default key to use if no key is read.
-     * @param defaultValue The default value to use if no value is read.
-     * @param readKey A lambda function defining how to read the key from the input stream.
-     * @param readValue A lambda function defining how to read the value from the input stream.
-     */
-    fun <K, V> readMapEntry(
-        map: MutableMap<K, V>,
-        keyDataType: DataType,
-        valueDataType: DataType,
-        defaultKey: K?,
-        defaultValue: V?,
-        readKey: CodedInputStream.() -> K,
-        readValue: CodedInputStream.() -> V
-    ) {
-        recursiveRead {
-            val keyTag = wireFormatMakeTag(kMapKeyFieldNumber, wireFormatForType(keyDataType, false))
-            val valueTag =
-                wireFormatMakeTag(kMapValueFieldNumber, wireFormatForType(valueDataType, false))
-
-            var key: K? = defaultKey
-            var value: V? = defaultValue
-
-            var hitError = false
-
-            while (true) {
-                when (val tag = readTag()) {
-                    0 -> break
-                    keyTag -> key = readKey()
-                    valueTag -> value = readValue()
-                    else -> {
-                        //Unknown
-                        if (!skipField(tag)) {
-                            hitError = true
-                            break
-                        }
-                    }
-                }
-            }
-
-            if (!hitError && key != null && value != null) {
-                map[key] = value
-            }
-        }
-    }
-
     abstract fun readBytes(): ByteArray
 
     abstract fun readUInt32(): UInt
@@ -135,6 +81,8 @@ abstract class CodedInputStream {
     abstract fun pushLimit(newLimit: Int): Int
 
     abstract fun popLimit(oldLimit: Int)
+
+    abstract fun peek(length: Int): ByteArray
 
     fun <M : Message> readUnknownFieldOrExtension(
         tag: Int,
@@ -223,12 +171,12 @@ abstract class CodedInputStream {
         return UnknownField.Group(number, fields)
     }
 
-    private fun <T> recursiveRead(readEntry: () -> T): T {
+    internal fun <T> recursiveRead(readEntry: (size: Int) -> T): T {
         checkRecursionLimit()
         val length: Int = readInt32()
         val oldLimit = pushLimit(length)
         recursionDepth++
-        val readResult = readEntry()
+        val readResult = readEntry(length)
         checkLastTagWas(0)
         recursionDepth--
         popLimit(oldLimit)

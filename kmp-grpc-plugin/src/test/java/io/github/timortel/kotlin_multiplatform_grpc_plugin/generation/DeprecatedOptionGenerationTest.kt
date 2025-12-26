@@ -66,8 +66,8 @@ class DeprecatedOptionGenerationTest : BaseGenerationTest() {
         val enumClazz = enumFile.members.first()
         assertInstanceOf<TypeSpec>(enumClazz)
 
-        enumClazz.enumConstants["DEFAULT"]!!.annotations.assertNotDeprecated()
-        enumClazz.enumConstants["DEPRECATED_OPTION"]!!.annotations.assertDeprecated()
+        enumClazz.typeSpecs.first { it.name == "DEFAULT" }.annotations.assertNotDeprecated()
+        enumClazz.typeSpecs.first { it.name == "DEPRECATED_OPTION" }.annotations.assertNotDeprecated()
     }
 
     private fun List<AnnotationSpec>.assertDeprecated() {

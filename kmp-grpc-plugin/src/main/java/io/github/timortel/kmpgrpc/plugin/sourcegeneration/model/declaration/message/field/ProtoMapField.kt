@@ -10,6 +10,7 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOptionsHold
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoMessage
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.ProtoMessageProperty
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.OptionTarget
 import org.antlr.v4.runtime.ParserRuleContext
 
 data class ProtoMapField(
@@ -36,8 +37,17 @@ data class ProtoMapField(
     override val declarationResolver: DeclarationResolver
         get() = message
 
+    override val optionTarget: OptionTarget get() = OptionTarget.FIELD(type = OptionTarget.FIELD.Type.Map)
+
     init {
         keyType.parent = ProtoType.Parent.MapField(this)
         valuesType.parent = ProtoType.Parent.MapField(this)
+    }
+
+    override fun validate() {
+        super.validate()
+
+        keyType.validate()
+        valuesType.validate()
     }
 }

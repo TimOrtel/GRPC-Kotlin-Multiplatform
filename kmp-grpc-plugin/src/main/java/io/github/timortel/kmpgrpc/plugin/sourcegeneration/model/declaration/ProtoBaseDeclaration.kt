@@ -1,11 +1,13 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration
 
 import com.squareup.kotlinpoet.ClassName
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoLanguageVersion
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.Options
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOptionsHolder
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoProject
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoVisibilityHolder
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.ProtoNestInFileClass
 import org.antlr.v4.runtime.ParserRuleContext
 
 interface ProtoBaseDeclaration : ProtoOptionsHolder, ProtoVisibilityHolder {
@@ -33,10 +35,10 @@ interface ProtoBaseDeclaration : ProtoOptionsHolder, ProtoVisibilityHolder {
      */
     val className: ClassName
         get() {
-            return if (Options.Basic.javaMultipleFiles.get(file)) {
-                ClassName(file.javaPackage, kotlinClassName)
-            } else {
+            return if (isNested) {
                 file.className.nestedClass(kotlinClassName)
+            } else {
+                ClassName(file.javaPackage, kotlinClassName)
             }
         }
 
@@ -44,7 +46,14 @@ interface ProtoBaseDeclaration : ProtoOptionsHolder, ProtoVisibilityHolder {
      * If the message is nested within another class in the generated code.
      */
     val isNested: Boolean
-        get() = !Options.Basic.javaMultipleFiles.get(file)
+        get() = when (file.languageVersion) {
+            ProtoLanguageVersion.PROTO3, ProtoLanguageVersion.EDITION2023 -> !Options.Basic.javaMultipleFiles.get(file)
+            ProtoLanguageVersion.EDITION2024 -> when (Options.Feature.nestInFileClass.get(this)) {
+                ProtoNestInFileClass.YES -> true
+                ProtoNestInFileClass.NO -> false
+                ProtoNestInFileClass.LEGACY -> !Options.Basic.javaMultipleFiles.get(file)
+            }
+        }
 
     val ctx: ParserRuleContext
 }

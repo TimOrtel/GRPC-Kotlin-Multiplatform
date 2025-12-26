@@ -10,6 +10,7 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.Prot
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoFieldCardinality
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoMessageField
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoRegularField
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.joinCodeBlocks
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.joinToCodeBlock
@@ -121,13 +122,25 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
         message.oneOfs.forEach { oneOf ->
             oneOf.fields.forEach { field ->
                 addCode(buildFieldTagCode(field, field.isPacked))
+
+                beginControlFlow("·->·")
+
                 addCode(
-                    "·->·%N·=·%T(",
-                    oneOf.attributeName,
-                    field.sealedClassChildName
+                    buildAssignScalarFieldValueCodeBlock(
+                        type = field.type,
+                        file = field.file,
+                        fieldNumber = field.number,
+                        variableName = oneOf.attributeName,
+                        assignMode = "=",
+                        constructType = {
+                            add("%T(", field.sealedClassChildName)
+                            it()
+                            add(")")
+                        }
+                    )
                 )
-                addCode(buildReadScalarFieldDataCode(field))
-                addCode(")\n")
+
+                endControlFlow()
             }
         }
     }
@@ -145,16 +158,87 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
         }
     }
 
+    private fun buildAssignScalarFieldValueCodeBlock(
+        type: ProtoType,
+        file: ProtoFile,
+        fieldNumber: Int,
+        variableName: String,
+        assignMode: String,
+        constructType: CodeBlock.Builder.(insertValue: CodeBlock.Builder.() -> Unit) -> Unit
+    ): CodeBlock {
+        val enumNumberVar =
+            Const.Message.Companion.WrapperDeserializationFunction.ENUM_NUMBER_VALUE_LOCAL_VARIABLE
+        val enumVar = Const.Message.Companion.WrapperDeserializationFunction.ENUM_VALUE_LOCAL_VARIABLE
+
+        val isClosedEnum = isClosedEnum(type, file)
+
+        return CodeBlock.builder().apply {
+            if (isClosedEnum) {
+                addStatement("val·%N·=·%N.readEnum()", enumNumberVar, wrapperParamName)
+                addStatement(
+                    "val·%N·=·%T.%N(%N)",
+                    enumVar,
+                    type.resolve(),
+                    Const.Enum.GET_ENUM_FOR_OR_NULL_FUNCTION_NAME,
+                    enumNumberVar
+                )
+
+                add("if·(%N·!=·null)·%N·$assignMode·", enumVar, variableName)
+                constructType { add("%N", enumVar)}
+                add("\n")
+
+                addStatement(
+                    "else·%N·+=·%T(%L, %N.toLong())",
+                    Const.Message.Companion.WrapperDeserializationFunction.UNKNOWN_FIELDS_LOCAL_VARIABLE,
+                    unknownFieldVarint,
+                    fieldNumber,
+                    enumNumberVar
+                )
+            } else {
+                add("%N·$assignMode·", variableName)
+                constructType {
+                    add(
+                        when (val type = type) {
+                            is ProtoType.DefType -> when (val decl = type.resolveDeclaration()) {
+                                is ProtoEnum -> buildReadScalarFieldOpenEnumTypeCode(type)
+                                is ProtoMessage -> buildReadScalarFieldMessageTypeCode(type, decl)
+                            }
+
+                            is ProtoType.NonDeclType -> {
+                                buildReadScalarFieldBasicTypeCode(type)
+                            }
+                        }
+                    )
+                }
+                add("\n")
+            }
+        }
+            .build()
+    }
+
+    private fun isClosedEnum(type: ProtoType, file: ProtoFile): Boolean {
+        return type is ProtoType.DefType && (type.resolveDeclaration() as? ProtoEnum)?.isOpen(file.languageVersion) == false
+    }
+
     private fun FunSpec.Builder.declareWhenEntryForField(field: ProtoMessageField, isPacked: Boolean) {
         addCode(buildFieldTagCode(field, isPacked))
 
-        addCode(" -> ")
+        addCode("·->·")
 
         when (field.cardinality) {
             is ProtoFieldCardinality.Singular -> {
-                addCode("%N·=·", field.attributeName)
-                addCode(buildReadScalarFieldDataCode(field))
-                addCode("\n")
+                beginControlFlow("")
+                addCode(
+                    buildAssignScalarFieldValueCodeBlock(
+                        type = field.type,
+                        file = field.file,
+                        fieldNumber = field.number,
+                        variableName = field.attributeName,
+                        assignMode = "=",
+                        constructType = { it() }
+                    )
+                )
+                endControlFlow()
             }
 
             ProtoFieldCardinality.Repeated -> {
@@ -193,12 +277,15 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
 
                         //Enums need to first get mapped
                         if (field.type.isEnum) {
-                            addStatement(
-                                "%N += %T.%N(%N.readEnum())",
-                                field.attributeName,
-                                field.type.resolve(),
-                                Const.Enum.GET_ENUM_FOR_FUNCTION_NAME,
-                                wrapperParamName
+                            addCode(
+                                buildAssignScalarFieldValueCodeBlock(
+                                    type = field.type,
+                                    file = field.file,
+                                    fieldNumber = field.number,
+                                    variableName = field.attributeName,
+                                    assignMode = "+=",
+                                    constructType = { it() }
+                                )
                             )
                         } else {
                             val functionName = getReadScalarFunctionName(field.type)
@@ -220,12 +307,14 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
                         // not packed
                         if (field.type.isEnum) {
                             addCode(
-                                "%N·+=·%T.%N(%N.%N())\n",
-                                field.attributeName,
-                                field.type.resolve(),
-                                Const.Enum.GET_ENUM_FOR_FUNCTION_NAME,
-                                wrapperParamName,
-                                getReadScalarFunctionName(field.type)
+                                buildAssignScalarFieldValueCodeBlock(
+                                    type = field.type,
+                                    file = field.file,
+                                    fieldNumber = field.number,
+                                    variableName = field.attributeName,
+                                    assignMode = "+=",
+                                    constructType = { it() }
+                                )
                             )
                         } else {
                             addCode(
@@ -250,10 +339,12 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
             addCode(" -> ")
 
             addCode(
-                "%N.%N(%N, %T.%N, %T.%N, ",
+                "%M(%N, %L, %N, %N, %T.%N, %T.%N, ",
+                readMapEntry,
                 wrapperParamName,
-                "readMapEntry",
+                mapField.number,
                 mapField.attributeName,
+                Const.Message.Companion.WrapperDeserializationFunction.UNKNOWN_FIELDS_LOCAL_VARIABLE,
                 DataType::class.asTypeName(),
                 mapField.keyType.wireType.name,
                 DataType::class.asTypeName(),
@@ -398,44 +489,36 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
     }
 
     /**
-     * @return a CodeBlock that reads the data for [field] under the assumption that it is a scalar field
+     * @return a CodeBlock that reads the data for [type] under the assumption that it is a scalar field
      */
-    private fun buildReadScalarFieldDataCode(field: ProtoRegularField): CodeBlock {
-        return when (val type = field.type) {
-            is ProtoType.NonDeclType -> {
-                CodeBlock.of(
-                    "%N.%N()",
-                    wrapperParamName,
-                    getReadScalarFunctionName(field.type)
-                )
-            }
+    private fun buildReadScalarFieldBasicTypeCode(type: ProtoType.NonDeclType): CodeBlock {
+        return CodeBlock.of(
+            "%N.%N()",
+            wrapperParamName,
+            getReadScalarFunctionName(type)
+        )
+    }
 
-            is ProtoType.DefType -> {
-                when (val decl = type.resolveDeclaration()) {
-                    is ProtoMessage -> {
-                        CodeBlock.builder()
-                            .add(
-                                "%N.%N(%T.Companion, ",
-                                wrapperParamName,
-                                "readMessage",
-                                field.type.resolve()
-                            )
-                            .add(buildExtensionRegistryCodeForMessage(decl))
-                            .add(")")
-                            .build()
-                    }
+    private fun buildReadScalarFieldMessageTypeCode(type: ProtoType.DefType, message: ProtoMessage): CodeBlock {
+        return CodeBlock.builder()
+            .add(
+                "%N.%N(%T.Companion, ",
+                wrapperParamName,
+                "readMessage",
+                type.resolve()
+            )
+            .add(buildExtensionRegistryCodeForMessage(message))
+            .add(")")
+            .build()
+    }
 
-                    is ProtoEnum -> {
-                        CodeBlock.of(
-                            "%T.%N(%N.readEnum())",
-                            field.type.resolve(),
-                            Const.Enum.GET_ENUM_FOR_FUNCTION_NAME,
-                            wrapperParamName
-                        )
-                    }
-                }
-            }
-        }
+    private fun buildReadScalarFieldOpenEnumTypeCode(type: ProtoType.DefType): CodeBlock {
+        return CodeBlock.of(
+            "%T.%N(%N.readEnum())",
+            type.resolve(),
+            Const.Enum.GET_ENUM_FOR_FUNCTION_NAME,
+            wrapperParamName
+        )
     }
 
     private fun buildReadMapFieldDataCode(type: ProtoType): CodeBlock {
@@ -465,7 +548,8 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
                         CodeBlock.of(
                             "{·%T.%N(readEnum())·}",
                             type.resolve(),
-                            Const.Enum.GET_ENUM_FOR_FUNCTION_NAME
+                            if (decl.isOpen(type.file.languageVersion)) Const.Enum.GET_ENUM_FOR_FUNCTION_NAME
+                            else Const.Enum.GET_ENUM_FOR_OR_NULL_FUNCTION_NAME
                         )
                     }
                 }
@@ -503,7 +587,8 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
         return if (message.isExtendable) {
             CodeBlock.of(
                 "%M",
-                message.className.nestedClass("Companion").member(Const.Message.Companion.defaultExtensionRegistryProperty.name)
+                message.className.nestedClass("Companion")
+                    .member(Const.Message.Companion.defaultExtensionRegistryProperty.name)
             )
         } else {
             CodeBlock.of("%T.empty()", kmExtensionRegistry)

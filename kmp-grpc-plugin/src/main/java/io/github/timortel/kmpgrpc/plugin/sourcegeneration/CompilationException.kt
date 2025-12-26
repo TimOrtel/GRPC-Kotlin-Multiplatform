@@ -24,6 +24,7 @@ sealed class CompilationException(val msg: String, val filePath: String, val ctx
     // Enum
     class EnumIllegalFirstField(message: String, file: ProtoFile, ctx: ParserRuleContext) : CompilationException(message, file, ctx)
     class EnumNoFields(message: String, file: ProtoFile, ctx: ParserRuleContext) : CompilationException(message, file, ctx)
+    class IllegalClosedEnumImport(message: String, file: ProtoFile, ctx: ParserRuleContext) : CompilationException(message, file, ctx)
 
     // Name Resolving
     class ResolvedToPackage(message: String, file: ProtoFile, ctx: ParserRuleContext) : CompilationException(message, file, ctx)
@@ -32,6 +33,8 @@ sealed class CompilationException(val msg: String, val filePath: String, val ctx
 
     // Options
     class OptionFailedParse(message: String, file: ProtoFile, ctx: ParserRuleContext) : CompilationException(message, file, ctx)
+    class OptionInvalidTarget(message: String, file: ProtoFile, ctx: ParserRuleContext) : CompilationException(message, file, ctx)
+    class OptionUsedWithInvalidLanguageVersion(message: String, file: ProtoFile, ctx: ParserRuleContext) : CompilationException(message, file, ctx)
 
     // Extensions
     class ExtensionDefinedOnNonExtendableMessage(message: String, file: ProtoFile, ctx: ParserRuleContext) : CompilationException(message, file, ctx)
@@ -39,6 +42,13 @@ sealed class CompilationException(val msg: String, val filePath: String, val ctx
     class ExtensionRangeOverlap(message: String, file: ProtoFile, ctx: ParserRuleContext) : CompilationException(message, file, ctx)
     class ExtensionInvalidReference(message: String, file: ProtoFile, ctx: ParserRuleContext) : CompilationException(message, file, ctx)
     class ExtensionInvalidRange(message: String, file: ProtoFile, ctx: ParserRuleContext) : CompilationException(message, file, ctx)
+
+    // Export
+    class ImportLocalDeclaration(message: String, file: ProtoFile, ctx: ParserRuleContext) : CompilationException(message, file, ctx)
+    class StrictExportViolation(message: String, file: ProtoFile, ctx: ParserRuleContext) : CompilationException(message, file, ctx)
+
+    // Language
+    class UnsupportedLanguageFeatureUsed(message: String, file: ProtoFile, ctx: ParserRuleContext) : CompilationException(message, file, ctx)
 
     override val message: String
         get() = if (ctx == null) {

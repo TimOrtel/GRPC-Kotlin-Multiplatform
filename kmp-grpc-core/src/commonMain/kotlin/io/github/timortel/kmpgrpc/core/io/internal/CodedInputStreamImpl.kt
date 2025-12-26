@@ -201,4 +201,8 @@ internal class CodedInputStreamImpl(val source: Source) : CodedInputStream() {
         source.skip(byteCount.toLong())
         position += byteCount
     }
+
+    override fun peek(length: Int): ByteArray {
+        return source.peek().readByteArray(length)
+    }
 }

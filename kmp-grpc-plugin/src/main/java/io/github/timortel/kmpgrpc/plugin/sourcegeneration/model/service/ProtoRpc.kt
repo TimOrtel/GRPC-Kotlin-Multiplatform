@@ -38,6 +38,13 @@ data class ProtoRpc(
         returnType.parent = ProtoType.Parent.Rpc(this)
     }
 
+    override fun validate() {
+        super.validate()
+
+        sendType.validate()
+        returnType.validate()
+    }
+
     enum class MethodType(val jvmMethodType: String) {
         UNARY("UNARY"),
         CLIENT_STREAMING("CLIENT_STREAMING"),

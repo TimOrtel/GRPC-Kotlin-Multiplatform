@@ -19,7 +19,6 @@ data class ProtoOneOf(
     val options: List<ProtoOption>
 ) : ProtoMessageProperty, ProtoNode, ProtoChildPropertyNameResolver {
     companion object {
-        private const val UNKNOWN_CLASS_NAME = "Unknown"
         private const val UNSET_CLASS_NAME = "NotSet"
     }
 
@@ -30,7 +29,6 @@ data class ProtoOneOf(
     val sealedClassName: ClassName get() = message.className.nestedClass(name.capitalize())
 
     val sealedClassNameNotSet: ClassName get() = sealedClassName.nestedClass(UNSET_CLASS_NAME)
-    val sealedClassNameUnknown: ClassName get() = sealedClassName.nestedClass(UNKNOWN_CLASS_NAME)
 
     override val desiredAttributeName: String = name
 

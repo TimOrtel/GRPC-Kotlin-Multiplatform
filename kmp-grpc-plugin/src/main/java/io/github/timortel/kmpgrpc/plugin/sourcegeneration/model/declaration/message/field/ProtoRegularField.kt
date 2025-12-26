@@ -6,4 +6,10 @@ sealed class ProtoRegularField : ProtoBaseField() {
     abstract val type: ProtoType
 
     abstract val isPacked: Boolean
+
+    override fun validate() {
+        super.validate()
+
+        type.validate()
+    }
 }

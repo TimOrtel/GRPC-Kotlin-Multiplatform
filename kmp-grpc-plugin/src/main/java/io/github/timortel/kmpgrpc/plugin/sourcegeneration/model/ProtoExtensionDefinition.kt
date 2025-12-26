@@ -41,6 +41,8 @@ data class ProtoExtensionDefinition(
         }
 
         fields.forEach { it.validate() }
+
+        messageType.validate()
     }
 
     sealed interface Parent : DeclarationResolver {

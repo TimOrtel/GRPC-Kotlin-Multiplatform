@@ -1,6 +1,6 @@
 [![GitHub license](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg?style=flat)](http://www.apache.org/licenses/LICENSE-2.0)
 [![Download](https://img.shields.io/maven-central/v/io.github.timortel/kmp-grpc-core) ](https://central.sonatype.com/artifact/io.github.timortel/kmp-grpc-core)
-![version](https://img.shields.io/badge/version-1.5.0-blue)
+![version](https://img.shields.io/badge/version-2.0.0-blue)
 
 ![badge][badge-android]
 ![badge][badge-jvm]
@@ -35,7 +35,7 @@ This projects implements client-side gRPC for Android, JVM, Native (including iO
 | Proto2        | ⏳ Planned      |
 | Proto3        | ✅ Supported    |
 | Editions 2023 | ✅ Supported    |
-| Editions 2024 | ⏳ Planned      |
+| Editions 2024 | ✅ Supported    |
 
 Please note that not all features may be available even if the protobuf version is marked as _supported_.
 
@@ -71,14 +71,17 @@ Please note that not all features may be available even if the protobuf version 
 | `optimize_for`         | ❌      | ❌            |
 
 ### Features
-| Feature                   | Edition 2023 |
-|---------------------------|--------------|
-| `field_presence`          | ✅            | 
-| `repeated_field_encoding` | ✅            | 
-| `enum_type`               | ❌            | 
-| `json_format`             | ❌            | 
-| `message_encoding`        | ❌            | 
-| `utf8_validation`         | ❌            |
+| Feature                        | Edition 2023 | Edition 2024 |
+|--------------------------------|--------------|--------------|
+| `field_presence`               | ✅            | ✅            |
+| `repeated_field_encoding`      | ✅            | ✅            |
+| `enum_type`                    | ✅            | ✅            |
+| `json_format`                  | ⏳ Planned    | ⏳ Planned    |
+| `message_encoding`             | ⏳ Planned    | ⏳ Planned    |
+| `utf8_validation`              | ❌            | ❌            |
+| `default_symbol_visibility`    |              | ✅            |
+| `(pb.java).nest_in_file_class` |              | ✅            |
+| `enforce_naming_style`         |              | ⏳ Planned    |
 
 
 
