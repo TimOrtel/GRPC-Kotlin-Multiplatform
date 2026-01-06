@@ -5,7 +5,9 @@ import io.github.timortel.kmpgrpc.core.Code
 import io.github.timortel.kmpgrpc.core.StatusException
 import io.github.timortel.kmpgrpc.core.message.UnknownField
 import io.github.timortel.kmpgrpc.test.*
+import io.github.timortel.kmpgrpc.test.proto2.Proto2TestServiceStub
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.createMessageWithAllTypes
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.createProto2NestedGroupMessage
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.createScalarMessage
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
@@ -139,6 +141,15 @@ abstract class RpcTest : ServerTest {
         val returnedMessage = stub.returnIdentically(baseMessage)
 
         assertEquals(baseMessage, returnedMessage)
+    }
+
+    @Test
+    fun testSendNestedGroupMessage() = runTest {
+        val message = createProto2NestedGroupMessage()
+
+        val stub = Proto2TestServiceStub(channel)
+        val returnedMessage = stub.sendMessageWithNestedGroups(message)
+        assertEquals(message, returnedMessage)
     }
 
     @Test

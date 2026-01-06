@@ -1,5 +1,7 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration.parsing
 
+import io.github.timortel.kmpgrpc.anltr.Protobuf2Parser
+import io.github.timortel.kmpgrpc.anltr.Protobuf2Visitor
 import io.github.timortel.kmpgrpc.anltr.Protobuf3Parser
 import io.github.timortel.kmpgrpc.anltr.Protobuf3Visitor
 import io.github.timortel.kmpgrpc.anltr.ProtobufEditionsParser
@@ -27,6 +29,7 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.mess
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoOneOfField
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.service.ProtoRpc
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.service.ProtoService
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.decapitalize
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.tree.ErrorNode
 import org.antlr.v4.runtime.tree.ParseTree
@@ -40,7 +43,7 @@ class ProtobufModelBuilderVisitor(
     private val fileName: String,
     private val fileNameWithoutExtension: String,
     private val protoLanguageVersion: ProtoLanguageVersion
-) : Protobuf3Visitor<Any>, ProtobufEditionsVisitor<Any> {
+) : Protobuf3Visitor<Any>, ProtobufEditionsVisitor<Any>, Protobuf2Visitor<Any> {
 
     private fun visitProto(
         ctx: ParserRuleContext,
@@ -118,6 +121,29 @@ class ProtobufModelBuilderVisitor(
         )
     }
 
+    override fun visitProto(ctx: Protobuf2Parser.ProtoContext): ProtoFile {
+        val imports = ctx.importStatement().map { visitImportStatement(it) }
+        val options = ctx.optionStatement().map { visitOptionStatement(it) }
+
+        val messages = ctx.topLevelDef().mapNotNull { it.messageDef() }.map { visitMessageDef(it) }
+        val topLevelEnums = ctx.topLevelDef().mapNotNull { it.enumDef() }.map { visitEnumDef(it) }
+        val services = ctx.topLevelDef().mapNotNull { it.serviceDef() }.map { visitServiceDef(it) }
+        val extensionDefinitionsData = ctx.topLevelDef().mapNotNull { it.extendDef() }.map { visitExtendDef(it) }
+
+        val packages = ctx.packageStatement().mapNotNull { it.fullIdent()?.text }
+
+        return visitProto(
+            ctx = ctx,
+            imports = imports,
+            options = options,
+            messages = messages + extensionDefinitionsData.flatMap { it.groupMessages },
+            topLevelEnums = topLevelEnums,
+            services = services,
+            packages = packages,
+            extensionDefinitions = extensionDefinitionsData.map { it.extensionDefinition }
+        )
+    }
+
     private fun visitImportStatement(ctx: ParserRuleContext, identifier: String, type: ProtoImport.Type): ProtoImport {
         return ProtoImport(identifier = identifier, type = type, ctx = ctx)
     }
@@ -133,6 +159,15 @@ class ProtobufModelBuilderVisitor(
     }
 
     override fun visitImportStatement(ctx: Protobuf3Parser.ImportStatementContext): ProtoImport {
+        val type = when {
+            ctx.PUBLIC() != null -> ProtoImport.Type.PUBLIC
+            else -> ProtoImport.Type.DEFAULT
+        }
+
+        return visitImportStatement(ctx, ctx.strLit().text, type)
+    }
+
+    override fun visitImportStatement(ctx: Protobuf2Parser.ImportStatementContext): ProtoImport {
         val type = when {
             ctx.PUBLIC() != null -> ProtoImport.Type.PUBLIC
             else -> ProtoImport.Type.DEFAULT
@@ -157,6 +192,10 @@ class ProtobufModelBuilderVisitor(
         return visitOption(ctx, ctx.optionName().text, ctx.constant().text)
     }
 
+    override fun visitOptionStatement(ctx: Protobuf2Parser.OptionStatementContext): ProtoOption {
+        return visitOption(ctx, ctx.optionName().text, ctx.constant().text)
+    }
+
     override fun visitSymbolVisibility(ctx: ProtobufEditionsParser.SymbolVisibilityContext?): ProtoSymbolVisibility? {
         return when {
             ctx?.LOCAL() != null -> ProtoSymbolVisibility.LOCAL
@@ -165,7 +204,9 @@ class ProtobufModelBuilderVisitor(
         }
     }
 
+    // -------------------------
     // Message parsing
+    // -------------------------
 
     override fun visitMessageDef(ctx: ProtobufEditionsParser.MessageDefContext): ProtoMessage {
         val name = ctx.messageName().text
@@ -199,6 +240,7 @@ class ProtobufModelBuilderVisitor(
             extensionDefinitions = extensionDefinitions,
             extensionRange = extensionRange,
             symbolVisibility = symbolVisibility,
+            type = ProtoMessage.Type.DEFAULT,
             ctx = ctx
         )
     }
@@ -233,15 +275,106 @@ class ProtobufModelBuilderVisitor(
             extensionDefinitions = extensionDefinitions,
             extensionRange = ProtoExtensionRanges(),
             symbolVisibility = null,
+            type = ProtoMessage.Type.DEFAULT,
             ctx = ctx
         )
+    }
+
+    private fun visitProto2MessageFromElements(
+        name: String,
+        elements: List<Protobuf2Parser.MessageElementContext>,
+        type: ProtoMessage.Type,
+        ctx: ParserRuleContext
+    ): ProtoMessage {
+        val nestedMessages = elements.mapNotNull { it.messageDef() }.map { visitMessageDef(it) }
+        val nestedEnums = elements.mapNotNull { it.enumDef() }.map { visitEnumDef(it) }
+
+        val directFields = elements.mapNotNull { it.field() }.map { visitField(it) }
+        val mapFields = elements.mapNotNull { it.mapField() }.map { visitMapField(it) }
+        val oneOfs = elements.mapNotNull { it.oneof() }.map { visitOneof(it) }
+
+        val parsedGroups = elements.mapNotNull { it.group() }.map { visitGroup(it) }
+        val groupFields = parsedGroups.map { it.field }
+        val groupMessages = parsedGroups.map { it.message }
+
+        val reservation = elements.mapNotNull { it.reserved() }.map { visitReserved(it) }.fold()
+        val options = elements.mapNotNull { it.optionStatement() }.map { visitOptionStatement(it) }
+
+        val extensionDefinitionsData = elements.mapNotNull { it.extendDef() }.map { visitExtendDef(it) }
+        val extensionRange = elements.mapNotNull { it.extensions() }.map { visitExtensions(it) }.fold()
+
+        return ProtoMessage(
+            name = name,
+            messages = nestedMessages + groupMessages + extensionDefinitionsData.flatMap { it.groupMessages },
+            enums = nestedEnums,
+            fields = directFields + groupFields,
+            oneOfs = oneOfs,
+            mapFields = mapFields,
+            reservation = reservation,
+            options = options,
+            extensionDefinitions = extensionDefinitionsData.map { it.extensionDefinition },
+            extensionRange = extensionRange,
+            symbolVisibility = null,
+            type = type,
+            ctx = ctx
+        )
+    }
+
+    override fun visitMessageDef(ctx: Protobuf2Parser.MessageDefContext): ProtoMessage {
+        val name = ctx.messageName().text
+        val elements = ctx.messageBody().messageElement()
+
+        return visitProto2MessageFromElements(
+            name = name,
+            elements = elements,
+            type = ProtoMessage.Type.DEFAULT,
+            ctx = ctx
+        )
+    }
+
+    private fun visitGroupFieldCardinality(label: Protobuf2Parser.FieldLabelContext?): ProtoMessageField.FieldCardinality {
+        return when {
+            label?.REPEATED() != null -> ProtoMessageField.FieldCardinality.REPEATED
+            label?.OPTIONAL() != null -> ProtoMessageField.FieldCardinality.SINGULAR_OPTIONAL
+            label?.REQUIRED() != null -> ProtoMessageField.FieldCardinality.SINGULAR_REQUIRED
+            else -> throw IllegalStateException("field cardinality must be one of: repeated, optional, required")
+        }
+    }
+
+    override fun visitGroup(ctx: Protobuf2Parser.GroupContext): ParsedGroup {
+        val label = ctx.fieldLabel()
+        val fieldCardinality = visitGroupFieldCardinality(label)
+
+        val groupName = ctx.groupName().text
+        val number = visitIntLit(ctx.fieldNumber().intLit())
+
+        val options = visitFieldOptions(ctx.fieldOptions())
+
+        val field = ProtoMessageField(
+            type = ProtoType.DefType(groupName, ctx),
+            name = groupName.decapitalize(),
+            number = number,
+            options = options,
+            fieldCardinality = fieldCardinality,
+            ctx = ctx
+        )
+
+        val groupElements = ctx.messageBody().messageElement()
+        val groupMessage = visitProto2MessageFromElements(
+            name = groupName,
+            elements = groupElements,
+            type = ProtoMessage.Type.GROUP,
+            ctx = ctx
+        )
+
+        return ParsedGroup(field = field, message = groupMessage)
     }
 
     override fun visitReserved(ctx: ProtobufEditionsParser.ReservedContext): ProtoReservation {
         return when {
             ctx.ranges() != null -> ProtoReservation(ranges = visitRanges(ctx.ranges()))
             ctx.reservedFieldNames() != null -> visitReservedFieldNames(ctx.reservedFieldNames())
-            else -> throw ParseException("Could not read reserved field", ctx)
+            else -> throw ParseException("Could not read reserved field", ctx, filePath)
         }
     }
 
@@ -249,7 +382,15 @@ class ProtobufModelBuilderVisitor(
         return when {
             ctx.ranges() != null -> ProtoReservation(ranges = visitRanges(ctx.ranges()))
             ctx.reservedFieldNames() != null -> visitReservedFieldNames(ctx.reservedFieldNames())
-            else -> throw ParseException("Could not read reserved field", ctx)
+            else -> throw ParseException("Could not read reserved field", ctx, filePath)
+        }
+    }
+
+    override fun visitReserved(ctx: Protobuf2Parser.ReservedContext): ProtoReservation {
+        return when {
+            ctx.ranges() != null -> ProtoReservation(ranges = visitRanges(ctx.ranges()))
+            ctx.reservedFieldNames() != null -> visitReservedFieldNames(ctx.reservedFieldNames())
+            else -> throw ParseException("Could not read reserved field", ctx, filePath)
         }
     }
 
@@ -258,6 +399,10 @@ class ProtobufModelBuilderVisitor(
     }
 
     override fun visitRanges(ctx: Protobuf3Parser.RangesContext): List<ProtoRange> {
+        return ctx.range_().map { visitRange_(it) }
+    }
+
+    override fun visitRanges(ctx: Protobuf2Parser.RangesContext): List<ProtoRange> {
         return ctx.range_().map { visitRange_(it) }
     }
 
@@ -272,11 +417,15 @@ class ProtobufModelBuilderVisitor(
     }
 
     override fun visitRange_(ctx: ProtobufEditionsParser.Range_Context): ProtoRange {
-        return visitRange(ctx.intLit(0).parseInt(), ctx.intLit(1)?.parseInt(), ctx.MAX() != null, ctx)
+        return visitRange(visitIntLit(ctx.intLit(0)), ctx.intLit(1)?.let(::visitIntLit), ctx.MAX() != null, ctx)
     }
 
     override fun visitRange_(ctx: Protobuf3Parser.Range_Context): ProtoRange {
-        return visitRange(ctx.intLit(0).parseInt(), ctx.intLit(1)?.parseInt(), ctx.MAX() != null, ctx)
+        return visitRange(visitIntLit(ctx.intLit(0)), ctx.intLit(1)?.let(::visitIntLit), ctx.MAX() != null, ctx)
+    }
+
+    override fun visitRange_(ctx: Protobuf2Parser.Range_Context): ProtoRange {
+        return visitRange(visitIntLit(ctx.intLit(0)), ctx.intLit(1)?.let(::visitIntLit), ctx.MAX() != null, ctx)
     }
 
     private fun visitReservedFieldNames(names: List<String>): ProtoReservation {
@@ -294,13 +443,21 @@ class ProtobufModelBuilderVisitor(
         return visitReservedFieldNames(ctx.strLit().map { it.text })
     }
 
+    override fun visitReservedFieldNames(ctx: Protobuf2Parser.ReservedFieldNamesContext): ProtoReservation {
+        return visitReservedFieldNames(ctx.strLit().map { it.text })
+    }
+
     override fun visitMessageBody(ctx: ProtobufEditionsParser.MessageBodyContext): Any = Unit
     override fun visitMessageBody(ctx: Protobuf3Parser.MessageBodyContext): Any = Unit
+    override fun visitMessageBody(ctx: Protobuf2Parser.MessageBodyContext): Any = Unit
 
     override fun visitMessageElement(ctx: ProtobufEditionsParser.MessageElementContext): Any = Unit
     override fun visitMessageElement(ctx: Protobuf3Parser.MessageElementContext?): Any = Unit
+    override fun visitMessageElement(ctx: Protobuf2Parser.MessageElementContext?): Any = Unit
 
+    // -------------------------
     // Enum Parsing
+    // -------------------------
 
     override fun visitEnumDef(ctx: ProtobufEditionsParser.EnumDefContext): ProtoEnum {
         val name = ctx.enumName().text
@@ -340,7 +497,27 @@ class ProtobufModelBuilderVisitor(
         )
     }
 
+    override fun visitEnumDef(ctx: Protobuf2Parser.EnumDefContext): ProtoEnum {
+        val name = ctx.enumName().text
+        val elements = ctx.enumBody().enumElement()
+
+        val options = elements.mapNotNull { it.optionStatement() }.map { visitOptionStatement(it) }
+        val fields = elements.mapNotNull { it.enumField() }.map { visitEnumField(it) }
+        val reservation = elements.mapNotNull { it.reserved() }.map { visitReserved(it) }.fold()
+
+        return ProtoEnum(
+            name = name,
+            fields = fields,
+            options = options,
+            reservation = reservation,
+            symbolVisibility = null,
+            ctx = ctx
+        )
+    }
+
+    // -------------------------
     // Field parsing
+    // -------------------------
 
     override fun visitField(ctx: ProtobufEditionsParser.FieldContext): ProtoMessageField {
         val label = ctx.fieldLabel()
@@ -352,7 +529,7 @@ class ProtobufModelBuilderVisitor(
 
         val type = visitType_(ctx.type_())
         val name = ctx.fieldName().text
-        val number = ctx.fieldNumber().parseInt()
+        val number = visitIntLit(ctx.fieldNumber().intLit())
 
         val options = visitFieldOptions(ctx.fieldOptions())
 
@@ -377,7 +554,33 @@ class ProtobufModelBuilderVisitor(
 
         val type = visitType_(ctx.type_())
         val name = ctx.fieldName().text
-        val number = ctx.fieldNumber().parseInt()
+        val number = visitIntLit(ctx.fieldNumber().intLit())
+
+        val options = visitFieldOptions(ctx.fieldOptions())
+
+        return ProtoMessageField(
+            type = type,
+            name = name,
+            number = number,
+            options = options,
+            fieldCardinality = fieldCardinality,
+            ctx = ctx
+        )
+    }
+
+    override fun visitField(ctx: Protobuf2Parser.FieldContext): ProtoMessageField {
+        val label = ctx.fieldLabel()
+
+        val fieldCardinality = when {
+            label?.REPEATED() != null -> ProtoMessageField.FieldCardinality.REPEATED
+            label?.OPTIONAL() != null -> ProtoMessageField.FieldCardinality.SINGULAR_OPTIONAL
+            label?.REQUIRED() != null -> ProtoMessageField.FieldCardinality.SINGULAR_REQUIRED
+            else -> throw IllegalStateException("field cardinality must be one of: repeated, optional, required")
+        }
+
+        val type = visitType_(ctx.type_())
+        val name = ctx.fieldName().text
+        val number = visitIntLit(ctx.fieldNumber().intLit())
 
         val options = visitFieldOptions(ctx.fieldOptions())
 
@@ -396,7 +599,7 @@ class ProtobufModelBuilderVisitor(
         val valuesType = visitType_(ctx.type_())
 
         val name = ctx.mapName().text
-        val number = ctx.fieldNumber().parseInt()
+        val number = visitIntLit(ctx.fieldNumber().intLit())
 
         val options = visitFieldOptions(ctx.fieldOptions())
 
@@ -415,7 +618,26 @@ class ProtobufModelBuilderVisitor(
         val valuesType = visitType_(ctx.type_())
 
         val name = ctx.mapName().text
-        val number = ctx.fieldNumber().parseInt()
+        val number = visitIntLit(ctx.fieldNumber().intLit())
+
+        val options = visitFieldOptions(ctx.fieldOptions())
+
+        return ProtoMapField(
+            name = name,
+            number = number,
+            options = options,
+            keyType = keyType,
+            valuesType = valuesType,
+            ctx = ctx
+        )
+    }
+
+    override fun visitMapField(ctx: Protobuf2Parser.MapFieldContext): ProtoMapField {
+        val keyType = visitKeyType(ctx.keyType())
+        val valuesType = visitType_(ctx.type_())
+
+        val name = ctx.mapName().text
+        val number = visitIntLit(ctx.fieldNumber().intLit())
 
         val options = visitFieldOptions(ctx.fieldOptions())
 
@@ -438,6 +660,10 @@ class ProtobufModelBuilderVisitor(
         return ctx?.fieldOption().orEmpty().map { visitFieldOption(it) }
     }
 
+    override fun visitFieldOptions(ctx: Protobuf2Parser.FieldOptionsContext?): List<ProtoOption> {
+        return ctx?.fieldOption().orEmpty().map { visitFieldOption(it) }
+    }
+
     private fun visitFieldOption(ctx: ParserRuleContext, name: String, value: String): ProtoOption {
         return ProtoOption(name, value, ctx)
     }
@@ -447,6 +673,10 @@ class ProtobufModelBuilderVisitor(
     }
 
     override fun visitFieldOption(ctx: Protobuf3Parser.FieldOptionContext): ProtoOption {
+        return visitFieldOption(ctx, ctx.optionName().text, ctx.constant().text)
+    }
+
+    override fun visitFieldOption(ctx: Protobuf2Parser.FieldOptionContext): ProtoOption {
         return visitFieldOption(ctx, ctx.optionName().text, ctx.constant().text)
     }
 
@@ -467,7 +697,7 @@ class ProtobufModelBuilderVisitor(
 
     override fun visitEnumField(ctx: ProtobufEditionsParser.EnumFieldContext): ProtoEnumField {
         val name = ctx.ident().text
-        val number = ctx.intLit().parseInt()
+        val number = visitIntLit(ctx.intLit())
         val options = visitEnumValueOptions(ctx.enumValueOptions())
 
         return visitEnumField(ctx, name, number, options, ctx.MINUS() != null)
@@ -475,7 +705,15 @@ class ProtobufModelBuilderVisitor(
 
     override fun visitEnumField(ctx: Protobuf3Parser.EnumFieldContext): ProtoEnumField {
         val name = ctx.ident().text
-        val number = ctx.intLit().parseInt()
+        val number = visitIntLit(ctx.intLit())
+        val options = visitEnumValueOptions(ctx.enumValueOptions())
+
+        return visitEnumField(ctx, name, number, options, ctx.MINUS() != null)
+    }
+
+    override fun visitEnumField(ctx: Protobuf2Parser.EnumFieldContext): ProtoEnumField {
+        val name = ctx.ident().text
+        val number = visitIntLit(ctx.intLit())
         val options = visitEnumValueOptions(ctx.enumValueOptions())
 
         return visitEnumField(ctx, name, number, options, ctx.MINUS() != null)
@@ -490,6 +728,10 @@ class ProtobufModelBuilderVisitor(
         return ctx?.enumValueOption().orEmpty().map { visitEnumValueOption(it) }
     }
 
+    override fun visitEnumValueOptions(ctx: Protobuf2Parser.EnumValueOptionsContext?): List<ProtoOption> {
+        return ctx?.enumValueOption().orEmpty().map { visitEnumValueOption(it) }
+    }
+
     override fun visitEnumValueOption(ctx: ProtobufEditionsParser.EnumValueOptionContext): ProtoOption {
         return ProtoOption(name = ctx.optionName().text, value = ctx.constant().text, ctx)
     }
@@ -498,7 +740,13 @@ class ProtobufModelBuilderVisitor(
         return ProtoOption(name = ctx.optionName().text, value = ctx.constant().text, ctx)
     }
 
+    override fun visitEnumValueOption(ctx: Protobuf2Parser.EnumValueOptionContext): ProtoOption {
+        return ProtoOption(name = ctx.optionName().text, value = ctx.constant().text, ctx)
+    }
+
+    // -------------------------
     // One-Of Parsing
+    // -------------------------
 
     override fun visitOneof(ctx: ProtobufEditionsParser.OneofContext): ProtoOneOf {
         val name = ctx.oneofName().text
@@ -518,10 +766,19 @@ class ProtobufModelBuilderVisitor(
         return ProtoOneOf(name = name, fields = fields, options = options)
     }
 
+    override fun visitOneof(ctx: Protobuf2Parser.OneofContext): ProtoOneOf {
+        val name = ctx.oneofName().text
+
+        val options = ctx.optionStatement().map { visitOptionStatement(it) }
+        val fields = ctx.oneofField().map { visitOneofField(it) }
+
+        return ProtoOneOf(name = name, fields = fields, options = options)
+    }
+
     override fun visitOneofField(ctx: ProtobufEditionsParser.OneofFieldContext): ProtoOneOfField {
         val type = visitType_(ctx.type_())
         val name = ctx.fieldName().text
-        val number = ctx.fieldNumber().parseInt()
+        val number = visitIntLit(ctx.fieldNumber().intLit())
 
         val options = visitFieldOptions(ctx.fieldOptions())
 
@@ -537,7 +794,7 @@ class ProtobufModelBuilderVisitor(
     override fun visitOneofField(ctx: Protobuf3Parser.OneofFieldContext): ProtoOneOfField {
         val type = visitType_(ctx.type_())
         val name = ctx.fieldName().text
-        val number = ctx.fieldNumber().parseInt()
+        val number = visitIntLit(ctx.fieldNumber().intLit())
 
         val options = visitFieldOptions(ctx.fieldOptions())
 
@@ -550,7 +807,25 @@ class ProtobufModelBuilderVisitor(
         )
     }
 
+    override fun visitOneofField(ctx: Protobuf2Parser.OneofFieldContext): ProtoOneOfField {
+        val type = visitType_(ctx.type_())
+        val name = ctx.fieldName().text
+        val number = visitIntLit(ctx.fieldNumber().intLit())
+
+        val options = visitFieldOptions(ctx.fieldOptions())
+
+        return ProtoOneOfField(
+            type = type,
+            name = name,
+            number = number,
+            options = options,
+            ctx = ctx
+        )
+    }
+
+    // -------------------------
     // Service parsing
+    // -------------------------
 
     override fun visitServiceDef(ctx: ProtobufEditionsParser.ServiceDefContext): ProtoService {
         val name = ctx.serviceName().text
@@ -566,6 +841,19 @@ class ProtobufModelBuilderVisitor(
     }
 
     override fun visitServiceDef(ctx: Protobuf3Parser.ServiceDefContext): ProtoService {
+        val name = ctx.serviceName().text
+        val options = ctx.serviceElement().mapNotNull { it.optionStatement() }.map { visitOptionStatement(it) }
+        val rpcs = ctx.serviceElement().mapNotNull { it.rpc() }.map { visitRpc(it) }
+
+        return ProtoService(
+            name = name,
+            options = options,
+            rpcs = rpcs,
+            ctx = ctx
+        )
+    }
+
+    override fun visitServiceDef(ctx: Protobuf2Parser.ServiceDefContext): ProtoService {
         val name = ctx.serviceName().text
         val options = ctx.serviceElement().mapNotNull { it.optionStatement() }.map { visitOptionStatement(it) }
         val rpcs = ctx.serviceElement().mapNotNull { it.rpc() }.map { visitRpc(it) }
@@ -614,10 +902,31 @@ class ProtobufModelBuilderVisitor(
         )
     }
 
+    override fun visitRpc(ctx: Protobuf2Parser.RpcContext): ProtoRpc {
+        val name = ctx.rpcName().text
+        val clientType = visitMessageType(ctx.messageType(0))
+        val serverType = visitMessageType(ctx.messageType(1))
+        val isClientStream = ctx.clientStream != null
+        val isServerStream = ctx.serverStream != null
+        val options = ctx.optionStatement().map { visitOptionStatement(it) }
+
+        return ProtoRpc(
+            name = name,
+            sendType = clientType,
+            returnType = serverType,
+            isSendingStream = isClientStream,
+            isReceivingStream = isServerStream,
+            options = options
+        )
+    }
+
     override fun visitServiceElement(ctx: ProtobufEditionsParser.ServiceElementContext?): Any = Unit
     override fun visitServiceElement(ctx: Protobuf3Parser.ServiceElementContext?): Any = Unit
+    override fun visitServiceElement(ctx: Protobuf2Parser.ServiceElementContext): Any = Unit
 
+    // -------------------------
     // Extensions
+    // -------------------------
 
     override fun visitExtendDef(ctx: ProtobufEditionsParser.ExtendDefContext): ProtoExtensionDefinition {
         val messageDef = ctx.messageType().text
@@ -633,11 +942,37 @@ class ProtobufModelBuilderVisitor(
         return ProtoExtensionDefinition(ProtoType.DefType(messageDef, ctx.messageType()), fields, ctx)
     }
 
+    override fun visitExtendDef(ctx: Protobuf2Parser.ExtendDefContext): Proto2ExtendDefinitionData {
+        val messageDef = ctx.messageType().text
+
+        val elements = ctx.extendElement()
+        val fieldsFromFields = elements.mapNotNull { it.field() }.map { visitField(it) }
+        // Groups inside extend: best-effort mapping to a field (group message is not modeled in ProtoExtensionDefinition).
+        val groups = elements.mapNotNull { it.group() }.map { grp -> visitGroup(grp) }
+
+        val extensionDefinition = ProtoExtensionDefinition(
+            messageType = ProtoType.DefType(messageDef, ctx.messageType()),
+            fields = fieldsFromFields + groups.map { it.field },
+            ctx = ctx
+        )
+
+        return Proto2ExtendDefinitionData(
+            extensionDefinition = extensionDefinition,
+            groupMessages = groups.map { it.message }
+        )
+    }
+
     override fun visitExtensions(ctx: ProtobufEditionsParser.ExtensionsContext): ProtoExtensionRanges {
         return ProtoExtensionRanges(ranges = visitRanges(ctx.ranges()))
     }
 
+    override fun visitExtensions(ctx: Protobuf2Parser.ExtensionsContext): ProtoExtensionRanges {
+        return ProtoExtensionRanges(ranges = visitRanges(ctx.ranges()))
+    }
+
+    // -------------------------
     // Type parsing
+    // -------------------------
 
     override fun visitType_(ctx: ProtobufEditionsParser.Type_Context): ProtoType {
         return when {
@@ -657,7 +992,7 @@ class ProtobufModelBuilderVisitor(
             ctx.BOOL() != null -> ProtoType.BoolType
             ctx.STRING() != null -> ProtoType.StringType
             ctx.BYTES() != null -> ProtoType.BytesType
-            else -> throw ParseException("Unknown type found.", ctx)
+            else -> throw ParseException("Unknown type found.", ctx, filePath)
         }
     }
 
@@ -679,7 +1014,29 @@ class ProtobufModelBuilderVisitor(
             ctx.BOOL() != null -> ProtoType.BoolType
             ctx.STRING() != null -> ProtoType.StringType
             ctx.BYTES() != null -> ProtoType.BytesType
-            else -> throw ParseException("Unknown type found.", ctx)
+            else -> throw ParseException("Unknown type found.", ctx, filePath)
+        }
+    }
+
+    override fun visitType_(ctx: Protobuf2Parser.Type_Context): ProtoType {
+        return when {
+            ctx.messageType() != null || ctx.enumType() != null -> ProtoType.DefType(ctx.text, ctx)
+            ctx.DOUBLE() != null -> ProtoType.DoubleType
+            ctx.FLOAT() != null -> ProtoType.FloatType
+            ctx.INT32() != null -> ProtoType.Int32Type
+            ctx.INT64() != null -> ProtoType.Int64Type
+            ctx.UINT32() != null -> ProtoType.UInt32Type
+            ctx.UINT64() != null -> ProtoType.UInt64Type
+            ctx.SINT32() != null -> ProtoType.SInt32Type
+            ctx.SINT64() != null -> ProtoType.SInt64Type
+            ctx.FIXED32() != null -> ProtoType.Fixed32Type
+            ctx.FIXED64() != null -> ProtoType.Fixed64Type
+            ctx.SFIXED32() != null -> ProtoType.SFixed32Type
+            ctx.SFIXED64() != null -> ProtoType.SFixed64Type
+            ctx.BOOL() != null -> ProtoType.BoolType
+            ctx.STRING() != null -> ProtoType.StringType
+            ctx.BYTES() != null -> ProtoType.BytesType
+            else -> throw ParseException("Unknown type found.", ctx, filePath)
         }
     }
 
@@ -697,7 +1054,7 @@ class ProtobufModelBuilderVisitor(
             ctx.SFIXED64() != null -> ProtoType.SFixed64Type
             ctx.BOOL() != null -> ProtoType.BoolType
             ctx.STRING() != null -> ProtoType.StringType
-            else -> throw ParseException("Unknown type found.", ctx)
+            else -> throw ParseException("Unknown type found.", ctx, filePath)
         }
     }
 
@@ -715,7 +1072,25 @@ class ProtobufModelBuilderVisitor(
             ctx.SFIXED64() != null -> ProtoType.SFixed64Type
             ctx.BOOL() != null -> ProtoType.BoolType
             ctx.STRING() != null -> ProtoType.StringType
-            else -> throw ParseException("Unknown type found.", ctx)
+            else -> throw ParseException("Unknown type found.", ctx, filePath)
+        }
+    }
+
+    override fun visitKeyType(ctx: Protobuf2Parser.KeyTypeContext): ProtoType.MapKeyType {
+        return when {
+            ctx.INT32() != null -> ProtoType.Int32Type
+            ctx.INT64() != null -> ProtoType.Int64Type
+            ctx.UINT32() != null -> ProtoType.UInt32Type
+            ctx.UINT64() != null -> ProtoType.UInt64Type
+            ctx.SINT32() != null -> ProtoType.SInt32Type
+            ctx.SINT64() != null -> ProtoType.SInt64Type
+            ctx.FIXED32() != null -> ProtoType.Fixed32Type
+            ctx.FIXED64() != null -> ProtoType.Fixed64Type
+            ctx.SFIXED32() != null -> ProtoType.SFixed32Type
+            ctx.SFIXED64() != null -> ProtoType.SFixed64Type
+            ctx.BOOL() != null -> ProtoType.BoolType
+            ctx.STRING() != null -> ProtoType.StringType
+            else -> throw ParseException("Unknown type found.", ctx, filePath)
         }
     }
 
@@ -727,6 +1102,14 @@ class ProtobufModelBuilderVisitor(
         return ProtoType.DefType(ctx.text, ctx)
     }
 
+    override fun visitMessageType(ctx: Protobuf2Parser.MessageTypeContext): ProtoType.DefType {
+        return ProtoType.DefType(ctx.text, ctx)
+    }
+
+    // -------------------------
+    // Remaining visitor methods (stubs)
+    // -------------------------
+
     override fun visit(tree: ParseTree): Any = Unit
 
     override fun visitChildren(node: RuleNode?): Any = Unit
@@ -737,83 +1120,133 @@ class ProtobufModelBuilderVisitor(
 
     override fun visitEdition(ctx: ProtobufEditionsParser.EditionContext?): Any = Unit
     override fun visitSyntax(ctx: Protobuf3Parser.SyntaxContext?): Any = Unit
+    override fun visitSyntax(ctx: Protobuf2Parser.SyntaxContext?): Any = Unit
 
     override fun visitPackageStatement(ctx: ProtobufEditionsParser.PackageStatementContext?): Any = Unit
     override fun visitPackageStatement(ctx: Protobuf3Parser.PackageStatementContext?): Any = Unit
+    override fun visitPackageStatement(ctx: Protobuf2Parser.PackageStatementContext?): Any = Unit
 
     override fun visitOptionName(ctx: ProtobufEditionsParser.OptionNameContext?): Any = Unit
     override fun visitOptionName(ctx: Protobuf3Parser.OptionNameContext?): Any = Unit
+    override fun visitOptionName(ctx: Protobuf2Parser.OptionNameContext?): Any = Unit
 
     override fun visitFieldLabel(ctx: ProtobufEditionsParser.FieldLabelContext?): Any = Unit
     override fun visitFieldLabel(ctx: Protobuf3Parser.FieldLabelContext?): Any = Unit
+    override fun visitFieldLabel(ctx: Protobuf2Parser.FieldLabelContext?): Any = Unit
 
     override fun visitFieldNumber(ctx: ProtobufEditionsParser.FieldNumberContext?): Any = Unit
     override fun visitFieldNumber(ctx: Protobuf3Parser.FieldNumberContext?): Any = Unit
+    override fun visitFieldNumber(ctx: Protobuf2Parser.FieldNumberContext?): Any = Unit
 
     override fun visitTopLevelDef(ctx: ProtobufEditionsParser.TopLevelDefContext?): Any = Unit
     override fun visitTopLevelDef(ctx: Protobuf3Parser.TopLevelDefContext?): Any = Unit
+    override fun visitTopLevelDef(ctx: Protobuf2Parser.TopLevelDefContext?): Any = Unit
 
     override fun visitEnumBody(ctx: ProtobufEditionsParser.EnumBodyContext?): Any = Unit
     override fun visitEnumBody(ctx: Protobuf3Parser.EnumBodyContext?): Any = Unit
+    override fun visitEnumBody(ctx: Protobuf2Parser.EnumBodyContext?): Any = Unit
 
     override fun visitEnumElement(ctx: ProtobufEditionsParser.EnumElementContext?): Any = Unit
     override fun visitEnumElement(ctx: Protobuf3Parser.EnumElementContext?): Any = Unit
+    override fun visitEnumElement(ctx: Protobuf2Parser.EnumElementContext?): Any = Unit
 
     override fun visitConstant(ctx: ProtobufEditionsParser.ConstantContext?): Any = Unit
     override fun visitConstant(ctx: Protobuf3Parser.ConstantContext?): Any = Unit
+    override fun visitConstant(ctx: Protobuf2Parser.ConstantContext?): Any = Unit
 
     override fun visitBlockLit(ctx: ProtobufEditionsParser.BlockLitContext?): Any = Unit
     override fun visitBlockLit(ctx: Protobuf3Parser.BlockLitContext?): Any = Unit
+    override fun visitBlockLit(ctx: Protobuf2Parser.BlockLitContext?): Any = Unit
 
     override fun visitEmptyStatement_(ctx: ProtobufEditionsParser.EmptyStatement_Context?): Any = Unit
     override fun visitEmptyStatement_(ctx: Protobuf3Parser.EmptyStatement_Context?): Any = Unit
+    override fun visitEmptyStatement_(ctx: Protobuf2Parser.EmptyStatement_Context?): Any = Unit
 
     override fun visitIdent(ctx: ProtobufEditionsParser.IdentContext?): Any = Unit
     override fun visitIdent(ctx: Protobuf3Parser.IdentContext?): Any = Unit
+    override fun visitIdent(ctx: Protobuf2Parser.IdentContext?): Any = Unit
 
     override fun visitFullIdent(ctx: ProtobufEditionsParser.FullIdentContext?): Any = Unit
     override fun visitFullIdent(ctx: Protobuf3Parser.FullIdentContext?): Any = Unit
+    override fun visitFullIdent(ctx: Protobuf2Parser.FullIdentContext?): Any = Unit
 
     override fun visitMessageName(ctx: ProtobufEditionsParser.MessageNameContext?): Any = Unit
     override fun visitMessageName(ctx: Protobuf3Parser.MessageNameContext?): Any = Unit
+    override fun visitMessageName(ctx: Protobuf2Parser.MessageNameContext?): Any = Unit
 
     override fun visitEnumName(ctx: ProtobufEditionsParser.EnumNameContext?): Any = Unit
     override fun visitEnumName(ctx: Protobuf3Parser.EnumNameContext?): Any = Unit
+    override fun visitEnumName(ctx: Protobuf2Parser.EnumNameContext?): Any = Unit
 
     override fun visitFieldName(ctx: ProtobufEditionsParser.FieldNameContext?): Any = Unit
     override fun visitFieldName(ctx: Protobuf3Parser.FieldNameContext?): Any = Unit
+    override fun visitFieldName(ctx: Protobuf2Parser.FieldNameContext?): Any = Unit
 
     override fun visitOneofName(ctx: ProtobufEditionsParser.OneofNameContext?): Any = Unit
     override fun visitOneofName(ctx: Protobuf3Parser.OneofNameContext?): Any = Unit
+    override fun visitOneofName(ctx: Protobuf2Parser.OneofNameContext?): Any = Unit
 
     override fun visitMapName(ctx: ProtobufEditionsParser.MapNameContext?): Any = Unit
     override fun visitMapName(ctx: Protobuf3Parser.MapNameContext?): Any = Unit
+    override fun visitMapName(ctx: Protobuf2Parser.MapNameContext?): Any = Unit
 
     override fun visitServiceName(ctx: ProtobufEditionsParser.ServiceNameContext?): Any = Unit
     override fun visitServiceName(ctx: Protobuf3Parser.ServiceNameContext?): Any = Unit
+    override fun visitServiceName(ctx: Protobuf2Parser.ServiceNameContext?): Any = Unit
 
     override fun visitRpcName(ctx: ProtobufEditionsParser.RpcNameContext?): Any = Unit
     override fun visitRpcName(ctx: Protobuf3Parser.RpcNameContext?): Any = Unit
+    override fun visitRpcName(ctx: Protobuf2Parser.RpcNameContext?): Any = Unit
 
     override fun visitEnumType(ctx: ProtobufEditionsParser.EnumTypeContext?): Any = Unit
     override fun visitEnumType(ctx: Protobuf3Parser.EnumTypeContext?): Any = Unit
+    override fun visitEnumType(ctx: Protobuf2Parser.EnumTypeContext?): Any = Unit
 
-    override fun visitIntLit(ctx: ProtobufEditionsParser.IntLitContext?): Any = Unit
-    override fun visitIntLit(ctx: Protobuf3Parser.IntLitContext?): Any = Unit
+    override fun visitIntLit(ctx: ProtobufEditionsParser.IntLitContext): Int = visitIntLit(ctx.text, ctx)
+    override fun visitIntLit(ctx: Protobuf3Parser.IntLitContext): Int = visitIntLit(ctx.text, ctx)
+    override fun visitIntLit(ctx: Protobuf2Parser.IntLitContext): Int = visitIntLit(ctx.text, ctx)
+
+    private fun visitIntLit(text: String, ctx: ParserRuleContext): Int {
+        return when {
+            text.startsWith("0x") || text.startsWith("0X") -> {
+                text.substring(2).toIntOrNull(16)
+            }
+            text.startsWith('0') -> {
+                text.toIntOrNull(8)
+            }
+            else -> text.toIntOrNull()
+        }  ?: throw ParseException("Could not parse integer", ctx, filePath)
+    }
 
     override fun visitStrLit(ctx: ProtobufEditionsParser.StrLitContext?): Any = Unit
     override fun visitStrLit(ctx: Protobuf3Parser.StrLitContext?): Any = Unit
+    override fun visitStrLit(ctx: Protobuf2Parser.StrLitContext?): Any = Unit
 
     override fun visitBoolLit(ctx: ProtobufEditionsParser.BoolLitContext?): Any = Unit
     override fun visitBoolLit(ctx: Protobuf3Parser.BoolLitContext?): Any = Unit
+    override fun visitBoolLit(ctx: Protobuf2Parser.BoolLitContext?): Any = Unit
 
     override fun visitFloatLit(ctx: ProtobufEditionsParser.FloatLitContext?): Any = Unit
     override fun visitFloatLit(ctx: Protobuf3Parser.FloatLitContext?): Any = Unit
+    override fun visitFloatLit(ctx: Protobuf2Parser.FloatLitContext?): Any = Unit
 
     override fun visitKeywords(ctx: ProtobufEditionsParser.KeywordsContext?): Any = Unit
     override fun visitKeywords(ctx: Protobuf3Parser.KeywordsContext?): Any = Unit
+    override fun visitKeywords(ctx: Protobuf2Parser.KeywordsContext?): Any = Unit
 
-    private fun ParserRuleContext.parseInt(): Int {
-        return text.toIntOrNull() ?: throw ParseException("Could not parse integer", this)
-    }
+    // Protobuf2-only nodes (stubs / safety)
+    override fun visitExtendElement(ctx: Protobuf2Parser.ExtendElementContext?): Any = Unit
+    override fun visitStream(ctx: Protobuf2Parser.StreamContext?): Any = Unit
+    override fun visitGroupName(ctx: Protobuf2Parser.GroupNameContext?): Any = Unit
+    override fun visitStreamName(ctx: Protobuf2Parser.StreamNameContext?): Any = Unit
+
+    data class ParsedGroup(
+        val field: ProtoMessageField,
+        val message: ProtoMessage
+    )
+
+    data class Proto2ExtendDefinitionData(
+        val extensionDefinition: ProtoExtensionDefinition,
+        val groupMessages: List<ProtoMessage>
+    )
 }

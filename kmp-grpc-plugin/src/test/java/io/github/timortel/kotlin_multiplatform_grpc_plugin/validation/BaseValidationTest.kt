@@ -32,6 +32,7 @@ abstract class BaseValidationTest {
     }
 
     enum class ProtoVersion(val header: String) {
+        PROTO2("syntax = \"proto2\";"),
         PROTO3("syntax = \"proto3\";"),
         EDITION2023("edition = \"2023\";"),
         EDITION2024("edition = \"2024\";")

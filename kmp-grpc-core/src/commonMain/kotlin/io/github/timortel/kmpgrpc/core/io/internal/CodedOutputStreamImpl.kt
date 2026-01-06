@@ -217,6 +217,16 @@ internal class CodedOutputStreamImpl(private val sink: Sink) : CodedOutputStream
         values.forEach { writeMessage(fieldNumber, it) }
     }
 
+    override fun writeGroup(fieldNumber: Int, value: Message) {
+        writeTag(fieldNumber, WireFormat.START_GROUP)
+        value.serialize(this)
+        writeTag(fieldNumber, WireFormat.END_GROUP)
+    }
+
+    override fun writeGroupArray(fieldNumber: Int, values: List<Message>) {
+        values.forEach { writeGroup(fieldNumber, it) }
+    }
+
     override fun <K, V> writeMap(
         fieldNumber: Int,
         map: Map<K, V>,

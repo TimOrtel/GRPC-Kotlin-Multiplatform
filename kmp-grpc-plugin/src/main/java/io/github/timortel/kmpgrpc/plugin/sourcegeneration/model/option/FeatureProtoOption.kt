@@ -31,6 +31,7 @@ class FeatureProtoOption<T>(
         name = name,
         parse = parse,
         languageConfigurationMap = mapOf(
+            ProtoLanguageVersion.PROTO2 to LangConfig.Unavailable(),
             ProtoLanguageVersion.PROTO3 to LangConfig.Unavailable(),
             ProtoLanguageVersion.EDITION2023 to edition2023Config,
             ProtoLanguageVersion.EDITION2024 to edition2024Config,

@@ -5,9 +5,12 @@ import io.github.timortel.kmpgrpc.core.message.UnknownField
 import io.github.timortel.kmpgrpc.core.message.extensions.buildExtensions
 import io.github.timortel.kmpgrpc.test.Unknownfield
 import io.github.timortel.kmpgrpc.test.emptyMessage
+import io.github.timortel.kmpgrpc.test.proto2.Proto2GroupTest
 import io.github.timortel.kmpgrpc.test.simpleMessage
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.createMessageWithAllExtensions
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.createMessageWithAllTypes
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.createProto2GroupMessageWithExtensions
+import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.createProto2NestedGroupMessage
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.createScalarMessage
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -95,6 +98,38 @@ class EqTest {
                 set(ExtensionsTest.field1, "Foo")
             }
         )
+
+        assertNotEquals(msg1, msg2)
+    }
+
+    @Test
+    fun messageWithNestedGroupsEqual() {
+        val msg1 = createProto2NestedGroupMessage()
+        val msg2 = createProto2NestedGroupMessage()
+
+        assertEquals(msg1, msg2)
+    }
+
+    @Test
+    fun messageWithNestedGroupsDiffer() {
+        val msg1 = createProto2NestedGroupMessage()
+        val msg2 = Proto2GroupTest.A()
+
+        assertNotEquals(msg1, msg2)
+    }
+
+    @Test
+    fun messageWithGroupMessageExtensionsEqual() {
+        val msg1 = createProto2GroupMessageWithExtensions()
+        val msg2 = createProto2GroupMessageWithExtensions()
+
+        assertEquals(msg1, msg2)
+    }
+
+    @Test
+    fun messageWithGroupMessageExtensionsDiffer() {
+        val msg1 = createProto2GroupMessageWithExtensions()
+        val msg2 = msg1.copy(extensions = buildExtensions {  })
 
         assertNotEquals(msg1, msg2)
     }

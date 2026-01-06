@@ -4,12 +4,14 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.CompilationException
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoDeclaration
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoEnum
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoMessage
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoImport
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.structure.ProtoPackage
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.toFilePositionString
 
 /**
- * Implementation for resoling in both messages and enums
+ * Implementation for resolving declarations in both messages and enums
  */
 interface DeclarationResolver : BaseDeclarationResolver {
 
@@ -27,13 +29,27 @@ interface DeclarationResolver : BaseDeclarationResolver {
         // Search scope
         val identifier = type.declaration
 
-        val allowedFiles = listOf(type.file) + type.file.importedFiles
+        val fileToImport = type.file.imports.associateBy { import ->
+            type.file.project.rootFolder.resolveImport(import.path)
+                ?: throw CompilationException.UnresolvedImport(
+                    "Unable to resolve import ${import.identifier}",
+                    type.file,
+                    import.ctx
+                )
+        }
 
         // Only allow candidates from the file itself or from imported files
         val allowedCandidates = candidates.filter { candidate ->
             when (candidate) {
-                is Candidate.Message -> candidate.message.file in allowedFiles
-                is Candidate.Enum -> candidate.enum.file in allowedFiles
+                is Candidate.Message, is Candidate.Enum -> {
+                    when {
+                        candidate.file == type.file -> true
+                        else -> {
+                            val import = fileToImport[candidate.file]
+                            import != null && import.type == ProtoImport.Type.DEFAULT
+                        }
+                    }
+                }
                 is Candidate.Package -> true // Packages are always allowed
             }
         }
@@ -47,11 +63,11 @@ interface DeclarationResolver : BaseDeclarationResolver {
 
                 validateCandidates(type, matchingCandidates)
 
-                return when {
+                when {
                     matchingCandidates.isNotEmpty() -> {
                         val newType = type.copy(declaration = remainingIdentifier)
 
-                        // Go deeper into the three. No turning back. There must be exactly one element in the list.
+                        // Go deeper into the tree. No turning back. There must be exactly one element in the list.
                         when (val candidate = matchingCandidates.first()) {
                             is Candidate.Message -> candidate.message.resolveDeclaration(newType, false)
                             is Candidate.Enum -> candidate.enum.resolveDeclaration(newType)
@@ -128,16 +144,26 @@ interface DeclarationResolver : BaseDeclarationResolver {
 
         fun getLocation(): String
 
-        data class Message(val message: ProtoMessage) : Candidate {
+        sealed interface FileBasedCandidate : Candidate {
+            val file: ProtoFile
+        }
+
+        data class Message(val message: ProtoMessage) : FileBasedCandidate {
             override val name: String
                 get() = message.name
+
+            override val file: ProtoFile
+                get() = message.file
 
             override fun getLocation(): String = message.ctx.toFilePositionString(message.file.path)
         }
 
-        data class Enum(val enum: ProtoEnum) : Candidate {
+        data class Enum(val enum: ProtoEnum) : FileBasedCandidate {
             override val name: String
                 get() = enum.name
+
+            override val file: ProtoFile
+                get() = enum.file
 
             override fun getLocation(): String = enum.ctx.toFilePositionString(enum.file.path)
 

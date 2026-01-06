@@ -3,6 +3,7 @@ package io.github.timortel.kotlin_multiplatform_grpc_plugin.test
 import ExtensionsTest
 import io.github.timortel.kmpgrpc.core.message.extensions.buildExtensions
 import io.github.timortel.kmpgrpc.test.*
+import io.github.timortel.kmpgrpc.test.proto2.Proto2GroupTest
 
 fun createScalarMessage() = scalarTypes {
     field1 = "Test"
@@ -102,11 +103,13 @@ fun createMessageWithAllExtensions() = ExtensionsTest.MessageWithEveryExtension(
         set(ExtensionsTest.field33, listOf(0uL, 134uL, 353111345134uL))
         set(ExtensionsTest.field34, listOf(-14, 0, 1241522))
         set(ExtensionsTest.field35, listOf(-154L, 0L, 4514124121L))
-        set(ExtensionsTest.field36, listOf(
-            byteArrayOf(0, -127, 127),
-            byteArrayOf(-123, 1, 2),
-            byteArrayOf(3, 3, -6)
-        ))
+        set(
+            ExtensionsTest.field36, listOf(
+                byteArrayOf(0, -127, 127),
+                byteArrayOf(-123, 1, 2),
+                byteArrayOf(3, 3, -6)
+            )
+        )
     }
 )
 
@@ -187,4 +190,33 @@ fun createEditionsNonPackedTypesMessage(): EditionsNonPackedTypesMessage = Editi
     field11List = field11,
     field12List = field12,
     field13List = field13,
+)
+
+fun createProto2NestedGroupMessage() = Proto2GroupTest.A(
+    b = Proto2GroupTest.A.B(
+        field1 = "text1",
+        field2 = 2,
+        c = Proto2GroupTest.A.B.C(field1 = "text3", field2 = "text4")
+    ),
+    dList = listOf(
+        Proto2GroupTest.A.D(field1 = "text5", field2 = 6),
+        Proto2GroupTest.A.D(field1 = "text7", field2 = 8)
+    )
+)
+
+fun createProto2GroupMessageWithExtensions() = Proto2GroupTest.E(
+    field1 = "text1",
+    g = Proto2GroupTest.E.G(
+        field1 = "text2",
+        extensions = buildExtensions {
+            set(Proto2GroupTest.field2, "text3")
+        }
+    ),
+    extensions = buildExtensions {
+        set(
+            Proto2GroupTest.f, Proto2GroupTest.F(
+                field1 = "text4"
+            )
+        )
+    }
 )

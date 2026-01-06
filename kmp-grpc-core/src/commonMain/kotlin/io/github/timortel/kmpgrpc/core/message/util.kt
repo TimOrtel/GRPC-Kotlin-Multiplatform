@@ -9,7 +9,7 @@ fun <M : Message> mergeUnknownFieldOrExtension(
     fieldOrExtension: UnknownFieldOrExtension<M, Any>?,
     unknownFields: MutableList<UnknownField>,
     extensionBuilder: MessageExtensionsBuilder<M>
-) {
+): Boolean {
     when (fieldOrExtension) {
         is UnknownFieldOrExtension.UnknownField -> unknownFields.add(fieldOrExtension.field)
         is UnknownFieldOrExtension.RepeatedExtension<M, Any> -> {
@@ -18,6 +18,8 @@ fun <M : Message> mergeUnknownFieldOrExtension(
         is UnknownFieldOrExtension.ScalarExtension<M, Any> -> {
             extensionBuilder[fieldOrExtension.extension] = fieldOrExtension.value
         }
-        null -> {}
+        null -> return false
     }
+
+    return true
 }

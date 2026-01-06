@@ -45,7 +45,7 @@ dependencies {
 sourceSets {
     main {
         proto {
-            srcDirs("../src/commonMain/proto/general")
+            srcDirs("../src/commonMain/proto/general", "../src/commonMain/proto/proto2")
         }
         kotlin.srcDir(layout.buildDirectory.dir("generated/source/proto/main/grpc"))
         kotlin.srcDir(layout.buildDirectory.dir("generated/source/proto/main/grpckt"))

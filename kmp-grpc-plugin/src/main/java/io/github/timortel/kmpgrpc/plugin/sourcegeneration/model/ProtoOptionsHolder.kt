@@ -10,6 +10,10 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.toFilePositionStr
 
 interface ProtoOptionsHolder : ProtoNode {
 
+    companion object {
+        private val ignoredPackages = listOf("google.protobuf")
+    }
+
     val options: List<ProtoOption>
     val file: ProtoFile
 
@@ -18,6 +22,8 @@ interface ProtoOptionsHolder : ProtoNode {
     val optionTarget: OptionTarget
 
     override fun validate() {
+        if (file.`package` in ignoredPackages) return
+
         options.forEach { option ->
             val isIgnored = option.name in Options.ignoredOptions
             val relatedOption = Options.options.firstOrNull { it.name == option.name }
