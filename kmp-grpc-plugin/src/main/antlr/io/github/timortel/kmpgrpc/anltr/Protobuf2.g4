@@ -12,6 +12,7 @@
  * - Added package header
  * - Adapted rpc definition to expose clientStream and serverStream attributes
  * - Added field options to group declarations
+ * - Added support for options on extension declarations.
  * @author Tim Ortel
  */
 
@@ -141,7 +142,7 @@ type_
 // Extensions
 
 extensions
-    : EXTENSIONS ranges SEMI
+    : EXTENSIONS ranges (LB fieldOptions RB)? SEMI
     ;
 
 // Reserved
@@ -343,7 +344,7 @@ intLit
     ;
 
 strLit
-    : STR_LIT
+    : STR_LIT+
     | PROTO2_LIT_SINGLE
     | PROTO2_LIT_DOUBLE
     ;

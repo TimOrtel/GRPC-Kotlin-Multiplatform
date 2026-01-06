@@ -346,7 +346,7 @@ class ProtobufModelBuilderVisitor(
         val fieldCardinality = visitGroupFieldCardinality(label)
 
         val groupName = ctx.groupName().text
-        val number = ctx.fieldNumber().parseInt()
+        val number = visitIntLit(ctx.fieldNumber().intLit())
 
         val options = visitFieldOptions(ctx.fieldOptions())
 
@@ -374,7 +374,7 @@ class ProtobufModelBuilderVisitor(
         return when {
             ctx.ranges() != null -> ProtoReservation(ranges = visitRanges(ctx.ranges()))
             ctx.reservedFieldNames() != null -> visitReservedFieldNames(ctx.reservedFieldNames())
-            else -> throw ParseException("Could not read reserved field", ctx)
+            else -> throw ParseException("Could not read reserved field", ctx, filePath)
         }
     }
 
@@ -382,7 +382,7 @@ class ProtobufModelBuilderVisitor(
         return when {
             ctx.ranges() != null -> ProtoReservation(ranges = visitRanges(ctx.ranges()))
             ctx.reservedFieldNames() != null -> visitReservedFieldNames(ctx.reservedFieldNames())
-            else -> throw ParseException("Could not read reserved field", ctx)
+            else -> throw ParseException("Could not read reserved field", ctx, filePath)
         }
     }
 
@@ -390,7 +390,7 @@ class ProtobufModelBuilderVisitor(
         return when {
             ctx.ranges() != null -> ProtoReservation(ranges = visitRanges(ctx.ranges()))
             ctx.reservedFieldNames() != null -> visitReservedFieldNames(ctx.reservedFieldNames())
-            else -> throw ParseException("Could not read reserved field", ctx)
+            else -> throw ParseException("Could not read reserved field", ctx, filePath)
         }
     }
 
@@ -417,15 +417,15 @@ class ProtobufModelBuilderVisitor(
     }
 
     override fun visitRange_(ctx: ProtobufEditionsParser.Range_Context): ProtoRange {
-        return visitRange(ctx.intLit(0).parseInt(), ctx.intLit(1)?.parseInt(), ctx.MAX() != null, ctx)
+        return visitRange(visitIntLit(ctx.intLit(0)), ctx.intLit(1)?.let(::visitIntLit), ctx.MAX() != null, ctx)
     }
 
     override fun visitRange_(ctx: Protobuf3Parser.Range_Context): ProtoRange {
-        return visitRange(ctx.intLit(0).parseInt(), ctx.intLit(1)?.parseInt(), ctx.MAX() != null, ctx)
+        return visitRange(visitIntLit(ctx.intLit(0)), ctx.intLit(1)?.let(::visitIntLit), ctx.MAX() != null, ctx)
     }
 
     override fun visitRange_(ctx: Protobuf2Parser.Range_Context): ProtoRange {
-        return visitRange(ctx.intLit(0).parseInt(), ctx.intLit(1)?.parseInt(), ctx.MAX() != null, ctx)
+        return visitRange(visitIntLit(ctx.intLit(0)), ctx.intLit(1)?.let(::visitIntLit), ctx.MAX() != null, ctx)
     }
 
     private fun visitReservedFieldNames(names: List<String>): ProtoReservation {
@@ -529,7 +529,7 @@ class ProtobufModelBuilderVisitor(
 
         val type = visitType_(ctx.type_())
         val name = ctx.fieldName().text
-        val number = ctx.fieldNumber().parseInt()
+        val number = visitIntLit(ctx.fieldNumber().intLit())
 
         val options = visitFieldOptions(ctx.fieldOptions())
 
@@ -554,7 +554,7 @@ class ProtobufModelBuilderVisitor(
 
         val type = visitType_(ctx.type_())
         val name = ctx.fieldName().text
-        val number = ctx.fieldNumber().parseInt()
+        val number = visitIntLit(ctx.fieldNumber().intLit())
 
         val options = visitFieldOptions(ctx.fieldOptions())
 
@@ -580,7 +580,7 @@ class ProtobufModelBuilderVisitor(
 
         val type = visitType_(ctx.type_())
         val name = ctx.fieldName().text
-        val number = ctx.fieldNumber().parseInt()
+        val number = visitIntLit(ctx.fieldNumber().intLit())
 
         val options = visitFieldOptions(ctx.fieldOptions())
 
@@ -599,7 +599,7 @@ class ProtobufModelBuilderVisitor(
         val valuesType = visitType_(ctx.type_())
 
         val name = ctx.mapName().text
-        val number = ctx.fieldNumber().parseInt()
+        val number = visitIntLit(ctx.fieldNumber().intLit())
 
         val options = visitFieldOptions(ctx.fieldOptions())
 
@@ -618,7 +618,7 @@ class ProtobufModelBuilderVisitor(
         val valuesType = visitType_(ctx.type_())
 
         val name = ctx.mapName().text
-        val number = ctx.fieldNumber().parseInt()
+        val number = visitIntLit(ctx.fieldNumber().intLit())
 
         val options = visitFieldOptions(ctx.fieldOptions())
 
@@ -637,7 +637,7 @@ class ProtobufModelBuilderVisitor(
         val valuesType = visitType_(ctx.type_())
 
         val name = ctx.mapName().text
-        val number = ctx.fieldNumber().parseInt()
+        val number = visitIntLit(ctx.fieldNumber().intLit())
 
         val options = visitFieldOptions(ctx.fieldOptions())
 
@@ -697,7 +697,7 @@ class ProtobufModelBuilderVisitor(
 
     override fun visitEnumField(ctx: ProtobufEditionsParser.EnumFieldContext): ProtoEnumField {
         val name = ctx.ident().text
-        val number = ctx.intLit().parseInt()
+        val number = visitIntLit(ctx.intLit())
         val options = visitEnumValueOptions(ctx.enumValueOptions())
 
         return visitEnumField(ctx, name, number, options, ctx.MINUS() != null)
@@ -705,7 +705,7 @@ class ProtobufModelBuilderVisitor(
 
     override fun visitEnumField(ctx: Protobuf3Parser.EnumFieldContext): ProtoEnumField {
         val name = ctx.ident().text
-        val number = ctx.intLit().parseInt()
+        val number = visitIntLit(ctx.intLit())
         val options = visitEnumValueOptions(ctx.enumValueOptions())
 
         return visitEnumField(ctx, name, number, options, ctx.MINUS() != null)
@@ -713,7 +713,7 @@ class ProtobufModelBuilderVisitor(
 
     override fun visitEnumField(ctx: Protobuf2Parser.EnumFieldContext): ProtoEnumField {
         val name = ctx.ident().text
-        val number = ctx.intLit().parseInt()
+        val number = visitIntLit(ctx.intLit())
         val options = visitEnumValueOptions(ctx.enumValueOptions())
 
         return visitEnumField(ctx, name, number, options, ctx.MINUS() != null)
@@ -778,7 +778,7 @@ class ProtobufModelBuilderVisitor(
     override fun visitOneofField(ctx: ProtobufEditionsParser.OneofFieldContext): ProtoOneOfField {
         val type = visitType_(ctx.type_())
         val name = ctx.fieldName().text
-        val number = ctx.fieldNumber().parseInt()
+        val number = visitIntLit(ctx.fieldNumber().intLit())
 
         val options = visitFieldOptions(ctx.fieldOptions())
 
@@ -794,7 +794,7 @@ class ProtobufModelBuilderVisitor(
     override fun visitOneofField(ctx: Protobuf3Parser.OneofFieldContext): ProtoOneOfField {
         val type = visitType_(ctx.type_())
         val name = ctx.fieldName().text
-        val number = ctx.fieldNumber().parseInt()
+        val number = visitIntLit(ctx.fieldNumber().intLit())
 
         val options = visitFieldOptions(ctx.fieldOptions())
 
@@ -810,7 +810,7 @@ class ProtobufModelBuilderVisitor(
     override fun visitOneofField(ctx: Protobuf2Parser.OneofFieldContext): ProtoOneOfField {
         val type = visitType_(ctx.type_())
         val name = ctx.fieldName().text
-        val number = ctx.fieldNumber().parseInt()
+        val number = visitIntLit(ctx.fieldNumber().intLit())
 
         val options = visitFieldOptions(ctx.fieldOptions())
 
@@ -992,7 +992,7 @@ class ProtobufModelBuilderVisitor(
             ctx.BOOL() != null -> ProtoType.BoolType
             ctx.STRING() != null -> ProtoType.StringType
             ctx.BYTES() != null -> ProtoType.BytesType
-            else -> throw ParseException("Unknown type found.", ctx)
+            else -> throw ParseException("Unknown type found.", ctx, filePath)
         }
     }
 
@@ -1014,7 +1014,7 @@ class ProtobufModelBuilderVisitor(
             ctx.BOOL() != null -> ProtoType.BoolType
             ctx.STRING() != null -> ProtoType.StringType
             ctx.BYTES() != null -> ProtoType.BytesType
-            else -> throw ParseException("Unknown type found.", ctx)
+            else -> throw ParseException("Unknown type found.", ctx, filePath)
         }
     }
 
@@ -1036,7 +1036,7 @@ class ProtobufModelBuilderVisitor(
             ctx.BOOL() != null -> ProtoType.BoolType
             ctx.STRING() != null -> ProtoType.StringType
             ctx.BYTES() != null -> ProtoType.BytesType
-            else -> throw ParseException("Unknown type found.", ctx)
+            else -> throw ParseException("Unknown type found.", ctx, filePath)
         }
     }
 
@@ -1054,7 +1054,7 @@ class ProtobufModelBuilderVisitor(
             ctx.SFIXED64() != null -> ProtoType.SFixed64Type
             ctx.BOOL() != null -> ProtoType.BoolType
             ctx.STRING() != null -> ProtoType.StringType
-            else -> throw ParseException("Unknown type found.", ctx)
+            else -> throw ParseException("Unknown type found.", ctx, filePath)
         }
     }
 
@@ -1072,7 +1072,7 @@ class ProtobufModelBuilderVisitor(
             ctx.SFIXED64() != null -> ProtoType.SFixed64Type
             ctx.BOOL() != null -> ProtoType.BoolType
             ctx.STRING() != null -> ProtoType.StringType
-            else -> throw ParseException("Unknown type found.", ctx)
+            else -> throw ParseException("Unknown type found.", ctx, filePath)
         }
     }
 
@@ -1090,7 +1090,7 @@ class ProtobufModelBuilderVisitor(
             ctx.SFIXED64() != null -> ProtoType.SFixed64Type
             ctx.BOOL() != null -> ProtoType.BoolType
             ctx.STRING() != null -> ProtoType.StringType
-            else -> throw ParseException("Unknown type found.", ctx)
+            else -> throw ParseException("Unknown type found.", ctx, filePath)
         }
     }
 
@@ -1202,9 +1202,21 @@ class ProtobufModelBuilderVisitor(
     override fun visitEnumType(ctx: Protobuf3Parser.EnumTypeContext?): Any = Unit
     override fun visitEnumType(ctx: Protobuf2Parser.EnumTypeContext?): Any = Unit
 
-    override fun visitIntLit(ctx: ProtobufEditionsParser.IntLitContext?): Any = Unit
-    override fun visitIntLit(ctx: Protobuf3Parser.IntLitContext?): Any = Unit
-    override fun visitIntLit(ctx: Protobuf2Parser.IntLitContext?): Any = Unit
+    override fun visitIntLit(ctx: ProtobufEditionsParser.IntLitContext): Int = visitIntLit(ctx.text, ctx)
+    override fun visitIntLit(ctx: Protobuf3Parser.IntLitContext): Int = visitIntLit(ctx.text, ctx)
+    override fun visitIntLit(ctx: Protobuf2Parser.IntLitContext): Int = visitIntLit(ctx.text, ctx)
+
+    private fun visitIntLit(text: String, ctx: ParserRuleContext): Int {
+        return when {
+            text.startsWith("0x") || text.startsWith("0X") -> {
+                text.substring(2).toIntOrNull(16)
+            }
+            text.startsWith('0') -> {
+                text.toIntOrNull(8)
+            }
+            else -> text.toIntOrNull()
+        }  ?: throw ParseException("Could not parse integer", ctx, filePath)
+    }
 
     override fun visitStrLit(ctx: ProtobufEditionsParser.StrLitContext?): Any = Unit
     override fun visitStrLit(ctx: Protobuf3Parser.StrLitContext?): Any = Unit
@@ -1227,10 +1239,6 @@ class ProtobufModelBuilderVisitor(
     override fun visitStream(ctx: Protobuf2Parser.StreamContext?): Any = Unit
     override fun visitGroupName(ctx: Protobuf2Parser.GroupNameContext?): Any = Unit
     override fun visitStreamName(ctx: Protobuf2Parser.StreamNameContext?): Any = Unit
-
-    private fun ParserRuleContext.parseInt(): Int {
-        return text.toIntOrNull() ?: throw ParseException("Could not parse integer", this)
-    }
 
     data class ParsedGroup(
         val field: ProtoMessageField,

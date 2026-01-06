@@ -95,18 +95,19 @@ Please note that not all features may be available even if the protobuf version 
 ### Well-known types:
 For reference, see [the official documentation](https://protobuf.dev/reference/protobuf/google.protobuf/). Well-known types support must be enabled in your gradle config (see [Setup](#setup)). 
 
-| Protobuf Type        | Supported     |
-|----------------------|---------------|
-| `any.proto`         | ✅ Supported   |
-| `api.proto`         | ✅ Supported   |
-| `duration.proto`    | ✅ Supported   |
-| `empty.proto`       | ✅ Supported   |
-| `field_mask.proto`  | ✅ Supported   |
+| Protobuf Type          | Supported     |
+|------------------------|---------------|
+| `any.proto`            | ✅ Supported   |
+| `api.proto`            | ✅ Supported   |
+| `descriptor.proto`     | ✅ Supported   |
+| `duration.proto`       | ✅ Supported   |
+| `empty.proto`          | ✅ Supported   |
+| `field_mask.proto`     | ✅ Supported   |
 | `source_context.proto` | ✅ Supported   |
-| `struct.proto`      | ✅ Supported   |
-| `timestamp.proto`   | ✅ Supported   |
-| `type.proto`        | ✅ Supported   |
-| `wrappers.proto`    | ✅ Supported   |
+| `struct.proto`         | ✅ Supported   |
+| `timestamp.proto`      | ✅ Supported   |
+| `type.proto`           | ✅ Supported   |
+| `wrappers.proto`       | ✅ Supported   |
 
 ### Additional Features
 - ✅ Generates DSL syntax to create messages

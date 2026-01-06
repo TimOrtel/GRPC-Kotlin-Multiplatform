@@ -150,7 +150,6 @@ object Options {
         "cc_enable_arenas"
     )
 
-
     sealed interface LangConfig<T> {
         class Unavailable<T> : LangConfig<T>
 
