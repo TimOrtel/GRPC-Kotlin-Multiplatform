@@ -19,6 +19,7 @@ abstract class DownloadWellKnownTypesTask @Inject constructor(objectFactory: Obj
         private val wellKnownTypes = listOf(
             "any.proto",
             "api.proto",
+            "descriptor.proto",
             "duration.proto",
             "empty.proto",
             "field_mask.proto",
