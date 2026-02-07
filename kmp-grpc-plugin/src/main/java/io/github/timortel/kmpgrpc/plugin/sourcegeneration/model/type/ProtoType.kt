@@ -6,6 +6,7 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.*
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoExtensionDefinition
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoLanguageVersion
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoNode
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOptionsHolder
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoProject
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoDeclaration
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoEnum
@@ -14,6 +15,7 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.mess
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoMessageField
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoOneOfField
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.Options
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.service.ProtoRpc
 import io.github.timortel.kmpgrpc.shared.internal.io.DataType
 import org.antlr.v4.runtime.ParserRuleContext
@@ -213,8 +215,28 @@ sealed interface ProtoType : ProtoNode {
         override fun defaultValue(messageDefaultValue: MessageDefaultValue): CodeBlock {
             return when (val decl = resolveDeclaration()) {
                 is ProtoEnum -> {
-                    val defaultField = decl.defaultField
-                    CodeBlock.of("%T.%N", decl.className, defaultField.name)
+                    val optionsHolder: ProtoOptionsHolder = when (val p = parent) {
+                        is Parent.MessageField -> p.field
+                        is Parent.MapField -> p.field
+                        is Parent.OneOfField -> p.field
+                        is Parent.Rpc -> throw IllegalStateException("Enum cannot have rpc as parent")
+                        is Parent.ExtensionDefinition -> throw IllegalStateException("Cannot get default value with extension definition parent")
+                    }
+
+                    val defaultValueAsString = when (file.languageVersion) {
+                        ProtoLanguageVersion.PROTO3 -> null
+                        ProtoLanguageVersion.PROTO2, ProtoLanguageVersion.EDITION2023, ProtoLanguageVersion.EDITION2024 -> {
+                            Options.Basic.default.get(optionsHolder)
+                        }
+                    }
+
+                    val defaultValue = if (defaultValueAsString == null) decl.fields.first()
+                    else {
+                        decl.fields.firstOrNull { it.name == defaultValueAsString }
+                            ?: throw CompilationException.UnresolvedReference("Could not find enum entry with name $defaultValueAsString", file, ctx)
+                    }
+
+                    CodeBlock.of("%T.%N", decl.className, defaultValue.name)
                 }
 
                 is ProtoMessage -> {

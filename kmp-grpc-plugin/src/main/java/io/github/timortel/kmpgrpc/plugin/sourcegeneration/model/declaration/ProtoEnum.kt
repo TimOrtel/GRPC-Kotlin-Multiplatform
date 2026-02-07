@@ -39,15 +39,6 @@ data class ProtoEnum(
             is ProtoDeclParent.Message -> p.message.file
         }
 
-    val defaultField: ProtoEnumField
-        get() =
-            fields.firstOrNull()
-                ?: throw CompilationException.EnumIllegalFirstField(
-                    "Enumeration does not have any entries.",
-                    file,
-                    ctx
-                )
-
     override val heldFields: List<ProtoField> =
         fields
 

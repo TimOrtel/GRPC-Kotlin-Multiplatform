@@ -63,6 +63,15 @@ object Options {
             proto3Config = LangConfig.Available(defaultValue = true),
             editionConfig = LangConfig.Unavailable()
         )
+
+        val default = SimpleProtoOption(
+            name = "default",
+            parse = { it },
+            targets = listOf(OptionTargetMatcher.FIELD()),
+            proto2Config = LangConfig.Available(defaultValue = null),
+            proto3Config = LangConfig.Unavailable(),
+            editionConfig = LangConfig.Available(defaultValue = null)
+        )
     }
 
     object Feature {
@@ -133,6 +142,7 @@ object Options {
         Basic.allowAlias,
         Basic.deprecated,
         Basic.packed,
+        Basic.default,
         Feature.fieldPresence,
         Feature.repeatedFieldEncoding,
         Feature.defaultSymbolVisibility,
