@@ -13,6 +13,7 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.kmMessageWit
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.enumeration.ProtoEnumerationWriter
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.field.ProtoFieldWriter
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.FieldPropertyConstructorExtension
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.IsInitializedFieldExtension
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.MessageWriterExtension
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.UnknownFieldsExtension
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.message.extensions.functions.CopyFunctionExtension
@@ -55,7 +56,8 @@ abstract class ProtoMessageWriter(private val isActual: Boolean) {
         UnknownFieldsExtension,
         ExtensionsPropertyExtension,
         ExtensionDefinitionExtension,
-        DefaultExtensionRegistryExtension
+        DefaultExtensionRegistryExtension,
+        IsInitializedFieldExtension
     )
 
     /**
@@ -77,6 +79,7 @@ abstract class ProtoMessageWriter(private val isActual: Boolean) {
                 primaryConstructor(
                     FunSpec
                         .constructorBuilder()
+                        .addModifiers(KModifier.PRIVATE)
                         .apply {
                             if (isActual) {
                                 addModifiers(KModifier.ACTUAL)

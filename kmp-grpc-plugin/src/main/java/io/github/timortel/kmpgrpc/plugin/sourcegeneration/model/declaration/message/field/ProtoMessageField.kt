@@ -101,7 +101,15 @@ class ProtoMessageField(
      * If cardinality is either explicit or legacy, or if the type is a message and it is not repeated
      */
     val needsIsSetProperty: Boolean
-        get() = cardinality.isExplicit || (type is ProtoType.DefType && type.isMessage && cardinality != ProtoFieldCardinality.Repeated)
+        get() {
+            val isSingularMessage = type is ProtoType.DefType && type.isMessage && cardinality != ProtoFieldCardinality.Repeated
+
+            return when (file.languageVersion) {
+                ProtoLanguageVersion.PROTO2 -> cardinality is ProtoFieldCardinality.Singular
+                ProtoLanguageVersion.PROTO3 -> cardinality.isExplicit || isSingularMessage
+                ProtoLanguageVersion.EDITION2023, ProtoLanguageVersion.EDITION2024 -> !cardinality.isImplicit && cardinality != ProtoFieldCardinality.Repeated
+            }
+        }
 
     val isSetProperty: ExtraProperty
         get() = ExtraProperty(
@@ -169,6 +177,22 @@ class ProtoMessageField(
                 ctx = ctx
             )
         }
+    }
+
+    fun isConstructorParameterNullable(type: ConstructorParameterType): Boolean {
+        return when (type) {
+            ConstructorParameterType.CONSTRUCTOR, ConstructorParameterType.CREATE_PARTIAL -> needsIsSetProperty
+            ConstructorParameterType.CREATE -> when (fieldCardinality) {
+                FieldCardinality.SINGULAR, FieldCardinality.SINGULAR_OPTIONAL, FieldCardinality.REPEATED -> needsIsSetProperty
+                FieldCardinality.SINGULAR_REQUIRED -> false
+            }
+        }
+    }
+
+    enum class ConstructorParameterType {
+        CONSTRUCTOR,
+        CREATE,
+        CREATE_PARTIAL
     }
 
     data class ExtraProperty(

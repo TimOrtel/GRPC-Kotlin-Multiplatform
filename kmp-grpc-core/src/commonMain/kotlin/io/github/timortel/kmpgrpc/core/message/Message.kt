@@ -18,6 +18,11 @@ expect interface Message {
     val fullName: String
 
     /**
+     * If all required fields for this message have been set.
+     */
+    val isInitialized: Boolean
+
+    /**
      * Serializes this message and returns it as a [ByteArray].
      *
      * @return A byte array containing the serialized representation of this message.

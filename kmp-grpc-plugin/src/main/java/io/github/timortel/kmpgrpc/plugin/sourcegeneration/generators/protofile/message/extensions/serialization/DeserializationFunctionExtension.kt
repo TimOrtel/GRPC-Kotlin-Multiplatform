@@ -4,6 +4,7 @@ import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.SourceTarget
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.*
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.MessageConstructorCallWriter
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoEnum
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoMessage
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoFieldCardinality
@@ -11,8 +12,6 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.mess
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoRegularField
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.joinCodeBlocks
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.joinToCodeBlock
 import io.github.timortel.kmpgrpc.shared.internal.io.DataType
 import io.github.timortel.kmpgrpc.shared.internal.io.wireFormatForType
 import io.github.timortel.kmpgrpc.shared.internal.io.wireFormatMakeTag
@@ -183,7 +182,7 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
                 )
 
                 add("if·(%N·!=·null)·%N·$assignMode·", enumVar, variableName)
-                constructType { add("%N", enumVar)}
+                constructType { add("%N", enumVar) }
                 add("\n")
 
                 addStatement(
@@ -366,41 +365,29 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
         message: ProtoMessage
     ) {
         builder.apply {
-            addCode("return %T(", message.className)
+            addCode("return ")
 
-            val separator = ",\n"
-
-            val fieldsBlock = (message.fields + message.mapFields + message.oneOfs)
-                .joinToCodeBlock(separator = separator) { field ->
-                    add(
-                        "%N·=·%N",
-                        field.attributeName,
-                        field.attributeName
-                    )
-                }
-
-            val unknownFieldsBlock =
-                CodeBlock.of(
-                    "%N·=·%N",
-                    Const.Message.Constructor.UnknownFields.name,
-                    Const.Message.Companion.WrapperDeserializationFunction.UNKNOWN_FIELDS_LOCAL_VARIABLE
+            addCode(
+                MessageConstructorCallWriter.getConstructorCallCode(
+                    message = message,
+                    type = MessageConstructorCallWriter.ConstructorType.BUILD_PARTIAL,
+                    getFieldParameter = { CodeBlock.of("%N", it.attributeName) },
+                    getMapFieldParameter = { CodeBlock.of("%N", it.attributeName) },
+                    getOneOfFieldParameter = { CodeBlock.of("%N", it.attributeName) },
+                    getUnknownFieldsParameter = {
+                        CodeBlock.of(
+                            "%N",
+                            Const.Message.Companion.WrapperDeserializationFunction.UNKNOWN_FIELDS_LOCAL_VARIABLE
+                        )
+                    },
+                    getExtensionParameter = {
+                        CodeBlock.of(
+                            "%N.build()",
+                            Const.Message.Companion.WrapperDeserializationFunction.EXTENSION_BUILDER_LOCAL_VARIABLE
+                        )
+                    }
                 )
-
-            val extensionsBlock =
-                CodeBlock.of(
-                    "%N·=·%N.build()",
-                    Const.Message.Constructor.MessageExtensions.name,
-                    Const.Message.Companion.WrapperDeserializationFunction.EXTENSION_BUILDER_LOCAL_VARIABLE
-                )
-
-            val codeBlocks = listOf(
-                fieldsBlock,
-                unknownFieldsBlock
-            ) + if (message.isExtendable) listOf(extensionsBlock) else emptyList()
-
-            addCode(codeBlocks.joinCodeBlocks(separator))
-
-            addCode(")\n")
+            )
         }
     }
 
@@ -490,7 +477,11 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
         )
     }
 
-    private fun buildReadScalarFieldMessageTypeCode(type: ProtoType.DefType, message: ProtoMessage, fieldNumber: Int): CodeBlock {
+    private fun buildReadScalarFieldMessageTypeCode(
+        type: ProtoType.DefType,
+        message: ProtoMessage,
+        fieldNumber: Int
+    ): CodeBlock {
         return CodeBlock.builder()
             .add(
                 "%N.%N(%T.Companion, ",
