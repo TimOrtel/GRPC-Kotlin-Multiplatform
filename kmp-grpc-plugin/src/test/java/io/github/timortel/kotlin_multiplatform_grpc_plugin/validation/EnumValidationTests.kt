@@ -84,7 +84,7 @@ class EnumValidationTests : BaseValidationTest() {
 
     @TestParameterInjectorTest
     fun `test WHEN enum does not have default field THEN a compilation exception is thrown`(
-        @TestParameter protoVersion: ProtoVersion
+        @TestParameter(value = ["PROTO3", "EDITION2023", "EDITION2024"]) protoVersion: ProtoVersion
     ) {
         assertThrows<CompilationException.EnumIllegalFirstField> {
             runGenerator(

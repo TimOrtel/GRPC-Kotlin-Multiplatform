@@ -87,7 +87,7 @@ class OptionHolderValidationTests : BaseValidationTest() {
         runGenerator(
             """
                     message TestMessage {
-                        string field1 = 1 [foo="bar"];
+                        ${protoVersion.fieldPrefix} string field1 = 1 [foo="bar"];
                     }
                 """.trimIndent(),
             protoVersion

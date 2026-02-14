@@ -80,6 +80,7 @@ data class ProtoEnum(
                 ProtoLanguageVersion.PROTO3 -> true
                 ProtoLanguageVersion.EDITION2023, ProtoLanguageVersion.EDITION2024 -> getFeatureIsOpen()
             }
+
             ProtoLanguageVersion.EDITION2023, ProtoLanguageVersion.EDITION2024 -> when (file.languageVersion) {
                 ProtoLanguageVersion.PROTO2 -> false
                 ProtoLanguageVersion.PROTO3 -> true
@@ -100,7 +101,7 @@ data class ProtoEnum(
 
         when (file.languageVersion) {
             ProtoLanguageVersion.PROTO2 -> {}
-            ProtoLanguageVersion.PROTO3, ProtoLanguageVersion.EDITION2023,ProtoLanguageVersion.EDITION2024 -> {
+            ProtoLanguageVersion.PROTO3, ProtoLanguageVersion.EDITION2023, ProtoLanguageVersion.EDITION2024 -> {
                 if (fields.first().number != 0) throw CompilationException.EnumIllegalFirstField(
                     message = "The first value defined in an enumeration must have value 0",
                     file = file,

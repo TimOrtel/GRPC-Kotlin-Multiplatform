@@ -35,6 +35,11 @@ abstract class BaseValidationTest {
         PROTO2("syntax = \"proto2\";"),
         PROTO3("syntax = \"proto3\";"),
         EDITION2023("edition = \"2023\";"),
-        EDITION2024("edition = \"2024\";")
+        EDITION2024("edition = \"2024\";");
+
+        val fieldPrefix: String get() = when (this) {
+            PROTO2 -> "optional"
+            else -> ""
+        }
     }
 }
