@@ -1,3 +1,5 @@
+import io.github.timortel.kmpgrpc.plugin.DownloadWellKnownTypesTask
+
 plugins {
     kotlin("jvm") version libs.versions.kotlin.get()
     id("java-gradle-plugin")
@@ -46,6 +48,10 @@ kotlin {
 
         main {
             kotlin.srcDir(layout.projectDirectory.dir("../kmp-grpc-shared/src/commonMain"))
+        }
+
+        test {
+            resources.srcDir(layout.buildDirectory.dir("wkt"))
         }
     }
 
@@ -110,4 +116,12 @@ tasks.withType<Javadoc> {
     exclude("**/Protobuf3Parser.java")
     exclude("**/Protobuf3BaseVisitor.java")
     exclude("**/Protobuf3BaseListener.java")
+}
+
+val downloadWellKnownTypesTask = tasks.register("downloadWellKnownTypes", DownloadWellKnownTypesTask::class.java) {
+    outputDir.set(layout.buildDirectory.dir("wkt"))
+}
+
+tasks.named("processTestResources") {
+    dependsOn(downloadWellKnownTypesTask)
 }

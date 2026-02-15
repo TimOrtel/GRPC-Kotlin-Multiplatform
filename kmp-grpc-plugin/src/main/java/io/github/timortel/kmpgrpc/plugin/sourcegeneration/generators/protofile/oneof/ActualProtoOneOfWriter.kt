@@ -24,6 +24,7 @@ abstract class ActualProtoOneOfWriter : ProtoOneOfWriter(true) {
         addSerializeFunction(builder, listOf(KModifier.ABSTRACT)) {}
 
         builder.addProperty(Const.Message.OneOf.REQUIRED_SIZE_PROPERTY_NAME, INT, KModifier.ABSTRACT)
+        builder.addProperty(Const.Message.OneOf.isInitializedProperty.toPropertySpec(KModifier.ABSTRACT))
     }
 
     override fun modifyChildClass(builder: TypeSpec.Builder, oneOf: ProtoOneOf, childClassType: ChildClassType) {
@@ -63,6 +64,22 @@ abstract class ActualProtoOneOfWriter : ProtoOneOfWriter(true) {
                         ChildClassType.Unknown -> CodeBlock.of("0")
                     }
                 )
+                .build()
+        )
+
+        builder.addProperty(
+            Const.Message.OneOf.isInitializedProperty.toPropertySpecBuilder(KModifier.OVERRIDE)
+                .apply {
+                    when (childClassType) {
+                        is ChildClassType.Normal -> if (childClassType.field.type.isMessage) {
+                            initializer("%N.%N", childClassType.field.attributeName, Const.Message.isInitializedProperty.name)
+                        } else {
+                            initializer("true")
+                        }
+                        ChildClassType.NotSet -> initializer("true")
+                        ChildClassType.Unknown -> initializer("true")
+                    }
+                }
                 .build()
         )
     }

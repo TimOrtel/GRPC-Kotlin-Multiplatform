@@ -63,9 +63,10 @@ class ProtoMessageField(
 
     val cardinality: ProtoFieldCardinality
         get() = when (file.languageVersion) {
-            ProtoLanguageVersion.PROTO3 -> when (fieldCardinality) {
+            ProtoLanguageVersion.PROTO3, ProtoLanguageVersion.PROTO2 -> when (fieldCardinality) {
                 FieldCardinality.SINGULAR -> ProtoFieldCardinality.Singular(ProtoFieldPresence.IMPLICIT)
                 FieldCardinality.SINGULAR_OPTIONAL -> ProtoFieldCardinality.Singular(ProtoFieldPresence.EXPLICIT)
+                FieldCardinality.SINGULAR_REQUIRED -> ProtoFieldCardinality.Singular(ProtoFieldPresence.LEGACY_REQUIRED)
                 FieldCardinality.REPEATED -> ProtoFieldCardinality.Repeated
             }
 
@@ -75,7 +76,7 @@ class ProtoMessageField(
                 )
 
                 FieldCardinality.REPEATED -> ProtoFieldCardinality.Repeated
-                FieldCardinality.SINGULAR_OPTIONAL -> throw IllegalArgumentException("FieldCardinality.SINGULAR_OPTIONAL is illegal for edition versions.")
+                FieldCardinality.SINGULAR_OPTIONAL, FieldCardinality.SINGULAR_REQUIRED -> throw IllegalArgumentException("field cardinality $fieldCardinality is illegal for edition versions.")
             }
         }
 
@@ -100,7 +101,15 @@ class ProtoMessageField(
      * If cardinality is either explicit or legacy, or if the type is a message and it is not repeated
      */
     val needsIsSetProperty: Boolean
-        get() = cardinality.isExplicit || (type is ProtoType.DefType && type.isMessage && cardinality != ProtoFieldCardinality.Repeated)
+        get() {
+            val isSingularMessage = type is ProtoType.DefType && type.isMessage && cardinality != ProtoFieldCardinality.Repeated
+
+            return when (file.languageVersion) {
+                ProtoLanguageVersion.PROTO2 -> cardinality is ProtoFieldCardinality.Singular
+                ProtoLanguageVersion.PROTO3 -> cardinality.isExplicit || isSingularMessage
+                ProtoLanguageVersion.EDITION2023, ProtoLanguageVersion.EDITION2024 -> !cardinality.isImplicit && cardinality != ProtoFieldCardinality.Repeated
+            }
+        }
 
     val isSetProperty: ExtraProperty
         get() = ExtraProperty(
@@ -118,7 +127,7 @@ class ProtoMessageField(
      */
     override val isPacked: Boolean
         get() = cardinality == ProtoFieldCardinality.Repeated && type.isPackable && when (file.languageVersion) {
-            ProtoLanguageVersion.PROTO3 -> Options.Basic.packed.get(this)
+            ProtoLanguageVersion.PROTO3, ProtoLanguageVersion.PROTO2 -> Options.Basic.packed.get(this)
             ProtoLanguageVersion.EDITION2023, ProtoLanguageVersion.EDITION2024 ->
                 when (Options.Feature.repeatedFieldEncoding.get(this)) {
                     ProtoRepeatedFieldEncoding.PACKED -> true
@@ -170,6 +179,22 @@ class ProtoMessageField(
         }
     }
 
+    fun isConstructorParameterNullable(type: ConstructorParameterType): Boolean {
+        return when (type) {
+            ConstructorParameterType.CONSTRUCTOR, ConstructorParameterType.CREATE_PARTIAL -> needsIsSetProperty
+            ConstructorParameterType.CREATE -> when (fieldCardinality) {
+                FieldCardinality.SINGULAR, FieldCardinality.SINGULAR_OPTIONAL, FieldCardinality.REPEATED -> needsIsSetProperty
+                FieldCardinality.SINGULAR_REQUIRED -> false
+            }
+        }
+    }
+
+    enum class ConstructorParameterType {
+        CONSTRUCTOR,
+        CREATE,
+        CREATE_PARTIAL
+    }
+
     data class ExtraProperty(
         override val desiredAttributeName: String,
         override val resolvingParent: ProtoChildPropertyNameResolver,
@@ -191,6 +216,7 @@ class ProtoMessageField(
     enum class FieldCardinality {
         SINGULAR,
         SINGULAR_OPTIONAL,
+        SINGULAR_REQUIRED,
         REPEATED
     }
 }

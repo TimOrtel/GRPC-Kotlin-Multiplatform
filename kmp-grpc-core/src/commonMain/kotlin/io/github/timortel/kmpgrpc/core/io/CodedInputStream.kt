@@ -64,6 +64,15 @@ abstract class CodedInputStream {
         return recursiveRead { deserializer.deserialize(this, extensionRegistry) }
     }
 
+    fun <M : Message> readGroup(deserializer: MessageDeserializer<M>, extensionRegistry: ExtensionRegistry<M>, fieldNumber: Int): M {
+        checkRecursionLimit()
+        recursionDepth++
+        val message = deserializer.deserialize(this, extensionRegistry)
+        checkLastTagWas(wireFormatMakeTag(fieldNumber, WireFormat.END_GROUP))
+        recursionDepth--
+        return message
+    }
+
     abstract fun readBytes(): ByteArray
 
     abstract fun readUInt32(): UInt
@@ -89,6 +98,7 @@ abstract class CodedInputStream {
         extensionRegistry: ExtensionRegistry<M>
     ): UnknownFieldOrExtension<M, Any>? {
         val number = wireFormatGetTagFieldNumber(tag)
+        if (wireFormatGetTagWireType(tag) == WireFormat.END_GROUP.value) return null
 
         val extension = extensionRegistry.getExtensionForFieldNumber(number)
         @Suppress("UNCHECKED_CAST")

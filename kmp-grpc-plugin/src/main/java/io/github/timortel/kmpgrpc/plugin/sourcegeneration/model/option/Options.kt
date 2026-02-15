@@ -12,6 +12,7 @@ object Options {
             name = "java_multiple_files",
             parse = String::toBooleanStrictOrNull,
             targets = listOf(OptionTargetMatcher.FILE),
+            proto2Config = LangConfig.Available(defaultValue = false),
             proto3Config = LangConfig.Available(defaultValue = false),
             edition2023Config = LangConfig.Available(defaultValue = false),
             edition2024Config = LangConfig.Available(defaultValue = false)
@@ -21,6 +22,7 @@ object Options {
             name = "java_package",
             parse = { it },
             targets = listOf(OptionTargetMatcher.FILE),
+            proto2Config = LangConfig.Available(defaultValue = null),
             proto3Config = LangConfig.Available(defaultValue = null),
             editionConfig = LangConfig.Available(defaultValue = null)
         )
@@ -29,6 +31,7 @@ object Options {
             name = "java_outer_classname",
             parse = { it },
             targets = listOf(OptionTargetMatcher.FILE),
+            proto2Config = LangConfig.Available(defaultValue = null),
             proto3Config = LangConfig.Available(defaultValue = null),
             editionConfig = LangConfig.Available(defaultValue = null)
         )
@@ -37,6 +40,7 @@ object Options {
             name = "allow_alias",
             parse = String::toBooleanStrictOrNull,
             targets = listOf(OptionTargetMatcher.ENUM(restrictToTopLevel = false)),
+            proto2Config = LangConfig.Available(defaultValue = false),
             proto3Config = LangConfig.Available(defaultValue = false),
             editionConfig = LangConfig.Available(defaultValue = false)
         )
@@ -45,6 +49,7 @@ object Options {
             name = "deprecated",
             parse = String::toBooleanStrictOrNull,
             targets = listOf(OptionTargetMatcher.FIELD(), OptionTargetMatcher.ENUM_ENTRY),
+            proto2Config = LangConfig.Available(defaultValue = false),
             proto3Config = LangConfig.Available(defaultValue = false),
             editionConfig = LangConfig.Available(defaultValue = false),
             failOnInvalidTargetUsage = false
@@ -54,8 +59,18 @@ object Options {
             name = "packed",
             parse = String::toBooleanStrictOrNull,
             targets = listOf(OptionTargetMatcher.FIELD(restriction = OptionTargetMatcher.FIELD.Restriction.OnlyOnRepeated(forcePackable = true))),
+            proto2Config = LangConfig.Available(defaultValue = true),
             proto3Config = LangConfig.Available(defaultValue = true),
             editionConfig = LangConfig.Unavailable()
+        )
+
+        val default = SimpleProtoOption(
+            name = "default",
+            parse = { it },
+            targets = listOf(OptionTargetMatcher.FIELD()),
+            proto2Config = LangConfig.Available(defaultValue = null),
+            proto3Config = LangConfig.Unavailable(),
+            editionConfig = LangConfig.Available(defaultValue = null)
         )
     }
 
@@ -80,6 +95,10 @@ object Options {
             name = "default_symbol_visibility",
             parse = { value -> ProtoDefaultSymbolVisibility.entries.firstOrNull { it.name == value } },
             languageConfigurationMap = mapOf(
+                ProtoLanguageVersion.PROTO2 to LangConfig.Available(
+                    defaultValue = ProtoDefaultSymbolVisibility.EXPORT_ALL,
+                    isLocked = true
+                ),
                 ProtoLanguageVersion.PROTO3 to LangConfig.Available(
                     defaultValue = ProtoDefaultSymbolVisibility.EXPORT_ALL,
                     isLocked = true
@@ -123,6 +142,7 @@ object Options {
         Basic.allowAlias,
         Basic.deprecated,
         Basic.packed,
+        Basic.default,
         Feature.fieldPresence,
         Feature.repeatedFieldEncoding,
         Feature.defaultSymbolVisibility,
@@ -139,7 +159,6 @@ object Options {
         "csharp_namespace",
         "cc_enable_arenas"
     )
-
 
     sealed interface LangConfig<T> {
         class Unavailable<T> : LangConfig<T>

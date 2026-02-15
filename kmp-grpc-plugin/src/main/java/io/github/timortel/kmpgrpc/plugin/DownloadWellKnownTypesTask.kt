@@ -5,6 +5,7 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
+import java.net.URI
 import java.net.URL
 import javax.inject.Inject
 
@@ -19,6 +20,7 @@ abstract class DownloadWellKnownTypesTask @Inject constructor(objectFactory: Obj
         private val wellKnownTypes = listOf(
             "any.proto",
             "api.proto",
+            "descriptor.proto",
             "duration.proto",
             "empty.proto",
             "field_mask.proto",
@@ -39,7 +41,7 @@ abstract class DownloadWellKnownTypesTask @Inject constructor(objectFactory: Obj
 
         wellKnownTypes.forEach { protoFile ->
             val protoFileUrl = "$WELL_KNOW_BASE_URL/$protoFile"
-            val url = URL(protoFileUrl)
+            val url = URI(protoFileUrl).toURL()
             val outputFile = outputDir.file("$WELL_KNOWN_TYPES_RELATIVE_PATH/$protoFile").get().asFile
 
             logger.info("Downloading $protoFileUrl into ${outputFile.path}")

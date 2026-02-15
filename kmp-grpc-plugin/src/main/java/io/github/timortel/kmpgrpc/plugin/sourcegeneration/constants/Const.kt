@@ -1,5 +1,6 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants
 
+import com.squareup.kotlinpoet.BOOLEAN
 import com.squareup.kotlinpoet.LIST
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.STRING
@@ -38,16 +39,9 @@ object Const {
     }
 
     object Message {
-        val reservedAttributeNames = setOf(
-            "fullName",
-            "requiredSize",
-            Companion.WrapperDeserializationFunction.TAG_LOCAL_VARIABLE,
-            Companion.WrapperDeserializationFunction.ENUM_NUMBER_VALUE_LOCAL_VARIABLE,
-            Companion.WrapperDeserializationFunction.ENUM_VALUE_LOCAL_VARIABLE,
-            Constructor.UnknownFields.name
-        )
-
         val fullNameProperty = Property.of("fullName", STRING)
+
+        val isInitializedProperty = Property.of("isInitialized", BOOLEAN)
 
         object Constructor {
             val UnknownFields = Property.of("unknownFields", LIST.parameterizedBy(unknownField))
@@ -63,6 +57,7 @@ object Const {
             val reservedAttributeNames = setOf("requiredSize")
 
             const val REQUIRED_SIZE_PROPERTY_NAME = "requiredSize"
+            val isInitializedProperty = Property.of("isInitialized", BOOLEAN)
 
             const val SERIALIZE_FUNCTION_NAME = "serialize"
             const val SERIALIZE_FUNCTION_STREAM_PARAM_NAME = "stream"
@@ -104,6 +99,16 @@ object Const {
                 const val EXTENSION_BUILDER_LOCAL_VARIABLE = "extensionBuilder"
             }
         }
+
+        val reservedAttributeNames = setOf(
+            fullNameProperty.name,
+            "requiredSize",
+            isInitializedProperty.name,
+            Companion.WrapperDeserializationFunction.TAG_LOCAL_VARIABLE,
+            Companion.WrapperDeserializationFunction.ENUM_NUMBER_VALUE_LOCAL_VARIABLE,
+            Companion.WrapperDeserializationFunction.ENUM_VALUE_LOCAL_VARIABLE,
+            Constructor.UnknownFields.name
+        )
     }
 
     object DSL {

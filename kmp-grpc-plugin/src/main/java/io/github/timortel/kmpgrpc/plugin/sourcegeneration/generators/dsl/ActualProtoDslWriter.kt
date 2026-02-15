@@ -3,54 +3,47 @@ package io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.dsl
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FunSpec
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.Const
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.joinToCodeBlock
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.uninitializedMessageException
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.MessageConstructorCallWriter
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoMessage
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoMessageField
 
 object ActualProtoDslWriter : ProtoDslWriter(true) {
 
     override fun modifyBuildFunction(builder: FunSpec.Builder, message: ProtoMessage) {
         builder.apply {
-            addCode("return %T(", message.className)
-
-            val separator = ",\n"
-
-            val fields = message.fields.joinToCodeBlock(separator) { field ->
-                add("%N = %N ?: ", field.attributeName, field.attributeName)
-                add(field.defaultValue())
-            }
-
-            val mapFields = message.mapFields.joinToCodeBlock(separator) { field ->
-                add("%N = %N ?: emptyMap()", field.attributeName, field.attributeName)
-            }
-
-            val oneOfFields = message.oneOfs.joinToCodeBlock(separator) { oneOf ->
-                add(
-                    "%N = %N",
-                    oneOf.attributeName,
-                    oneOf.attributeName
-                )
-            }
-
-            val extensionBlock = CodeBlock.of(
-                "%N = %N.build()",
-                Const.Message.Constructor.MessageExtensions.name,
-                Const.DSL.MessageExtensions.name
-            )
-
-            val blocks = listOf(fields, mapFields, oneOfFields) +
-                    if (message.isExtendable) listOf(extensionBlock) else emptyList()
+            addCode("val msg = ")
 
             addCode(
-                blocks
-                    .filter { it.isNotEmpty() }
-                    .joinToCodeBlock(separator) { add(it) }
+                MessageConstructorCallWriter.getConstructorCallCode(
+                    message = message,
+                    type = MessageConstructorCallWriter.ConstructorType.BUILD_PARTIAL,
+                    getFieldParameter = { field ->
+                        if (field.isConstructorParameterNullable(ProtoMessageField.ConstructorParameterType.CREATE_PARTIAL)) {
+                            CodeBlock.of("%N", field.attributeName)
+                        } else {
+                            CodeBlock.builder()
+                                .add("%N ?: ", field.attributeName)
+                                .add(field.defaultValue())
+                                .build()
+                        }
+                    },
+                    getMapFieldParameter = { field ->
+                        CodeBlock.of("%N ?: emptyMap()", field.attributeName)
+                    },
+                    getOneOfFieldParameter = { oneOf ->
+                        CodeBlock.of("%N", oneOf.attributeName)
+                    },
+                    getUnknownFieldsParameter = { null },
+                    getExtensionParameter = { CodeBlock.of("%N.build()", Const.DSL.MessageExtensions.name) }
+                )
             )
 
-            if (fields.isNotEmpty() || mapFields.isNotEmpty() || oneOfFields.isNotEmpty() || message.isExtendable) {
-                addCode("\n")
-            }
+            addCode("\n")
 
-            addCode(")")
+            addStatement("if (!msg.isInitialized) throw %T(msg)", uninitializedMessageException)
+
+            addStatement("return msg")
         }
     }
 }

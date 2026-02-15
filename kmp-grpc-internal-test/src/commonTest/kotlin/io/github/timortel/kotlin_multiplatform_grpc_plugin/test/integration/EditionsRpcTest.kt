@@ -1,6 +1,8 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.test.integration
 
 import io.github.timortel.kmpgrpc.core.Channel
+import io.github.timortel.kmpgrpc.core.Code
+import io.github.timortel.kmpgrpc.core.StatusException
 import io.github.timortel.kmpgrpc.test.EditionsTestServiceStub
 import io.github.timortel.kmpgrpc.test.editions.EditionsLegacyField
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.createEditionsNonPackedTypesMessage
@@ -9,6 +11,7 @@ import io.github.timortel.kotlin_multiplatform_grpc_plugin.test.createMessageWit
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 abstract class EditionsRpcTest : ServerTest {
 
@@ -39,9 +42,11 @@ abstract class EditionsRpcTest : ServerTest {
     @Test
     fun testLegacyRequiredFieldNoData() = runTest {
         val message = EditionsLegacyField()
-        val response = stub.sendLegacyRequiredField(message)
+        val exception = assertFailsWith<StatusException> {
+            stub.sendLegacyRequiredField(message)
+        }
 
-        assertEquals(message, response)
+        assertEquals(Code.INTERNAL, exception.status.code)
     }
 
     @Test

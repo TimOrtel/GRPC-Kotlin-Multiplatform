@@ -70,3 +70,6 @@ val fieldTypeBytes = fieldType.nestedClass("Bytes")
 // util
 val mergeUnknownFieldOrExtension = MemberName(PACKAGE_MESSAGE, "mergeUnknownFieldOrExtension")
 val readMapEntry = MemberName(PACKAGE_IO, "readMapEntry")
+
+// exceptions
+val uninitializedMessageException = ClassName(PACKAGE_BASE, "UninitializedMessageException")

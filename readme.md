@@ -32,7 +32,7 @@ This projects implements client-side gRPC for Android, JVM, Native (including iO
 ### Supported protobuf versions
 |               | Support status |
 |---------------|----------------|
-| Proto2        | ⏳ Planned      |
+| Proto2        | ✅ Supported    |
 | Proto3        | ✅ Supported    |
 | Editions 2023 | ✅ Supported    |
 | Editions 2024 | ✅ Supported    |
@@ -61,14 +61,15 @@ Please note that not all features may be available even if the protobuf version 
 ### Supported proto options and features:
 
 ### Legacy options
-| Proto Option           | Proto3 | Edition 2023 |
-|------------------------|--------|--------------|
-| `java_package`         | ✅      | ✅            | 
-| `java_outer_classname` | ✅      | ✅            | 
-| `java_multiple_files`  | ✅      | ✅            | 
-| `deprecated`           | ✅      | ✅            | 
-| `packed`               | ✅      | ✅            | 
-| `optimize_for`         | ❌      | ❌            |
+| Proto Option           | Proto2 | Proto3 | Edition 2023 |
+|------------------------|--------|--------|--------------|
+| `java_package`         | ✅      | ✅      | ✅            | 
+| `java_outer_classname` | ✅      | ✅      | ✅            | 
+| `java_multiple_files`  | ✅      | ✅      | ✅            | 
+| `deprecated`           | ✅      | ✅      | ✅            | 
+| `packed`               | ✅      | ✅      | ✅            | 
+| `default` enum-option  | ✅      | ✅      | ✅            | 
+| `optimize_for`         | ❌      | ❌      | ❌            |
 
 ### Features
 | Feature                        | Edition 2023 | Edition 2024 |
@@ -95,18 +96,19 @@ Please note that not all features may be available even if the protobuf version 
 ### Well-known types:
 For reference, see [the official documentation](https://protobuf.dev/reference/protobuf/google.protobuf/). Well-known types support must be enabled in your gradle config (see [Setup](#setup)). 
 
-| Protobuf Type        | Supported     |
-|----------------------|---------------|
-| `any.proto`         | ✅ Supported   |
-| `api.proto`         | ✅ Supported   |
-| `duration.proto`    | ✅ Supported   |
-| `empty.proto`       | ✅ Supported   |
-| `field_mask.proto`  | ✅ Supported   |
+| Protobuf Type          | Supported     |
+|------------------------|---------------|
+| `any.proto`            | ✅ Supported   |
+| `api.proto`            | ✅ Supported   |
+| `descriptor.proto`     | ✅ Supported   |
+| `duration.proto`       | ✅ Supported   |
+| `empty.proto`          | ✅ Supported   |
+| `field_mask.proto`     | ✅ Supported   |
 | `source_context.proto` | ✅ Supported   |
-| `struct.proto`      | ✅ Supported   |
-| `timestamp.proto`   | ✅ Supported   |
-| `type.proto`        | ✅ Supported   |
-| `wrappers.proto`    | ✅ Supported   |
+| `struct.proto`         | ✅ Supported   |
+| `timestamp.proto`      | ✅ Supported   |
+| `type.proto`           | ✅ Supported   |
+| `wrappers.proto`       | ✅ Supported   |
 
 ### Additional Features
 - ✅ Generates DSL syntax to create messages
@@ -456,7 +458,7 @@ The plugin generates kotlin code for all provided proto files. No `protoc` is ne
 by gRPC for JVM and by [tonic](https://github.com/hyperium/tonic) for all native targets. For JavaScript, the requests are handled by [ktor](https://github.com/ktorio/ktor).
 
 ## License
-Copyright 2025 Tim Ortel
+Copyright 2026 Tim Ortel
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
 

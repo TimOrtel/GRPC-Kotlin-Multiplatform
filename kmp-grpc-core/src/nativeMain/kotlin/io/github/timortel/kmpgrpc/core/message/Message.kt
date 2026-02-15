@@ -11,6 +11,8 @@ actual interface Message {
 
     actual val requiredSize: Int
 
+    actual val isInitialized: Boolean
+
     actual fun serialize(): ByteArray {
         val buffer = Buffer()
         serialize(CodedOutputStreamImpl(buffer))

@@ -1,0 +1,43 @@
+syntax = "proto2";
+
+package io.github.timortel.kmpgrpc.test.proto2;
+
+option java_outer_classname = "Proto2GroupTest";
+
+message A {
+  optional group B = 1 {
+    optional string field1 = 1;
+    optional int32 field2 = 2;
+
+    optional group C = 3 {
+      optional string field1 = 1;
+
+      optional string field2 = 2;
+    }
+  }
+
+  repeated group D = 2 {
+    optional string field1 = 1;
+    optional int32 field2 = 2;
+  }
+}
+
+message E {
+  optional string field1 = 1;
+  optional group G = 2 {
+    optional string field1 = 1;
+    extensions 2 to max;
+  }
+
+  extensions 3 to max;
+}
+
+extend E {
+  optional group F = 4 {
+    optional string field1 = 1;
+  }
+}
+
+extend E.G {
+  optional string field2 = 2;
+}
