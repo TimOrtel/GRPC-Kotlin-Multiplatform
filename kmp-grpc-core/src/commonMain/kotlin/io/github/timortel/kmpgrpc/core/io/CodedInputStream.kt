@@ -98,6 +98,7 @@ abstract class CodedInputStream {
         extensionRegistry: ExtensionRegistry<M>
     ): UnknownFieldOrExtension<M, Any>? {
         val number = wireFormatGetTagFieldNumber(tag)
+        if (wireFormatGetTagWireType(tag) == WireFormat.END_GROUP.value) return null
 
         val extension = extensionRegistry.getExtensionForFieldNumber(number)
         @Suppress("UNCHECKED_CAST")
