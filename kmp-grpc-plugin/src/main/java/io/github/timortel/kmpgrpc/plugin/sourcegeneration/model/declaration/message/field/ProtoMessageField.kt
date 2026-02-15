@@ -10,10 +10,11 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoExtensionDe
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoLanguageVersion
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOption
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOptionsHolder
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoProject
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoChildProperty
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoChildPropertyNameResolver
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.CodeNameResolver
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoMessage
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.ProtoMessageProperty
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoExtensionField.Parent
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.OptionTarget
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.Options
@@ -29,9 +30,12 @@ class ProtoMessageField(
     override val options: List<ProtoOption>,
     private val fieldCardinality: FieldCardinality,
     override val ctx: ParserRuleContext
-) : ProtoRegularField(), ProtoMessageProperty {
+) : ProtoRegularField(), ProtoExtensionField {
 
-    lateinit var parent: Parent
+    override lateinit var parent: Parent
+
+    override val project: ProtoProject
+        get() = file.project
 
     override val parentOptionsHolder: ProtoOptionsHolder?
         get() = when (val p = parent) {
@@ -80,10 +84,10 @@ class ProtoMessageField(
             }
         }
 
-    override val desiredAttributeName: String
+    override val desiredCodeName: String
         get() = when (cardinality) {
-            is ProtoFieldCardinality.Singular -> name
-            ProtoFieldCardinality.Repeated -> "${name}List"
+            is ProtoFieldCardinality.Singular -> transformedKotlinName
+            ProtoFieldCardinality.Repeated -> if (transformedKotlinName.endsWith("List")) transformedKotlinName else "${transformedKotlinName}List"
         }
 
     override val propertyType: TypeName
@@ -113,10 +117,11 @@ class ProtoMessageField(
 
     val isSetProperty: ExtraProperty
         get() = ExtraProperty(
-            desiredAttributeName = "is${name.capitalize()}Set",
-            resolvingParent = resolvingParent,
+            desiredCodeName = "is${transformedKotlinName.capitalize()}Set",
+            codeNameResolver = codeNameResolver,
             priority = number,
-            propertyType = BOOLEAN
+            propertyType = BOOLEAN,
+            project = project
         )
 
     val childProperties: List<ProtoChildProperty>
@@ -196,18 +201,14 @@ class ProtoMessageField(
     }
 
     data class ExtraProperty(
-        override val desiredAttributeName: String,
-        override val resolvingParent: ProtoChildPropertyNameResolver,
+        override val desiredCodeName: String,
+        override val codeNameResolver: CodeNameResolver,
         override val priority: Int,
-        override val propertyType: TypeName
+        override val propertyType: TypeName,
+        override val project: ProtoProject
     ) : ProtoChildProperty {
         override val name: String
-            get() = desiredAttributeName
-    }
-
-    sealed interface Parent {
-        data class Message(val message: ProtoMessage) : Parent
-        data class ExtensionDefinition(val ext: ProtoExtensionDefinition) : Parent
+            get() = desiredCodeName
     }
 
     /**

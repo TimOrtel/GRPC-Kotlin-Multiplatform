@@ -70,6 +70,8 @@ dependencies {
     implementation(libs.squareup.kotlinpoet)
     compileOnly(libs.kotlin.gradle.plugin)
 
+    implementation(libs.text.case.converter)
+
     testImplementation(platform(libs.junit.bom))
     testImplementation(libs.junit.jupiter)
     testRuntimeOnly(libs.junit.platform.launcher)

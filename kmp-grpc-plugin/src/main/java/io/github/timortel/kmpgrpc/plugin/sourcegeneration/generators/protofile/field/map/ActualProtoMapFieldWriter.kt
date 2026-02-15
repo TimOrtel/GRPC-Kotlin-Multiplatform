@@ -10,7 +10,7 @@ object ActualProtoMapFieldWriter : ProtoMapFieldWriter() {
         builder: PropertySpec.Builder,
         field: ProtoMapField
     ) {
-        builder.initializer(field.attributeName)
+        builder.initializer(field.codeName)
         builder.addModifiers(KModifier.ACTUAL)
     }
 }

@@ -27,9 +27,9 @@ object ToStringFunctionExtension : MessageWriterExtension {
 
                         val propertiesCodeBlock =
                             (message.fields + message.oneOfs + message.mapFields).joinToCodeBlock(separator) { field ->
-                                addStatement("append(%S)", field.attributeName)
+                                addStatement("append(%S)", field.codeName)
                                 addStatement("append(%S)", "=")
-                                addStatement("append(%N.toString())", field.attributeName)
+                                addStatement("append(%N.toString())", field.codeName)
                             }
 
                         val unknownFieldsCodeBlock = CodeBlock.builder()

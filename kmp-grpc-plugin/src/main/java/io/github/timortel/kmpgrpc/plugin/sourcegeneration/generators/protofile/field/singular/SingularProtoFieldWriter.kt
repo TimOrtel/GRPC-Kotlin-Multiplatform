@@ -15,7 +15,7 @@ abstract class SingularProtoFieldWriter : BaseProtoFieldWriter {
         with(builder) {
             addProperty(
                 PropertySpec
-                    .builder(field.attributeName, field.type.resolve())
+                    .builder(field.codeName, field.type.resolve())
                     .addKdoc(field.infoText)
                     .addModifiers(attrs)
                     .apply {
@@ -29,7 +29,7 @@ abstract class SingularProtoFieldWriter : BaseProtoFieldWriter {
             if (field.needsIsSetProperty) {
                 addProperty(
                     PropertySpec
-                        .builder(field.isSetProperty.attributeName, BOOLEAN)
+                        .builder(field.isSetProperty.codeName, BOOLEAN)
                         .addKdoc(field.infoText)
                         .addModifiers(attrs)
                         .apply { modifyIsSetProperty(field) }

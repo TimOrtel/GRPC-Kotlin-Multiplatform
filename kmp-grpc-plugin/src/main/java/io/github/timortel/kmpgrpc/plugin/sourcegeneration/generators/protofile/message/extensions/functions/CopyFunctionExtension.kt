@@ -22,11 +22,11 @@ object CopyFunctionExtension : MessageWriterExtension {
                         .forEach { messageProperty ->
                             addParameter(
                                 ParameterSpec.builder(
-                                    name = messageProperty.attributeName,
+                                    name = messageProperty.codeName,
                                     type = messageProperty.propertyType
                                 )
                                     .apply {
-                                        if (!isActual) defaultValue("this.%N", messageProperty.attributeName)
+                                        if (!isActual) defaultValue("this.%N", messageProperty.codeName)
                                     }
                                     .build()
                             )
@@ -70,7 +70,7 @@ object CopyFunctionExtension : MessageWriterExtension {
                     .apply {
                         (message.fields + message.mapFields + message.oneOfs)
                             .forEach { messageProperty ->
-                                add("%1N = %1N,\n", messageProperty.attributeName)
+                                add("%1N = %1N,\n", messageProperty.codeName)
                             }
 
                         if (message.isExtendable) {

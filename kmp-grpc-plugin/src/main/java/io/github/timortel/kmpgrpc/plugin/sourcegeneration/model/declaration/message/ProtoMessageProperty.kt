@@ -2,7 +2,7 @@ package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.mes
 
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.DeclarationResolver
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoChildProperty
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoChildPropertyNameResolver
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.CodeNameResolver
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoMessage
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
 
@@ -16,8 +16,8 @@ interface ProtoMessageProperty : ProtoChildProperty {
 
     val file: ProtoFile
 
-    override val resolvingParent: ProtoChildPropertyNameResolver
-        get() = message
+    override val codeNameResolver: CodeNameResolver
+        get() = message.fieldNameResolver
 
     val declarationResolver: DeclarationResolver
 }

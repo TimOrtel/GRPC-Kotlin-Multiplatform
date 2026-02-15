@@ -54,7 +54,7 @@ object Const {
         }
 
         object OneOf {
-            val reservedAttributeNames = setOf("requiredSize")
+            val reservedClassNames = setOf("NotSet")
 
             const val REQUIRED_SIZE_PROPERTY_NAME = "requiredSize"
             val isInitializedProperty = Property.of("isInitialized", BOOLEAN)

@@ -44,7 +44,7 @@ object ProtoExtensionWriter {
 
                     addProperty(
                         PropertySpec.builder(
-                            name = field.name,
+                            name = field.codeName,
                             type = propertyType,
                             modifiers = if (isActual) listOf(KModifier.ACTUAL) else emptyList()
                         )

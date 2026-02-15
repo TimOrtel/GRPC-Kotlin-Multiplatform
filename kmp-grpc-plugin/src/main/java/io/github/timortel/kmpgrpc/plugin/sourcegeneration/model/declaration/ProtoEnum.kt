@@ -4,10 +4,12 @@ import com.squareup.kotlinpoet.ClassName
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.CompilationException
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.Warnings
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.BaseDeclarationResolver
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.CodeNameResolver
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoDeclParent
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoLanguageVersion
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOption
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOptionsHolder
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.SourceCodeNamedNode
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.enumeration.ProtoEnumField
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.ProtoReservation
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
@@ -25,7 +27,7 @@ data class ProtoEnum(
     override val reservation: ProtoReservation,
     override val symbolVisibility: ProtoSymbolVisibility?,
     override val ctx: ParserRuleContext
-) : ProtoDeclaration, BaseDeclarationResolver, ProtoFieldHolder {
+) : ProtoStructureDeclaration, BaseDeclarationResolver, ProtoFieldHolder, CodeNameResolver {
 
     private companion object {
         private const val UNRECOGNIZED_FILE_NAME = "Unrecognized"
@@ -51,6 +53,12 @@ data class ProtoEnum(
         }
 
     val unrecognizedSubtypeClassName: ClassName get() = className.nestedClass(UNRECOGNIZED_FILE_NAME)
+
+    override val consideredNodes: List<SourceCodeNamedNode>
+        get() = fields
+
+    override val reservedNames: Set<String>
+        get() = emptySet()
 
     init {
         fields.forEach { it.enum = this }
@@ -90,7 +98,7 @@ data class ProtoEnum(
     }
 
     override fun validate() {
-        super<ProtoDeclaration>.validate()
+        super<ProtoStructureDeclaration>.validate()
         super<ProtoFieldHolder>.validate()
 
         if (fields.isEmpty()) throw CompilationException.EnumNoFields(
@@ -134,7 +142,7 @@ data class ProtoEnum(
     }
 
     // An enum does not have children, so it cannot resolve anything
-    override fun resolveDeclaration(type: ProtoType.DefType): ProtoDeclaration? {
+    override fun resolveDeclaration(type: ProtoType.DefType): ProtoStructureDeclaration? {
         return null
     }
 }

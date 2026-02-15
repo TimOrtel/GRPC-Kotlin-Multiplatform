@@ -46,7 +46,7 @@ abstract class ProtoServiceWriter(private val isActual: Boolean) {
 
                     addFunction(
                         FunSpec
-                            .builder(rpc.name)
+                            .builder(rpc.codeName)
                             .apply {
                                 if (!rpc.isReceivingStream) {
                                     this.addModifiers(KModifier.SUSPEND)

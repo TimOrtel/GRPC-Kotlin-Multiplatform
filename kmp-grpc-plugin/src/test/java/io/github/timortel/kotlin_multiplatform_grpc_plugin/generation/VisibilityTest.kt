@@ -3,6 +3,7 @@ package io.github.timortel.kotlin_multiplatform_grpc_plugin.generation
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeSpec
+import io.github.timortel.kmpgrpc.plugin.NamingStrategy
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.ProtoSourceGenerator
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.createSingleFileProtoFolderFromResource
 import org.junit.jupiter.api.Assertions
@@ -30,7 +31,8 @@ class VisibilityTest : BaseGenerationTest() {
                 )
             ),
             shouldGenerateTargetMap = targetMapAll,
-            internalVisibility = internalVisibility
+            internalVisibility = internalVisibility,
+            namingStrategy = NamingStrategy.PROTO_LITERAL
         )
 
         fileMap.values.forEach { files ->

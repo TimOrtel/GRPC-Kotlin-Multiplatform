@@ -72,7 +72,7 @@ abstract class ActualProtoOneOfWriter : ProtoOneOfWriter(true) {
                 .apply {
                     when (childClassType) {
                         is ChildClassType.Normal -> if (childClassType.field.type.isMessage) {
-                            initializer("%N.%N", childClassType.field.attributeName, Const.Message.isInitializedProperty.name)
+                            initializer("%N.%N", childClassType.field.codeName, Const.Message.isInitializedProperty.name)
                         } else {
                             initializer("true")
                         }

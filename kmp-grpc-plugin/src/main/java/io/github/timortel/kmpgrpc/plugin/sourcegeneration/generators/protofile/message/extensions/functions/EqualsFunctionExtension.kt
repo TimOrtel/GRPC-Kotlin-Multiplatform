@@ -50,7 +50,7 @@ object EqualsFunctionExtension : MessageWriterExtension {
                 add("if (")
                 add(
                     field.type.inequalityCode(
-                        attributeName = field.attributeName,
+                        attributeName = field.codeName,
                         otherParamName = otherParamName,
                         isRepeated = field.cardinality == ProtoFieldCardinality.Repeated
                     )
@@ -61,7 +61,7 @@ object EqualsFunctionExtension : MessageWriterExtension {
             val mapFieldCodeBlock = message.mapFields.joinToCodeBlock(separator) { mapField ->
                 add(
                     "if (%1N != %2N.%1N) return false",
-                    mapField.attributeName,
+                    mapField.codeName,
                     otherParamName
                 )
             }
@@ -70,7 +70,7 @@ object EqualsFunctionExtension : MessageWriterExtension {
             val oneOfCodeBlock = message.oneOfs.joinToCodeBlock(separator) { oneOf ->
                 add(
                     "if (%1N != %2N.%1N) return false",
-                    oneOf.attributeName,
+                    oneOf.codeName,
                     otherParamName
                 )
             }

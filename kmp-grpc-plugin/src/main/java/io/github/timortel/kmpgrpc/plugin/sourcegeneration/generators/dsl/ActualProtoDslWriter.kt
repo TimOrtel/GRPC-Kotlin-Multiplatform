@@ -20,19 +20,19 @@ object ActualProtoDslWriter : ProtoDslWriter(true) {
                     type = MessageConstructorCallWriter.ConstructorType.BUILD_PARTIAL,
                     getFieldParameter = { field ->
                         if (field.isConstructorParameterNullable(ProtoMessageField.ConstructorParameterType.CREATE_PARTIAL)) {
-                            CodeBlock.of("%N", field.attributeName)
+                            CodeBlock.of("%N", field.codeName)
                         } else {
                             CodeBlock.builder()
-                                .add("%N ?: ", field.attributeName)
+                                .add("%N ?: ", field.codeName)
                                 .add(field.defaultValue())
                                 .build()
                         }
                     },
                     getMapFieldParameter = { field ->
-                        CodeBlock.of("%N ?: emptyMap()", field.attributeName)
+                        CodeBlock.of("%N ?: emptyMap()", field.codeName)
                     },
                     getOneOfFieldParameter = { oneOf ->
-                        CodeBlock.of("%N", oneOf.attributeName)
+                        CodeBlock.of("%N", oneOf.codeName)
                     },
                     getUnknownFieldsParameter = { null },
                     getExtensionParameter = { CodeBlock.of("%N.build()", Const.DSL.MessageExtensions.name) }

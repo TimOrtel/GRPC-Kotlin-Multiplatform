@@ -1,6 +1,7 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model
 
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoDeclaration
+import io.github.timortel.kmpgrpc.plugin.NamingStrategy
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoStructureDeclaration
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoMessage
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.structure.ProtoFolder
@@ -11,13 +12,14 @@ import org.slf4j.Logger
 data class ProtoProject(
     val rootFolder: ProtoFolder,
     val logger: Logger,
-    val defaultVisibility: Visibility
+    val defaultVisibility: Visibility,
+    val namingStrategy: NamingStrategy
 ) : ProtoNode, ProtoExtensionDefinitionFinder {
 
     val rootPackage: ProtoPackage
 
     // This is an optimization, to avoid searching the tree for every message
-    private val extensionDefinitionsMap: Map<ProtoDeclaration, List<ProtoExtensionDefinition>>
+    private val extensionDefinitionsMap: Map<ProtoStructureDeclaration, List<ProtoExtensionDefinition>>
 
     init {
         rootFolder.parent = ProtoFolder.Parent.Project(this)
@@ -32,7 +34,7 @@ data class ProtoProject(
         rootPackage.validate()
     }
 
-    fun resolveDeclarationFullyQualified(type: ProtoType.DefType): ProtoDeclaration? {
+    fun resolveDeclarationFullyQualified(type: ProtoType.DefType): ProtoStructureDeclaration? {
         return rootPackage.resolveDeclaration(type)
     }
 
@@ -42,6 +44,24 @@ data class ProtoProject(
 
     fun findExtensionDefinitionsForMessage(message: ProtoMessage): List<ProtoExtensionDefinition> {
         return extensionDefinitionsMap[message].orEmpty()
+    }
+
+    fun getCodeNameResolverForKotlinPackage(pkg: String): CodeNameResolver {
+        val trimmedPkg = pkg.trim('.')
+        val filesInPackage = rootPackage.findFiles { it.javaPackage.trim('.') == trimmedPkg }
+
+        val consideredNodes = filesInPackage.flatMap { file ->
+            val topLevelDeclarations = file.messages + file.enums + file.services
+            val declarations = topLevelDeclarations.filterNot { it.isNested }
+            val containSelf = topLevelDeclarations.any { it.isNested } || file.extensionDefinitions.any { it.fields.isNotEmpty() }
+
+            declarations + listOf(file.dslFile) + if (containSelf) listOf(file) else emptyList()
+        }
+
+        return object : CodeNameResolver {
+            override val reservedNames: Set<String> = emptySet()
+            override val consideredNodes: List<SourceCodeNamedNode> = consideredNodes
+        }
     }
 
     private fun buildPackageTree(

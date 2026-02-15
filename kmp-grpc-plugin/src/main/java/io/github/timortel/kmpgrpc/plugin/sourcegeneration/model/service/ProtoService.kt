@@ -1,8 +1,6 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.service
 
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoNode
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOption
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOptionsHolder
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.*
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoBaseDeclaration
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.OptionTarget
@@ -13,11 +11,18 @@ data class ProtoService(
     val rpcs: List<ProtoRpc>,
     override val options: List<ProtoOption>,
     override val ctx: ParserRuleContext
-) : ProtoBaseDeclaration, ProtoNode {
+) : ProtoBaseDeclaration, ProtoNode, CodeNameResolver {
 
     override lateinit var file: ProtoFile
 
-    override val kotlinClassName: String = "${name}Stub"
+    override val desiredCodeName: String
+        get() = "${transformedKotlinName}Stub"
+
+    override val consideredNodes: List<SourceCodeNamedNode>
+        get() = rpcs
+
+    override val reservedNames: Set<String>
+        get() = emptySet()
 
     init {
         rpcs.forEach { it.service = this }

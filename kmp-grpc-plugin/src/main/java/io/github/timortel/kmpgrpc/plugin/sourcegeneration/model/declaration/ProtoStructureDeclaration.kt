@@ -2,6 +2,7 @@ package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration
 
 import com.squareup.kotlinpoet.ClassName
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.CompilationException
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.CodeNameResolver
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoDeclParent
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoLanguageVersion
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.Options
@@ -9,7 +10,7 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.Options
 /**
  * Base interface of both messages and enums
  */
-sealed interface ProtoDeclaration : ProtoBaseDeclaration {
+sealed interface ProtoStructureDeclaration : ProtoBaseDeclaration {
 
     /**
      * The parent node of this declaration.
@@ -39,7 +40,7 @@ sealed interface ProtoDeclaration : ProtoBaseDeclaration {
     override val className: ClassName
         get() {
             return when (val p = parent) {
-                is ProtoDeclParent.Message -> p.message.className.nestedClass(name)
+                is ProtoDeclParent.Message -> p.message.className.nestedClass(transformedKotlinName)
                 is ProtoDeclParent.File -> super.className
             }
         }
@@ -48,6 +49,12 @@ sealed interface ProtoDeclaration : ProtoBaseDeclaration {
         get() = when (parent) {
             is ProtoDeclParent.Message -> true
             is ProtoDeclParent.File -> super.isNested
+        }
+
+    override val codeNameResolver: CodeNameResolver
+        get() = when (val p = parent) {
+            is ProtoDeclParent.File -> super.codeNameResolver
+            is ProtoDeclParent.Message -> p.message.classNameResolver
         }
 
     val isProtoTopLevel: Boolean
