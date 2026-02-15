@@ -31,6 +31,9 @@ internal val Metadata.jvmMetadata: JvmMetadata
 internal val JvmMetadata.kmMetadata: Metadata
     get() {
         val entries: List<Entry<*>> = keys().mapNotNull { keyName ->
+            // https://github.com/grpc/grpc-java/issues/11873#issuecomment-2639132154
+            if (keyName.startsWith(':')) return@mapNotNull null
+
             if (keyName.endsWith(BINARY_KEY_SUFFIX)) {
                 val key = io.grpc.Metadata.Key.of(keyName, JvmMetadata.BINARY_BYTE_MARSHALLER)
 
