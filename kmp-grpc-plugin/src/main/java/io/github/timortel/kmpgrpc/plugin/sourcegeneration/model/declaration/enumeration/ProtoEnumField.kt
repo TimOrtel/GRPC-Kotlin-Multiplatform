@@ -1,8 +1,13 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.enumeration
 
 import com.squareup.kotlinpoet.ClassName
+import dev.turingcomplete.textcaseconverter.StandardTextCases
+import dev.turingcomplete.textcaseconverter.TextCase
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.CodeNameResolver
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOption
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOptionsHolder
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoProject
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.SourceCodeNamedNode
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoEnum
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoField
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
@@ -14,7 +19,7 @@ data class ProtoEnumField(
     override val number: Int,
     override val options: List<ProtoOption>,
     override val ctx: ParserRuleContext
-) : ProtoField {
+) : ProtoField, SourceCodeNamedNode {
     lateinit var enum: ProtoEnum
 
     override val parentOptionsHolder: ProtoOptionsHolder
@@ -23,7 +28,15 @@ data class ProtoEnumField(
     override val file: ProtoFile
         get() = enum.file
 
+    override val project: ProtoProject
+        get() = file.project
+
+    override val kotlinIdiomaticTextCase: TextCase = StandardTextCases.PASCAL_CASE
+
     override val optionTarget: OptionTarget get() = OptionTarget.ENUM_ENTRY
 
-    val className: ClassName get() = enum.className.nestedClass(name)
+    val className: ClassName get() = enum.className.nestedClass(transformedKotlinName)
+
+    override val codeNameResolver: CodeNameResolver
+        get() = enum
 }

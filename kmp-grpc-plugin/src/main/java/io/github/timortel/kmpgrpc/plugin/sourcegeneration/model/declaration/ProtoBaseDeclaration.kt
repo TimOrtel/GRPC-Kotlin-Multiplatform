@@ -1,26 +1,27 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration
 
 import com.squareup.kotlinpoet.ClassName
+import dev.turingcomplete.textcaseconverter.StandardTextCases
+import dev.turingcomplete.textcaseconverter.TextCase
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.CodeNameResolver
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoLanguageVersion
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.Options
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOptionsHolder
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoProject
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoVisibilityHolder
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.SourceCodeNamedNode
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.ProtoNestInFileClass
 import org.antlr.v4.runtime.ParserRuleContext
 
-interface ProtoBaseDeclaration : ProtoOptionsHolder, ProtoVisibilityHolder {
+interface ProtoBaseDeclaration : ProtoOptionsHolder, ProtoVisibilityHolder, SourceCodeNamedNode {
 
     /**
      * The name of this declaration
      */
-    val name: String
+    override val name: String
 
-    /**
-     * The name of the class generated for this declaration
-     */
-    val kotlinClassName: String get() = name
+    override val kotlinIdiomaticTextCase: TextCase get() = StandardTextCases.PASCAL_CASE
 
     /**
      * The file this declaration is located in
@@ -36,14 +37,14 @@ interface ProtoBaseDeclaration : ProtoOptionsHolder, ProtoVisibilityHolder {
     val className: ClassName
         get() {
             return if (isNested) {
-                file.className.nestedClass(kotlinClassName)
+                file.className.nestedClass(codeName)
             } else {
-                ClassName(file.javaPackage, kotlinClassName)
+                ClassName(file.javaPackage, codeName)
             }
         }
 
     /**
-     * If the message is nested within another class in the generated code.
+     * If this declaration is nested within another class in the generated code.
      */
     val isNested: Boolean
         get() = when (file.languageVersion) {
@@ -54,6 +55,10 @@ interface ProtoBaseDeclaration : ProtoOptionsHolder, ProtoVisibilityHolder {
                 ProtoNestInFileClass.LEGACY -> !Options.Basic.javaMultipleFiles.get(file)
             }
         }
+
+    override val codeNameResolver: CodeNameResolver
+        get() = if (isNested) file.declarationCodeNameResolver
+        else file.codeNameResolver
 
     val ctx: ParserRuleContext
 }

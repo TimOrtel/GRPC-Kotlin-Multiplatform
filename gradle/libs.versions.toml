@@ -24,6 +24,8 @@ buildConfigPlugin = "5.7.1"
 
 kotlinPoet = "2.2.0"
 
+textCaseConverter = "2.0.0"
+
 # Misc (Testing, Example Apps)
 protobufJvm = "3.25.6"
 protobufGradlePlugin = "0.9.5"
@@ -64,6 +66,8 @@ ktor-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 
 squareup-kotlinpoet = { group = "com.squareup", name = "kotlinpoet", version.ref = "kotlinPoet" }
 squareup-okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
+
+text-case-converter = { group = "dev.turingcomplete", name = "text-case-converter", version.ref = "textCaseConverter" }
 
 kotlin-gradle-plugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
 android-gradle-plugin = { group = "com.android.tools.build", name = "gradle", version.ref = "androidGradlePlugin" }

@@ -2,6 +2,7 @@ package io.github.timortel.kotlin_multiplatform_grpc_plugin.generation
 
 import com.google.testing.junit.testparameterinjector.junit5.TestParameter
 import com.google.testing.junit.testparameterinjector.junit5.TestParameterInjectorTest
+import io.github.timortel.kmpgrpc.plugin.NamingStrategy
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.ProtoSourceGenerator
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.SourceTarget
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.createSingleFileProtoFolder
@@ -30,7 +31,8 @@ class NestInFileClassGenerationTest : BaseGenerationTest() {
                 )
             ),
             shouldGenerateTargetMap = targetMapAll,
-            internalVisibility = false
+            internalVisibility = false,
+            namingStrategy = NamingStrategy.PROTO_LITERAL
         )
 
         fileMap.values.forEach { collection ->
@@ -55,7 +57,8 @@ class NestInFileClassGenerationTest : BaseGenerationTest() {
                 )
             ),
             shouldGenerateTargetMap = targetMapAll,
-            internalVisibility = false
+            internalVisibility = false,
+            namingStrategy = NamingStrategy.PROTO_LITERAL
         )
 
         fileMap.entries.forEach { (target, collection) ->
@@ -94,7 +97,8 @@ class NestInFileClassGenerationTest : BaseGenerationTest() {
                 )
             ),
             shouldGenerateTargetMap = targetMapAll,
-            internalVisibility = false
+            internalVisibility = false,
+            namingStrategy = NamingStrategy.PROTO_LITERAL
         )
 
         fileMap.entries.forEach { (target, collection) ->
@@ -143,7 +147,8 @@ class NestInFileClassGenerationTest : BaseGenerationTest() {
                 )
             ),
             shouldGenerateTargetMap = targetMapAll,
-            internalVisibility = false
+            internalVisibility = false,
+            namingStrategy = NamingStrategy.PROTO_LITERAL
         )
 
         fileMap.values.forEach { collection ->
@@ -172,7 +177,8 @@ class NestInFileClassGenerationTest : BaseGenerationTest() {
                 )
             ),
             shouldGenerateTargetMap = targetMapAll,
-            internalVisibility = false
+            internalVisibility = false,
+            namingStrategy = NamingStrategy.PROTO_LITERAL
         )
 
         fileMap.entries.forEach { (target, collection) ->

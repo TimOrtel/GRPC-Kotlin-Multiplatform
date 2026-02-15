@@ -7,6 +7,7 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.*
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.ProtoExtensionRanges
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.ProtoOneOf
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.ProtoReservation
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoExtensionField
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoMapField
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoMessageField
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
@@ -33,7 +34,7 @@ data class ProtoMessage(
     override val symbolVisibility: ProtoSymbolVisibility?,
     val type: Type,
     override val ctx: ParserRuleContext
-) : ProtoDeclaration, FileBasedDeclarationResolver, ProtoFieldHolder, ProtoChildPropertyNameResolver,
+) : ProtoStructureDeclaration, FileBasedDeclarationResolver, ProtoFieldHolder,
     ProtoExtensionDefinitionHolder, ProtoExtensionDefinitionFinder {
 
     override lateinit var parent: ProtoDeclParent
@@ -81,16 +82,26 @@ data class ProtoMessage(
     val dslBuildFunction: MemberName
         get() = MemberName(file.javaPackage, name.decapitalize())
 
-    override val childProperties: List<ProtoChildProperty>
-        get() = fields + mapFields + oneOfs + fields.flatMap { it.childProperties }
-
-    override val reservedAttributeNames: Set<String>
-        get() = Const.Message.reservedAttributeNames
-
     val extensionsInProject: List<ProtoExtensionDefinition>
         get() = project.findExtensionDefinitionsForMessage(this)
 
     val isExtendable: Boolean = extensionRange.ranges.isNotEmpty()
+
+    val fieldNameResolver = object : CodeNameResolver {
+        override val consideredNodes: List<SourceCodeNamedNode>
+            get() = fields + mapFields + oneOfs + fields.flatMap { it.childProperties }
+
+        override val reservedNames: Set<String>
+            get() = Const.Message.reservedAttributeNames
+    }
+
+    val classNameResolver = object : CodeNameResolver {
+        override val consideredNodes: List<SourceCodeNamedNode>
+            get() = messages + enums
+
+        override val reservedNames: Set<String>
+            get() = setOf("Companion")
+    }
 
     init {
         val parent = ProtoDeclParent.Message(this)
@@ -99,7 +110,7 @@ data class ProtoMessage(
         enums.forEach { it.parent = parent }
 
         oneOfs.forEach { it.message = this }
-        fields.forEach { it.parent = ProtoMessageField.Parent.Message(this) }
+        fields.forEach { it.parent = ProtoExtensionField.Parent.Message(this) }
         mapFields.forEach { it.message = this }
 
         extensionDefinitions.forEach { it.parent = ProtoExtensionDefinition.Parent.Message(this) }
@@ -107,7 +118,7 @@ data class ProtoMessage(
         extensionRange.message = this
     }
 
-    override fun resolveDeclarationInParent(type: ProtoType.DefType): ProtoDeclaration? {
+    override fun resolveDeclarationInParent(type: ProtoType.DefType): ProtoStructureDeclaration? {
         return when (val p = parent) {
             is ProtoDeclParent.File -> p.file.resolveDeclaration(type)
             is ProtoDeclParent.Message -> p.message.resolveDeclaration(type)
@@ -117,7 +128,7 @@ data class ProtoMessage(
     override fun validate() {
         super<FileBasedDeclarationResolver>.validate()
         super<ProtoFieldHolder>.validate()
-        super<ProtoDeclaration>.validate()
+        super<ProtoStructureDeclaration>.validate()
         super<ProtoExtensionDefinitionHolder>.validate()
 
         messages.forEach { it.validate() }

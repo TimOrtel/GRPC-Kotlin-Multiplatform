@@ -8,6 +8,7 @@ import io.github.timortel.kmpgrpc.anltr.Protobuf3Parser
 import io.github.timortel.kmpgrpc.anltr.ProtobufEditionsLexer
 import io.github.timortel.kmpgrpc.anltr.ProtobufEditionsParser
 import io.github.timortel.kmpgrpc.plugin.KmpGrpcExtension
+import io.github.timortel.kmpgrpc.plugin.NamingStrategy
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.project.CommonProtoProjectWriter
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.project.NativeProtoProjectWriter
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.project.JsProtoProjectWriter
@@ -39,6 +40,7 @@ object ProtoSourceGenerator {
         protoFolders: List<InputFile>,
         shouldGenerateTargetMap: Map<String, Boolean>,
         internalVisibility: Boolean,
+        namingStrategy: NamingStrategy,
         commonOutputFolder: File,
         jvmOutputFolder: File,
         jsOutputFolder: File,
@@ -59,7 +61,8 @@ object ProtoSourceGenerator {
             logger = logger,
             protoFolders = protoFolders,
             shouldGenerateTargetMap = shouldGenerateTargetMapBySourceTarget,
-            internalVisibility = internalVisibility
+            internalVisibility = internalVisibility,
+            namingStrategy = namingStrategy
         )
 
         fileMap[SourceTarget.Common].writeTo(commonOutputFolder)
@@ -83,12 +86,14 @@ object ProtoSourceGenerator {
         logger: Logger,
         protoFolders: List<InputFile>,
         shouldGenerateTargetMap: Map<SourceTarget, Boolean>,
-        internalVisibility: Boolean
+        internalVisibility: Boolean,
+        namingStrategy: NamingStrategy
     ): Map<SourceTarget, List<FileSpec>> {
         val project = buildProtoProject(
             logger = logger,
             protoFolders = protoFolders,
-            internalVisibility = internalVisibility
+            internalVisibility = internalVisibility,
+            namingStrategy = namingStrategy
         )
 
         // Before generating code, validate and print warnings / throw errors
@@ -116,7 +121,8 @@ object ProtoSourceGenerator {
     internal fun buildProtoProject(
         logger: Logger,
         protoFolders: List<InputFile>,
-        internalVisibility: Boolean
+        internalVisibility: Boolean,
+        namingStrategy: NamingStrategy
     ): ProtoProject {
         val folders = protoFolders.mapNotNull { sourceFolder ->
             walkFolder(sourceFolder, logger)
@@ -128,7 +134,8 @@ object ProtoSourceGenerator {
                 ProtoFolder(name = "", folders = l.folders + r.folders, files = l.files + r.files)
             },
             logger = logger,
-            defaultVisibility = if (internalVisibility) Visibility.INTERNAL else Visibility.PUBLIC
+            defaultVisibility = if (internalVisibility) Visibility.INTERNAL else Visibility.PUBLIC,
+            namingStrategy = namingStrategy
         )
     }
 

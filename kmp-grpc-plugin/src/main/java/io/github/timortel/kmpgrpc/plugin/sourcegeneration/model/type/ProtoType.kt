@@ -8,7 +8,7 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoLanguageVer
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoNode
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOptionsHolder
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoProject
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoDeclaration
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoStructureDeclaration
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoEnum
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoMessage
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoMapField
@@ -252,7 +252,7 @@ sealed interface ProtoType : ProtoNode {
             return resolveDeclaration().className
         }
 
-        fun resolveDeclaration(): ProtoDeclaration {
+        fun resolveDeclaration(): ProtoStructureDeclaration {
             val decl = if (declaration.startsWith('.')) {
                 val fullyQualifiedName = declaration.substring(1)
 

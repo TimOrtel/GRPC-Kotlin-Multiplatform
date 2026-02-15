@@ -128,7 +128,7 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
                         type = field.type,
                         file = field.file,
                         fieldNumber = field.number,
-                        variableName = oneOf.attributeName,
+                        variableName = oneOf.codeName,
                         assignMode = "=",
                         constructType = {
                             add("%T(", field.sealedClassChildName)
@@ -231,7 +231,7 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
                         type = field.type,
                         file = field.file,
                         fieldNumber = field.number,
-                        variableName = field.attributeName,
+                        variableName = field.codeName,
                         assignMode = "=",
                         constructType = { it() }
                     )
@@ -246,7 +246,7 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
                     field.type is ProtoType.DefType && field.type.isMessage -> {
                         val message = field.type.resolveDeclaration() as ProtoMessage
 
-                        addCode("%N·+=·", field.attributeName)
+                        addCode("%N·+=·", field.codeName)
                         addCode(buildReadScalarFieldMessageTypeCode(field.type, message, field.number))
                         addCode("\n")
                     }
@@ -272,7 +272,7 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
                                     type = field.type,
                                     file = field.file,
                                     fieldNumber = field.number,
-                                    variableName = field.attributeName,
+                                    variableName = field.codeName,
                                     assignMode = "+=",
                                     constructType = { it() }
                                 )
@@ -282,7 +282,7 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
 
                             addStatement(
                                 "%N·+=·%N.%N()",
-                                field.attributeName,
+                                field.codeName,
                                 wrapperParamName,
                                 functionName
                             )
@@ -301,7 +301,7 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
                                     type = field.type,
                                     file = field.file,
                                     fieldNumber = field.number,
-                                    variableName = field.attributeName,
+                                    variableName = field.codeName,
                                     assignMode = "+=",
                                     constructType = { it() }
                                 )
@@ -309,7 +309,7 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
                         } else {
                             addCode(
                                 "%N·+=·%N.%N()\n",
-                                field.attributeName,
+                                field.codeName,
                                 wrapperParamName,
                                 getReadScalarFunctionName(field.type)
                             )
@@ -333,7 +333,7 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
                 readMapEntry,
                 wrapperParamName,
                 mapField.number,
-                mapField.attributeName,
+                mapField.codeName,
                 Const.Message.Companion.WrapperDeserializationFunction.UNKNOWN_FIELDS_LOCAL_VARIABLE,
                 DataType::class.asTypeName(),
                 mapField.keyType.wireType.name,
@@ -371,9 +371,9 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
                 MessageConstructorCallWriter.getConstructorCallCode(
                     message = message,
                     type = MessageConstructorCallWriter.ConstructorType.BUILD_PARTIAL,
-                    getFieldParameter = { CodeBlock.of("%N", it.attributeName) },
-                    getMapFieldParameter = { CodeBlock.of("%N", it.attributeName) },
-                    getOneOfFieldParameter = { CodeBlock.of("%N", it.attributeName) },
+                    getFieldParameter = { CodeBlock.of("%N", it.codeName) },
+                    getMapFieldParameter = { CodeBlock.of("%N", it.codeName) },
+                    getOneOfFieldParameter = { CodeBlock.of("%N", it.codeName) },
                     getUnknownFieldsParameter = {
                         CodeBlock.of(
                             "%N",
@@ -405,7 +405,7 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
 
                     declareLocalVariable(
                         builder,
-                        field.attributeName,
+                        field.codeName,
                         type,
                         true,
                         defaultValue
@@ -415,7 +415,7 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
                 ProtoFieldCardinality.Repeated -> {
                     declareLocalVariable(
                         builder,
-                        field.attributeName,
+                        field.codeName,
                         MUTABLE_LIST.parameterizedBy(field.type.resolve()),
                         false,
                         CodeBlock.of("mutableListOf()")
@@ -427,7 +427,7 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
         message.mapFields.forEach { field ->
             declareLocalVariable(
                 builder,
-                field.attributeName,
+                field.codeName,
                 MUTABLE_MAP.parameterizedBy(field.keyType.resolve(), field.valuesType.resolve()),
                 false,
                 CodeBlock.of("mutableMapOf()")
@@ -437,7 +437,7 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
         message.oneOfs.forEach { oneOf ->
             declareLocalVariable(
                 builder,
-                oneOf.attributeName,
+                oneOf.codeName,
                 oneOf.sealedClassName,
                 true,
                 CodeBlock.of("%T", oneOf.sealedClassNameNotSet)

@@ -68,7 +68,7 @@ class SerializationFunctionExtension : BaseSerializationExtension() {
 
                     field.cardinality.isImplicit -> {
                         addCode("if·(")
-                        addCode(field.type.isNotDefaultValueCode(field.attributeName, false))
+                        addCode(field.type.isNotDefaultValueCode(field.codeName, false))
                         beginControlFlow(")·{ ")
 
                         addCode(
@@ -93,7 +93,7 @@ class SerializationFunctionExtension : BaseSerializationExtension() {
                                 Const.Message.SerializeFunction.STREAM_PARAM,
                                 writeArrayFunction,
                                 field.number,
-                                field.attributeName,
+                                field.codeName,
                                 wireFormatMakeTag(field.number, field.type.wireType, true)
                             )
                         } else {
@@ -108,7 +108,7 @@ class SerializationFunctionExtension : BaseSerializationExtension() {
                                 Const.Message.SerializeFunction.STREAM_PARAM,
                                 writeArrayFunction,
                                 field.number,
-                                field.attributeName
+                                field.codeName
                             )
                         }
                     }
@@ -122,7 +122,7 @@ class SerializationFunctionExtension : BaseSerializationExtension() {
             message.oneOfs.forEach { oneOf ->
                 addStatement(
                     "%N.%N(%N)",
-                    oneOf.attributeName,
+                    oneOf.codeName,
                     Const.Message.OneOf.SERIALIZE_FUNCTION_NAME,
                     Const.Message.SerializeFunction.STREAM_PARAM
                 )
@@ -156,7 +156,7 @@ class SerializationFunctionExtension : BaseSerializationExtension() {
                 Const.Message.SerializeFunction.STREAM_PARAM,
                 "writeMap",
                 field.number,
-                field.attributeName
+                field.codeName
             )
 
             addCode(getComputeMapValueRequiredSizeCode(field.keyType))
@@ -266,7 +266,7 @@ class SerializationFunctionExtension : BaseSerializationExtension() {
                         streamParam,
                         functionName,
                         field.number,
-                        field.attributeName
+                        field.codeName
                     )
                 }
 
@@ -280,7 +280,7 @@ class SerializationFunctionExtension : BaseSerializationExtension() {
                                 streamParam,
                                 functionName,
                                 field.number,
-                                field.attributeName
+                                field.codeName
                             )
                         }
                         is ProtoEnum -> {
@@ -288,7 +288,7 @@ class SerializationFunctionExtension : BaseSerializationExtension() {
                                 "%N.writeEnum(%L, %N.%N)\n",
                                 streamParam,
                                 field.number,
-                                field.attributeName,
+                                field.codeName,
                                 Const.Enum.NUMBER_PROPERTY_NAME
                             )
                         }
@@ -300,7 +300,7 @@ class SerializationFunctionExtension : BaseSerializationExtension() {
                 CodeBlock.builder()
                     .beginControlFlow(
                         "if (%N)",
-                        field.isSetProperty.attributeName
+                        field.isSetProperty.codeName
                     )
                     .add(serializationCodeBlock)
                     .endControlFlow()

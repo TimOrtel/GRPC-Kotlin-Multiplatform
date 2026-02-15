@@ -14,7 +14,7 @@ abstract class ProtoDslWriter(private val isActual: Boolean) {
 
     fun generateDslBuilderFile(protoFile: ProtoFile): FileSpec {
         val builder = FileSpec
-            .builder(protoFile.javaPackage, protoFile.javaFileName + "Dsl")
+            .builder(protoFile.dslFile.className)
             .addAnnotation(DefaultAnnotations.SuppressDeprecation)
             .addAnnotation(DefaultAnnotations.OptIntoKmpGrpcInternalApi)
 
@@ -70,7 +70,7 @@ abstract class ProtoDslWriter(private val isActual: Boolean) {
                                 addProperty(
                                     PropertySpec
                                         .builder(
-                                            field.attributeName,
+                                            field.codeName,
                                             field.type.resolve().copy(nullable = true)
                                         )
                                         .addModifiers(modifier)
@@ -88,7 +88,7 @@ abstract class ProtoDslWriter(private val isActual: Boolean) {
                                 addProperty(
                                     PropertySpec
                                         .builder(
-                                            field.attributeName,
+                                            field.codeName,
                                             MUTABLE_LIST.parameterizedBy(field.type.resolve())
                                         ).apply {
                                             if (isActual) {
@@ -106,7 +106,7 @@ abstract class ProtoDslWriter(private val isActual: Boolean) {
                         addProperty(
                             PropertySpec
                                 .builder(
-                                    name = field.attributeName,
+                                    name = field.codeName,
                                     type = MUTABLE_MAP.parameterizedBy(
                                         field.keyType.resolve(),
                                         field.valuesType.resolve()
@@ -126,7 +126,7 @@ abstract class ProtoDslWriter(private val isActual: Boolean) {
                         addProperty(
                             PropertySpec
                                 .builder(
-                                    oneOf.attributeName,
+                                    oneOf.codeName,
                                     oneOf.sealedClassName,
                                     modifier
                                 )

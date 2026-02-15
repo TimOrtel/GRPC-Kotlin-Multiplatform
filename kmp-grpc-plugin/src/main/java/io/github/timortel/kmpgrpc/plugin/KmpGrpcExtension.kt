@@ -43,6 +43,10 @@ open class KmpGrpcExtension @Inject constructor(objects: ObjectFactory) {
         .property(Boolean::class.java)
         .convention(false)
 
+    val namingStrategy: Property<NamingStrategy> = objects
+        .property(NamingStrategy::class.java)
+        .convention(NamingStrategy.KOTLIN_IDIOMATIC)
+
     fun common(targets: List<String> = listOf("commonMain")) {
         targetSourcesMap.put(COMMON, targets)
     }

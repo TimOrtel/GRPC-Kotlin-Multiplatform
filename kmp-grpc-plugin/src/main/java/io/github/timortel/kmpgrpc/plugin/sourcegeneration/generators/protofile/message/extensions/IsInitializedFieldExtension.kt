@@ -47,14 +47,14 @@ object IsInitializedFieldExtension : MessageWriterExtension {
                                             is ProtoFieldCardinality.Singular -> {
                                                 add(
                                                     "(%1N == null || %1N.%2N)",
-                                                    it.attributeName,
+                                                    it.codeName,
                                                     Const.Message.isInitializedProperty.name
                                                 )
                                             }
                                             ProtoFieldCardinality.Repeated -> {
                                                 add(
                                                     "%N.all { it.%N }",
-                                                    it.attributeName,
+                                                    it.codeName,
                                                     Const.Message.isInitializedProperty.name
                                                 )
                                             }
@@ -64,7 +64,7 @@ object IsInitializedFieldExtension : MessageWriterExtension {
                                     val subMessageOneOfFieldsBool = oneOfs.joinToCodeBlock(separator) {
                                         add(
                                             "%N.%N",
-                                            it.attributeName,
+                                            it.codeName,
                                             Const.Message.OneOf.isInitializedProperty.name
                                         )
                                     }
@@ -72,7 +72,7 @@ object IsInitializedFieldExtension : MessageWriterExtension {
                                     val subMessageMapFieldsBool = subMessageMapFields.joinToCodeBlock(separator) {
                                         add(
                                             "%N.values.all { it.%N }",
-                                            it.attributeName,
+                                            it.codeName,
                                             Const.Message.isInitializedProperty.name
                                         )
                                     }

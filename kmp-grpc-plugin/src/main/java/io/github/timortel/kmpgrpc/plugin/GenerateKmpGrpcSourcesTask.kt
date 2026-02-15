@@ -46,6 +46,9 @@ abstract class GenerateKmpGrpcSourcesTask : DefaultTask() {
     @get:Input
     abstract val skipWellKnownExtensions: Property<Boolean>
 
+    @get:Input
+    abstract val namingStrategy: Property<NamingStrategy>
+
     @get:InputDirectory
     abstract val generatedSourcesOutputFolder: DirectoryProperty
 
@@ -100,6 +103,7 @@ abstract class GenerateKmpGrpcSourcesTask : DefaultTask() {
             logger = logger,
             protoFolders = protoFolders,
             shouldGenerateTargetMap = shouldGenerateTargetMap,
+            namingStrategy = namingStrategy.get(),
             commonOutputFolder = getCommonOutputFolder(outputFolder),
             jvmOutputFolder = getJVMOutputFolder(outputFolder),
             jsOutputFolder = getJSOutputFolder(outputFolder),
@@ -107,7 +111,6 @@ abstract class GenerateKmpGrpcSourcesTask : DefaultTask() {
             nativeOutputDir = getNativeOutputFolder(outputFolder),
             internalVisibility = internalVisibility.get()
         )
-
 
         if (includeWellKnownTypes.get() && skipWellKnownExtensions.get()) {
             copyWellKnownExtensions()

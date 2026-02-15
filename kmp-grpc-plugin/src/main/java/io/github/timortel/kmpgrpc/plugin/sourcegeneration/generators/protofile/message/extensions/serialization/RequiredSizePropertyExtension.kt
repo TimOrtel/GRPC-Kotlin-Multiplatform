@@ -38,7 +38,7 @@ class RequiredSizePropertyExtension : BaseSerializationExtension() {
                 val fieldsCodeBlock = message.fields.joinToCodeBlock(separator) { field ->
                     when {
                         field.needsIsSetProperty -> {
-                            add("if·(%N != null)·{·", field.attributeName)
+                            add("if·(%N != null)·{·", field.codeName)
                             add(
                                 getCodeForRequiredSizeForScalarAttributeC(
                                     field = field,
@@ -59,7 +59,7 @@ class RequiredSizePropertyExtension : BaseSerializationExtension() {
 
                         field.cardinality.isImplicit -> {
                             add("if·(")
-                            add(field.type.isDefaultValueCode(field.attributeName, false))
+                            add(field.type.isDefaultValueCode(field.codeName, false))
                             add(")·0·else·{ ")
                             add(getCodeForRequiredSizeForScalarAttributeC(field, isOptional = false))
                             add(" }")
@@ -67,10 +67,10 @@ class RequiredSizePropertyExtension : BaseSerializationExtension() {
 
                         field.cardinality == ProtoFieldCardinality.Repeated -> {
                             add("if·(")
-                            add(field.type.isDefaultValueCode(field.attributeName, true))
+                            add(field.type.isDefaultValueCode(field.codeName, true))
                             beginControlFlow(")·0·else·{")
 
-                            beginControlFlow("%N.let·{·e·->", field.attributeName)
+                            beginControlFlow("%N.let·{·e·->", field.codeName)
 
                             beginControlFlow("val·dataSize·=·e.sumOf·{")
                             when (field.type) {
@@ -109,7 +109,7 @@ class RequiredSizePropertyExtension : BaseSerializationExtension() {
                                     computeInt32SizeNoTag
                                 )
                             } else {
-                                addStatement("dataSize + %N.size * tagSize", field.attributeName)
+                                addStatement("dataSize + %N.size * tagSize", field.codeName)
                             }
 
                             endControlFlow()
@@ -124,7 +124,7 @@ class RequiredSizePropertyExtension : BaseSerializationExtension() {
                         "%M(%L, %N, ::%M, ",
                         computeMapSize,
                         mapField.number,
-                        mapField.attributeName,
+                        mapField.codeName,
                         getComputeDataTypeSizeMember(mapField.keyType, true)
                     )
 
@@ -136,7 +136,7 @@ class RequiredSizePropertyExtension : BaseSerializationExtension() {
                 val oneOfsBlock = message.oneOfs.joinToCodeBlock(separator) { oneOf ->
                     add(
                         "%N.%N",
-                        oneOf.attributeName,
+                        oneOf.codeName,
                         Const.Message.OneOf.REQUIRED_SIZE_PROPERTY_NAME
                     )
                 }
@@ -171,7 +171,7 @@ class RequiredSizePropertyExtension : BaseSerializationExtension() {
                         formatString,
                         getComputeDataTypeSizeMember(type, true),
                         field.number,
-                        field.attributeName
+                        field.codeName
                     )
                 }
 
@@ -182,7 +182,7 @@ class RequiredSizePropertyExtension : BaseSerializationExtension() {
                                 "%M(%L, %N)",
                                 computeMessageSize,
                                 field.number,
-                                field.attributeName
+                                field.codeName
                             )
                         }
 
@@ -191,7 +191,7 @@ class RequiredSizePropertyExtension : BaseSerializationExtension() {
                                 "%M(%L, this.%N.%N)",
                                 computeEnumSize,
                                 field.number,
-                                field.attributeName,
+                                field.codeName,
                                 Const.Enum.NUMBER_PROPERTY_NAME
                             )
                         }

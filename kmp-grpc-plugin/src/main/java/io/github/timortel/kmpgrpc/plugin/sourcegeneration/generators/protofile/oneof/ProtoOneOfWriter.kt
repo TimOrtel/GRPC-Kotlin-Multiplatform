@@ -17,7 +17,7 @@ abstract class ProtoOneOfWriter(private val isActual: Boolean) {
         builder.addProperty(
             PropertySpec
                 .builder(
-                    name = protoOneOf.attributeName,
+                    name = protoOneOf.codeName,
                     type = protoOneOf.sealedClassName,
                     modifiers = attrs
                 )
@@ -55,7 +55,7 @@ abstract class ProtoOneOfWriter(private val isActual: Boolean) {
                                             .constructorBuilder()
                                             .addParameter(
                                                 ParameterSpec
-                                                    .builder(field.attributeName, field.type.resolve())
+                                                    .builder(field.codeName, field.type.resolve())
                                                     .build()
                                             )
                                             .apply {
@@ -68,10 +68,10 @@ abstract class ProtoOneOfWriter(private val isActual: Boolean) {
                                 }
                                 .addProperty(
                                     PropertySpec
-                                        .builder(name = field.attributeName, type = field.type.resolve())
+                                        .builder(name = field.codeName, type = field.type.resolve())
                                         .apply {
                                             if (isActual) {
-                                                initializer(field.attributeName)
+                                                initializer(field.codeName)
                                                 addModifiers(KModifier.ACTUAL)
                                             }
                                         }

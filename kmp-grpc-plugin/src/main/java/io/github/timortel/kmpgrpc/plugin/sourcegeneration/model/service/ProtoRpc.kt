@@ -1,23 +1,30 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.service
 
+import dev.turingcomplete.textcaseconverter.StandardTextCases
+import dev.turingcomplete.textcaseconverter.TextCase
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.CodeNameResolver
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOption
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOptionsHolder
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoProject
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.SourceCodeNamedNode
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.option.OptionTarget
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.util.capitalize
 
 data class ProtoRpc(
-    val name: String,
+    override val name: String,
     val sendType: ProtoType.DefType,
     val returnType: ProtoType.DefType,
     val isSendingStream: Boolean,
     val isReceivingStream: Boolean,
     override val options: List<ProtoOption>
-) : ProtoOptionsHolder {
+) : ProtoOptionsHolder, SourceCodeNamedNode {
     lateinit var service: ProtoService
 
     override val file: ProtoFile get() = service.file
+
+    override val project: ProtoProject get() = file.project
 
     val jvmMethodDescriptorName: String = "methodDescriptor${name.capitalize()}"
 
@@ -32,6 +39,14 @@ data class ProtoRpc(
         isReceivingStream -> MethodType.SERVER_STREAMING
         else -> MethodType.UNARY
     }
+
+    override val kotlinIdiomaticTextCase: TextCase = StandardTextCases.SOFT_CAMEL_CASE
+
+    override val codeNameResolver: CodeNameResolver
+        get() = service
+
+    override val priority: Int
+        get() = 1
 
     init {
         sendType.parent = ProtoType.Parent.Rpc(this)

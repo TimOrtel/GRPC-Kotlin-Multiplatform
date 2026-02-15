@@ -45,7 +45,7 @@ object HashCodeFunctionExtension : MessageWriterExtension {
             }
 
             properties.forEachIndexed { index, property ->
-                val attrName = property.attributeName
+                val attrName = property.codeName
 
                 // Mimic the way IntelliJ generates hashCode
                 if (index == 0) {

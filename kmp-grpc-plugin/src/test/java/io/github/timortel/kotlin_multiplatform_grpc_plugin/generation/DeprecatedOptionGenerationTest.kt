@@ -3,6 +3,7 @@ package io.github.timortel.kotlin_multiplatform_grpc_plugin.generation
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asTypeName
+import io.github.timortel.kmpgrpc.plugin.NamingStrategy
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.ProtoSourceGenerator
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.SourceTarget
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.createSingleFileProtoFolderFromResource
@@ -23,7 +24,8 @@ class DeprecatedOptionGenerationTest : BaseGenerationTest() {
                 )
             ),
             shouldGenerateTargetMap = targetMapAll,
-            internalVisibility = false
+            internalVisibility = false,
+            namingStrategy = NamingStrategy.PROTO_LITERAL
         )
 
         val deprecatedProperties = listOf(

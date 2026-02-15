@@ -42,17 +42,17 @@ object MessageConstructorCallWriter {
                 val separator = ",\n"
 
                 val fields = message.fields.joinToCodeBlock(separator) { field ->
-                    add("%N = ", field.attributeName)
+                    add("%N = ", field.codeName)
                     add(getFieldParameter(field))
                 }
 
                 val mapFields = message.mapFields.joinToCodeBlock(separator) { field ->
-                    add("%N = ", field.attributeName)
+                    add("%N = ", field.codeName)
                     add(getMapFieldParameter(field))
                 }
 
                 val oneOfFields = message.oneOfs.joinToCodeBlock(separator) { oneOf ->
-                    add("%N = ", oneOf.attributeName)
+                    add("%N = ", oneOf.codeName)
                     add(getOneOfFieldParameter(oneOf))
                 }
 

@@ -92,9 +92,9 @@ object FieldPropertyConstructorExtension : MessageWriterExtension {
                             MessageConstructorCallWriter.getConstructorCallCode(
                                 message = message,
                                 type = MessageConstructorCallWriter.ConstructorType.DIRECT,
-                                getFieldParameter = { field -> CodeBlock.of("%N", field.attributeName) },
-                                getMapFieldParameter = { field -> CodeBlock.of("%N", field.attributeName) },
-                                getOneOfFieldParameter = { field -> CodeBlock.of("%N", field.attributeName) },
+                                getFieldParameter = { field -> CodeBlock.of("%N", field.codeName) },
+                                getMapFieldParameter = { field -> CodeBlock.of("%N", field.codeName) },
+                                getOneOfFieldParameter = { field -> CodeBlock.of("%N", field.codeName) },
                                 getUnknownFieldsParameter = {
                                     CodeBlock.of(
                                         "%N",
@@ -139,7 +139,7 @@ object FieldPropertyConstructorExtension : MessageWriterExtension {
 
                     builder.addParameter(
                         ParameterSpec
-                            .builder(field.attributeName, type)
+                            .builder(field.codeName, type)
                             .apply {
                                 if (!isActual && addDefaultValues) {
                                     defaultValue(
@@ -161,7 +161,7 @@ object FieldPropertyConstructorExtension : MessageWriterExtension {
                 ProtoFieldCardinality.Repeated -> {
                     builder.addParameter(
                         ParameterSpec
-                            .builder(field.attributeName, LIST.parameterizedBy(field.type.resolve()))
+                            .builder(field.codeName, LIST.parameterizedBy(field.type.resolve()))
                             .apply {
                                 if (!isActual && addDefaultValues) defaultValue("emptyList()")
                             }
@@ -175,7 +175,7 @@ object FieldPropertyConstructorExtension : MessageWriterExtension {
             builder.addParameter(
                 ParameterSpec
                     .builder(
-                        mapField.attributeName,
+                        mapField.codeName,
                         MAP.parameterizedBy(
                             mapField.keyType.resolve(),
                             mapField.valuesType.resolve(),
@@ -192,7 +192,7 @@ object FieldPropertyConstructorExtension : MessageWriterExtension {
             builder.addParameter(
                 ParameterSpec
                     .builder(
-                        oneOf.attributeName,
+                        oneOf.codeName,
                         oneOf.sealedClassName
                     )
                     .apply {

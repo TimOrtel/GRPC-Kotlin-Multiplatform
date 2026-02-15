@@ -7,6 +7,7 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.DeclarationResol
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOption
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoOptionsHolder
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoProject
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoMessage
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.ProtoMessageProperty
@@ -29,7 +30,12 @@ data class ProtoMapField(
 
     override val file: ProtoFile get() = message.file
 
-    override val desiredAttributeName: String = "${name}Map"
+    override val project: ProtoProject
+        get() = file.project
+
+
+    override val desiredCodeName: String
+        get() = if (transformedKotlinName.endsWith("Map")) transformedKotlinName else "${transformedKotlinName}Map"
 
     override val propertyType: TypeName
         get() = MAP.parameterizedBy(keyType.resolve(), valuesType.resolve())

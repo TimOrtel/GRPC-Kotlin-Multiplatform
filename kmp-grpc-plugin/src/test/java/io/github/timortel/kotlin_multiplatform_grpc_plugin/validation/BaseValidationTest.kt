@@ -1,5 +1,6 @@
 package io.github.timortel.kotlin_multiplatform_grpc_plugin.validation
 
+import io.github.timortel.kmpgrpc.plugin.NamingStrategy
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.InputFile
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.ProtoSourceGenerator
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.SourceTarget
@@ -27,7 +28,8 @@ abstract class BaseValidationTest {
                 SourceTarget.Js to true,
                 SourceTarget.Native to true
             ),
-            internalVisibility = false
+            internalVisibility = false,
+            namingStrategy = NamingStrategy.PROTO_LITERAL
         )
     }
 

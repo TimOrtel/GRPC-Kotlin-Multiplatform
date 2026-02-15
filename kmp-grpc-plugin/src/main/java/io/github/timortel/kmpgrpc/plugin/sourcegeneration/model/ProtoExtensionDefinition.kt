@@ -2,7 +2,9 @@ package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model
 
 import com.squareup.kotlinpoet.ClassName
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.CompilationException
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoChildProperty
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoMessage
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoExtensionField
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoMessageField
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
@@ -18,16 +20,22 @@ data class ProtoExtensionDefinition(
     val messageType: ProtoType.DefType,
     val fields: List<ProtoMessageField>,
     val ctx: ParserRuleContext
-) : ProtoNode {
+) : ProtoNode, CodeNameResolver {
     lateinit var parent: Parent
 
     val file: ProtoFile
         get() = parent.file
 
+    override val reservedNames: Set<String>
+        get() = emptySet()
+
+    override val consideredNodes: List<ProtoChildProperty>
+        get() = fields
+
     init {
         messageType.parent = ProtoType.Parent.ExtensionDefinition(this)
 
-        fields.forEach { it.parent = ProtoMessageField.Parent.ExtensionDefinition(this) }
+        fields.forEach { it.parent = ProtoExtensionField.Parent.ExtensionDefinition(this) }
     }
 
     override fun validate() {

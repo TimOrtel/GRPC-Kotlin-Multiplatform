@@ -1,7 +1,7 @@
 package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model
 
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.CompilationException
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoDeclaration
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoStructureDeclaration
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoEnum
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoMessage
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
@@ -17,7 +17,7 @@ interface DeclarationResolver : BaseDeclarationResolver {
 
     val candidates: List<Candidate>
 
-    override fun resolveDeclaration(type: ProtoType.DefType): ProtoDeclaration? {
+    override fun resolveDeclaration(type: ProtoType.DefType): ProtoStructureDeclaration? {
         return resolveDeclaration(type, true)
     }
 
@@ -25,7 +25,7 @@ interface DeclarationResolver : BaseDeclarationResolver {
      * @param type the identifier of the declaration. Must not start with '.'.
      * @param canTryNextInnerScope if resolving may go to the parent to try the next inner scope
      */
-    fun resolveDeclaration(type: ProtoType.DefType, canTryNextInnerScope: Boolean): ProtoDeclaration? {
+    fun resolveDeclaration(type: ProtoType.DefType, canTryNextInnerScope: Boolean): ProtoStructureDeclaration? {
         // Search scope
         val identifier = type.declaration
 
@@ -115,7 +115,7 @@ interface DeclarationResolver : BaseDeclarationResolver {
     /**
      * Tries resolving the identifier in the next inner scope, which is the parent of this node
      */
-    fun resolveDeclarationInParent(type: ProtoType.DefType): ProtoDeclaration?
+    fun resolveDeclarationInParent(type: ProtoType.DefType): ProtoStructureDeclaration?
 
     /**
      * @param type the identifier relevant for the current scope

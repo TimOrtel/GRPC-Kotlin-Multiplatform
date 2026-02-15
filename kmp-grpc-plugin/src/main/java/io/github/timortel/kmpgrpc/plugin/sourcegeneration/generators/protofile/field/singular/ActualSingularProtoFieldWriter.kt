@@ -14,17 +14,17 @@ object ActualSingularProtoFieldWriter : SingularProtoFieldWriter() {
                 CodeBlock
                     .builder()
                     .apply {
-                        add("%N ?: ", field.attributeName)
+                        add("%N ?: ", field.codeName)
                         add(field.defaultValue(messageDefaultValue = ProtoType.MessageDefaultValue.EMPTY))
                     }
                     .build()
             )
         } else {
-            initializer(field.attributeName)
+            initializer(field.codeName)
         }
     }
 
     override fun PropertySpec.Builder.modifyIsSetProperty(field: ProtoMessageField) {
-        initializer("%N != null", field.attributeName)
+        initializer("%N != null", field.codeName)
     }
 }

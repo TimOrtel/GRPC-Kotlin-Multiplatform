@@ -7,7 +7,7 @@ import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoNode
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file.ProtoFile
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.ProtoProject
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.type.ProtoType
-import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoDeclaration
+import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoStructureDeclaration
 
 data class ProtoPackage(val name: String, val packages: List<ProtoPackage>, val files: List<ProtoFile>) :
     DeclarationResolver, ProtoNode, ProtoExtensionDefinitionFinder {
@@ -34,7 +34,7 @@ data class ProtoPackage(val name: String, val packages: List<ProtoPackage>, val 
         packages.forEach { it.validate() }
     }
 
-    override fun resolveDeclarationInParent(type: ProtoType.DefType): ProtoDeclaration? {
+    override fun resolveDeclarationInParent(type: ProtoType.DefType): ProtoStructureDeclaration? {
         return when (val p = parent) {
             is Parent.Package -> p.`package`.resolveDeclaration(type)
             // Base package reached, no more resolution possible
@@ -44,6 +44,13 @@ data class ProtoPackage(val name: String, val packages: List<ProtoPackage>, val 
 
     override fun findExtensionDefinitions(): List<ProtoExtensionDefinition> {
         return packages.flatMap { it.findExtensionDefinitions() } + files.flatMap { it.findExtensionDefinitions() }
+    }
+
+    /**
+     * Recursively finds all files that match the predicate
+     */
+    fun findFiles(predicate: (ProtoFile) -> Boolean): List<ProtoFile> {
+        return files.filter(predicate) + packages.flatMap { it.findFiles(predicate) }
     }
 
     sealed interface Parent {

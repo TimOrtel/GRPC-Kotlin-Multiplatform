@@ -13,7 +13,7 @@ abstract class ProtoMapFieldWriter : BaseProtoFieldWriter {
         builder.addProperty(
             PropertySpec
                 .builder(
-                    field.attributeName,
+                    field.codeName,
                     MAP.parameterizedBy(field.keyType.resolve(), field.valuesType.resolve())
                 )
                 .addKdoc(field.infoText)

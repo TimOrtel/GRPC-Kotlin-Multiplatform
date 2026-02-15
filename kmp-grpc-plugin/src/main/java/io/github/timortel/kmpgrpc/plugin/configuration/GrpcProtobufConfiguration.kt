@@ -33,6 +33,7 @@ object GrpcProtobufConfiguration {
             it.targetSourcesMap.set(kmpGrpcExtension.targetSourcesMap.get().toMap())
             it.includeWellKnownTypes.set(kmpGrpcExtension.includeWellKnownTypes.get())
             it.internalVisibility.set(kmpGrpcExtension.internalVisibility.get())
+            it.namingStrategy.set(kmpGrpcExtension.namingStrategy.get())
         }
 
         project.plugins.withType(KotlinMultiplatformPluginWrapper::class.java) {
