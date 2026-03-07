@@ -2,6 +2,7 @@ package io.github.timortel.kotlin_multiplatform_grpc_plugin.modeltree
 
 import com.google.testing.junit.testparameterinjector.junit5.TestParameter
 import com.google.testing.junit.testparameterinjector.junit5.TestParameterInjectorTest
+import io.github.timortel.kmpgrpc.plugin.NamingStrategy
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.message.field.ProtoMessageField
 import io.github.timortel.kotlin_multiplatform_grpc_plugin.validation.BaseValidationTest
 import org.junit.jupiter.api.Assertions
@@ -66,7 +67,11 @@ class DefaultEnumValueTest : BaseModelTreeTest() {
         version: BaseValidationTest.ProtoVersion,
         expectedDefaultValue: String
     ) {
-        val project = buildProject(proto.trimIndent(), version)
+        val project = buildProject(
+            content = proto.trimIndent(),
+            protoVersion = version,
+            namingStrategy = NamingStrategy.KOTLIN_IDIOMATIC
+        )
 
         val field = project
             .findMessage("C")

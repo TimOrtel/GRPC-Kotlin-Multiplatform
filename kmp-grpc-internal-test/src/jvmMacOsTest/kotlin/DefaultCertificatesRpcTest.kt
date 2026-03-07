@@ -24,7 +24,7 @@ abstract class DefaultCertificatesRpcTest : ServerTest {
         val stub = HelloServiceStub(channelWithCertificate)
 
         val msg = HelloRequest(greeting = "Hello World")
-        stub.SayHello(msg)
+        stub.sayHello(msg)
     }
 
     @Test
@@ -32,6 +32,6 @@ abstract class DefaultCertificatesRpcTest : ServerTest {
         val stub = HelloServiceStub(channelWithoutCertificates)
 
         val msg = HelloRequest(greeting = "Hello World")
-        assertFailsWith<StatusException> { stub.SayHello(msg) }
+        assertFailsWith<StatusException> { stub.sayHello(msg) }
     }
 }
