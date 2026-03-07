@@ -26,9 +26,9 @@ message Proto2MessageWithRequiredExtension {
 }
 
 extend Proto2MessageWithRequiredExtension {
-  required string extension1 = 1;
+  optional string extension1 = 1;
 
-  required Proto2MessageWithMixedFields extensionRequiredMsg = 2;
+  optional Proto2MessageWithMixedFields extensionRequiredMsg = 2;
 
   repeated Proto2MessageWithMixedFields extensionRepeatedMsg = 3;
 }
