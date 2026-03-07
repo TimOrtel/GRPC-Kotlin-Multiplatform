@@ -61,6 +61,9 @@ data class ProtoProject(
         return object : CodeNameResolver {
             override val reservedNames: Set<String> = emptySet()
             override val consideredNodes: List<SourceCodeNamedNode> = consideredNodes
+
+            override val conflictResolutionStrategy: CodeNameResolver.ConflictResolutionStrategy
+                get() = CodeNameResolver.ConflictResolutionStrategy.appendNumber
         }
     }
 

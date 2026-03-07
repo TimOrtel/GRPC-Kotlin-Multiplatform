@@ -74,6 +74,9 @@ data class ProtoFile(
         override val reservedNames: Set<String> = emptySet()
 
         override val consideredNodes: List<SourceCodeNamedNode> = topLevelDeclarations
+
+        override val conflictResolutionStrategy: CodeNameResolver.ConflictResolutionStrategy
+            get() = CodeNameResolver.ConflictResolutionStrategy.appendNumber
     }
 
     override val kotlinIdiomaticTextCase: TextCase

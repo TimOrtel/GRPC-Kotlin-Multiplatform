@@ -9,7 +9,7 @@ interface CodeNameResolver {
 
     val consideredNodes: List<SourceCodeNamedNode>
 
-    fun resolveNameConflict(name: String): String = "${name}_"
+    val conflictResolutionStrategy: ConflictResolutionStrategy get() = ConflictResolutionStrategy.appendUnderscore
 
     fun resolveCodeName(field: SourceCodeNamedNode): String {
         val reservedNames = reservedNames.toMutableSet()
@@ -20,8 +20,10 @@ interface CodeNameResolver {
             .forEach { currentNode ->
                 var attributeName = currentNode.desiredCodeName
 
+                var conflictCount = 1
                 while (attributeName in reservedNames) {
-                    attributeName = resolveNameConflict(attributeName)
+                    attributeName = conflictResolutionStrategy.resolveNameConflict(currentNode.desiredCodeName, attributeName, conflictCount)
+                    conflictCount++
                 }
 
                 if (currentNode == field) return attributeName
@@ -31,5 +33,27 @@ interface CodeNameResolver {
             }
 
         throw IllegalArgumentException("field=$field not child of resolver=$this. Known children=$consideredNodes.")
+    }
+
+    interface ConflictResolutionStrategy {
+        fun resolveNameConflict(originalName: String, currentName: String, conflictCount: Int): String = "${currentName}_"
+
+        companion object {
+            val appendUnderscore: ConflictResolutionStrategy = object : ConflictResolutionStrategy {
+                override fun resolveNameConflict(
+                    originalName: String,
+                    currentName: String,
+                    conflictCount: Int
+                ): String = "${currentName}_"
+            }
+
+            val appendNumber: ConflictResolutionStrategy = object : ConflictResolutionStrategy {
+                override fun resolveNameConflict(
+                    originalName: String,
+                    currentName: String,
+                    conflictCount: Int
+                ): String = "${currentName}$conflictCount"
+            }
+        }
     }
 }
