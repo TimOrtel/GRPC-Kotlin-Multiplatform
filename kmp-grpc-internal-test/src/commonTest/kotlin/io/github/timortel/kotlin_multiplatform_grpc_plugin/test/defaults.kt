@@ -30,7 +30,7 @@ fun createMessageWithAllTypes() = messageWithEverything {
     field4 = 25L
     field5 = 3f
     field6 = 7.0
-    field7 = SimpleEnum.ONE
+    field7 = SimpleEnum.One
     field8 = simpleMessage { field1 = "Foo" }
 
     field9List += listOf("Foo", "Bar", "Baz")
@@ -39,11 +39,11 @@ fun createMessageWithAllTypes() = messageWithEverything {
     field12List += listOf(12L, 23424L, 10312313L, -123131L)
     field13List += listOf(-1f, 2f, 2.5f, -0.5f)
     field14List += listOf(-0.5, 15.0)
-    field15List += listOf(SimpleEnum.ZERO, SimpleEnum.ZERO, SimpleEnum.ONE, SimpleEnum.TWO)
+    field15List += listOf(SimpleEnum.Zero, SimpleEnum.Zero, SimpleEnum.One, SimpleEnum.Two)
 
     field16Map += mapOf("foo" to 1, "bar" to -13, "baz" to 112)
     field17Map += mapOf(1 to simpleMessage { field1 = "Foo" }, 13 to simpleMessage { field1 = "Baz" })
-    field18Map += mapOf(-15 to SimpleEnum.ONE, 23 to SimpleEnum.TWO)
+    field18Map += mapOf(-15 to SimpleEnum.One, 23 to SimpleEnum.Two)
 
     field19 = 12u
     field20 = 14uL
@@ -74,7 +74,7 @@ fun createMessageWithAllExtensions() = ExtensionsTest.MessageWithEveryExtension(
         set(ExtensionsTest.field4, 25L)
         set(ExtensionsTest.field5, 3f)
         set(ExtensionsTest.field6, 7.0)
-        set(ExtensionsTest.field7, SimpleEnum.ONE)
+        set(ExtensionsTest.field7, SimpleEnum.One)
         set(ExtensionsTest.field8, simpleMessage { field1 = "Foo" })
 
         set(ExtensionsTest.field9List, listOf("Foo", "Bar", "Baz"))
@@ -83,7 +83,7 @@ fun createMessageWithAllExtensions() = ExtensionsTest.MessageWithEveryExtension(
         set(ExtensionsTest.field12List, listOf(12L, 23424L, 10312313L, -123131L))
         set(ExtensionsTest.field13List, listOf(-1f, 2f, 2.5f, -0.5f))
         set(ExtensionsTest.field14List, listOf(-0.5, 15.0))
-        set(ExtensionsTest.field15List, listOf(SimpleEnum.ZERO, SimpleEnum.ZERO, SimpleEnum.ONE, SimpleEnum.TWO))
+        set(ExtensionsTest.field15List, listOf(SimpleEnum.Zero, SimpleEnum.Zero, SimpleEnum.One, SimpleEnum.Two))
 
         set(ExtensionsTest.field19, 12u)
         set(ExtensionsTest.field20, 14uL)

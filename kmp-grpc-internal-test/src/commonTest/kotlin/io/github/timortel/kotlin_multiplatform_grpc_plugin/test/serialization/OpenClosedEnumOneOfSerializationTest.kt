@@ -13,14 +13,14 @@ class OpenClosedEnumOneOfSerializationTest {
         runClosedOneOfDeserializationTest(
             UnknownField.Varint(1, 0),
             ClosedEnumTest.MessageWithClosedOneOf.A.B(
-                ClosedEnumTest.ClosedEnum.DEFAULT
+                ClosedEnumTest.ClosedEnum.Default
             ),
             emptyList()
         )
         runClosedOneOfDeserializationTest(
             UnknownField.Varint(1, 1),
             ClosedEnumTest.MessageWithClosedOneOf.A.B(
-                ClosedEnumTest.ClosedEnum.ONE
+                ClosedEnumTest.ClosedEnum.One
             ),
             emptyList()
         )
@@ -49,14 +49,14 @@ class OpenClosedEnumOneOfSerializationTest {
         runOpenOneOfDeserializationTest(
             UnknownField.Varint(1, 0),
             OpenEnumTest.MessageWithOpenOneOf.A.B(
-                OpenEnumTest.OpenEnum.DEFAULT
+                OpenEnumTest.OpenEnum.Default
             ),
             emptyList()
         )
         runOpenOneOfDeserializationTest(
             UnknownField.Varint(1, 1),
             OpenEnumTest.MessageWithOpenOneOf.A.B(
-                OpenEnumTest.OpenEnum.ONE
+                OpenEnumTest.OpenEnum.One
             ),
             emptyList()
         )

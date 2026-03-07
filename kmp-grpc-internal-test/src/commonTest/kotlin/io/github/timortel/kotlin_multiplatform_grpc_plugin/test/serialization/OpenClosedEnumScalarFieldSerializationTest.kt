@@ -10,11 +10,11 @@ class OpenClosedEnumScalarFieldSerializationTest {
 
     @Test
     fun testClosedScalarDeserializationScenarios() {
-        runClosedScalarDeserializationTest(UnknownField.Varint(1, 0), ClosedEnumTest.ClosedEnum.DEFAULT, emptyList())
-        runClosedScalarDeserializationTest(UnknownField.Varint(1, 1), ClosedEnumTest.ClosedEnum.ONE, emptyList())
+        runClosedScalarDeserializationTest(UnknownField.Varint(1, 0), ClosedEnumTest.ClosedEnum.Default, emptyList())
+        runClosedScalarDeserializationTest(UnknownField.Varint(1, 1), ClosedEnumTest.ClosedEnum.One, emptyList())
         runClosedScalarDeserializationTest(
             UnknownField.Varint(1, 2),
-            ClosedEnumTest.ClosedEnum.DEFAULT,
+            ClosedEnumTest.ClosedEnum.Default,
             listOf(UnknownField.Varint(1, 2))
         )
     }
@@ -34,8 +34,8 @@ class OpenClosedEnumScalarFieldSerializationTest {
 
     @Test
     fun testOpenScalarDeserializationScenarios() {
-        runOpenScalarDeserializationTest(UnknownField.Varint(1, 0), OpenEnumTest.OpenEnum.DEFAULT, emptyList())
-        runOpenScalarDeserializationTest(UnknownField.Varint(1, 1), OpenEnumTest.OpenEnum.ONE, emptyList())
+        runOpenScalarDeserializationTest(UnknownField.Varint(1, 0), OpenEnumTest.OpenEnum.Default, emptyList())
+        runOpenScalarDeserializationTest(UnknownField.Varint(1, 1), OpenEnumTest.OpenEnum.One, emptyList())
         runOpenScalarDeserializationTest(
             UnknownField.Varint(1, 2),
             OpenEnumTest.OpenEnum.Unrecognized(2),

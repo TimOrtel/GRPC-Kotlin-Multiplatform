@@ -117,7 +117,7 @@ class DSLBuilderTest {
 
     @Test
     fun testCreateEnumMessage() {
-        val enum = SimpleEnum.ONE
+        val enum = SimpleEnum.One
 
         val msg = messageWithEnum {
             field1 = enum
@@ -128,7 +128,7 @@ class DSLBuilderTest {
 
     @Test
     fun testCreateRepeatedEnumMessage() {
-        val list = listOf(SimpleEnum.ONE, SimpleEnum.TWO, SimpleEnum.ZERO, SimpleEnum.ONE)
+        val list = listOf(SimpleEnum.One, SimpleEnum.Two, SimpleEnum.Zero, SimpleEnum.One)
 
         val msg = messageWithRepeatedEnum {
             field1List += list
@@ -191,11 +191,11 @@ class DSLBuilderTest {
     @Test
     fun testCreateMessageWithEnumMap() {
         val map = mapOf(
-            33 to SimpleEnum.ONE,
-            12 to SimpleEnum.TWO,
-            13 to SimpleEnum.TWO,
-            -12 to SimpleEnum.ONE,
-            5 to SimpleEnum.ZERO
+            33 to SimpleEnum.One,
+            12 to SimpleEnum.Two,
+            13 to SimpleEnum.Two,
+            -12 to SimpleEnum.One,
+            5 to SimpleEnum.Zero
         )
 
         val msg = messageWithEnumMap {

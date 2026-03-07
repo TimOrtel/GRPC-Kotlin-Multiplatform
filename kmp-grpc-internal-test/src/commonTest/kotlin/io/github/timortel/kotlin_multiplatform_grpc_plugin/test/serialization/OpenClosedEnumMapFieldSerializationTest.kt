@@ -15,8 +15,8 @@ class OpenClosedEnumMapFieldSerializationTest {
                 2 to 1
             ),
             expectedValues = mapOf(
-                1 to ClosedEnumTest.ClosedEnum.DEFAULT,
-                2 to ClosedEnumTest.ClosedEnum.ONE,
+                1 to ClosedEnumTest.ClosedEnum.Default,
+                2 to ClosedEnumTest.ClosedEnum.One,
             ),
             expectedUnknownFieldCount = 0
         )
@@ -28,7 +28,7 @@ class OpenClosedEnumMapFieldSerializationTest {
                 3 to 2
             ),
             expectedValues = mapOf(
-                2 to ClosedEnumTest.ClosedEnum.ONE
+                2 to ClosedEnumTest.ClosedEnum.One
             ),
             expectedUnknownFieldCount = 2
         )
@@ -57,8 +57,8 @@ class OpenClosedEnumMapFieldSerializationTest {
                 2 to 1
             ),
             expectedValues = mapOf(
-                1 to OpenEnumTest.OpenEnum.DEFAULT,
-                2 to OpenEnumTest.OpenEnum.ONE,
+                1 to OpenEnumTest.OpenEnum.Default,
+                2 to OpenEnumTest.OpenEnum.One,
             ),
             expectedUnknownFieldCount = 0
         )
@@ -71,7 +71,7 @@ class OpenClosedEnumMapFieldSerializationTest {
             ),
             expectedValues = mapOf(
                 1 to OpenEnumTest.OpenEnum.Unrecognized(-1),
-                2 to OpenEnumTest.OpenEnum.ONE,
+                2 to OpenEnumTest.OpenEnum.One,
                 3 to OpenEnumTest.OpenEnum.Unrecognized(2)
             ),
             expectedUnknownFieldCount = 0

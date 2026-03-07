@@ -13,16 +13,16 @@ class OpenClosedEnumRepeatedFieldSerializationTest {
     fun testClosedRepeatedDeserializationScenarios() {
         runClosedRepeatedDeserializationTest(
             fields = listOf(0),
-            expectedValues = listOf(ClosedEnumTest.ClosedEnum.DEFAULT),
+            expectedValues = listOf(ClosedEnumTest.ClosedEnum.Default),
             expectedUnknownFields = emptyList()
         )
 
         runClosedRepeatedDeserializationTest(
             fields = listOf(0, 1, 0),
             expectedValues = listOf(
-                ClosedEnumTest.ClosedEnum.DEFAULT,
-                ClosedEnumTest.ClosedEnum.ONE,
-                ClosedEnumTest.ClosedEnum.DEFAULT
+                ClosedEnumTest.ClosedEnum.Default,
+                ClosedEnumTest.ClosedEnum.One,
+                ClosedEnumTest.ClosedEnum.Default
             ),
             expectedUnknownFields = emptyList()
         )
@@ -30,7 +30,7 @@ class OpenClosedEnumRepeatedFieldSerializationTest {
         runClosedRepeatedDeserializationTest(
             fields = listOf(-4, 3, 1),
             expectedValues = listOf(
-                ClosedEnumTest.ClosedEnum.ONE
+                ClosedEnumTest.ClosedEnum.One
             ),
             expectedUnknownFields = listOf(
                 UnknownField.Varint(1, -4),
@@ -68,16 +68,16 @@ class OpenClosedEnumRepeatedFieldSerializationTest {
     fun testOpenRepeatedDeserializationScenarios() {
         runOpenRepeatedDeserializationTest(
             fields = listOf(0),
-            expectedValues = listOf(OpenEnumTest.OpenEnum.DEFAULT),
+            expectedValues = listOf(OpenEnumTest.OpenEnum.Default),
             expectedUnknownFields = emptyList()
         )
 
         runOpenRepeatedDeserializationTest(
             fields = listOf(0, 1, 0),
             expectedValues = listOf(
-                OpenEnumTest.OpenEnum.DEFAULT,
-                OpenEnumTest.OpenEnum.ONE,
-                OpenEnumTest.OpenEnum.DEFAULT
+                OpenEnumTest.OpenEnum.Default,
+                OpenEnumTest.OpenEnum.One,
+                OpenEnumTest.OpenEnum.Default
             ),
             expectedUnknownFields = emptyList()
         )
@@ -87,7 +87,7 @@ class OpenClosedEnumRepeatedFieldSerializationTest {
             expectedValues = listOf(
                 OpenEnumTest.OpenEnum.Unrecognized(-4),
                 OpenEnumTest.OpenEnum.Unrecognized(3),
-                OpenEnumTest.OpenEnum.ONE,
+                OpenEnumTest.OpenEnum.One,
             ),
             expectedUnknownFields = emptyList()
         )

@@ -115,8 +115,6 @@ kmpGrpc {
 
     includeWellKnownTypes = true
 
-    namingStrategy = NamingStrategy.LEGACY
-
     protoSourceFolders = project.files(
         "src/commonMain/proto/general",
         "src/commonMain/proto/unknownfield",
