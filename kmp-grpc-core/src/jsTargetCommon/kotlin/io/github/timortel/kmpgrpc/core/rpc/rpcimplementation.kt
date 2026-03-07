@@ -15,9 +15,9 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
+import kotlinx.coroutines.channels.ProducerScope
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.FlowCollector
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.channelFlow
 import kotlinx.io.Buffer
 import kotlinx.io.Source
 import kotlinx.io.readByteArray
@@ -92,7 +92,7 @@ private fun <Request : Message, Response : Message> grpcImplementation(
 ): Flow<Response> {
     val metadata = callOptions.metadata
 
-    return flow {
+    return channelFlow {
         channel.registerRpc()
 
         try {
@@ -166,6 +166,7 @@ private fun <Request : Message, Response : Message> grpcImplementation(
                 throw StatusException.internal("Unexpected timeout except caught.", e)
             }
         } catch (t: Throwable) {
+            t.printStackTrace()
             throw StatusException(
                 status = Status(
                     code = Code.UNAVAILABLE,
@@ -179,7 +180,7 @@ private fun <Request : Message, Response : Message> grpcImplementation(
     }
 }
 
-private suspend fun <T : Message> FlowCollector<T>.readResponse(
+private suspend fun <T : Message> ProducerScope<T>.readResponse(
     channel: ByteReadChannel,
     methodDescriptor: MethodDescriptor,
     deserializer: MessageDeserializer<T>,
@@ -204,7 +205,7 @@ private suspend fun <T : Message> FlowCollector<T>.readResponse(
                     interceptor.onReceiveMessage(methodDescriptor, currentMessage)
                 }
 
-            emit(actualMessage)
+            send(actualMessage)
         } else if (flag == 0x80.toUByte()) {
             val headers = decodeHeadersFrame(payload)
 
