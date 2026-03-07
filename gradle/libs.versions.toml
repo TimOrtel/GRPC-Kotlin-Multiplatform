@@ -7,20 +7,20 @@ androidGradlePlugin = "8.11.2"
 androidCompileSdk = "36"
 androidMinSdk = "21"
 
-kotlin = "2.2.21"
-kotlinxIo = "0.8.0"
+kotlin = "2.3.10"
+kotlinxIo = "0.9.0"
 kotlinxCoroutines = "1.10.2"
 
-ktor = "3.3.2"
-okio = "3.16.3"
+ktor = "3.4.1"
+okio = "3.16.4"
 
-grpcJvm = "1.76.0"
+grpcJvm = "1.79.0"
 grpcKotlin = "1.5.0"
 
 # Plugin Relevant
 antlr = "4.13.2"
-gradlePluginPublish = "2.0.0"
-buildConfigPlugin = "5.7.1"
+gradlePluginPublish = "2.1.0"
+buildConfigPlugin = "6.0.9"
 
 kotlinPoet = "2.2.0"
 
