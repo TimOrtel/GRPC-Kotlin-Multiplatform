@@ -13,7 +13,7 @@ private const val DEFAULT_TYPE_URL_PREFIX = "type.googleapis.com"
  * @return a new [Any] message with the given [message] as content.
  */
 public fun <T : Message> Any.Companion.wrap(message: T, typeUrlPrefix: String = DEFAULT_TYPE_URL_PREFIX): Any = any {
-    type_url = getTypeUrl(message.fullName, typeUrlPrefix)
+    typeUrl = getTypeUrl(message.fullName, typeUrlPrefix)
     value = message.serialize()
 }
 
@@ -34,7 +34,7 @@ public fun <T : Message, DES : MessageDeserializer<T>> Any.unwrap(deserializer: 
  * @return if the type held by this object matches [T]
  */
 public fun <T : Message> Any.isType(message: MessageCompanion<T>, typeUrlPrefix: String): Boolean {
-    return type_url == getTypeUrl(message.fullName, typeUrlPrefix)
+    return typeUrl == getTypeUrl(message.fullName, typeUrlPrefix)
 }
 
 /**
@@ -44,7 +44,7 @@ public fun <T : Message> Any.isType(message: MessageCompanion<T>, typeUrlPrefix:
  * @return if the type held by this object matches [T]
  */
 public fun <T : Message> Any.isType(message: MessageCompanion<T>): Boolean {
-    return type_url.substringAfterLast('/') == message.fullName
+    return typeUrl.substringAfterLast('/') == message.fullName
 }
 
 /**
@@ -53,7 +53,7 @@ public fun <T : Message> Any.isType(message: MessageCompanion<T>): Boolean {
  * @return if the type held by this object matches the type of [message]
  */
 public fun Any.isSameTypeAs(message: Message, typeUrlPrefix: String): Boolean {
-    return type_url == getTypeUrl(message.fullName, typeUrlPrefix)
+    return typeUrl == getTypeUrl(message.fullName, typeUrlPrefix)
 }
 
 /**
@@ -62,7 +62,7 @@ public fun Any.isSameTypeAs(message: Message, typeUrlPrefix: String): Boolean {
  * @return if the type held by this object matches the type of [message]
  */
 public fun Any.isSameTypeAs(message: Message): Boolean {
-    return type_url.substringAfterLast('/') == message.fullName
+    return typeUrl.substringAfterLast('/') == message.fullName
 }
 
 private fun getTypeUrl(fullName: String, typeUrlPrefix: String): String =

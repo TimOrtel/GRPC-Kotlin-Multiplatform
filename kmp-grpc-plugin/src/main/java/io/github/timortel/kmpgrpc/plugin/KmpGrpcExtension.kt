@@ -31,6 +31,8 @@ open class KmpGrpcExtension @Inject constructor(objects: ObjectFactory) {
 
     /**
      * Instructs the plugin to download and include the well known proto-types: https://protobuf.dev/reference/protobuf/google.protobuf/
+     *
+     * Can only be used in combination with `namingStrategy` `KOTLIN_IDIOMATIC`.
      */
     val includeWellKnownTypes: Property<Boolean> = objects
         .property(Boolean::class.java)
@@ -43,6 +45,20 @@ open class KmpGrpcExtension @Inject constructor(objects: ObjectFactory) {
         .property(Boolean::class.java)
         .convention(false)
 
+    /**
+     * Configures how Protobuf messages and fields are mapped to Kotlin identifiers.
+     *
+     * This property allows you to choose between standard Protobuf naming, idiomatic
+     * Kotlin style, or the legacy behavior. It affects the generated class names,
+     * property names, and method names.
+     *
+     * Supported strategies:
+     * - [NamingStrategy.KOTLIN_IDIOMATIC]: (Default) Transforms names to Kotlin conventions
+     * (e.g., `user_id` -> `userId`, `User_Message` -> `UserMessage`).
+     * - [NamingStrategy.PROTO_LITERAL]: Preserves the exact names defined in the .proto file.
+     * - [NamingStrategy.LEGACY]: Preserves .proto names but appends "List" or "Map"
+     * suffixes to collection types (Behavior from v1.x).
+     */
     val namingStrategy: Property<NamingStrategy> = objects
         .property(NamingStrategy::class.java)
         .convention(NamingStrategy.KOTLIN_IDIOMATIC)

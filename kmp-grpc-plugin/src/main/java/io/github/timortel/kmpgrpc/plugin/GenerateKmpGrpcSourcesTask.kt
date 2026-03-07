@@ -3,6 +3,7 @@ package io.github.timortel.kmpgrpc.plugin
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.ProtoSourceGenerator
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.SystemInputFile
 import org.gradle.api.DefaultTask
+import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
@@ -84,6 +85,13 @@ abstract class GenerateKmpGrpcSourcesTask : DefaultTask() {
 
     @TaskAction
     fun generateSources() {
+        if (namingStrategy.get() != NamingStrategy.KOTLIN_IDIOMATIC && includeWellKnownTypes.get()) {
+            throw GradleException(
+                "Invalid Configuration: 'includeWellKnownTypes' can only be set to true " +
+                        "if 'namingStrategy' is set to KOTLIN_IDIOMATIC."
+            )
+        }
+
         val tsm = targetSourcesMap.get()
 
         val shouldGenerateTargetMap = KmpGrpcExtension.targets.associateWith { target ->

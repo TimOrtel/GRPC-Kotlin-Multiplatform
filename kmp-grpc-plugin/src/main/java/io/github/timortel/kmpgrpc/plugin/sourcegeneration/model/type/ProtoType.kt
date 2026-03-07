@@ -236,7 +236,7 @@ sealed interface ProtoType : ProtoNode {
                             ?: throw CompilationException.UnresolvedReference("Could not find enum entry with name $defaultValueAsString", file, ctx)
                     }
 
-                    CodeBlock.of("%T.%N", decl.className, defaultValue.name)
+                    CodeBlock.of("%T.%N", decl.className, defaultValue.codeName)
                 }
 
                 is ProtoMessage -> {

@@ -128,7 +128,7 @@ abstract class ProtoEnumerationWriter(val isActual: Boolean) {
                         .beginControlFlow("when(num)")
                         .apply {
                             protoEnum.fields.forEach { field ->
-                                add("%L -> %N\n", field.number, field.name)
+                                add("%L -> %N\n", field.number, field.codeName)
                             }
                             if (orNullVersion) {
                                 add("else -> null\n")

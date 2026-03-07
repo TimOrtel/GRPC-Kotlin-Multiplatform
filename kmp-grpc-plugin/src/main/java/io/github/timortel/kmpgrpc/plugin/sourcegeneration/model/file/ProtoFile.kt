@@ -3,6 +3,7 @@ package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.file
 import com.squareup.kotlinpoet.ClassName
 import dev.turingcomplete.textcaseconverter.StandardTextCases
 import dev.turingcomplete.textcaseconverter.TextCase
+import io.github.timortel.kmpgrpc.plugin.NamingStrategy
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.*
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoStructureDeclaration
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.ProtoEnum
@@ -57,12 +58,16 @@ data class ProtoFile(
             return Options.Basic.javaPackage.get(this) ?: `package`.orEmpty()
         }
 
-    val javaFileName: String
-        get() {
-            return Options.Basic.javaOuterClassName.get(this) ?: fileNameWithoutExtension.snakeCaseToCamelCase()
-        }
+    override val name: String get() = Options.Basic.javaOuterClassName.get(this) ?: when (project.namingStrategy) {
+        NamingStrategy.LEGACY -> fileNameWithoutExtension.snakeCaseToCamelCase()
+        NamingStrategy.PROTO_LITERAL, NamingStrategy.KOTLIN_IDIOMATIC -> fileNameWithoutExtension
+    }
 
-    val className: ClassName get() = ClassName(javaPackage, javaFileName)
+    override val codeName: String by lazy {
+        super.codeName
+    }
+
+    val className: ClassName get() = ClassName(javaPackage, codeName)
 
     override val optionTarget: OptionTarget = OptionTarget.FILE
 
@@ -81,8 +86,6 @@ data class ProtoFile(
 
     override val kotlinIdiomaticTextCase: TextCase
         get() = StandardTextCases.PASCAL_CASE
-
-    override val name: String = fileName
 
     override val codeNameResolver: CodeNameResolver
         get() = project.getCodeNameResolverForKotlinPackage(javaPackage)
@@ -120,8 +123,8 @@ data class ProtoFile(
 
         override val kotlinIdiomaticTextCase: TextCase = StandardTextCases.PASCAL_CASE
 
-        override val name: String = file.name
-        override val desiredCodeName: String = "${name}Dsl"
+        override val name: String get() = file.name
+        override val desiredCodeName: String get() = "${name}Dsl"
 
         override val codeNameResolver: CodeNameResolver
             get() = file.codeNameResolver
