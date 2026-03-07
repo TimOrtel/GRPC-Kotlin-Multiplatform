@@ -44,7 +44,7 @@ jobs:
           --verbose \
           --header "Authorization: Bearer $TOKEN" \
           --form bundle=@kmp-grpc-core-${{ inputs.version }}.zip \
-          "https://central.sonatype.com/api/v1/publisher/upload?publishingType=USER_MANAGED&name=io.github.timortel%3Akmp-grpc-core%3A${{ inputs.version }}
+          "https://central.sonatype.com/api/v1/publisher/upload?publishingType=USER_MANAGED&name=io.github.timortel%3Akmp-grpc-core%3A${{ inputs.version }}")
           echo "deployment_id=$RESPONSE" >> "$GITHUB_OUTPUT"
 
       - name: Wait for deployment to be ready
