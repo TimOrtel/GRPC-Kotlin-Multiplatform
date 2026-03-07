@@ -367,7 +367,7 @@ You can construct a message of type `MyMessage` like this:
 val msg = Sample.MyMessage(
     regularField = "val1", 
     extensions = buildExtensions {
-        set[Sample.myExtension] = "val2"
+        set(Sample.myExtension, "val2")
     }
 )
 ```

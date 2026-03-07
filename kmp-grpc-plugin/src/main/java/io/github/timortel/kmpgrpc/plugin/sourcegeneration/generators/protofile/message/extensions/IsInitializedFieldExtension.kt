@@ -2,6 +2,7 @@ package io.github.timortel.kmpgrpc.plugin.sourcegeneration.generators.protofile.
 
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.TypeSpec
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.SourceTarget
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.Const
@@ -34,7 +35,13 @@ object IsInitializedFieldExtension : MessageWriterExtension {
 
                                 val subMessages = subMessageFields + subMessageMapFields + oneOfs
 
-                                if (requiredFields.isEmpty() && subMessages.isEmpty()) {
+                                val consideredExtensionFields = message.extensionsInProject.flatMap { extensions ->
+                                    extensions.fields.filter { field ->
+                                        field.cardinality.isLegacyRequired || field.type.isMessage
+                                    }
+                                }
+
+                                if (requiredFields.isEmpty() && subMessages.isEmpty() && consideredExtensionFields.isEmpty()) {
                                     add("true")
                                 } else {
                                     val separator = " && "
@@ -51,6 +58,7 @@ object IsInitializedFieldExtension : MessageWriterExtension {
                                                     Const.Message.isInitializedProperty.name
                                                 )
                                             }
+
                                             ProtoFieldCardinality.Repeated -> {
                                                 add(
                                                     "%N.all { it.%N }",
@@ -77,7 +85,48 @@ object IsInitializedFieldExtension : MessageWriterExtension {
                                         )
                                     }
 
-                                    val impl = listOf(requiredFieldsBool, subMessageFieldsBool, subMessageOneOfFieldsBool, subMessageMapFieldsBool).joinCodeBlocks(separator)
+                                    val requiredExtensionFieldsBool =
+                                        consideredExtensionFields.joinToCodeBlock(separator) { field ->
+                                            val extensionMember = MemberName(field.file.className, field.codeName)
+
+                                            when (field.cardinality) {
+                                                is ProtoFieldCardinality.Singular -> {
+                                                    if (field.type.isMessage) {
+                                                        add(
+                                                            "%N[%M]?.%N == true",
+                                                            Const.Message.Constructor.MessageExtensions.name,
+                                                            extensionMember,
+                                                            Const.Message.isInitializedProperty.name
+                                                        )
+                                                    } else {
+                                                        add(
+                                                            "%N[%M] != null",
+                                                            Const.Message.Constructor.MessageExtensions.name,
+                                                            extensionMember
+                                                        )
+                                                    }
+                                                }
+
+                                                ProtoFieldCardinality.Repeated -> {
+                                                    if (field.type.isMessage) {
+                                                        add(
+                                                            "%N[%M].all { it.%N }",
+                                                            Const.Message.Constructor.MessageExtensions.name,
+                                                            extensionMember,
+                                                            Const.Message.isInitializedProperty.name
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                    val impl = listOf(
+                                        requiredFieldsBool,
+                                        subMessageFieldsBool,
+                                        subMessageOneOfFieldsBool,
+                                        subMessageMapFieldsBool,
+                                        requiredExtensionFieldsBool
+                                    ).joinCodeBlocks(separator)
 
                                     add(impl)
                                 }
