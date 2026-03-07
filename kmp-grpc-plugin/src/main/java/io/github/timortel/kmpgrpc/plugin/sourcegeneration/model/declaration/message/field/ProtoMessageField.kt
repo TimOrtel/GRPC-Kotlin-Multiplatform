@@ -3,6 +3,7 @@ package io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.declaration.mes
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.MemberName.Companion.member
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import io.github.timortel.kmpgrpc.plugin.NamingStrategy
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.CompilationException
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.constants.Const
 import io.github.timortel.kmpgrpc.plugin.sourcegeneration.model.DeclarationResolver
@@ -87,7 +88,10 @@ class ProtoMessageField(
     override val desiredCodeName: String
         get() = when (cardinality) {
             is ProtoFieldCardinality.Singular -> transformedKotlinName
-            ProtoFieldCardinality.Repeated -> if (transformedKotlinName.endsWith("List")) transformedKotlinName else "${transformedKotlinName}List"
+            ProtoFieldCardinality.Repeated -> when (project.namingStrategy) {
+                NamingStrategy.PROTO_LITERAL -> transformedKotlinName
+                NamingStrategy.KOTLIN_IDIOMATIC, NamingStrategy.LEGACY -> if (transformedKotlinName.endsWith("List")) transformedKotlinName else "${transformedKotlinName}List"
+            }
         }
 
     override val propertyType: TypeName
@@ -147,7 +151,7 @@ class ProtoMessageField(
                 is Parent.Message -> p.message.className
             }
 
-            return parentClassName.member(name)
+            return parentClassName.member(codeName)
         }
 
     override val optionTarget: OptionTarget

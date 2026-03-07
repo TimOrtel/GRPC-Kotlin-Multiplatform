@@ -23,7 +23,7 @@ interface SourceCodeNamedNode {
      */
     val transformedKotlinName: String
         get() = when (project.namingStrategy) {
-            NamingStrategy.PROTO_LITERAL -> name
+            NamingStrategy.PROTO_LITERAL, NamingStrategy.LEGACY -> name
             NamingStrategy.KOTLIN_IDIOMATIC -> {
                 // Ensure the input is treated as one cohesive "word" set before converting
                 val normalizedName = name.trim('_') // Protobuf allows __internal__ names

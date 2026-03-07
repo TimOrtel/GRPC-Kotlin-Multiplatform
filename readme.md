@@ -432,6 +432,18 @@ kmpGrpc {
     
     // Optional: if all generated source files should have 'internal' visibility.
     internalVisibility = true
+
+    /*
+     * Defines the naming convention for generated classes and properties.
+     * * - [NamingStrategy.KOTLIN_IDIOMATIC] (Default): Transforms names to match Kotlin 
+     * conventions (e.g., snake_case fields become camelCase, messages become PascalCase).
+     * Repeated fields are automatically suffixed with "List".
+     * * - [NamingStrategy.PROTO_LITERAL]: Keeps names exactly as they are defined 
+     * in the .proto source files.
+     * * - [NamingStrategy.LEGACY]: Matches the behavior of major version 1 of this library. Keeps the 
+     * original .proto names but appends "List" and "Map" suffixes where applicable.
+     */
+    namingStrategy = NamingStrategy.KOTLIN_IDIOMATIC
     
     // Specify the folders where your proto files are located, you can list multiple.
     protoSourceFolders = project.files("<source to your protos>")

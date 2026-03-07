@@ -9,7 +9,7 @@ interface OneOfSealedClassNameHolder : SourceCodeNamedNode {
 
     val sealedClassRawName: String
         get() = when (project.namingStrategy) {
-            NamingStrategy.PROTO_LITERAL -> transformedKotlinName.capitalize()
+            NamingStrategy.PROTO_LITERAL, NamingStrategy.LEGACY -> transformedKotlinName.capitalize()
             NamingStrategy.KOTLIN_IDIOMATIC -> kotlinIdiomaticTextCase.convertTo(
                 StandardTextCases.PASCAL_CASE,
                 transformedKotlinName

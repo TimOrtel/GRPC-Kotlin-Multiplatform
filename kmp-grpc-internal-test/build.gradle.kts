@@ -1,3 +1,4 @@
+import io.github.timortel.kmpgrpc.plugin.NamingStrategy
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 
@@ -113,6 +114,8 @@ kmpGrpc {
     native()
 
     includeWellKnownTypes = true
+
+    namingStrategy = NamingStrategy.LEGACY
 
     protoSourceFolders = project.files(
         "src/commonMain/proto/general",
