@@ -38,7 +38,8 @@ data class ProtoMapField(
     override val desiredCodeName: String
         get() = when (project.namingStrategy) {
             NamingStrategy.PROTO_LITERAL -> transformedKotlinName
-            NamingStrategy.KOTLIN_IDIOMATIC, NamingStrategy.LEGACY -> if (transformedKotlinName.endsWith("Map")) transformedKotlinName else "${transformedKotlinName}Map"
+            NamingStrategy.LEGACY -> "${transformedKotlinName}Map"
+            NamingStrategy.KOTLIN_IDIOMATIC -> if (transformedKotlinName.endsWith("Map")) transformedKotlinName else "${transformedKotlinName}Map"
         }
 
     override val propertyType: TypeName

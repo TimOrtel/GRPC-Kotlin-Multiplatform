@@ -81,7 +81,9 @@ class ProtoMessageField(
                 )
 
                 FieldCardinality.REPEATED -> ProtoFieldCardinality.Repeated
-                FieldCardinality.SINGULAR_OPTIONAL, FieldCardinality.SINGULAR_REQUIRED -> throw IllegalArgumentException("field cardinality $fieldCardinality is illegal for edition versions.")
+                FieldCardinality.SINGULAR_OPTIONAL, FieldCardinality.SINGULAR_REQUIRED -> throw IllegalArgumentException(
+                    "field cardinality $fieldCardinality is illegal for edition versions."
+                )
             }
         }
 
@@ -90,7 +92,8 @@ class ProtoMessageField(
             is ProtoFieldCardinality.Singular -> transformedKotlinName
             ProtoFieldCardinality.Repeated -> when (project.namingStrategy) {
                 NamingStrategy.PROTO_LITERAL -> transformedKotlinName
-                NamingStrategy.KOTLIN_IDIOMATIC, NamingStrategy.LEGACY -> if (transformedKotlinName.endsWith("List")) transformedKotlinName else "${transformedKotlinName}List"
+                NamingStrategy.LEGACY -> "${transformedKotlinName}List"
+                NamingStrategy.KOTLIN_IDIOMATIC -> if (transformedKotlinName.endsWith("List")) transformedKotlinName else "${transformedKotlinName}List"
             }
         }
 
@@ -110,7 +113,8 @@ class ProtoMessageField(
      */
     val needsIsSetProperty: Boolean
         get() {
-            val isSingularMessage = type is ProtoType.DefType && type.isMessage && cardinality != ProtoFieldCardinality.Repeated
+            val isSingularMessage =
+                type is ProtoType.DefType && type.isMessage && cardinality != ProtoFieldCardinality.Repeated
 
             return when (file.languageVersion) {
                 ProtoLanguageVersion.PROTO2 -> cardinality is ProtoFieldCardinality.Singular
