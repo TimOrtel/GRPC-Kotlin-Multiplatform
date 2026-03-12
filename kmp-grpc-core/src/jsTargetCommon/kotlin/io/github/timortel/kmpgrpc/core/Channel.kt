@@ -66,4 +66,6 @@ actual class Channel private constructor(
     override fun cleanupResources() {
         client.close()
     }
+
+    actual fun resetConnectBackoff() {}
 }

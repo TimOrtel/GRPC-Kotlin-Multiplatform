@@ -179,6 +179,8 @@ actual class Channel private constructor(
             init(ENABLE_TRACE_LOGGING)
         }
     }
+
+    actual fun resetConnectBackoff() {}
 }
 
 private fun installCertificates(

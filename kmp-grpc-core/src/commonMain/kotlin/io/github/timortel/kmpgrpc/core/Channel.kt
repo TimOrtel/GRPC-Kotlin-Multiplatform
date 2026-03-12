@@ -69,6 +69,7 @@ expect class Channel {
          */
         fun withClientIdentity(certificate: Certificate, key: PrivateKey): Builder
 
+
         /**
          * Construct the channel
          *
@@ -93,6 +94,15 @@ expect class Channel {
      */
     suspend fun shutdown()
 
+
+    /**
+     * For subchannels that are in TRANSIENT_FAILURE state, short-circuit the backoff timer and make them reconnect immediately
+     *
+     * This is primarily intended for Android users, where the network may experience frequent temporary drops. Rather than waiting for gRPC's name resolution and reconnect timers to elapse before reconnecting, the app may use this method as a mechanism to notify gRPC that the network is now available and a reconnection attempt may occur immediately.
+     *
+     * No-op if not supported by the implementation.
+     */
+    fun resetConnectBackoff()
     /**
      * Initiates a forceful shutdown of the gRPC channel. After invoking this method, no new calls
      * can be started, and ongoing calls are immediately canceled.
