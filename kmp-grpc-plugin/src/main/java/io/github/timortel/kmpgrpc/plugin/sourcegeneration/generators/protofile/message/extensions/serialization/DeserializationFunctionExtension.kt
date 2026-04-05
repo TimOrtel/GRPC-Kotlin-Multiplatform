@@ -370,6 +370,7 @@ class DeserializationFunctionExtension : BaseSerializationExtension() {
             addCode(
                 MessageConstructorCallWriter.getConstructorCallCode(
                     message = message,
+                    useMemberImport = false,
                     type = MessageConstructorCallWriter.ConstructorType.BUILD_PARTIAL,
                     getFieldParameter = { CodeBlock.of("%N", it.codeName) },
                     getMapFieldParameter = { CodeBlock.of("%N", it.codeName) },
