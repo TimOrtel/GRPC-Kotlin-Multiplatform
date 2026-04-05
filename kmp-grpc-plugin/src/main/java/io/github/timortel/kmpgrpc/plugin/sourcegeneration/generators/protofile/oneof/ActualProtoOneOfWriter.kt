@@ -17,7 +17,7 @@ abstract class ActualProtoOneOfWriter : ProtoOneOfWriter(true) {
     override val attrs: List<KModifier> = listOf(KModifier.ACTUAL)
 
     override fun modifyOneOfProperty(builder: PropertySpec.Builder, oneOf: ProtoOneOf) {
-        builder.initializer(oneOf.name)
+        builder.initializer(oneOf.codeName)
     }
 
     override fun modifyParentClass(builder: TypeSpec.Builder, oneOf: ProtoOneOf) {
