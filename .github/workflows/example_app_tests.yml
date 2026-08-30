@@ -42,7 +42,7 @@ jobs:
       - name: Run tests
         run: |
           cd examples/compose-example
-          ./gradlew :composeApp:testDebugUnitTest :composeApp:desktopTest
+          ./gradlew :composeApp:testAndroidHostTest :composeApp:desktopTest
 
   test-js:
     runs-on: ubuntu-latest

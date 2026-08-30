@@ -9,7 +9,10 @@ kotlin {
     jvmToolchain(17)
 
     android {
-        compileSdk = 37
+        compileSdk = 36
+        defaultConfig {
+            minSdk = 21
+        }
         namespace = "io.github.timortel.kmpgrpc.example.android"
 
         compilerOptions { jvmTarget.set(JvmTarget.JVM_17) }

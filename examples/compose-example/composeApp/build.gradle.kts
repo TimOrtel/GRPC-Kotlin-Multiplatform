@@ -37,6 +37,10 @@ kotlin {
             withHostTest {
                 isIncludeAndroidResources = true
             }
+
+            androidResources {
+                enable = true
+            }
         }
 
         jvm("desktop")
@@ -108,7 +112,7 @@ kotlin {
                 implementation(libs.io.grpc.okhttp)
             }
 
-            androidUnitTest {
+            getByName("androidHostTest") {
                 dependencies {
                     implementation(libs.androidx.test.junit)
                     implementation(libs.androidx.ui.test.manifest)
