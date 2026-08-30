@@ -31,7 +31,7 @@ fun Project.getTargetGroup(): TargetGroup {
 fun KotlinMultiplatformExtension.setupTargets(project: Project) {
     val targetsTarget = project.getTargetGroup()
 
-    val enabledTargets = when(targetsTarget) {
+    val enabledTargets = when (targetsTarget) {
         TargetGroup.ALL -> Targets.values().toList()
         TargetGroup.NATIVE_APPLE -> listOf(Targets.NATIVE_APPLE)
         TargetGroup.NATIVE_OTHERS_TESTABLE -> listOf(Targets.NATIVE_OTHERS_TESTABLE)
@@ -40,13 +40,8 @@ fun KotlinMultiplatformExtension.setupTargets(project: Project) {
         TargetGroup.NON_APPLE_TESTABLE -> listOf(Targets.JVM, Targets.JS, Targets.NATIVE_OTHERS_TESTABLE)
     }
 
-    // Android always has to be included.
-    androidTarget("android") {
-        publishLibraryVariants("release", "debug")
-    }
-
     if (Targets.JS in enabledTargets) {
-        js(IR) {
+        js {
             browser()
             nodejs()
         }

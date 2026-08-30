@@ -1,28 +1,28 @@
 [versions]
-grpcKotlinMultiplatform = "2.0.0"
+grpcKotlinMultiplatform = "2.0.1"
 
-androidGradlePlugin = "8.11.2"
+androidGradlePlugin = "9.1.1"
 
 # Core Lib Relevant
 androidCompileSdk = "36"
 androidMinSdk = "21"
 
-kotlin = "2.3.10"
-kotlinxIo = "0.9.0"
-kotlinxCoroutines = "1.10.2"
+kotlin = "2.4.10"
+kotlinxIo = "0.9.1"
+kotlinxCoroutines = "1.11.0"
 
-ktor = "3.4.1"
-okio = "3.16.4"
+ktor = "3.5.2"
+okio = "3.18.1"
 
-grpcJvm = "1.79.0"
+grpcJvm = "1.83.1"
 grpcKotlin = "1.5.0"
 
 # Plugin Relevant
 antlr = "4.13.2"
-gradlePluginPublish = "2.1.0"
-buildConfigPlugin = "6.0.9"
+gradlePluginPublish = "2.1.1"
+buildConfigPlugin = "6.0.10"
 
-kotlinPoet = "2.2.0"
+kotlinPoet = "2.3.0"
 
 textCaseConverter = "2.0.0"
 
@@ -30,13 +30,13 @@ textCaseConverter = "2.0.0"
 protobufJvm = "3.25.6"
 protobufGradlePlugin = "0.9.5"
 
-slf4jSimple = "2.0.17"
+slf4jSimple = "2.0.18"
 
 junit = "5.13.4"
-mockk = "1.14.5"
-testParameterInjector = "1.20"
+mockk = "1.14.11"
+testParameterInjector = "1.22"
 
-guava = "33.5.0-jre"
+guava = "33.7.1-jre"
 
 [libraries]
 antlr = { group = "org.antlr", name = "antlr4", version.ref = "antlr" }
@@ -81,7 +81,7 @@ junit-platform-launcher = { group = "org.junit.platform", name = "junit-platform
 mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 
 [plugins]
-android-library = { id = "com.android.library", version.ref = "androidGradlePlugin" }
+android-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "androidGradlePlugin" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 protobuf = { id = "com.google.protobuf", version.ref = "protobufGradlePlugin" }
