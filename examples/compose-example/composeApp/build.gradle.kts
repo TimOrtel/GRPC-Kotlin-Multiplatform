@@ -1,11 +1,9 @@
 @file:OptIn(ExperimentalComposeLibrary::class)
 
-import com.android.build.api.dsl.ApplicationExtension
 import org.jetbrains.compose.ExperimentalComposeLibrary
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
-import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 
 val appleTargetsOnlyProperty = "appleTargetsOnly"
@@ -18,10 +16,7 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kmpGrpcPlugin)
-}
-
-if (!appleTargetsOnly) {
-    plugins.apply("com.android.application")
+    id("com.android.kotlin.multiplatform.library")
 }
 
 group = "io.github.timortel.kmpgrpc.composeexample.composeapp"
@@ -31,10 +26,20 @@ kotlin {
     applyDefaultHierarchyTemplate()
 
     if (!appleTargetsOnly) {
-        androidTarget {
-            @OptIn(ExperimentalKotlinGradlePluginApi::class)
+        android {
+            namespace = "io.github.timortel.kmpgrpc.composeexample"
+            compileSdk = libs.versions.android.compileSdk.get().toInt()
+
             compilerOptions {
                 jvmTarget.set(JvmTarget.JVM_17)
+            }
+
+            withHostTest {
+                isIncludeAndroidResources = true
+            }
+
+            androidResources {
+                enable = true
             }
         }
 
@@ -62,7 +67,6 @@ kotlin {
     }
 
     listOf(
-        iosX64(),
         iosArm64(),
         iosSimulatorArm64()
     ).forEach {
@@ -108,7 +112,7 @@ kotlin {
                 implementation(libs.io.grpc.okhttp)
             }
 
-            androidUnitTest {
+            getByName("androidHostTest") {
                 dependencies {
                     implementation(libs.androidx.test.junit)
                     implementation(libs.androidx.ui.test.manifest)
@@ -122,30 +126,6 @@ kotlin {
 }
 
 if (!appleTargetsOnly) {
-    extensions.configure<ApplicationExtension>("android") {
-        namespace = "io.github.timortel.kmpgrpc.composeexample"
-        compileSdk = libs.versions.android.compileSdk.get().toInt()
-
-        defaultConfig {
-            applicationId = "io.github.timortel.kmpgrpc.composeexample"
-            minSdk = libs.versions.android.minSdk.get().toInt()
-            targetSdk = libs.versions.android.targetSdk.get().toInt()
-            versionCode = 1
-            versionName = "1.0"
-        }
-
-        compileOptions {
-            sourceCompatibility = JavaVersion.VERSION_17
-            targetCompatibility = JavaVersion.VERSION_17
-        }
-
-        testOptions {
-            unitTests {
-                isIncludeAndroidResources = true
-            }
-        }
-    }
-
     compose.desktop {
         application {
             mainClass = "io.github.timortel.kmpgrpc.composeexample.MainKt"

@@ -1,33 +1,24 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     id("com.android.application")
-    kotlin("android")
     kotlin("plugin.compose")
-}
-
-android {
-    compileSdk = 36
-    namespace = "io.github.timortel.kmpgrpc.example.android"
-
-    defaultConfig {
-        minSdk = 23
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
-
-    buildFeatures {
-        compose = true
-    }
-
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.15"
-    }
 }
 
 kotlin {
     jvmToolchain(17)
+
+    android {
+        compileSdk = 36
+        defaultConfig {
+            minSdk = 21
+        }
+        namespace = "io.github.timortel.kmpgrpc.example.android"
+
+        compilerOptions { jvmTarget.set(JvmTarget.JVM_17) }
+
+        buildFeatures { compose = true }
+    }
 }
 
 dependencies {

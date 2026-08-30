@@ -17,7 +17,7 @@ object GreetingLogic {
         return try {
             stub
                 .withDeadlineAfter(3.seconds)
-                .SayHello(
+                .sayHello(
                     request = helloRequest {
                         greeting = message
                     }

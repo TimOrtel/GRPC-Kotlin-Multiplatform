@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 val appleTargetsOnlyProperty = "appleTargetsOnly"
 val appleTargetsOnly = if (project.hasProperty(appleTargetsOnlyProperty)) {
     project.property(appleTargetsOnlyProperty).toString() == "true"
@@ -5,11 +7,8 @@ val appleTargetsOnly = if (project.hasProperty(appleTargetsOnlyProperty)) {
 
 plugins {
     kotlin("multiplatform")
-    id("io.github.timortel.kmpgrpc.plugin") version "1.4.0"
-}
-
-if (!appleTargetsOnly) {
-    plugins.apply("com.android.library")
+    id("io.github.timortel.kmpgrpc.plugin") version "2.0.1"
+    id("com.android.kotlin.multiplatform.library")
 }
 
 group = "io.github.timortel.kmpgrpc.example.common"
@@ -26,9 +25,16 @@ kotlin {
 
     if (!appleTargetsOnly) {
         jvm("jvm")
-        androidTarget()
+        android {
+            compileSdk = 36
+            namespace = "io.github.timortel.grpc_multiplaform.example.common"
 
-        js(IR) {
+            compilerOptions {
+                jvmTarget.set(JvmTarget.JVM_17)
+            }
+        }
+
+        js {
             useCommonJs()
             browser()
         }
@@ -36,8 +42,7 @@ kotlin {
 
     listOf(
         iosArm64(),
-        iosSimulatorArm64(),
-        iosX64()
+        iosSimulatorArm64()
     ).forEach {
         it.binaries.framework {
             baseName = "Common"
@@ -63,16 +68,4 @@ kmpGrpc {
     native()
 
     protoSourceFolders = project.files("../protos/src/main/proto")
-}
-
-if (!appleTargetsOnly) {
-    extensions.configure<com.android.build.gradle.LibraryExtension>("android") {
-        compileSdk = 35
-        namespace = "io.github.timortel.grpc_multiplaform.example.common"
-
-        compileOptions {
-            sourceCompatibility = JavaVersion.VERSION_17
-            targetCompatibility = JavaVersion.VERSION_17
-        }
-    }
 }
