@@ -4,7 +4,7 @@ grpcKotlinMultiplatform = "2.0.1"
 androidGradlePlugin = "9.1.1"
 
 # Core Lib Relevant
-androidCompileSdk = "36"
+androidCompileSdk = "37"
 androidMinSdk = "21"
 
 kotlin = "2.4.10"
