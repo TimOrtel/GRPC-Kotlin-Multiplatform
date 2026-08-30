@@ -17,6 +17,7 @@ object ActualProtoDslWriter : ProtoDslWriter(true) {
             addCode(
                 MessageConstructorCallWriter.getConstructorCallCode(
                     message = message,
+                    useMemberImport = true,
                     type = MessageConstructorCallWriter.ConstructorType.BUILD_PARTIAL,
                     getFieldParameter = { field ->
                         if (field.isConstructorParameterNullable(ProtoMessageField.ConstructorParameterType.CREATE_PARTIAL)) {

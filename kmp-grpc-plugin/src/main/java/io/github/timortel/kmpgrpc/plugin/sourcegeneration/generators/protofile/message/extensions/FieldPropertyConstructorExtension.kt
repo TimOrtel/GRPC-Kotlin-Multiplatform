@@ -91,6 +91,7 @@ object FieldPropertyConstructorExtension : MessageWriterExtension {
                         addCode(
                             MessageConstructorCallWriter.getConstructorCallCode(
                                 message = message,
+                                useMemberImport = true,
                                 type = MessageConstructorCallWriter.ConstructorType.DIRECT,
                                 getFieldParameter = { field -> CodeBlock.of("%N", field.codeName) },
                                 getMapFieldParameter = { field -> CodeBlock.of("%N", field.codeName) },

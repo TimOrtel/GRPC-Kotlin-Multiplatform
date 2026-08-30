@@ -20,6 +20,7 @@ object MessageConstructorCallWriter {
     fun getConstructorCallCode(
         message: ProtoMessage,
         type: ConstructorType,
+        useMemberImport: Boolean,
         getFieldParameter: (ProtoMessageField) -> CodeBlock,
         getMapFieldParameter: (ProtoMapField) -> CodeBlock,
         getOneOfFieldParameter: (ProtoOneOf) -> CodeBlock,
@@ -32,8 +33,13 @@ object MessageConstructorCallWriter {
 
                 when (type) {
                     ConstructorType.DIRECT -> add("%T(", message.className)
-                    ConstructorType.BUILD -> add("%M(", companion.member("invoke"))
-                    ConstructorType.BUILD_PARTIAL -> add("%M(", companion.member("createPartial"))
+                    ConstructorType.BUILD ->
+                        if (useMemberImport) add("%M(", companion.member("invoke"))
+                        else add("%N(", "invoke")
+
+                    ConstructorType.BUILD_PARTIAL ->
+                        if (useMemberImport) add("%M(", companion.member("createPartial"))
+                        else add ("%N(", "createPartial")
                 }
 
                 add("\n")
