@@ -1,17 +1,17 @@
 [versions]
-agp = "8.11.0"
-android-compileSdk = "35"
+agp = "9.1.1"
+android-compileSdk = "37"
 android-minSdk = "24"
-android-targetSdk = "35"
+android-targetSdk = "37"
 androidx-activityCompose = "1.10.1"
 androidx-lifecycle = "2.9.2"
 androidx-test-junit = "1.3.0"
 androidx-core = "1.17.0"
-compose-multiplatform = "1.8.2"
+compose-multiplatform = "1.12.0"
 grpcKotlinStub = "1.5.0"
 grpc = "1.76.0"
 junit = "4.13.2"
-kotlin = "2.3.10"
+kotlin = "2.4.10"
 kotlinx-coroutines = "1.10.2"
 kmpGrpc = "2.0.1"
 protobuf = "3.25.6"
@@ -43,7 +43,7 @@ grpc-stub = { module = "io.grpc:grpc-stub", version.ref = "grpc" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
-androidLibrary = { id = "com.android.library", version.ref = "agp" }
+androidMultiplatformLibrary = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
 composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }
 composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
