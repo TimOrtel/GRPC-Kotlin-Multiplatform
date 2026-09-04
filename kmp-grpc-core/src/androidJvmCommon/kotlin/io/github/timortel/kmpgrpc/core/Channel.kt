@@ -102,7 +102,6 @@ actual class Channel private constructor(val channel: ManagedChannel) {
 
     actual suspend fun shutdown() {
         channel.shutdown()
-
         awaitTermination()
     }
 
@@ -128,5 +127,9 @@ actual class Channel private constructor(val channel: ManagedChannel) {
                 t.interrupt()
             }
         }
+    }
+
+    actual fun resetConnectBackoff() {
+        channel.resetConnectBackoff()
     }
 }
