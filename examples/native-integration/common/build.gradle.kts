@@ -44,7 +44,8 @@ kotlin {
 
     listOf(
         iosArm64(),
-        iosSimulatorArm64()
+        iosSimulatorArm64(),
+        iosX64()
     ).forEach {
         it.binaries.framework {
             baseName = "Common"
