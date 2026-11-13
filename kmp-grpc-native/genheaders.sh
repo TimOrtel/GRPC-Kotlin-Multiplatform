@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
+set -e
 
-cargo install cbindgen
+export PATH="$HOME/.cargo/bin:$PATH"
+
+if ! command -v cbindgen >/dev/null 2>&1; then
+    cargo install --locked cbindgen
+fi
 
 mkdir -p include
-$HOME/.cargo/bin/cbindgen --config cbindgen.toml --crate kmp-grpc-native --lang c --output include/rpcnative.h
+cbindgen --config cbindgen.toml --crate kmp-grpc-native --lang c --output include/rpcnative.h

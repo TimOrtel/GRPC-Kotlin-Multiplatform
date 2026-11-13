@@ -22,7 +22,7 @@ private enum class Targets {
 fun Project.getTargetGroup(): TargetGroup {
     val targetsTargetProperty = "io.github.timortel.kmp-grpc.internal.targets"
     return if (project.hasProperty(targetsTargetProperty)) {
-        TargetGroup.values().firstOrNull { it.name == project.property(targetsTargetProperty).toString() }
+        TargetGroup.entries.firstOrNull { it.name == project.property(targetsTargetProperty).toString() }
             ?: TargetGroup.ALL
     } else TargetGroup.ALL
 }

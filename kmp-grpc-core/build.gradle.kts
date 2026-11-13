@@ -152,10 +152,6 @@ kotlin {
     }
 }
 
-val emptyJavadocJar by tasks.registering(Jar::class) {
-    archiveClassifier.set("javadoc")
-}
-
 publishing {
     repositories {
         maven {
@@ -164,13 +160,14 @@ publishing {
         }
     }
 
-    if (publications.findByName("jvm") != null) {
-        publications.named<MavenPublication>("jvm") {
-            artifact(emptyJavadocJar.get())
-        }
-    }
-
     publications.withType<MavenPublication>().all {
+        val pubName = name
+        val emptyJavadocJar = tasks.register<Jar>("${pubName}EmptyJavadocJar") {
+            archiveClassifier.set("javadoc")
+            destinationDirectory.set(layout.buildDirectory.dir("javadoc-jars/$pubName"))
+        }
+        artifact(emptyJavadocJar)
+
         pom {
             name.set("kmp-grpc-core")
             description.set("A gRPC core library for Kotlin Multiplatform")
@@ -212,6 +209,8 @@ buildConfig {
 }
 
 val compileNativeCodeTask = tasks.register("compileNativeCode", Exec::class.java) {
+    onlyIf { !usePrebuiltNative }
+
     inputs.files(fileTree("../kmp-grpc-native/") {
         include("src/**/*.rs")
         include("Cargo.lock")
@@ -235,6 +234,8 @@ val compileNativeCodeTask = tasks.register("compileNativeCode", Exec::class.java
 }
 
 val genNativeHeadersTask = tasks.register("genNativeHeadersFromRust", Exec::class.java) {
+    onlyIf { !usePrebuiltNative }
+
     inputs.files(fileTree("../kmp-grpc-native/") {
         include("src/**/*.rs")
         include("genheaders.sh")
@@ -254,6 +255,8 @@ tasks.withType<CInteropProcess>().configureEach {
 }
 
 val genNativeLicenseTextsTask = tasks.register("genNativeLicenseTexts", Exec::class.java) {
+    onlyIf { !usePrebuiltNative }
+
     inputs.files(fileTree("../kmp-grpc-native/") {
         include("about.hbs")
         include("about.toml")
@@ -325,7 +328,7 @@ kotlin.targets.withType<KotlinNativeTarget>().configureEach {
 }
 
 tasks.withType<org.gradle.jvm.tasks.Jar>().configureEach {
-    if (this == emptyJavadocJar.get()) return@configureEach
+    if (name.endsWith("EmptyJavadocJar")) return@configureEach
 
     from(layout.projectDirectory.file("../THIRD_PARTY_LICENSES.txt")) {
         into("META-INF")
@@ -339,13 +342,17 @@ if (buildAsRelease) {
         val signingKey = findProperty("signingKey") as? String?
         val signingPassword = findProperty("signingPassword") as? String?
 
-        if (signingKey != null && signingPassword != null) {
-            val key = Base64.getDecoder().decode(signingKey).toString(Charsets.UTF_8)
+        if (!signingKey.isNullOrBlank() && !signingPassword.isNullOrEmpty()) {
+            val key = Base64.getMimeDecoder().decode(signingKey.trim()).toString(Charsets.UTF_8)
 
             useInMemoryPgpKeys(key, signingPassword)
         }
 
         sign(publishing.publications)
+    }
+
+    tasks.withType<AbstractPublishToMaven>().configureEach {
+        mustRunAfter(tasks.withType<Sign>())
     }
 }
 
