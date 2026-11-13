@@ -26,7 +26,7 @@ kotlin {
     if (!appleTargetsOnly) {
         jvm("jvm")
         android {
-            compileSdk = 36
+            compileSdk = 37
             namespace = "io.github.timortel.grpc_multiplaform.example.common"
 
             compilerOptions {
