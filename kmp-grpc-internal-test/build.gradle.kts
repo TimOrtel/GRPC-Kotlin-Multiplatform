@@ -1,9 +1,9 @@
-import io.github.timortel.kmpgrpc.plugin.NamingStrategy
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    id("com.android.library")
+    id("com.android.kotlin.multiplatform.library")
     kotlin("multiplatform")
 
     id("io.github.timortel.kmpgrpc.plugin")
@@ -20,6 +20,16 @@ kotlin {
     applyDefaultHierarchyTemplate()
 
     setupTargets(project)
+
+    android {
+        namespace = "io.github.timortel.kmpgrpc.internal.test"
+        compileSdk = libs.versions.androidCompileSdk.get().toInt()
+        minSdk = libs.versions.androidMinSdk.get().toInt()
+
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_17)
+        }
+    }
 
     compilerOptions {
         freeCompilerArgs.add("-Xexpect-actual-classes")
@@ -83,28 +93,6 @@ kotlin {
     }
 }
 
-android {
-    namespace = "io.github.timortel.kmpgrpc.internal.test"
-
-    compileSdk = libs.versions.androidCompileSdk.get().toInt()
-
-    defaultConfig {
-        minSdk = libs.versions.androidMinSdk.get().toInt()
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
-
-    sourceSets {
-        named("main") {
-            manifest.srcFile("src/androidMain/AndroidManifest.xml")
-            res.srcDirs("src/androidMain/res")
-        }
-    }
-}
-
 kmpGrpc {
     common()
     jvm()
@@ -137,9 +125,11 @@ buildConfig {
         val clientCertificateFile = projectDir.resolve("test-server/src/main/resources/client.pem")
         val clientKeyFile = projectDir.resolve("test-server/src/main/resources/client.key")
 
-        val pemProvider = { file: File -> provider {
-            "\"\"\"\n${file.readText()}\"\"\""
-        }}
+        val pemProvider = { file: File ->
+            provider {
+                "\"\"\"\n${file.readText()}\"\"\""
+            }
+        }
 
         buildConfigField("String", "STANDALONE_LEAF_CERTIFICATE", pemProvider(leafCertificateFile))
         buildConfigField("String", "CA_CERTIFICATE", pemProvider(caCertificateFile))

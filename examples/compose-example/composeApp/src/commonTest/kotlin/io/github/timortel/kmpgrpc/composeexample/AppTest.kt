@@ -3,6 +3,7 @@ package io.github.timortel.kmpgrpc.composeexample
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.*
+import androidx.compose.ui.test.v2.runComposeUiTest
 import kotlin.test.Test
 
 @OptIn(ExperimentalTestApi::class)

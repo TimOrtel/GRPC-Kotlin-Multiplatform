@@ -12,7 +12,7 @@ targets=(
   "x86_64-pc-windows-gnu"
 )
 
-cargo install cargo-about
+cargo install --locked --features cli cargo-about
 
 for target in "${targets[@]}"; do
   out_dir="target/${target}"

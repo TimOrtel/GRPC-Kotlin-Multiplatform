@@ -1,5 +1,7 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
-    id("com.android.library")
+    id("com.android.kotlin.multiplatform.library")
     kotlin("multiplatform")
     id("maven-publish")
 
@@ -20,6 +22,16 @@ kotlin {
 
     setupTargets(project)
 
+    android {
+        namespace = "io.github.timortel.kmpgrpc.wkt.ext"
+        compileSdk = libs.versions.androidCompileSdk.get().toInt()
+        minSdk = libs.versions.androidMinSdk.get().toInt()
+
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_17)
+        }
+    }
+
     compilerOptions {
         freeCompilerArgs.add("-Xexpect-actual-classes")
     }
@@ -39,6 +51,12 @@ kotlin {
                 implementation(kotlin("test-annotations-common"))
             }
         }
+
+        jvmTest {
+            dependencies {
+                implementation(kotlin("test-junit"))
+            }
+        }
     }
 }
 
@@ -48,27 +66,13 @@ publishing {
     }
 }
 
-android {
-    namespace = "io.github.timortel.kmpgrpc.wkt.ext"
-
-    compileSdk = libs.versions.androidCompileSdk.get().toInt()
-
-    defaultConfig {
-        minSdk = libs.versions.androidMinSdk.get().toInt()
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
-}
-
 kmpGrpc {
     common()
     jvm()
     android()
     js()
     native()
+    wasmjs()
 
     includeWellKnownTypes = true
 

@@ -1,12 +1,10 @@
-@file:OptIn(ExperimentalWasmDsl::class)
-
-import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import org.jetbrains.kotlin.gradle.tasks.CInteropProcess
-import java.util.Base64
+import java.util.*
 
 plugins {
-    id("com.android.library")
+    id("com.android.kotlin.multiplatform.library")
     kotlin("multiplatform")
     id("maven-publish")
     alias(libs.plugins.buildConfig)
@@ -22,6 +20,16 @@ repositories {
 }
 
 kotlin {
+    android {
+        namespace = "io.github.timortel.kmpgrpc.core"
+        compileSdk = libs.versions.androidCompileSdk.get().toInt()
+        minSdk = libs.versions.androidMinSdk.get().toInt()
+
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_17)
+        }
+    }
+
     jvmToolchain(17)
 
     applyDefaultHierarchyTemplate()
@@ -188,28 +196,6 @@ publishing {
                 developerConnection.set("scm:git:ssh://github.com/TimOrtel/GRPC-Kotlin-Multiplatform.git")
                 url.set("https://github.com/TimOrtel/GRPC-Kotlin-Multiplatform")
             }
-        }
-    }
-}
-
-android {
-    namespace = "io.github.timortel.kmpgrpc.core"
-
-    compileSdk = libs.versions.androidCompileSdk.get().toInt()
-
-    defaultConfig {
-        minSdk = libs.versions.androidMinSdk.get().toInt()
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
-
-    sourceSets {
-        named("main") {
-            manifest.srcFile("src/androidMain/AndroidManifest.xml")
-            res.srcDirs("src/androidMain/res")
         }
     }
 }
