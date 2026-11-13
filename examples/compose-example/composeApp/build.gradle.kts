@@ -25,24 +25,25 @@ version = "1.0-SNAPSHOT"
 kotlin {
     applyDefaultHierarchyTemplate()
 
-    if (!appleTargetsOnly) {
-        android {
-            namespace = "io.github.timortel.kmpgrpc.composeexample"
-            compileSdk = libs.versions.android.compileSdk.get().toInt()
+    // Android cannot be excluded as otherwise the build fails
+    android {
+        namespace = "io.github.timortel.kmpgrpc.composeexample"
+        compileSdk = libs.versions.android.compileSdk.get().toInt()
 
-            compilerOptions {
-                jvmTarget.set(JvmTarget.JVM_17)
-            }
-
-            withHostTest {
-                isIncludeAndroidResources = true
-            }
-
-            androidResources {
-                enable = true
-            }
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_17)
         }
 
+        withHostTest {
+            isIncludeAndroidResources = true
+        }
+
+        androidResources {
+            enable = true
+        }
+    }
+
+    if (!appleTargetsOnly) {
         jvm("desktop")
 
         @OptIn(ExperimentalWasmDsl::class)

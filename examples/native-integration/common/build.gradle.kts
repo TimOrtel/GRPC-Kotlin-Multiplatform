@@ -23,16 +23,18 @@ repositories {
 kotlin {
     applyDefaultHierarchyTemplate()
 
+    // Android cannot be excluded as otherwise the build fails
+    android {
+        compileSdk = 37
+        namespace = "io.github.timortel.grpc_multiplaform.example.common"
+
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_17)
+        }
+    }
+
     if (!appleTargetsOnly) {
         jvm("jvm")
-        android {
-            compileSdk = 37
-            namespace = "io.github.timortel.grpc_multiplaform.example.common"
-
-            compilerOptions {
-                jvmTarget.set(JvmTarget.JVM_17)
-            }
-        }
 
         js {
             useCommonJs()
