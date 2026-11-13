@@ -51,6 +51,12 @@ kotlin {
                 implementation(kotlin("test-annotations-common"))
             }
         }
+
+        jvmTest {
+            dependencies {
+                implementation(kotlin("test-junit"))
+            }
+        }
     }
 }
 
@@ -66,6 +72,7 @@ kmpGrpc {
     android()
     js()
     native()
+    wasmjs()
 
     includeWellKnownTypes = true
 

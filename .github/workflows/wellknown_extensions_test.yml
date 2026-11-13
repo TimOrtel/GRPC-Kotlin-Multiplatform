@@ -24,4 +24,4 @@ jobs:
           java-version: '17'
 
       - name: Run tests in plugin module
-        run: ./gradlew :kmp-grpc-wellknown-ext:test
+        run: ./gradlew :kmp-grpc-wellknown-ext:allTests
