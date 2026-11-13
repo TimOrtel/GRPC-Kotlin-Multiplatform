@@ -1,53 +1,231 @@
+name: Release
+
 on:
   workflow_dispatch:
     inputs:
-      version:
-        description: 'Version to release'
-        required: true
-        type: string
+      dry_run:
+        description: 'Run the full release build without uploading or publishing'
+        required: false
+        default: false
+        type: boolean
 
-run-name: "${{ inputs.version }} Release"
+run-name: "${{ inputs.dry_run && '[Dry Run] ' || '' }}Release"
 
 jobs:
-  release:
-    name: Release
+  validate:
+    name: Validate Version & Secrets
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.read_version.outputs.version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Read version and validate required secrets
+        id: read_version
+        env:
+          SIGNING_KEY_B64: ${{ secrets.SIGNING_KEY_B64 }}
+          SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+          MAVEN_CENTRAL_TOKEN: ${{ secrets.MAVEN_CENTRAL_TOKEN }}
+          GRADLE_PUBLISH_KEY: ${{ secrets.GRADLE_PUBLISH_KEY }}
+          GRADLE_PUBLISH_SECRET: ${{ secrets.GRADLE_PUBLISH_SECRET }}
+        run: |
+          TOML_VERSION=$(grep -E '^grpcKotlinMultiplatform\s*=' gradle/libs.versions.toml | head -n1 | sed -E 's/.*"([^"]+)".*/\1/')
+          if [ -z "$TOML_VERSION" ]; then
+            echo "Could not read grpcKotlinMultiplatform version from gradle/libs.versions.toml"
+            exit 1
+          fi
+          echo "Detected version: $TOML_VERSION"
+          echo "version=$TOML_VERSION" >> "$GITHUB_OUTPUT"
+
+          for var in SIGNING_KEY_B64 SIGNING_PASSWORD MAVEN_CENTRAL_TOKEN GRADLE_PUBLISH_KEY GRADLE_PUBLISH_SECRET; do
+            if [ -z "${!var}" ]; then
+              echo "Required secret $var is empty or not set"
+              exit 1
+            fi
+          done
+
+  build-rust-apple:
+    name: Build Rust Apple Targets
+    needs: validate
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Ensure Rust toolchain
+        run: |
+          export PATH="$HOME/.cargo/bin:$PATH"
+          rustup update stable
+          rustup default stable
+
+      - name: Build Apple Rust targets
+        working-directory: kmp-grpc-native
+        run: ./compile.sh release apple_test
+
+      - name: Stage Apple libraries
+        run: |
+          for lib in kmp-grpc-native/target/*/release/libkmp_grpc_native.a; do
+            [ -f "$lib" ] || { echo "No built Apple libraries found"; exit 1; }
+            rel="${lib#kmp-grpc-native/target/}"
+            mkdir -p "kmp-grpc-native/artifact/target/$(dirname "$rel")"
+            cp "$lib" "kmp-grpc-native/artifact/target/$rel"
+          done
+
+      - name: Upload Apple Rust artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: rust-apple-libs
+          path: kmp-grpc-native/artifact/target
+          if-no-files-found: error
+
+  build-rust-non-apple:
+    name: Build Rust Non-Apple Targets & Metadata
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Ensure Rust toolchain
+        run: |
+          export PATH="$HOME/.cargo/bin:$PATH"
+          rustup update stable
+          rustup default stable
+
+      - name: Build Linux & Windows Rust targets
+        working-directory: kmp-grpc-native
+        run: ./compile.sh release non_apple
+
+      - name: Generate C headers and third-party license texts
+        working-directory: kmp-grpc-native
+        run: |
+          ./genheaders.sh
+          ./genlicensetexts.sh
+
+      - name: Stage non-Apple libraries, headers, and licenses
+        run: |
+          for lib in kmp-grpc-native/target/*/release/libkmp_grpc_native.a; do
+            [ -f "$lib" ] || { echo "No built non-Apple libraries found"; exit 1; }
+            rel="${lib#kmp-grpc-native/target/}"
+            mkdir -p "kmp-grpc-native/artifact/target/$(dirname "$rel")"
+            cp "$lib" "kmp-grpc-native/artifact/target/$rel"
+          done
+
+          for html in kmp-grpc-native/target/*/THIRD_PARTY_LICENSES.html; do
+            [ -f "$html" ] || { echo "No license files found"; exit 1; }
+            rel="${html#kmp-grpc-native/target/}"
+            mkdir -p "kmp-grpc-native/artifact/target/$(dirname "$rel")"
+            cp "$html" "kmp-grpc-native/artifact/target/$rel"
+          done
+
+          mkdir -p kmp-grpc-native/artifact/include
+          cp kmp-grpc-native/include/rpcnative.h kmp-grpc-native/artifact/include/rpcnative.h
+
+      - name: Upload non-Apple Rust artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: rust-non-apple-libs
+          path: kmp-grpc-native/artifact/target
+          if-no-files-found: error
+
+      - name: Upload generated C header
+        uses: actions/upload-artifact@v4
+        with:
+          name: rust-headers
+          path: kmp-grpc-native/artifact/include
+          if-no-files-found: error
+
+  publish:
+    name: Build & Publish Release
+    needs: [validate, build-rust-apple, build-rust-non-apple]
     runs-on: macos-latest
     timeout-minutes: 45
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Set up JDK 21
+      - name: Set up JDK 17
         uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
-          java-version: '21'
+          java-version: '17'
+
+      - name: Download Apple Rust artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: rust-apple-libs
+          path: kmp-grpc-native/target
+
+      - name: Download non-Apple Rust artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: rust-non-apple-libs
+          path: kmp-grpc-native/target
+
+      - name: Download generated C header
+        uses: actions/download-artifact@v4
+        with:
+          name: rust-headers
+          path: kmp-grpc-native/include
+
+      - name: Verify prebuilt native artifacts
+        run: |
+          test -f kmp-grpc-native/include/rpcnative.h
+          ls -lh kmp-grpc-native/target/*/release/libkmp_grpc_native.a
+          ls -lh kmp-grpc-native/target/*/THIRD_PARTY_LICENSES.html
 
       - name: Publish Core Release To Local Dir
         env:
           ORG_GRADLE_PROJECT_signingKey: ${{ secrets.SIGNING_KEY_B64 }}
           ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.SIGNING_PASSWORD }}
-        run: ./gradlew :kmp-grpc-core:publishAllPublicationsToBuildDirRepository -Pio.github.timortel.kmp-grpc.internal.native.release=true
+        run: >
+          ./gradlew :kmp-grpc-core:publishAllPublicationsToBuildDirRepository
+          -Pio.github.timortel.kmp-grpc.internal.native.release=true
+          -Pio.github.timortel.kmp-grpc.internal.native.prebuilt=true
 
       - name: Build Core Release Zip
+        env:
+          VERSION: ${{ needs.validate.outputs.version }}
         run: |
           cd kmp-grpc-core/build/repos/releases
-          zip kmp-grpc-core-${{ inputs.version }}.zip -r io
-          mv kmp-grpc-core-${{ inputs.version }}.zip ../../../..
+          zip "kmp-grpc-core-${VERSION}.zip" -r io
+          mv "kmp-grpc-core-${VERSION}.zip" ../../../..
+
+      - name: Upload Core Release Zip Artifact (Dry Run)
+        if: ${{ inputs.dry_run }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: kmp-grpc-core-${{ needs.validate.outputs.version }}
+          path: kmp-grpc-core-${{ needs.validate.outputs.version }}.zip
+          if-no-files-found: error
 
       - name: Upload Core Release
+        if: ${{ !inputs.dry_run }}
         id: upload_release
         env:
           TOKEN: ${{ secrets.MAVEN_CENTRAL_TOKEN }}
+          VERSION: ${{ needs.validate.outputs.version }}
         run: |
-          RESPONSE=$(curl POST \
-          --verbose \
-          --header "Authorization: Bearer $TOKEN" \
-          --form bundle=@kmp-grpc-core-${{ inputs.version }}.zip \
-          "https://central.sonatype.com/api/v1/publisher/upload?publishingType=USER_MANAGED&name=io.github.timortel%3Akmp-grpc-core%3A${{ inputs.version }}")
-          echo "deployment_id=$RESPONSE" >> "$GITHUB_OUTPUT"
+          RESPONSE=$(curl --fail-with-body --silent --show-error --retry 3 \
+            --header "Authorization: Bearer $TOKEN" \
+            --form "bundle=@kmp-grpc-core-${VERSION}.zip" \
+            "https://central.sonatype.com/api/v1/publisher/upload?publishingType=USER_MANAGED&name=io.github.timortel%3Akmp-grpc-core%3A${VERSION}")
+
+          DEPLOYMENT_ID=$(printf '%s' "$RESPONSE" | tr -d '[:space:]')
+          if [ -z "$DEPLOYMENT_ID" ]; then
+            echo "Empty deployment ID returned from Sonatype Central: $RESPONSE"
+            exit 1
+          fi
+
+          echo "Uploaded deployment ID: $DEPLOYMENT_ID"
+          echo "deployment_id=$DEPLOYMENT_ID" >> "$GITHUB_OUTPUT"
 
       - name: Wait for deployment to be ready
+        if: ${{ !inputs.dry_run }}
         id: check_release
         timeout-minutes: 10
         env:
@@ -55,53 +233,60 @@ jobs:
           DEPLOYMENT_ID: ${{ steps.upload_release.outputs.deployment_id }}
         run: |
           while true; do
-            RESPONSE=$(curl -X 'POST' \
-            --verbose \
-            --header "Authorization: Bearer $TOKEN" \
-            "https://central.sonatype.com/api/v1/publisher/status?id=$DEPLOYMENT_ID")
+            RESPONSE=$(curl --fail-with-body --silent --show-error --retry 3 \
+              -X POST \
+              --header "Authorization: Bearer $TOKEN" \
+              "https://central.sonatype.com/api/v1/publisher/status?id=$DEPLOYMENT_ID")
 
-          STATUS=$(echo "$RESPONSE" | jq -r '.deploymentState')
+            STATUS=$(printf '%s' "$RESPONSE" | jq -r '.deploymentState // empty')
+            echo "Current deployment state: $STATUS"
 
-          echo "Current deployment state: $STATUS"
+            if [ "$STATUS" = "VALIDATED" ] || [ "$STATUS" = "PUBLISHED" ]; then
+              echo "status=$STATUS" >> "$GITHUB_OUTPUT"
+              break
+            fi
 
-          if [ "$STATUS" = "VALIDATED" ]; then
-            echo "status=VALIDATED" >> "$GITHUB_OUTPUT"
-            break
-          fi
+            if [ "$STATUS" = "FAILED" ]; then
+              echo "Deployment validation failed. Response:"
+              echo "$RESPONSE"
+              echo "status=FAILED" >> "$GITHUB_OUTPUT"
+              exit 1
+            fi
 
-          if [ "$STATUS" = "FAILED" ]; then
-            echo "status=FAILED" >> "$GITHUB_OUTPUT"
-            break
-          fi
+            if [ -z "$STATUS" ]; then
+              echo "Unexpected status response: $RESPONSE"
+              exit 1
+            fi
 
-          sleep 5
-
+            sleep 5
           done
 
-      - name: Drop failed deployment
-        if: steps.check_release.outputs.status == 'FAILED'
+      - name: Publish Core Library
+        if: ${{ !inputs.dry_run }}
+        id: publish_core
         env:
           TOKEN: ${{ secrets.MAVEN_CENTRAL_TOKEN }}
           DEPLOYMENT_ID: ${{ steps.upload_release.outputs.deployment_id }}
         run: |
-          curl -X 'DELETE' \
-          --verbose \
-          --header "Authorization: Bearer $TOKEN" \
-          "https://central.sonatype.com/api/v1/publisher/deployment/$DEPLOYMENT_ID"
-          exit 1
+          curl --fail-with-body --silent --show-error --retry 3 \
+            -X POST \
+            --header "Authorization: Bearer $TOKEN" \
+            "https://central.sonatype.com/api/v1/publisher/deployment/$DEPLOYMENT_ID"
+
+      - name: Drop failed deployment
+        if: ${{ !inputs.dry_run && failure() && steps.upload_release.outputs.deployment_id != '' && steps.publish_core.outcome != 'success' }}
+        env:
+          TOKEN: ${{ secrets.MAVEN_CENTRAL_TOKEN }}
+          DEPLOYMENT_ID: ${{ steps.upload_release.outputs.deployment_id }}
+        run: |
+          curl --fail-with-body --silent --show-error --retry 3 \
+            -X DELETE \
+            --header "Authorization: Bearer $TOKEN" \
+            "https://central.sonatype.com/api/v1/publisher/deployment/$DEPLOYMENT_ID"
 
       - name: Publish Gradle Plugin
+        if: ${{ !inputs.dry_run }}
         env:
           GRADLE_PUBLISH_KEY: ${{ secrets.GRADLE_PUBLISH_KEY }}
           GRADLE_PUBLISH_SECRET: ${{ secrets.GRADLE_PUBLISH_SECRET }}
         run: ./gradlew :kmp-grpc-plugin:publishPlugins
-
-      - name: Publish Core Library
-        env:
-          TOKEN: ${{ secrets.MAVEN_CENTRAL_TOKEN }}
-          DEPLOYMENT_ID: ${{ steps.upload_release.outputs.deployment_id }}
-        run: |
-          curl -X 'POST' \
-          --verbose \
-          --header "Authorization: Bearer $TOKEN" \
-          "https://central.sonatype.com/api/v1/publisher/deployment/$DEPLOYMENT_ID"
