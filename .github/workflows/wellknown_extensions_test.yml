@@ -24,4 +24,4 @@ jobs:
           java-version: '17'
 
       - name: Run tests in plugin module
-        run: ./gradlew :kmp-grpc-wellknown-ext:allTests
+        run: ./gradlew :kmp-grpc-wellknown-ext:allTests -Pio.github.timortel.kmp-grpc.internal.targets=NATIVE_OTHERS_TESTABLE --info
