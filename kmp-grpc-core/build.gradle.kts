@@ -119,6 +119,10 @@ kotlin {
 
         jvmTest {
             dependsOn(nativeJvmTest)
+
+            dependencies {
+                implementation(kotlin("test-junit"))
+            }
         }
 
         androidMain {
