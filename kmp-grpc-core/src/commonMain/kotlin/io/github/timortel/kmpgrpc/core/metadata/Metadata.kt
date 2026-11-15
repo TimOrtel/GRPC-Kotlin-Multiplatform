@@ -42,11 +42,11 @@ class Metadata private constructor(
             entries.groupBy { it.key }.forEach { (key, entries) ->
                 when (key) {
                     is Key.AsciiKey -> {
-                        asciiMap.put(key, entries.flatMap { it.values }.toSet() as Set<String>)
+                        asciiMap[key] = entries.flatMap { it.values }.toSet() as Set<String>
                     }
 
                     is Key.BinaryKey -> {
-                        binaryMap.put(key, entries.flatMap { it.values }.toSet() as Set<ByteArray>)
+                        binaryMap[key] = entries.flatMap { it.values }.toSet() as Set<ByteArray>
                     }
                 }
             }

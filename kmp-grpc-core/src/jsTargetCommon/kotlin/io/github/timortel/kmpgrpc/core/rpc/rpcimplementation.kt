@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalEncodingApi::class)
-
 package io.github.timortel.kmpgrpc.core.rpc
 
 import io.github.timortel.kmpgrpc.core.*
@@ -23,9 +21,7 @@ import kotlinx.io.Source
 import kotlinx.io.readByteArray
 import kotlinx.io.readString
 import kotlin.io.encoding.Base64
-import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.time.DurationUnit
-import kotlin.time.ExperimentalTime
 
 private val base64 = Base64.withPadding(Base64.PaddingOption.PRESENT_OPTIONAL)
 
@@ -81,7 +77,6 @@ fun <Request : Message, Response : Message> serverSideStreamingCallImplementatio
     )
 }
 
-@OptIn(ExperimentalTime::class)
 private fun <Request : Message, Response : Message> grpcImplementation(
     channel: Channel,
     path: String,
@@ -187,14 +182,14 @@ private suspend fun <T : Message> ProducerScope<T>.readResponse(
     interceptors: List<CallInterceptor>
 ) {
     while (!channel.exhausted()) {
-        val frame = channel.readBuffer(5)
+        val frame = channel.readBuffer(5L)
 
         if (frame.remaining == 0L) break
 
         val flag = frame.readByte().toUByte()
         val length = frame.readInt()
 
-        val payload = channel.readBuffer(length)
+        val payload = channel.readBuffer(length.toLong())
 
         if (flag == 0.toUByte()) {
             // data received
@@ -258,20 +253,28 @@ private fun decodeHeadersFrame(source: Source): Metadata {
 
     val entries = metadataString
         .split("\r\n")
-        .filter { entry -> entry.isNotBlank() && entry.count { it == ':' } == 1 }
-        .map { metadataEntry ->
-            val keyName = metadataEntry.substringBefore(':')
-            val value = metadataEntry.substringAfter(':')
+        .filter { entry -> entry.isNotBlank() && ':' in entry }
+        .mapNotNull { metadataEntry ->
+            val keyName = metadataEntry.substringBefore(':').trim()
+            if (keyName.isBlank()) return@mapNotNull null
+
+            val values = metadataEntry
+                .substringAfter(':')
+                .trim()
+                .split(',')
+                .map { it.trim() }
+                .toSet()
 
             when (val key = Key.fromName(keyName)) {
                 is Key.AsciiKey -> {
-                    Entry.Ascii(key, setOf(value))
+                    Entry.Ascii(key, values)
                 }
 
                 is Key.BinaryKey -> {
-                    val decodedValue = Base64.decode(value)
-
-                    Entry.Binary(key, setOf(decodedValue))
+                    Entry.Binary(
+                        key = key,
+                        values = values.map { base64.decode(it) }.toSet()
+                    )
                 }
             }
         }

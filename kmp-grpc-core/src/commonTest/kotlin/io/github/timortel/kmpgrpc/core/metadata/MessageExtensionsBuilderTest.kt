@@ -9,9 +9,9 @@ import kotlin.test.assertEquals
 
 class MessageExtensionsBuilderTest {
 
-    val extensionScalar = Extension.ScalarValueExtension(messageClass = Message::class, fieldNumber = 1, fieldType = FieldType.String)
-    val extensionRepeatedNonPackable = Extension.NonPackableRepeatedValueExtension(messageClass = Message::class, fieldNumber = 2, fieldType = FieldType.String)
-    val extensionRepeatedPackable = Extension.PackableRepeatedValueExtension(messageClass = Message::class, fieldNumber = 3, fieldType = FieldType.Int32, tag = 12u, isPacked = true)
+    val extensionScalar = Extension.ScalarValueExtension(fullName = "ext1", messageClass = Message::class, fieldNumber = 1, fieldType = FieldType.String)
+    val extensionRepeatedNonPackable = Extension.NonPackableRepeatedValueExtension(fullName = "ext2", messageClass = Message::class, fieldNumber = 2, fieldType = FieldType.String)
+    val extensionRepeatedPackable = Extension.PackableRepeatedValueExtension(fullName = "ext3", messageClass = Message::class, fieldNumber = 3, fieldType = FieldType.Int32, tag = 12u, isPacked = true)
 
     @Test
     fun test_WHEN_puttingValuesForExtensions_THEN_theExtensionsContainExactlyTheValuesWritten() {
@@ -20,9 +20,9 @@ class MessageExtensionsBuilderTest {
         val pValue = listOf(12, -24, 124)
 
         val extensions = buildExtensions {
-            put(extensionScalar, scalarValue)
-            put(extensionRepeatedNonPackable, npValue)
-            put(extensionRepeatedPackable, pValue)
+            set(extensionScalar, scalarValue)
+            set(extensionRepeatedNonPackable, npValue)
+            set(extensionRepeatedPackable, pValue)
         }
 
         assertEquals(scalarValue, extensions[extensionScalar])
@@ -35,7 +35,7 @@ class MessageExtensionsBuilderTest {
         val value = "first"
 
         val extensions = buildExtensions {
-            putOrAppend(extensionRepeatedNonPackable, value)
+            setOrAppend(extensionRepeatedNonPackable, listOf(value))
         }
 
         assertEquals(listOf(value), extensions[extensionRepeatedNonPackable])
@@ -47,8 +47,8 @@ class MessageExtensionsBuilderTest {
         val values2 = listOf("c", "d")
 
         val extensions = buildExtensions {
-            putOrAppend(extensionRepeatedNonPackable, values1)
-            putOrAppend(extensionRepeatedNonPackable, values2)
+            setOrAppend(extensionRepeatedNonPackable, values1)
+            setOrAppend(extensionRepeatedNonPackable, values2)
         }
 
         assertEquals(listOf("a", "b", "c", "d"), extensions[extensionRepeatedNonPackable])
@@ -60,8 +60,8 @@ class MessageExtensionsBuilderTest {
         val appended = listOf(3, 4)
 
         val extensions = buildExtensions {
-            put(extensionRepeatedPackable, initial)
-            putOrAppend(extensionRepeatedPackable, appended)
+            set(extensionRepeatedPackable, initial)
+            setOrAppend(extensionRepeatedPackable, appended)
         }
 
         assertEquals(listOf(1, 2, 3, 4), extensions[extensionRepeatedPackable])
