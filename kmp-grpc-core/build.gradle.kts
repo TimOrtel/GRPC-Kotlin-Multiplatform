@@ -231,7 +231,7 @@ val compileNativeCodeTask = tasks.register("compileNativeCode", Exec::class.java
     val targetGroup = when (val targetGroup = project.getTargetGroup()) {
         TargetGroup.ALL -> "all"
         TargetGroup.NATIVE_APPLE -> "apple_test"
-        TargetGroup.NATIVE_OTHERS_TESTABLE -> "other_test"
+        TargetGroup.NATIVE_OTHERS_TESTABLE, TargetGroup.NON_APPLE_TESTABLE -> "other_test"
         else -> throw IllegalStateException("target group $targetGroup does not include any native targets")
     }
 
