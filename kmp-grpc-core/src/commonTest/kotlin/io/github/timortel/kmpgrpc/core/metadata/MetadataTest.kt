@@ -79,4 +79,31 @@ class MetadataTest {
         assertEquals(emptySet(), finalMetadata.getAll(key1), "Expected no values of key1 to be present")
         assertEquals(values2, finalMetadata.getAll(key2), "Expected all key value pairs to be present")
     }
+
+    @Test
+    fun testCaseInsensitiveKeys() {
+        val asciiUpper = Key.AsciiKey("Custom-Header")
+        val asciiLower = Key.AsciiKey("custom-header")
+        val asciiFromName = Key.fromName("CUSTOM-HEADER")
+
+        val asciiMetadata = Metadata.of(
+            Entry.Ascii(asciiUpper, setOf("value1")),
+            Entry.Ascii(asciiLower, setOf("value2"))
+        )
+
+        assertEquals(setOf("value1", "value2"), asciiMetadata.getAll(asciiLower))
+        assertEquals(setOf("value1", "value2"), asciiMetadata.getAll(asciiUpper))
+        assertEquals(setOf("value1", "value2"), asciiMetadata.getAll(asciiFromName))
+        assertEquals(emptySet(), (asciiMetadata - asciiUpper).getAll(asciiLower))
+
+        val binaryValue = byteArrayOf(1, 2, 3)
+        val binaryUpper = Key.BinaryKey("Custom-Header-BIN")
+        val binaryLower = Key.BinaryKey("custom-header-bin")
+        val binaryFromName = Key.fromName("CUSTOM-HEADER-BIN")
+
+        val binaryMetadata = Metadata.of(binaryUpper, binaryValue)
+
+        assertEquals(binaryValue, binaryMetadata[binaryLower])
+        assertEquals(binaryValue, binaryMetadata[binaryFromName])
+    }
 }
