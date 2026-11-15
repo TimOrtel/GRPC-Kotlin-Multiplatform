@@ -255,7 +255,7 @@ private fun decodeHeadersFrame(source: Source): Metadata {
         .split("\r\n")
         .filter { entry -> entry.isNotBlank() && ':' in entry }
         .mapNotNull { metadataEntry ->
-            val keyName = metadataEntry.substringBefore(':').trim().lowercase()
+            val keyName = metadataEntry.substringBefore(':').trim()
             if (keyName.isBlank()) return@mapNotNull null
 
             val values = metadataEntry

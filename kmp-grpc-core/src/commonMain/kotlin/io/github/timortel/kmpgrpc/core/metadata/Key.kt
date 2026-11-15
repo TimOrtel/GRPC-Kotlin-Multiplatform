@@ -16,7 +16,7 @@ sealed interface Key<T> {
          * @return A Key instance, either BinaryKey or AsciiKey, based on the format of the name.
          */
         fun fromName(name: String): Key<*> {
-            return if (name.endsWith(BINARY_KEY_SUFFIX)) {
+            return if (name.lowercase().endsWith(BINARY_KEY_SUFFIX)) {
                 BinaryKey(name)
             } else {
                 AsciiKey(name)
@@ -31,11 +31,33 @@ sealed interface Key<T> {
      *
      * @property name The name of the ASCII key, which serves as its unique identifier in metadata. Must not end in "-bin".
      */
-    data class AsciiKey(override val name: String) : Key<String> {
+    class AsciiKey(name: String) : Key<String> {
+
+        override val name: String = name.lowercase()
+
         init {
-            if (name.endsWith(BINARY_KEY_SUFFIX)) {
+            if (this.name.endsWith(BINARY_KEY_SUFFIX)) {
                 throw IllegalArgumentException("name must not end with $BINARY_KEY_SUFFIX")
             }
+        }
+
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other == null || this::class != other::class) return false
+
+            other as AsciiKey
+
+            if (name != other.name) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int {
+            return name.hashCode()
+        }
+
+        override fun toString(): String {
+            return "AsciiKey(name='$name')"
         }
     }
 
@@ -44,11 +66,33 @@ sealed interface Key<T> {
      *
      * @property name The name of the binary key, which serves as its unique identifier in metadata. Must end in "-bin".
      */
-    data class BinaryKey(override val name: String) : Key<ByteArray> {
+    class BinaryKey(name: String) : Key<ByteArray> {
+
+        override val name: String = name.lowercase()
+
         init {
-            if (!name.endsWith(BINARY_KEY_SUFFIX)) {
+            if (!this.name.endsWith(BINARY_KEY_SUFFIX)) {
                 throw IllegalArgumentException("name must end with $BINARY_KEY_SUFFIX")
             }
+        }
+
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other == null || this::class != other::class) return false
+
+            other as BinaryKey
+
+            if (name != other.name) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int {
+            return name.hashCode()
+        }
+
+        override fun toString(): String {
+            return "BinaryKey(name='$name')"
         }
     }
 }
